@@ -1,0 +1,53 @@
+# Flutter/Dart/Pub related
+.dart_tool/
+.packages
+.pub-cache/
+build/
+flutter_export_environment.sh
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub/
+
+# Android related
+**/android/**/gradle-wrapper.jar
+**/android/**/gradle-wrapper.properties
+**/android/**/local.properties
+**/android/**/generated_plugin_registrant.*
+**/android/**/build/
+
+# iOS related
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework/
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Runner.xcworkspace/
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/ios/Runner/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+
+# Web related
+**/web/manifest.json
+**/web/favicon.png
+
+# MacOS related
+**/macos/Pods/
+**/macos/Flutter/ephemeral/
+
+# Visual Studio Code
+.vscode/
+
+# IntelliJ
+*.iml
+.idea/
+
+# Misc
+*.log
+*.lock
+pubspec.lock
+
+# Build outputs
+**/build/
+**/out/
