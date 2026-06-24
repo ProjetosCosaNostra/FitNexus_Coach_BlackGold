@@ -19,3 +19,6 @@ local.properties
 *.log
 *.bak
 *.tmp
+
+# Backups locais
+17_backups/
