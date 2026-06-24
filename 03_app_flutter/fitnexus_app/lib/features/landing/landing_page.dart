@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -319,7 +319,7 @@ class _TopBar extends StatelessWidget {
         ),
         if (showButtons) ...<Widget>[
           const SizedBox(width: 18),
-          const _SmallButton(text: 'Demonstração', filled: false, onTap: _emptyAction),
+          const _SmallButton(text: 'Demonstraçãonstração', filled: false, onTap: _emptyAction),
           const SizedBox(width: 10),
           const _SmallButton(text: 'Conhecer projeto', filled: true, onTap: _emptyAction),
         ],

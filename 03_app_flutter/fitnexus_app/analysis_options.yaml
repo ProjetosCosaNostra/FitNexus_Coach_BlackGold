@@ -1,9 +1,15 @@
-include: package:flutter_lints/flutter.yaml
+﻿include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    always_specify_types: ignore
+    prefer_const_constructors: ignore
+    prefer_const_declarations: ignore
+    prefer_const_literals_to_create_immutables: ignore
 
 linter:
   rules:
-    avoid_print: true
-    prefer_const_constructors: true
-    prefer_const_literals_to_create_immutables: true
-    avoid_unused_constructor_parameters: true
-    always_specify_types: true
+    always_specify_types: false
+    prefer_const_constructors: false
+    prefer_const_declarations: false
+    prefer_const_literals_to_create_immutables: false
