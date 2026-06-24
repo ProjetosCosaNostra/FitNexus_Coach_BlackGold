@@ -14,7 +14,7 @@ class DemoHomePage extends StatelessWidget {
           const SectionLabel('MVP Core 01'),
           const SizedBox(height: 12),
           const Text(
-            'Demonstraçãonstração navegável do FitNexus.',
+            'Demonstração navegável do FitNexus.',
             style: TextStyle(
               color: FitColors.text,
               fontSize: 44,
