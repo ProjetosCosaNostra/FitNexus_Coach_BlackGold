@@ -319,9 +319,11 @@ class _TopBar extends StatelessWidget {
         ),
         if (showButtons) ...<Widget>[
           const SizedBox(width: 18),
-          const _SmallButton(text: 'Demonstração', filled: false, onTap: _emptyAction),
-          const SizedBox(width: 10),
-          const _SmallButton(text: 'Conhecer projeto', filled: true, onTap: _emptyAction),
+          _TopBarButton(text: 'Landing', filled: false, route: '/'),
+          const SizedBox(width: 8),
+          _TopBarButton(text: 'Demonstração', filled: false, route: '/demo'),
+          const SizedBox(width: 8),
+          _TopBarButton(text: 'Ecossistema', filled: true, route: '/links'),
         ],
       ],
     );
@@ -1476,6 +1478,7 @@ class _HeroButton extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _SmallButton extends StatelessWidget {
   final String text;
   final bool filled;
@@ -1501,6 +1504,39 @@ class _SmallButton extends StatelessWidget {
         ),
       ),
       child: Text(text, style: const TextStyle(fontWeight: FontWeight.w900)),
+    );
+  }
+}
+
+class _TopBarButton extends StatelessWidget {
+  final String text;
+  final bool filled;
+  final String route;
+
+  const _TopBarButton({
+    required this.text,
+    required this.filled,
+    required this.route,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: () {
+        if (ModalRoute.of(context)?.settings.name != route) {
+          Navigator.pushNamed(context, route);
+        }
+      },
+      style: TextButton.styleFrom(
+        backgroundColor: filled ? AppColors.gold : Colors.transparent,
+        foregroundColor: filled ? Colors.black : AppColors.text,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(999),
+          side: BorderSide(color: filled ? AppColors.gold : AppColors.border),
+        ),
+      ),
+      child: Text(text, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
     );
   }
 }
