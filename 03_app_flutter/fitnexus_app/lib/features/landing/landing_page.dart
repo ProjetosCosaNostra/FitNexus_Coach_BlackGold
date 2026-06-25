@@ -1180,7 +1180,7 @@ class _ConversionPanel extends StatelessWidget {
               _ConversionBullet(
                 icon: Icons.auto_graph,
                 title: 'Base preparada',
-                text: 'Começa simples, com estrutura para evoluir depois sem prometer o que ainda não está pronto.',
+                text: 'Começa simples, com estrutura para evoluir conforme o negócio cresce.',
               ),
             ],
           );
@@ -1506,6 +1506,7 @@ class _SmallButton extends StatelessWidget {
 }
 
 void _emptyAction() {}
+
 
 
 
