@@ -35358,7 +35358,7 @@ A.Rd.prototype={
 $1(a){return B.Kh},
 $S:294}
 A.nl.prototype={
-F(a){return new A.ll(new A.jp(A.bW(A.c([B.Im,B.aI,B.Pb,B.dP,B.Pj,B.j3,B.R7,B.aI,B.R6,B.cC,new A.lA("Entrar no painel",new A.O7(a),B.Bc,null)],t.p),B.r,B.t,B.q),B.Aw,null),640,null)}}
+F(a){return new A.ll(new A.jp(A.bW(A.c([B.In,B.aI,B.Pb,B.dP,B.Pj,B.j3,B.R7,B.aI,B.R6,B.cC,new A.lA("Entrar no painel",new A.O7(a),B.Bc,null)],t.p),B.r,B.t,B.q),B.Aw,null),640,null)}}
 A.O7.prototype={
 $0(){return A.m1(this.a,"/professor",t.X)},
 $S:0}
@@ -35367,7 +35367,7 @@ F(a){var s=null,r=A.bV(18),q=A.d3(B.d6)
 return A.cm(s,A.bW(A.c([A.bi(this.c,s,s,B.jc),B.dR,A.bi(this.d,s,s,B.wh)],t.p),B.r,B.t,B.q),B.v,s,s,new A.bD(B.en,s,q,r,s,s,B.K),s,s,s,B.ey,s,s,1/0)}}
 A.nM.prototype={
 F(a){var s=null,r=t.p
-return new A.ll(A.bW(A.c([B.Io,B.aI,B.Pi,B.JZ,B.Pq,B.vR,A.wq(B.aK,A.c([new A.lA("Abrir painel do professor",new A.PF(a),B.Ba,s),new A.o0("Ver tela do aluno",new A.PG(a),B.Bf,s),new A.o0("Tela de acesso",new A.PH(a),B.Bb,s)],r),B.bB,14,14),B.K0,A.lL(new A.PI())],r),B.r,B.t,B.q),1160,s)}}
+return new A.ll(A.bW(A.c([B.Im,B.aI,B.Pi,B.JZ,B.Pq,B.vR,A.wq(B.aK,A.c([new A.lA("Abrir painel do professor",new A.PF(a),B.Ba,s),new A.o0("Ver tela do aluno",new A.PG(a),B.Bf,s),new A.o0("Tela de acesso",new A.PH(a),B.Bb,s)],r),B.bB,14,14),B.K0,A.lL(new A.PI())],r),B.r,B.t,B.q),1160,s)}}
 A.PF.prototype={
 $0(){return A.m1(this.a,"/professor",t.X)},
 $S:0}
@@ -35548,7 +35548,7 @@ A.yj.prototype={
 F(a){var s=null,r=this.d,q=r?B.az:B.a4,p=r?B.k:B.a_,o=A.bV(999)
 return new A.Fr(A.aid(),s,s,s,A.aqe(s,s,q,s,s,s,s,s,s,p,s,s,B.Aq,s,new A.cW(o,new A.bp(r?B.az:B.aU,1,B.G,-1)),s,s,s,s,s),s,s,!1,s,!0,s,A.bi(this.c,s,s,B.wb),s)}}
 A.oz.prototype={
-F(a){return new A.ll(A.bW(A.c([B.In,B.aI,B.Pr,B.j1,B.Pn,B.vR,A.lL(new A.Y_())],t.p),B.r,B.t,B.q),1160,null)}}
+F(a){return new A.ll(A.bW(A.c([B.Io,B.aI,B.Pr,B.j1,B.Pn,B.vR,A.lL(new A.Y_())],t.p),B.r,B.t,B.q),1160,null)}}
 A.Y_.prototype={
 $2(a,b){var s=null,r=t.p,q=new A.jp(A.bW(A.c([B.Pf,B.bu,new A.q7("Mariana Alves","Inferiores \u2022 3x por semana","86%",new A.XW(a),s),B.aI,new A.q7("Carlos Lima","Hipertrofia \u2022 Peito e tr\xedceps","62%",new A.XX(a),s),B.aI,new A.q7("Renata Costa","Condicionamento \u2022 Iniciante","44%",new A.XY(a),s)],r),B.r,B.t,B.q),B.ez,s),p=new A.jp(A.bW(A.c([B.Pp,B.bu,B.St,B.Ss,B.Sr,B.bu,new A.lA("Enviar para o aluno",new A.XZ(a),B.Bh,s)],r),B.r,B.t,B.q),B.ez,s)
 if(b.b<900)return A.bW(A.c([q,B.bu,p],r),B.O,B.t,B.q)
@@ -67494,9 +67494,9 @@ B.Ii=new A.vh(null,null,null,null,null,null,null,null,null,null,null)
 B.Ij=new A.vi(null,null,null,null,null,null,null,null,null,null,null,null)
 B.Ik=new A.vj(null,null,null,null,null,null,null,null,null,null,null,null,null)
 B.Il=new A.ms("App do aluno",null)
-B.Im=new A.ms("Acesso",null)
-B.In=new A.ms("Painel do professor",null)
-B.Io=new A.ms("MVP Core 01",null)
+B.Im=new A.ms("DEMONSTRA\xc7\xc3O",null)
+B.In=new A.ms("Acesso",null)
+B.Io=new A.ms("Painel do professor",null)
 B.Ip=new A.vk(null,null)
 B.Iq=new A.mt(0,"startEdgeUpdate")
 B.bs=new A.mt(1,"endEdgeUpdate")
