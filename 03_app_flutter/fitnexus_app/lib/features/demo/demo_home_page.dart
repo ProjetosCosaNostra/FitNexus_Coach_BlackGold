@@ -11,7 +11,7 @@ class DemoHomePage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const SectionLabel('MVP Core 01'),
+          const SectionLabel('DEMONSTRAÇÃO'),
           const SizedBox(height: 12),
           const Text(
             'Demonstração navegável do FitNexus.',
