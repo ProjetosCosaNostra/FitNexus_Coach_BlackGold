@@ -1513,7 +1513,7 @@ class _TopBarButton extends StatelessWidget {
   final bool filled;
   final String route;
 
-  const _TopBarButton({
+   const _TopBarButton({
     required this.text,
     required this.filled,
     required this.route,
