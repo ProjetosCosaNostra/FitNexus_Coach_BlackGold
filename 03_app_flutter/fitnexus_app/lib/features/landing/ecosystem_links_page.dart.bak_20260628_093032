@@ -1,0 +1,829 @@
+﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class EcosystemLinksPage extends StatelessWidget {
+  const EcosystemLinksPage({super.key});
+
+  static const String hubUrl =
+      'https://projetoscosanostra.github.io/FitNexus_Coach_BlackGold/#/links';
+
+  static const List<_EcoLink> _principal = <_EcoLink>[
+    _EcoLink(
+      title: 'Loja Oficial',
+      tag: 'Vitrine',
+      description: 'Achados selecionados, curadoria premium e produtos úteis.',
+      handle: 'La Famiglia Links',
+      url: 'https://projetoscosanostra.github.io/La_Famiglia_Links/',
+      icon: Icons.storefront_rounded,
+    ),
+    _EcoLink(
+      title: 'FitNexus Coach',
+      tag: 'SaaS Fitness',
+      description: 'Sistema fitness para personal, professor, aluno e academia.',
+      handle: 'Projeto BlackGold',
+      url: 'https://projetoscosanostra.github.io/FitNexus_Coach_BlackGold/',
+      icon: Icons.fitness_center_rounded,
+    ),
+  ];
+
+  static const List<_EcoLink> _redes = <_EcoLink>[
+    _EcoLink(
+      title: 'Instagram',
+      tag: 'Rede social',
+      description: 'Stories, criativos, novidades e vitrine visual.',
+      handle: '@cosanostra.blackgold',
+      url: 'https://www.instagram.com/cosanostra.blackgold/',
+      icon: Icons.camera_alt_rounded,
+    ),
+    _EcoLink(
+      title: 'Telegram',
+      tag: 'Canal',
+      description: 'Atualizações rápidas e achados.',
+      handle: '@BlackGoldSociety',
+      url: 'https://t.me/BlackGoldSociety',
+      icon: Icons.send_rounded,
+    ),
+    _EcoLink(
+      title: 'YouTube',
+      tag: 'Conteúdo',
+      description: 'Vídeos, bastidores e projetos.',
+      handle: '@cosanostra.blackgold',
+      url: 'https://www.youtube.com/@cosanostra.blackgold',
+      icon: Icons.smart_display_rounded,
+    ),
+    _EcoLink(
+      title: 'TikTok',
+      tag: 'Shorts',
+      description: 'Tendências, cortes e divulgação.',
+      handle: '@cosanostra.blackgold',
+      url: 'https://www.tiktok.com/@cosanostra.blackgold',
+      icon: Icons.music_note_rounded,
+    ),
+    _EcoLink(
+      title: 'Kwai',
+      tag: 'Vídeos',
+      description: 'Canal extra para vídeos curtos.',
+      handle: '@cosanostra.blackgold',
+      url: 'https://kwai-video.com/u/@cosanostra.blackgold/CwdSwBPA',
+      icon: Icons.video_library_rounded,
+    ),
+    _EcoLink(
+      title: 'Facebook',
+      tag: 'Rede social',
+      description: 'Página social da marca.',
+      handle: 'cosanostra.blackgold',
+      url: 'https://www.facebook.com/cosanostra.blackgold',
+      icon: Icons.facebook_rounded,
+    ),
+  ];
+
+  static const List<_EcoLink> _profissional = <_EcoLink>[
+    _EcoLink(
+      title: 'GitHub',
+      tag: 'Código',
+      description: 'Repositórios, páginas públicas e projetos digitais.',
+      handle: 'ProjetosCosaNostra',
+      url: 'https://github.com/ProjetosCosaNostra',
+      icon: Icons.code_rounded,
+    ),
+    _EcoLink(
+      title: 'LinkedIn',
+      tag: 'Profissional',
+      description: 'Perfil profissional, tecnologia, automação e projetos.',
+      handle: 'Felipe Rosa Gomes',
+      url: 'https://www.linkedin.com/in/felipe-projetoscosanostra/',
+      icon: Icons.business_center_rounded,
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _C.black,
+      body: SelectionArea(
+        child: Stack(
+          children: <Widget>[
+            const _Background(),
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(18, 22, 18, 28),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1320),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const _TopBar(),
+                        const SizedBox(height: 2),
+                        const _Hero(),
+                        const SizedBox(height: 32),
+                        const _SectionTitle('✦ Principal'),
+                        const SizedBox(height: 8),
+                        _LinksGrid(items: _principal, preferredColumns: 2),
+                        const SizedBox(height: 18),
+                        const _SectionTitle('✦ Redes oficiais'),
+                        const SizedBox(height: 10),
+                        _LinksGrid(items: _redes, preferredColumns: 3),
+                        const SizedBox(height: 18),
+                        const _SectionTitle('✦ Profissional'),
+                        const SizedBox(height: 10),
+                        _LinksGrid(items: _profissional, preferredColumns: 2),
+                        const SizedBox(height: 18),
+                        const _FinalCallout(),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TopBar extends StatelessWidget {
+  const _TopBar();
+
+  @override
+  Widget build(BuildContext context) {
+        return Row(
+      children: <Widget>[
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: _C.gold,
+            shape: BoxShape.circle,
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                color: _C.gold.withValues(alpha: 0.22),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.link_rounded, color: Colors.black, size: 28),
+        ),
+        const SizedBox(width: 14),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                'Ecossistema BlackGold',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 27,
+                  height: 1,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -1.2,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Todos os canais oficiais em um só lugar.',
+                style: TextStyle(
+                  color: _C.muted,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        _RouteButton(
+          text: 'Landing',
+          icon: Icons.home_rounded,
+          route: '/',
+        ),
+      ],
+    );
+  }
+}
+
+class _Hero extends StatelessWidget {
+  const _Hero();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final bool narrow = constraints.maxWidth < 860;
+
+              return Container(
+          padding: EdgeInsets.fromLTRB(
+            narrow ? 14 : 16,
+            narrow ? 6 : 8,
+            narrow ? 14 : 16,
+            narrow ? 6 : 8,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[
+                _C.black.withValues(alpha: 0.72),
+                _C.black.withValues(alpha: 0.46),
+              ],
+            ),
+            border: Border.all(color: _C.gold.withValues(alpha: 0.16), width: 1.0),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                color: _C.gold.withValues(alpha: 0.08),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: narrow
+              ? const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    _HeroCopy(),
+                    SizedBox(height: 10),
+                    _HeroImage(),
+                  ],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Expanded(flex: 8, child: _HeroCopy()),
+                    SizedBox(width: 16),
+                    Expanded(flex: 13, child: _HeroImage()),
+                  ],
+                ),
+        );
+      },
+    );
+  }
+}
+
+class _HeroCopy extends StatelessWidget {
+  const _HeroCopy();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        const _Badge('CANAIS OFICIAIS'),
+        const SizedBox(height: 10),
+        RichText(
+          text: const TextSpan(
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 34,
+              height: 0.98,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1.5,
+            ),
+            children: <TextSpan>[
+              TextSpan(text: 'Um hub único para loja,\nprojetos, conteúdo e\n'),
+              TextSpan(
+                text: 'presença digital.',
+                style: TextStyle(color: _C.gold),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        const Text(
+          'A pessoa chega aqui e escolhe para onde quer ir: loja, redes sociais, projeto fitness ou perfil profissional.',
+          style: TextStyle(
+            color: _C.muted,
+            fontSize: 15.5,
+            height: 1.45,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: <Widget>[
+            _HeroButton(
+              text: 'Copiar link',
+              icon: Icons.copy_rounded,
+              filled: true,
+              onPressed: () => _copyHub(context),
+            ),
+            _HeroButton(
+              text: 'Instagram',
+              icon: Icons.camera_alt_rounded,
+              onPressed: () => _openUrl(EcosystemLinksPage._redes.first.url),
+            ),
+            _HeroButton(
+              text: 'Loja oficial',
+              icon: Icons.storefront_rounded,
+              onPressed: () => _openUrl(EcosystemLinksPage._principal.first.url),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  static Future<void> _copyHub(BuildContext context) async {
+    await Clipboard.setData(
+      const ClipboardData(text: EcosystemLinksPage.hubUrl),
+    );
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Link do ecossistema copiado.'),
+        backgroundColor: _C.card,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+    );
+  }
+}
+
+class _HeroImage extends StatelessWidget {
+  const _HeroImage();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final bool narrow = constraints.maxWidth < 720;
+        final double maxHeight = narrow ? 360 : 500;
+
+        return Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: narrow ? 420 : 500, maxHeight: maxHeight),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Image.asset(
+                'assets/images/ecosistema_blackgold.png',
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
+                alignment: Alignment.center,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LinksGrid extends StatelessWidget {
+  const _LinksGrid({
+    required this.items,
+    required this.preferredColumns,
+  });
+
+  final List<_EcoLink> items;
+  final int preferredColumns;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double width = constraints.maxWidth;
+        final int columns = width < 720
+            ? 1
+            : width < 1040
+                ? 2
+                : preferredColumns;
+        final double mainAxisExtent = width < 720 ? 138 : 128;
+
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: columns,
+          crossAxisSpacing: 14,
+          mainAxisSpacing: 14,
+          mainAxisExtent: mainAxisExtent,
+          children: items.map((_EcoLink item) => _LinkCard(link: item)).toList(),
+        );
+      },
+    );
+  }
+}
+
+class _LinkCard extends StatelessWidget {
+  const _LinkCard({required this.link});
+
+  final _EcoLink link;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => _openUrl(link.url),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: _C.black.withValues(alpha: 0.45),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _C.gold.withValues(alpha: 0.28), width: 1.2),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              SizedBox(
+                width: 52,
+                height: 52,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: <Color>[
+                        _C.gold.withValues(alpha: 0.98),
+                        _C.goldDark.withValues(alpha: 0.78),
+                      ],
+                    ),
+                  ),
+                  child: Icon(link.icon, color: Colors.black, size: 28),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Text(
+                            link.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _TinyTag(link.tag),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      link.description,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: _C.muted,
+                        fontSize: 13.0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      link.handle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: _C.gold,
+                        fontSize: 12.0,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 38,
+                height: 38,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _C.gold.withValues(alpha: 0.38)),
+                  ),
+                  child: const Icon(
+                    Icons.north_east_rounded,
+                    color: _C.gold,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FinalCallout extends StatelessWidget {
+  const _FinalCallout();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _C.card.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: _C.gold.withValues(alpha: 0.35)),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: _C.gold.withValues(alpha: 0.08),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              color: _C.gold.withValues(alpha: 0.12),
+              border: Border.all(color: _C.gold.withValues(alpha: 0.36)),
+            ),
+            child: const Icon(Icons.link_rounded, color: _C.gold, size: 33),
+          ),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  'Divulgue tudo com um único link.',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'Use este hub em bio, QR Code, criativos, vídeos, perfis sociais e páginas dos projetos.',
+                  style: TextStyle(
+                    color: _C.muted,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          _HeroButton(
+            text: 'Copiar link do ecossistema',
+            icon: Icons.copy_rounded,
+            filled: true,
+            onPressed: () => _HeroCopy._copyHub(context),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 22,
+        height: 1,
+        fontWeight: FontWeight.w900,
+        letterSpacing: -0.6,
+      ),
+    );
+  }
+}
+
+class _RouteButton extends StatelessWidget {
+  const _RouteButton({
+    required this.text,
+    required this.icon,
+    required this.route,
+  });
+
+  final String text;
+  final IconData icon;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      onPressed: () {
+        if (ModalRoute.of(context)?.settings.name != route) {
+          Navigator.of(context).pushNamed(route);
+        }
+      },
+      icon: Icon(icon, size: 17),
+      label: Text(text),
+      style: TextButton.styleFrom(
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(999),
+          side: BorderSide(color: _C.gold.withValues(alpha: 0.6)),
+        ),
+        textStyle: const TextStyle(fontWeight: FontWeight.w900),
+      ),
+    );
+  }
+}
+
+class _HeroButton extends StatelessWidget {
+  const _HeroButton({
+    required this.text,
+    required this.icon,
+    required this.onPressed,
+    this.filled = false,
+  });
+
+  final String text;
+  final IconData icon;
+  final VoidCallback onPressed;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 17),
+      label: Text(text),
+      style: TextButton.styleFrom(
+        backgroundColor: filled ? _C.gold : Colors.transparent,
+        foregroundColor: filled ? Colors.black : Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(999),
+          side: BorderSide(
+            color: filled ? _C.gold : _C.gold.withValues(alpha: 0.7),
+          ),
+        ),
+        textStyle: const TextStyle(fontWeight: FontWeight.w900),
+      ),
+    );
+  }
+}
+
+class _Badge extends StatelessWidget {
+  const _Badge(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: _C.gold.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: _C.gold,
+          fontSize: 12,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+}
+
+class _TinyTag extends StatelessWidget {
+  const _TinyTag(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: _C.gold.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: _C.gold,
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _Background extends StatelessWidget {
+  const _Background();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: <Widget>[
+        const Positioned.fill(child: ColoredBox(color: _C.black)),
+        Positioned(
+          top: -160,
+          right: -180,
+          child: _BlurCircle(size: 560, opacity: 0.13),
+        ),
+        Positioned(
+          top: 140,
+          left: -220,
+          child: _BlurCircle(size: 520, opacity: 0.12),
+        ),
+        Positioned(
+          bottom: -210,
+          right: 60,
+          child: _BlurCircle(size: 520, opacity: 0.08),
+        ),
+      ],
+    );
+  }
+}
+
+class _BlurCircle extends StatelessWidget {
+  const _BlurCircle({
+    required this.size,
+    required this.opacity,
+  });
+
+  final double size;
+  final double opacity;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: <Color>[
+            _C.gold.withValues(alpha: opacity),
+            Colors.transparent,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EcoLink {
+  const _EcoLink({
+    required this.title,
+    required this.tag,
+    required this.description,
+    required this.handle,
+    required this.url,
+    required this.icon,
+  });
+
+  final String title;
+  final String tag;
+  final String description;
+  final String handle;
+  final String url;
+  final IconData icon;
+}
+
+class _C {
+  static const Color black = Color(0xFF050505);
+  static const Color card = Color(0xFF121212);
+  static const Color gold = Color(0xFFFFC83D);
+  static const Color goldDark = Color(0xFF8E6A13);
+  static const Color muted = Color(0xFFB8B1A5);
+}
+
+Future<void> _openUrl(String url) async {
+  final Uri uri = Uri.parse(url);
+  final bool opened = await launchUrl(
+    uri,
+    mode: LaunchMode.externalApplication,
+    webOnlyWindowName: '_blank',
+  );
+
+  if (!opened) {
+    throw Exception('Não foi possível abrir o link.');
+  }
+}
+
