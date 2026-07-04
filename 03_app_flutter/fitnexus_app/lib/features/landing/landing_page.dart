@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -321,7 +321,7 @@ class _TopBar extends StatelessWidget {
           const SizedBox(width: 18),
           _TopBarButton(text: 'Landing', filled: false, route: '/'),
           const SizedBox(width: 8),
-          _TopBarButton(text: 'Demonstração', filled: false, route: '/demo'),
+          _TopBarButton(text: 'Demonstração', filled: false, route: '/professor'),
           const SizedBox(width: 8),
           _TopBarButton(text: 'Ecossistema', filled: true, route: '/links'),
         ],
@@ -420,15 +420,15 @@ class _HeroCopy extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        const Wrap(
+        Wrap(
           spacing: 14,
           runSpacing: 14,
           children: <Widget>[
             _HeroButton(
-              text: 'Ver demonstração',
+              text: 'Ver painel do professor',
               icon: Icons.rocket_launch,
               filled: true,
-              onTap: _emptyAction,
+              onTap: () => Navigator.of(context).pushNamed('/professor'),
             ),
             _HeroButton(
               text: 'Como funciona',
@@ -758,7 +758,7 @@ class _ProductShowcase extends StatelessWidget {
         final bool narrow = constraints.maxWidth < 980;
 
         if (narrow) {
-          return const Column(
+          return Column(
             children: <Widget>[
               _ProcessPanel(),
               SizedBox(height: 22),
@@ -1314,24 +1314,24 @@ class _FounderOffer extends StatelessWidget {
             ],
           );
 
-          const Widget button = _HeroButton(
-            text: 'Ver demonstração',
+          final Widget button = _HeroButton(
+            text: 'Ver painel do professor',
             icon: Icons.arrow_forward,
             filled: true,
-            onTap: _emptyAction,
+            onTap: () => Navigator.of(context).pushNamed('/professor'),
           );
 
           if (narrow) {
-            return const Column(
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 _FounderOfferCopy(),
                 SizedBox(height: 18),
                 _HeroButton(
-                  text: 'Ver demonstração',
+                  text: 'Ver painel do professor',
                   icon: Icons.arrow_forward,
                   filled: true,
-                  onTap: _emptyAction,
+                  onTap: () => Navigator.of(context).pushNamed('/professor'),
                 ),
               ],
             );
@@ -1542,6 +1542,9 @@ class _TopBarButton extends StatelessWidget {
 }
 
 void _emptyAction() {}
+
+
+
 
 
 

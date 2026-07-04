@@ -92,10 +92,10 @@ class ProfessorDashboardPage extends StatelessWidget {
           _BackgroundGlow(),
           SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 44),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 110),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1510),
+                  constraints: const BoxConstraints(maxWidth: 1740),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
@@ -470,8 +470,10 @@ class _DashboardBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final bool compact = constraints.maxWidth < 1180;
-        if (compact) {
+        final bool mobile = constraints.maxWidth < 900;
+        final bool canUseSideRail = constraints.maxWidth >= 1700;
+
+        if (mobile) {
           return const Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
@@ -484,13 +486,24 @@ class _DashboardBody extends StatelessWidget {
           );
         }
 
+        if (!canUseSideRail) {
+          return const Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              _StudentsPanel(),
+              SizedBox(height: 14),
+              _DashboardInsightsRow(),
+            ],
+          );
+        }
+
         return const Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Expanded(child: _StudentsPanel()),
-            SizedBox(width: 20),
+            SizedBox(width: 22),
             SizedBox(
-              width: 364,
+              width: 430,
               child: Column(
                 children: <Widget>[
                   _AgendaPanel(),
@@ -499,6 +512,39 @@ class _DashboardBody extends StatelessWidget {
                 ],
               ),
             ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DashboardInsightsRow extends StatelessWidget {
+  const _DashboardInsightsRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final bool twoColumns = constraints.maxWidth >= 1120;
+
+        if (!twoColumns) {
+          return const Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              _AgendaPanel(),
+              SizedBox(height: 14),
+              _AnalyticsCards(compact: true),
+            ],
+          );
+        }
+
+        return const Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(flex: 5, child: _AgendaPanel()),
+            SizedBox(width: 14),
+            Expanded(flex: 6, child: _AnalyticsCards(compact: false)),
           ],
         );
       },
@@ -527,7 +573,7 @@ class _StudentsPanel extends StatelessWidget {
                   child: ConstrainedBox(
                     constraints: BoxConstraints(minWidth: constraints.maxWidth),
                     child: SizedBox(
-                      width: math.max(constraints.maxWidth, 1080),
+                      width: math.max(constraints.maxWidth, 1160),
                       child: Column(
                         children: <Widget>[
                           const _StudentsTableHeader(),
@@ -619,13 +665,13 @@ class _StudentsTableHeader extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(18, 12, 18, 8),
       child: Row(
         children: <Widget>[
-          SizedBox(width: 210, child: _HeaderText('ALUNO')),
-          SizedBox(width: 130, child: _HeaderText('OBJETIVO')),
-          SizedBox(width: 160, child: _HeaderText('ÚLTIMO TREINO')),
-          SizedBox(width: 150, child: _HeaderText('ADERÊNCIA')),
-          SizedBox(width: 135, child: _HeaderText('PRÓXIMO')),
-          SizedBox(width: 150, child: _HeaderText('STATUS')),
-          SizedBox(width: 92, child: _HeaderText('AÇÕES')),
+          SizedBox(width: 220, child: _HeaderText('ALUNO')),
+          SizedBox(width: 140, child: _HeaderText('OBJETIVO')),
+          SizedBox(width: 170, child: _HeaderText('ÚLTIMO TREINO')),
+          SizedBox(width: 155, child: _HeaderText('ADERÊNCIA')),
+          SizedBox(width: 140, child: _HeaderText('PRÓXIMO')),
+          SizedBox(width: 160, child: _HeaderText('STATUS')),
+          SizedBox(width: 108, child: _HeaderText('AÇÕES')),
         ],
       ),
     );
@@ -646,7 +692,7 @@ class _StudentTableRow extends StatelessWidget {
       child: Row(
         children: <Widget>[
           SizedBox(
-            width: 210,
+            width: 220,
             child: Row(
               children: <Widget>[
                 _Avatar(initials: student.initials),
@@ -665,13 +711,13 @@ class _StudentTableRow extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(width: 130, child: _BodyText(student.objective)),
-          SizedBox(width: 160, child: _TwoLineText(student.lastWorkout, student.lastDate)),
-          SizedBox(width: 150, child: _ProgressCell(value: student.adherence)),
-          SizedBox(width: 135, child: _BodyText(student.next)),
-          SizedBox(width: 150, child: Align(alignment: Alignment.centerLeft, child: _StatusBadge(label: student.status, tone: student.tone))),
+          SizedBox(width: 140, child: _BodyText(student.objective)),
+          SizedBox(width: 170, child: _TwoLineText(student.lastWorkout, student.lastDate)),
+          SizedBox(width: 155, child: _ProgressCell(value: student.adherence)),
+          SizedBox(width: 140, child: _BodyText(student.next)),
+          SizedBox(width: 160, child: Align(alignment: Alignment.centerLeft, child: _StatusBadge(label: student.status, tone: student.tone))),
           SizedBox(
-            width: 92,
+            width: 108,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: const <Widget>[
@@ -780,19 +826,19 @@ class _AnalyticsCards extends StatelessWidget {
     if (compact) {
       return const Column(
         children: <Widget>[
-          SizedBox(height: 236, child: _AdherenceCard()),
-          SizedBox(height: 12),
-          SizedBox(height: 236, child: _EvolutionCard()),
+          SizedBox(height: 260, child: _AdherenceCard()),
+          SizedBox(height: 14),
+          SizedBox(height: 260, child: _EvolutionCard()),
         ],
       );
     }
 
     return const SizedBox(
-      height: 260,
+      height: 300,
       child: Row(
         children: <Widget>[
           Expanded(child: _AdherenceCard()),
-          SizedBox(width: 12),
+          SizedBox(width: 14),
           Expanded(child: _EvolutionCard()),
         ],
       ),
@@ -806,7 +852,7 @@ class _AdherenceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _PremiumPanel(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -814,23 +860,23 @@ class _AdherenceCard extends StatelessWidget {
             'ADERÊNCIA DA SEMANA',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: _P.gold, fontSize: 12, height: 1.12, fontWeight: FontWeight.w900, letterSpacing: 0.45),
+            style: TextStyle(color: _P.gold, fontSize: 12.5, height: 1.12, fontWeight: FontWeight.w900, letterSpacing: 0.45),
           ),
           Expanded(
             child: Center(
               child: SizedBox(
-                width: 104,
-                height: 104,
+                width: 122,
+                height: 122,
                 child: Stack(
                   alignment: Alignment.center,
                   children: const <Widget>[
-                    CustomPaint(size: Size(104, 104), painter: _RingPainter(progress: 0.74)),
+                    CustomPaint(size: Size(122, 122), painter: _RingPainter(progress: 0.74)),
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        Text('74%', style: TextStyle(color: _P.text, fontSize: 27, height: 1, fontWeight: FontWeight.w900)),
+                        Text('74%', style: TextStyle(color: _P.text, fontSize: 31, height: 1, fontWeight: FontWeight.w900)),
                         SizedBox(height: 3),
-                        Text('Média geral', style: TextStyle(color: _P.muted, fontSize: 10.5, fontWeight: FontWeight.w700)),
+                        Text('Média geral', style: TextStyle(color: _P.muted, fontSize: 11, fontWeight: FontWeight.w700)),
                       ],
                     ),
                   ],
@@ -842,7 +888,7 @@ class _AdherenceCard extends StatelessWidget {
             '↗ 6%  vs. semana passada',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: _P.green, fontSize: 11.5, fontWeight: FontWeight.w800),
+            style: TextStyle(color: _P.green, fontSize: 12, fontWeight: FontWeight.w800),
           ),
         ],
       ),
@@ -856,7 +902,7 @@ class _EvolutionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _PremiumPanel(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const <Widget>[
@@ -864,18 +910,18 @@ class _EvolutionCard extends StatelessWidget {
             'EVOLUÇÃO MÉDIA',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: _P.gold, fontSize: 12, height: 1.12, fontWeight: FontWeight.w900, letterSpacing: 0.45),
+            style: TextStyle(color: _P.gold, fontSize: 12.5, height: 1.12, fontWeight: FontWeight.w900, letterSpacing: 0.45),
           ),
           Expanded(
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Text('23%', style: TextStyle(color: _P.text, fontSize: 29, height: 1, fontWeight: FontWeight.w900)),
+                  Text('23%', style: TextStyle(color: _P.text, fontSize: 32, height: 1, fontWeight: FontWeight.w900)),
                   SizedBox(height: 5),
-                  Text('Carga e presença', style: TextStyle(color: _P.muted, fontSize: 10.5, fontWeight: FontWeight.w700)),
+                  Text('Carga e presença', style: TextStyle(color: _P.muted, fontSize: 11, fontWeight: FontWeight.w700)),
                   SizedBox(height: 16),
-                  SizedBox(height: 50, child: CustomPaint(painter: _LineChartPainter())),
+                  SizedBox(height: 70, child: CustomPaint(painter: _LineChartPainter())),
                 ],
               ),
             ),
@@ -884,7 +930,7 @@ class _EvolutionCard extends StatelessWidget {
             '↗ 4%  vs. mês passado',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: _P.green, fontSize: 11.5, fontWeight: FontWeight.w800),
+            style: TextStyle(color: _P.green, fontSize: 12, fontWeight: FontWeight.w800),
           ),
         ],
       ),
@@ -1453,3 +1499,4 @@ class _ScheduleData {
 }
 
 enum _StatusTone { green, gold, blue, purple }
+

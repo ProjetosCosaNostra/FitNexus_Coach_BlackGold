@@ -26,6 +26,7 @@ class FitNexusApp extends StatelessWidget {
         ),
       ),
       routes: <String, WidgetBuilder>{
+        '/landing': (_) => const LandingPage(),
         '/': (_) => const LandingPage(),
         '/links': (_) => const EcosystemLinksPage(),
         '/demo': (_) => const DemoHomePage(),
@@ -36,3 +37,4 @@ class FitNexusApp extends StatelessWidget {
     );
   }
 }
+

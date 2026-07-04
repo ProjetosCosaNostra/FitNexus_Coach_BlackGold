@@ -26,3 +26,7 @@ local.properties
 # Imagens temporarias locais
 fitnexus_social_preview_1280x640_under_1mb.jpg
 imagem.png
+
+# Backups locais - não publicar
+*.bak*
+*.zip
