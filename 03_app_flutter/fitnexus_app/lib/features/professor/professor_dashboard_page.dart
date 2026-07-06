@@ -81,12 +81,20 @@ class ProfessorDashboardPage extends StatefulWidget {
 
 class _ProfessorDashboardPageState extends State<ProfessorDashboardPage> {
   late final List<_StudentData> _students = List<_StudentData>.of(ProfessorDashboardPage._initialStudents);
+  final List<_TrainingData> _trainings = <_TrainingData>[];
 
   List<_StatData> get _stats {
     final int activeStudents = 18 + (_students.length - ProfessorDashboardPage._initialStudents.length);
+    final int createdTrainings = 42 + _trainings.length;
+    final String trainingSubtitle = _trainings.isEmpty
+        ? '12 atualizados'
+        : _trainings.length == 1
+            ? '1 novo local'
+            : '${_trainings.length} novos locais';
+
     return <_StatData>[
       _StatData(Icons.groups_rounded, activeStudents.toString(), 'Alunos ativos', '+4 este mês'),
-      const _StatData(Icons.assignment_turned_in_rounded, '42', 'Treinos criados', '12 atualizados'),
+      _StatData(Icons.assignment_turned_in_rounded, createdTrainings.toString(), 'Treinos criados', trainingSubtitle),
       const _StatData(Icons.check_circle_rounded, '126', 'Execuções feitas', 'semana atual'),
       const _StatData(Icons.trending_up_rounded, '23%', 'Evolução média', 'carga e presença'),
       const _StatData(Icons.local_fire_department_rounded, '74%', 'Constância semanal', 'aderência média'),
@@ -115,6 +123,50 @@ class _ProfessorDashboardPageState extends State<ProfessorDashboardPage> {
     );
   }
 
+  Future<void> _openCreateTrainingDialog() async {
+    if (_students.isEmpty) {
+      _showNextStepMessage('Cadastre um aluno antes de criar treino');
+      return;
+    }
+
+    final _TrainingData? training = await showDialog<_TrainingData>(
+      context: context,
+      barrierColor: _P.black.withValues(alpha: 0.72),
+      builder: (BuildContext context) => _CreateTrainingDialog(students: _students),
+    );
+
+    if (training == null || !mounted) return;
+
+    setState(() {
+      _trainings.insert(0, training);
+
+      final int studentIndex = _students.indexWhere((student) => student.name == training.studentName);
+      if (studentIndex != -1) {
+        _students[studentIndex] = _students[studentIndex].copyWith(
+          lastWorkout: training.name,
+          lastDate: _todayLabel(),
+          status: 'Treino criado',
+          tone: _StatusTone.green,
+        );
+      }
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: _P.card,
+        content: Text('Treino "${training.name}" criado para ${training.studentName} com ${training.exerciseCount} exercícios.'),
+      ),
+    );
+  }
+
+  String _todayLabel() {
+    final DateTime now = DateTime.now();
+    final String day = now.day.toString().padLeft(2, '0');
+    final String month = now.month.toString().padLeft(2, '0');
+    return '$day/$month/${now.year}';
+  }
+
   void _showNextStepMessage(String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -131,7 +183,7 @@ class _ProfessorDashboardPageState extends State<ProfessorDashboardPage> {
       students: _students,
       stats: _stats,
       onNewStudent: _openNewStudentDialog,
-      onCreateTraining: () => _showNextStepMessage('Criar treino'),
+      onCreateTraining: _openCreateTrainingDialog,
       onReport: () => _showNextStepMessage('Relatório'),
       child: Scaffold(
         backgroundColor: _P.black,
@@ -1225,6 +1277,274 @@ class _NewStudentDialogState extends State<_NewStudentDialog> {
   }
 }
 
+class _CreateTrainingDialog extends StatefulWidget {
+  const _CreateTrainingDialog({required this.students});
+
+  final List<_StudentData> students;
+
+  @override
+  State<_CreateTrainingDialog> createState() => _CreateTrainingDialogState();
+}
+
+class _CreateTrainingDialogState extends State<_CreateTrainingDialog> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _trainingNameController = TextEditingController(text: 'Treino A - Full Body');
+  final TextEditingController _nextSessionController = TextEditingController(text: 'Próxima sessão');
+  final TextEditingController _notesController = TextEditingController(text: 'Carga inicial conservadora e execução limpa.');
+  final List<TextEditingController> _exerciseControllers = <TextEditingController>[
+    TextEditingController(text: 'Agachamento livre - 3x10'),
+    TextEditingController(text: 'Supino reto - 3x10'),
+    TextEditingController(text: 'Remada baixa - 3x12'),
+  ];
+
+  late String _selectedStudentName = widget.students.first.name;
+
+  @override
+  void dispose() {
+    _trainingNameController.dispose();
+    _nextSessionController.dispose();
+    _notesController.dispose();
+    for (final TextEditingController controller in _exerciseControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _addExercise() {
+    setState(() {
+      _exerciseControllers.add(TextEditingController(text: 'Novo exercício - 3x10'));
+    });
+  }
+
+  void _removeExercise(int index) {
+    if (_exerciseControllers.length <= 1) return;
+    final TextEditingController controller = _exerciseControllers.removeAt(index);
+    controller.dispose();
+    setState(() {});
+  }
+
+  void _save() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final List<String> exercises = _exerciseControllers
+        .map((TextEditingController controller) => _clean(controller.text))
+        .where((String exercise) => exercise.isNotEmpty)
+        .toList();
+
+    if (exercises.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: _P.card,
+          content: Text('Adicione pelo menos um exercício.'),
+        ),
+      );
+      return;
+    }
+
+    Navigator.of(context).pop(
+      _TrainingData(
+        studentName: _selectedStudentName,
+        name: _clean(_trainingNameController.text),
+        nextSession: _clean(_nextSessionController.text),
+        notes: _clean(_notesController.text),
+        exercises: exercises,
+        createdAt: _todayLabel(),
+      ),
+    );
+  }
+
+  String _clean(String value) => value.trim().replaceAll(RegExp(r'\s+'), ' ');
+
+  String _todayLabel() {
+    final DateTime now = DateTime.now();
+    final String day = now.day.toString().padLeft(2, '0');
+    final String month = now.month.toString().padLeft(2, '0');
+    return '$day/$month/${now.year}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool compact = MediaQuery.sizeOf(context).width < 720;
+
+    return Dialog(
+      insetPadding: EdgeInsets.symmetric(horizontal: compact ? 14 : 28, vertical: 24),
+      backgroundColor: Colors.transparent,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 780),
+        child: _PremiumPanel(
+          padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: _P.goldGradient,
+                          borderRadius: BorderRadius.circular(13),
+                          boxShadow: const <BoxShadow>[BoxShadow(color: _P.goldGlow, blurRadius: 20, offset: Offset(0, 8))],
+                        ),
+                        child: const Icon(Icons.add_task_rounded, color: _P.black, size: 23),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              'Criar treino',
+                              style: TextStyle(color: _P.text, fontSize: 24, fontWeight: FontWeight.w900, height: 1),
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              'Monte uma prescrição simples para o aluno selecionado.',
+                              style: TextStyle(color: _P.muted, fontSize: 13, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Fechar',
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close_rounded, color: _P.gold),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedStudentName,
+                    dropdownColor: _P.card,
+                    iconEnabledColor: _P.gold,
+                    style: const TextStyle(color: _P.text, fontSize: 14, fontWeight: FontWeight.w800),
+                    decoration: _dialogInputDecoration('Aluno', Icons.person_outline_rounded),
+                    items: widget.students
+                        .map(
+                          (student) => DropdownMenuItem<String>(
+                            value: student.name,
+                            child: Text(student.name, overflow: TextOverflow.ellipsis),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (String? value) {
+                      if (value == null) return;
+                      setState(() => _selectedStudentName = value);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  compact
+                      ? Column(
+                          children: <Widget>[
+                            _DialogField(controller: _trainingNameController, label: 'Nome do treino', icon: Icons.fitness_center_rounded, requiredField: true),
+                            const SizedBox(height: 12),
+                            _DialogField(controller: _nextSessionController, label: 'Próxima sessão', icon: Icons.schedule_rounded, requiredField: true),
+                          ],
+                        )
+                      : Row(
+                          children: <Widget>[
+                            Expanded(child: _DialogField(controller: _trainingNameController, label: 'Nome do treino', icon: Icons.fitness_center_rounded, requiredField: true)),
+                            const SizedBox(width: 12),
+                            Expanded(child: _DialogField(controller: _nextSessionController, label: 'Próxima sessão', icon: Icons.schedule_rounded, requiredField: true)),
+                          ],
+                        ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: <Widget>[
+                      const Expanded(
+                        child: Text(
+                          'Exercícios',
+                          style: TextStyle(color: _P.gold, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 0.4),
+                        ),
+                      ),
+                      _DialogActionButton(label: 'Adicionar', icon: Icons.add_rounded, onTap: _addExercise),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  for (int i = 0; i < _exerciseControllers.length; i++) ...<Widget>[
+                    _ExerciseField(
+                      controller: _exerciseControllers[i],
+                      index: i,
+                      canRemove: _exerciseControllers.length > 1,
+                      onRemove: () => _removeExercise(i),
+                    ),
+                    if (i < _exerciseControllers.length - 1) const SizedBox(height: 10),
+                  ],
+                  const SizedBox(height: 12),
+                  _DialogField(controller: _notesController, label: 'Observação do treino', icon: Icons.notes_rounded),
+                  const SizedBox(height: 22),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    alignment: WrapAlignment.end,
+                    children: <Widget>[
+                      _DialogActionButton(label: 'Cancelar', icon: Icons.close_rounded, onTap: () => Navigator.of(context).pop()),
+                      _DialogActionButton(label: 'Salvar treino', icon: Icons.check_rounded, filled: true, onTap: _save),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExerciseField extends StatelessWidget {
+  const _ExerciseField({required this.controller, required this.index, required this.canRemove, required this.onRemove});
+
+  final TextEditingController controller;
+  final int index;
+  final bool canRemove;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      style: const TextStyle(color: _P.text, fontSize: 14, fontWeight: FontWeight.w800),
+      cursorColor: _P.gold,
+      validator: (String? value) {
+        if (value == null || value.trim().isEmpty) return 'Informe o exercício';
+        return null;
+      },
+      decoration: _dialogInputDecoration('Exercício ${index + 1}', Icons.drag_indicator_rounded).copyWith(
+        suffixIcon: canRemove
+            ? IconButton(
+                tooltip: 'Remover exercício',
+                onPressed: onRemove,
+                icon: const Icon(Icons.delete_outline_rounded, color: _P.gold, size: 19),
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+InputDecoration _dialogInputDecoration(String label, IconData icon, {String? hint}) {
+  return InputDecoration(
+    labelText: label,
+    hintText: hint,
+    labelStyle: const TextStyle(color: _P.gold, fontWeight: FontWeight.w800),
+    hintStyle: const TextStyle(color: _P.muted, fontWeight: FontWeight.w600),
+    prefixIcon: Icon(icon, color: _P.gold, size: 19),
+    filled: true,
+    fillColor: _P.blackAlpha25,
+    errorStyle: const TextStyle(color: _P.gold, fontWeight: FontWeight.w800),
+    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: _P.borderSoft)),
+    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: _P.gold)),
+    errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: _P.gold2)),
+    focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: _P.gold)),
+  );
+}
+
 class _DialogField extends StatelessWidget {
   const _DialogField({
     required this.controller,
@@ -1864,6 +2184,26 @@ class _StatData {
   final String subtitle;
 }
 
+class _TrainingData {
+  const _TrainingData({
+    required this.studentName,
+    required this.name,
+    required this.nextSession,
+    required this.notes,
+    required this.exercises,
+    required this.createdAt,
+  });
+
+  final String studentName;
+  final String name;
+  final String nextSession;
+  final String notes;
+  final List<String> exercises;
+  final String createdAt;
+
+  int get exerciseCount => exercises.length;
+}
+
 class _StudentData {
   const _StudentData({
     required this.name,
@@ -1888,6 +2228,32 @@ class _StudentData {
   final String next;
   final String status;
   final _StatusTone tone;
+
+  _StudentData copyWith({
+    String? name,
+    String? initials,
+    String? objective,
+    String? level,
+    String? lastWorkout,
+    String? lastDate,
+    int? adherence,
+    String? next,
+    String? status,
+    _StatusTone? tone,
+  }) {
+    return _StudentData(
+      name: name ?? this.name,
+      initials: initials ?? this.initials,
+      objective: objective ?? this.objective,
+      level: level ?? this.level,
+      lastWorkout: lastWorkout ?? this.lastWorkout,
+      lastDate: lastDate ?? this.lastDate,
+      adherence: adherence ?? this.adherence,
+      next: next ?? this.next,
+      status: status ?? this.status,
+      tone: tone ?? this.tone,
+    );
+  }
 }
 
 class _ScheduleData {
