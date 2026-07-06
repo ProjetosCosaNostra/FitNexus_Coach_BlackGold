@@ -2,18 +2,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-class ProfessorDashboardPage extends StatelessWidget {
+class ProfessorDashboardPage extends StatefulWidget {
   const ProfessorDashboardPage({super.key});
 
-  static const List<_StatData> _stats = <_StatData>[
-    _StatData(Icons.groups_rounded, '18', 'Alunos ativos', '+4 este mês'),
-    _StatData(Icons.assignment_turned_in_rounded, '42', 'Treinos criados', '12 atualizados'),
-    _StatData(Icons.check_circle_rounded, '126', 'Execuções feitas', 'semana atual'),
-    _StatData(Icons.trending_up_rounded, '23%', 'Evolução média', 'carga e presença'),
-    _StatData(Icons.local_fire_department_rounded, '74%', 'Constância semanal', 'aderência média'),
-  ];
+  @override
+  State<ProfessorDashboardPage> createState() => _ProfessorDashboardPageState();
 
-  static const List<_StudentData> _students = <_StudentData>[
+  static const List<_StudentData> _initialStudents = <_StudentData>[
     _StudentData(
       name: 'Mariana Costa',
       initials: 'MC',
@@ -82,12 +77,65 @@ class ProfessorDashboardPage extends StatelessWidget {
     _ScheduleData('18:00', 'Mariana Costa', 'Inferiores A'),
     _ScheduleData('19:00', 'Lucas Almeida', 'Peito e tríceps'),
   ];
+}
+
+class _ProfessorDashboardPageState extends State<ProfessorDashboardPage> {
+  late final List<_StudentData> _students = List<_StudentData>.of(ProfessorDashboardPage._initialStudents);
+
+  List<_StatData> get _stats {
+    final int activeStudents = 18 + (_students.length - ProfessorDashboardPage._initialStudents.length);
+    return <_StatData>[
+      _StatData(Icons.groups_rounded, activeStudents.toString(), 'Alunos ativos', '+4 este mês'),
+      const _StatData(Icons.assignment_turned_in_rounded, '42', 'Treinos criados', '12 atualizados'),
+      const _StatData(Icons.check_circle_rounded, '126', 'Execuções feitas', 'semana atual'),
+      const _StatData(Icons.trending_up_rounded, '23%', 'Evolução média', 'carga e presença'),
+      const _StatData(Icons.local_fire_department_rounded, '74%', 'Constância semanal', 'aderência média'),
+    ];
+  }
+
+  Future<void> _openNewStudentDialog() async {
+    final _StudentData? student = await showDialog<_StudentData>(
+      context: context,
+      barrierColor: _P.black.withValues(alpha: 0.72),
+      builder: (BuildContext context) => const _NewStudentDialog(),
+    );
+
+    if (student == null || !mounted) return;
+
+    setState(() {
+      _students.insert(0, student);
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: _P.card,
+        content: Text('${student.name} foi adicionado ao painel.'),
+      ),
+    );
+  }
+
+  void _showNextStepMessage(String feature) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: _P.card,
+        content: Text('$feature entra no próximo bloco funcional.'),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _P.black,
-      body: Stack(
+    return _ProfessorDashboardScope(
+      students: _students,
+      stats: _stats,
+      onNewStudent: _openNewStudentDialog,
+      onCreateTraining: () => _showNextStepMessage('Criar treino'),
+      onReport: () => _showNextStepMessage('Relatório'),
+      child: Scaffold(
+        backgroundColor: _P.black,
+        body: Stack(
         children: <Widget>[
           _BackgroundGlow(),
           SafeArea(
@@ -111,8 +159,37 @@ class ProfessorDashboardPage extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
+  }
+}
+
+class _ProfessorDashboardScope extends InheritedWidget {
+  const _ProfessorDashboardScope({
+    required this.students,
+    required this.stats,
+    required this.onNewStudent,
+    required this.onCreateTraining,
+    required this.onReport,
+    required super.child,
+  });
+
+  final List<_StudentData> students;
+  final List<_StatData> stats;
+  final VoidCallback onNewStudent;
+  final VoidCallback onCreateTraining;
+  final VoidCallback onReport;
+
+  static _ProfessorDashboardScope of(BuildContext context) {
+    final _ProfessorDashboardScope? scope = context.dependOnInheritedWidgetOfExactType<_ProfessorDashboardScope>();
+    assert(scope != null, 'Professor dashboard scope not found');
+    return scope!;
+  }
+
+  @override
+  bool updateShouldNotify(covariant _ProfessorDashboardScope oldWidget) {
+    return students != oldWidget.students || stats != oldWidget.stats;
   }
 }
 
@@ -405,13 +482,26 @@ class _HeroCopy extends StatelessWidget {
           ),
         ),
         SizedBox(height: compact ? 22 : 28),
-        const Wrap(
+        Wrap(
           spacing: 14,
           runSpacing: 12,
           children: <Widget>[
-            _HeroButton(label: 'Novo aluno', icon: Icons.person_add_alt_1_rounded, filled: true),
-            _HeroButton(label: 'Criar treino', icon: Icons.add_task_rounded),
-            _HeroButton(label: 'Relatório', icon: Icons.show_chart_rounded),
+            _HeroButton(
+              label: 'Novo aluno',
+              icon: Icons.person_add_alt_1_rounded,
+              filled: true,
+              onTap: _ProfessorDashboardScope.of(context).onNewStudent,
+            ),
+            _HeroButton(
+              label: 'Criar treino',
+              icon: Icons.add_task_rounded,
+              onTap: _ProfessorDashboardScope.of(context).onCreateTraining,
+            ),
+            _HeroButton(
+              label: 'Relatório',
+              icon: Icons.show_chart_rounded,
+              onTap: _ProfessorDashboardScope.of(context).onReport,
+            ),
           ],
         ),
       ],
@@ -433,7 +523,7 @@ class _StatsStrip extends StatelessWidget {
             child: Wrap(
               spacing: 12,
               runSpacing: 12,
-              children: ProfessorDashboardPage._stats
+              children: _ProfessorDashboardScope.of(context).stats
                   .map(
                     (stat) => SizedBox(
                       width: constraints.maxWidth < 620 ? constraints.maxWidth : (constraints.maxWidth - 12) / 2,
@@ -451,9 +541,9 @@ class _StatsStrip extends StatelessWidget {
           decoration: _P.premiumDecoration(radius: 18),
           child: Row(
             children: <Widget>[
-              for (int i = 0; i < ProfessorDashboardPage._stats.length; i++) ...<Widget>[
-                Expanded(child: _StatCard(data: ProfessorDashboardPage._stats[i], flat: true)),
-                if (i < ProfessorDashboardPage._stats.length - 1) const _VerticalRule(),
+              for (int i = 0; i < _ProfessorDashboardScope.of(context).stats.length; i++) ...<Widget>[
+                Expanded(child: _StatCard(data: _ProfessorDashboardScope.of(context).stats[i], flat: true)),
+                if (i < _ProfessorDashboardScope.of(context).stats.length - 1) const _VerticalRule(),
               ],
             ],
           ),
@@ -560,6 +650,8 @@ class _StudentsPanel extends StatelessWidget {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final bool compact = constraints.maxWidth < 760;
+        final List<_StudentData> students = _ProfessorDashboardScope.of(context).students;
+
         return _PremiumPanel(
           padding: EdgeInsets.zero,
           child: Column(
@@ -577,8 +669,8 @@ class _StudentsPanel extends StatelessWidget {
                       child: Column(
                         children: <Widget>[
                           const _StudentsTableHeader(),
-                          for (final _StudentData student in ProfessorDashboardPage._students) _StudentTableRow(student: student),
-                          const _PaginationFooter(),
+                          for (final _StudentData student in students) _StudentTableRow(student: student),
+                          _PaginationFooter(total: students.length),
                         ],
                       ),
                     ),
@@ -589,14 +681,14 @@ class _StudentsPanel extends StatelessWidget {
                   padding: const EdgeInsets.all(14),
                   child: Column(
                     children: <Widget>[
-                      for (final _StudentData student in ProfessorDashboardPage._students) ...<Widget>[
-                        _StudentMobileCard(student: student),
-                        if (student != ProfessorDashboardPage._students.last) const SizedBox(height: 10),
+                      for (int i = 0; i < students.length; i++) ...<Widget>[
+                        _StudentMobileCard(student: students[i]),
+                        if (i < students.length - 1) const SizedBox(height: 10),
                       ],
                     ],
                   ),
                 ),
-                const _PaginationFooter(),
+                _PaginationFooter(total: students.length),
               ],
             ],
           ),
@@ -630,13 +722,14 @@ class _StudentsHeader extends StatelessWidget {
       ],
     );
 
-    final Widget actions = const Wrap(
+    final _ProfessorDashboardScope scope = _ProfessorDashboardScope.of(context);
+    final Widget actions = Wrap(
       spacing: 8,
       runSpacing: 8,
       children: <Widget>[
-        _SmallButton(label: 'Buscar', icon: Icons.search_rounded),
-        _SmallButton(label: 'Filtrar', icon: Icons.tune_rounded),
-        _SmallButton(label: 'Novo aluno', icon: Icons.add_rounded, filled: true),
+        const _SmallButton(label: 'Buscar', icon: Icons.search_rounded),
+        const _SmallButton(label: 'Filtrar', icon: Icons.tune_rounded),
+        _SmallButton(label: 'Novo aluno', icon: Icons.add_rounded, filled: true, onTap: scope.onNewStudent),
       ],
     );
 
@@ -938,16 +1031,291 @@ class _EvolutionCard extends StatelessWidget {
   }
 }
 
-class _HeroButton extends StatelessWidget {
-  const _HeroButton({required this.label, required this.icon, this.filled = false});
+
+class _NewStudentDialog extends StatefulWidget {
+  const _NewStudentDialog();
+
+  @override
+  State<_NewStudentDialog> createState() => _NewStudentDialogState();
+}
+
+class _NewStudentDialogState extends State<_NewStudentDialog> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _objectiveController = TextEditingController(text: 'Hipertrofia');
+  final TextEditingController _levelController = TextEditingController(text: 'Iniciante');
+  final TextEditingController _workoutController = TextEditingController(text: 'Avaliação inicial');
+  final TextEditingController _nextController = TextEditingController(text: 'Hoje 18:00');
+  final TextEditingController _statusController = TextEditingController(text: 'Novo aluno');
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _objectiveController.dispose();
+    _levelController.dispose();
+    _workoutController.dispose();
+    _nextController.dispose();
+    _statusController.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final String name = _clean(_nameController.text);
+    final String objective = _clean(_objectiveController.text);
+    final String level = _clean(_levelController.text);
+    final String workout = _clean(_workoutController.text);
+    final String next = _clean(_nextController.text);
+    final String status = _clean(_statusController.text);
+
+    Navigator.of(context).pop(
+      _StudentData(
+        name: name,
+        initials: _initialsFromName(name),
+        objective: objective,
+        level: level,
+        lastWorkout: workout,
+        lastDate: _todayLabel(),
+        adherence: 0,
+        next: next,
+        status: status,
+        tone: _toneFromStatus(status),
+      ),
+    );
+  }
+
+  String _clean(String value) => value.trim().replaceAll(RegExp(r'\s+'), ' ');
+
+  String _todayLabel() {
+    final DateTime now = DateTime.now();
+    final String day = now.day.toString().padLeft(2, '0');
+    final String month = now.month.toString().padLeft(2, '0');
+    return '$day/$month/${now.year}';
+  }
+
+  String _initialsFromName(String name) {
+    final List<String> parts = name.split(' ').where((String part) => part.trim().isNotEmpty).toList();
+    if (parts.isEmpty) return 'AL';
+    if (parts.length == 1) return parts.first.substring(0, math.min(2, parts.first.length)).toUpperCase();
+    return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'.toUpperCase();
+  }
+
+  _StatusTone _toneFromStatus(String status) {
+    final String normalized = status.toLowerCase();
+    if (normalized.contains('excel')) return _StatusTone.purple;
+    if (normalized.contains('revis')) return _StatusTone.gold;
+    if (normalized.contains('camin')) return _StatusTone.blue;
+    return _StatusTone.green;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool compact = MediaQuery.sizeOf(context).width < 680;
+
+    return Dialog(
+      insetPadding: EdgeInsets.symmetric(horizontal: compact ? 14 : 28, vertical: 24),
+      backgroundColor: Colors.transparent,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: _PremiumPanel(
+          padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: _P.goldGradient,
+                          borderRadius: BorderRadius.circular(13),
+                          boxShadow: const <BoxShadow>[BoxShadow(color: _P.goldGlow, blurRadius: 20, offset: Offset(0, 8))],
+                        ),
+                        child: const Icon(Icons.person_add_alt_1_rounded, color: _P.black, size: 23),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              'Novo aluno',
+                              style: TextStyle(color: _P.text, fontSize: 24, fontWeight: FontWeight.w900, height: 1),
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              'Cadastro rápido para aparecer no painel do professor.',
+                              style: TextStyle(color: _P.muted, fontSize: 13, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Fechar',
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close_rounded, color: _P.gold),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                  _DialogField(
+                    controller: _nameController,
+                    label: 'Nome do aluno',
+                    hint: 'Ex.: João Silva',
+                    icon: Icons.badge_outlined,
+                    requiredField: true,
+                  ),
+                  const SizedBox(height: 12),
+                  compact
+                      ? Column(
+                          children: <Widget>[
+                            _DialogField(controller: _objectiveController, label: 'Objetivo', icon: Icons.flag_outlined, requiredField: true),
+                            const SizedBox(height: 12),
+                            _DialogField(controller: _levelController, label: 'Nível', icon: Icons.stacked_line_chart_rounded, requiredField: true),
+                          ],
+                        )
+                      : Row(
+                          children: <Widget>[
+                            Expanded(child: _DialogField(controller: _objectiveController, label: 'Objetivo', icon: Icons.flag_outlined, requiredField: true)),
+                            const SizedBox(width: 12),
+                            Expanded(child: _DialogField(controller: _levelController, label: 'Nível', icon: Icons.stacked_line_chart_rounded, requiredField: true)),
+                          ],
+                        ),
+                  const SizedBox(height: 12),
+                  compact
+                      ? Column(
+                          children: <Widget>[
+                            _DialogField(controller: _workoutController, label: 'Treino inicial', icon: Icons.fitness_center_rounded, requiredField: true),
+                            const SizedBox(height: 12),
+                            _DialogField(controller: _nextController, label: 'Próximo treino', icon: Icons.schedule_rounded, requiredField: true),
+                          ],
+                        )
+                      : Row(
+                          children: <Widget>[
+                            Expanded(child: _DialogField(controller: _workoutController, label: 'Treino inicial', icon: Icons.fitness_center_rounded, requiredField: true)),
+                            const SizedBox(width: 12),
+                            Expanded(child: _DialogField(controller: _nextController, label: 'Próximo treino', icon: Icons.schedule_rounded, requiredField: true)),
+                          ],
+                        ),
+                  const SizedBox(height: 12),
+                  _DialogField(controller: _statusController, label: 'Status', icon: Icons.verified_outlined, requiredField: true),
+                  const SizedBox(height: 22),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    alignment: WrapAlignment.end,
+                    children: <Widget>[
+                      _DialogActionButton(label: 'Cancelar', icon: Icons.close_rounded, onTap: () => Navigator.of(context).pop()),
+                      _DialogActionButton(label: 'Salvar aluno', icon: Icons.check_rounded, filled: true, onTap: _save),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DialogField extends StatelessWidget {
+  const _DialogField({
+    required this.controller,
+    required this.label,
+    required this.icon,
+    this.hint,
+    this.requiredField = false,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final IconData icon;
+  final String? hint;
+  final bool requiredField;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      style: const TextStyle(color: _P.text, fontSize: 14, fontWeight: FontWeight.w800),
+      cursorColor: _P.gold,
+      validator: (String? value) {
+        if (!requiredField) return null;
+        if (value == null || value.trim().isEmpty) return 'Preencha este campo';
+        return null;
+      },
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        labelStyle: const TextStyle(color: _P.gold, fontWeight: FontWeight.w800),
+        hintStyle: const TextStyle(color: _P.muted, fontWeight: FontWeight.w600),
+        prefixIcon: Icon(icon, color: _P.gold, size: 19),
+        filled: true,
+        fillColor: _P.blackAlpha25,
+        errorStyle: const TextStyle(color: _P.gold, fontWeight: FontWeight.w800),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: _P.borderSoft)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: _P.gold)),
+        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: _P.gold2)),
+        focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: _P.gold)),
+      ),
+    );
+  }
+}
+
+class _DialogActionButton extends StatelessWidget {
+  const _DialogActionButton({required this.label, required this.icon, required this.onTap, this.filled = false});
 
   final String label;
   final IconData icon;
+  final VoidCallback onTap;
   final bool filled;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: onTap,
+      child: Container(
+        height: 42,
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        decoration: BoxDecoration(
+          gradient: filled ? _P.goldGradient : null,
+          color: filled ? null : _P.blackGlass,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: filled ? Colors.transparent : _P.borderSoft),
+          boxShadow: filled ? const <BoxShadow>[BoxShadow(color: _P.goldGlow, blurRadius: 20, offset: Offset(0, 8))] : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(icon, color: filled ? _P.black : _P.gold, size: 18),
+            const SizedBox(width: 8),
+            Text(label, style: TextStyle(color: filled ? _P.black : _P.text, fontSize: 12, fontWeight: FontWeight.w900)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroButton extends StatelessWidget {
+  const _HeroButton({required this.label, required this.icon, this.filled = false, this.onTap});
+
+  final String label;
+  final IconData icon;
+  final bool filled;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget content = Container(
       height: 42,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
@@ -966,19 +1334,28 @@ class _HeroButton extends StatelessWidget {
         ],
       ),
     );
+
+    if (onTap == null) return content;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: content,
+    );
   }
 }
 
 class _SmallButton extends StatelessWidget {
-  const _SmallButton({required this.label, required this.icon, this.filled = false});
+  const _SmallButton({required this.label, required this.icon, this.filled = false, this.onTap});
 
   final String label;
   final IconData icon;
   final bool filled;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final Widget content = Container(
       height: 38,
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
@@ -995,6 +1372,14 @@ class _SmallButton extends StatelessWidget {
           Text(label, style: TextStyle(color: filled ? _P.black : _P.text, fontSize: 11, fontWeight: FontWeight.w900)),
         ],
       ),
+    );
+
+    if (onTap == null) return content;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: onTap,
+      child: content,
     );
   }
 }
@@ -1136,18 +1521,33 @@ class _ProgressCell extends StatelessWidget {
 }
 
 class _PaginationFooter extends StatelessWidget {
-  const _PaginationFooter();
+  const _PaginationFooter({required this.total});
+
+  final int total;
 
   @override
   Widget build(BuildContext context) {
+    final int visible = math.min(total, 5);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
       child: Row(
         children: <Widget>[
-          const Expanded(child: Text('Mostrando 1 a 5 de 18 alunos', style: TextStyle(color: _P.muted, fontSize: 12, fontWeight: FontWeight.w600))),
+          Expanded(
+            child: Text(
+              'Mostrando 1 a $visible de $total alunos',
+              style: const TextStyle(color: _P.muted, fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ),
           const _PageBox(Icons.chevron_left_rounded),
           const SizedBox(width: 8),
-          Container(width: 28, height: 28, alignment: Alignment.center, decoration: BoxDecoration(gradient: _P.goldGradient, borderRadius: BorderRadius.circular(7)), child: const Text('1', style: TextStyle(color: _P.black, fontSize: 12, fontWeight: FontWeight.w900))),
+          Container(
+            width: 28,
+            height: 28,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(gradient: _P.goldGradient, borderRadius: BorderRadius.circular(7)),
+            child: const Text('1', style: TextStyle(color: _P.black, fontSize: 12, fontWeight: FontWeight.w900)),
+          ),
           const SizedBox(width: 14),
           const Text('2', style: TextStyle(color: _P.muted, fontSize: 11, fontWeight: FontWeight.w900)),
           const SizedBox(width: 22),
