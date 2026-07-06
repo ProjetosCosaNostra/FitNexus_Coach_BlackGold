@@ -160,6 +160,112 @@ class _ProfessorDashboardPageState extends State<ProfessorDashboardPage> {
     );
   }
 
+  _TrainingData _trainingForStudent(_StudentData student) {
+    for (final _TrainingData training in _trainings) {
+      if (training.studentName == student.name && training.name == student.lastWorkout) {
+        return training;
+      }
+    }
+
+    for (final _TrainingData training in _trainings) {
+      if (training.studentName == student.name) {
+        return training;
+      }
+    }
+
+    return _TrainingData(
+      studentName: student.name,
+      name: student.lastWorkout,
+      nextSession: student.next,
+      notes: 'Treino base exibido para conferência. Edite para transformar em prescrição local completa.',
+      exercises: _defaultExercisesFor(student.objective),
+      createdAt: student.lastDate,
+    );
+  }
+
+  List<String> _defaultExercisesFor(String objective) {
+    final String normalized = objective.toLowerCase();
+    if (normalized.contains('emag')) {
+      return const <String>['Aquecimento na esteira - 10 min', 'Circuito funcional - 3 voltas', 'Bike moderada - 12 min'];
+    }
+    if (normalized.contains('condicion')) {
+      return const <String>['Mobilidade geral - 8 min', 'Corrida intervalada - 12 min', 'Core e estabilidade - 3 séries'];
+    }
+    if (normalized.contains('defini')) {
+      return const <String>['Superset peito + tríceps - 3x12', 'Remada alta - 3x12', 'Cardio final - 15 min'];
+    }
+    return const <String>['Agachamento livre - 3x10', 'Supino reto - 3x10', 'Remada baixa - 3x12'];
+  }
+
+  Future<void> _openViewTrainingDialog(_StudentData student) async {
+    final _TrainingData training = _trainingForStudent(student);
+
+    await showDialog<void>(
+      context: context,
+      barrierColor: _P.black.withValues(alpha: 0.72),
+      builder: (BuildContext dialogContext) => _TrainingPreviewDialog(
+        student: student,
+        training: training,
+        onEdit: () => _openEditTrainingDialog(student),
+      ),
+    );
+  }
+
+  Future<void> _openEditTrainingDialog(_StudentData student) async {
+    final _TrainingData currentTraining = _trainingForStudent(student);
+
+    final _TrainingData? editedTraining = await showDialog<_TrainingData>(
+      context: context,
+      barrierColor: _P.black.withValues(alpha: 0.72),
+      builder: (BuildContext context) => _CreateTrainingDialog(
+        students: _students,
+        initialTraining: currentTraining,
+        title: 'Editar treino',
+        subtitle: 'Ajuste a prescrição e mantenha o histórico visual atualizado.',
+        submitLabel: 'Salvar edição',
+        lockStudent: true,
+      ),
+    );
+
+    if (editedTraining == null || !mounted) return;
+
+    setState(() {
+      final int existingTrainingIndex = _trainings.indexWhere(
+        (training) => training.studentName == currentTraining.studentName && training.name == currentTraining.name,
+      );
+
+      if (existingTrainingIndex != -1) {
+        _trainings[existingTrainingIndex] = editedTraining;
+      } else {
+        final int sameStudentIndex = _trainings.indexWhere((training) => training.studentName == editedTraining.studentName);
+        if (sameStudentIndex != -1) {
+          _trainings[sameStudentIndex] = editedTraining;
+        } else {
+          _trainings.insert(0, editedTraining);
+        }
+      }
+
+      final int studentIndex = _students.indexWhere((item) => item.name == editedTraining.studentName);
+      if (studentIndex != -1) {
+        _students[studentIndex] = _students[studentIndex].copyWith(
+          lastWorkout: editedTraining.name,
+          lastDate: _todayLabel(),
+          next: editedTraining.nextSession,
+          status: 'Treino editado',
+          tone: _StatusTone.gold,
+        );
+      }
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: _P.card,
+        content: Text('Treino "${editedTraining.name}" atualizado para ${editedTraining.studentName}.'),
+      ),
+    );
+  }
+
   String _todayLabel() {
     final DateTime now = DateTime.now();
     final String day = now.day.toString().padLeft(2, '0');
@@ -182,8 +288,11 @@ class _ProfessorDashboardPageState extends State<ProfessorDashboardPage> {
     return _ProfessorDashboardScope(
       students: _students,
       stats: _stats,
+      trainings: _trainings,
       onNewStudent: _openNewStudentDialog,
       onCreateTraining: _openCreateTrainingDialog,
+      onViewTraining: _openViewTrainingDialog,
+      onEditTraining: _openEditTrainingDialog,
       onReport: () => _showNextStepMessage('Relatório'),
       child: Scaffold(
         backgroundColor: _P.black,
@@ -221,16 +330,22 @@ class _ProfessorDashboardScope extends InheritedWidget {
   const _ProfessorDashboardScope({
     required this.students,
     required this.stats,
+    required this.trainings,
     required this.onNewStudent,
     required this.onCreateTraining,
+    required this.onViewTraining,
+    required this.onEditTraining,
     required this.onReport,
     required super.child,
   });
 
   final List<_StudentData> students;
   final List<_StatData> stats;
+  final List<_TrainingData> trainings;
   final VoidCallback onNewStudent;
   final VoidCallback onCreateTraining;
+  final void Function(_StudentData student) onViewTraining;
+  final void Function(_StudentData student) onEditTraining;
   final VoidCallback onReport;
 
   static _ProfessorDashboardScope of(BuildContext context) {
@@ -241,7 +356,7 @@ class _ProfessorDashboardScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(covariant _ProfessorDashboardScope oldWidget) {
-    return students != oldWidget.students || stats != oldWidget.stats;
+    return students != oldWidget.students || stats != oldWidget.stats || trainings != oldWidget.trainings;
   }
 }
 
@@ -830,6 +945,8 @@ class _StudentTableRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final _ProfessorDashboardScope scope = _ProfessorDashboardScope.of(context);
+
     return Container(
       constraints: const BoxConstraints(minHeight: 88),
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
@@ -865,10 +982,18 @@ class _StudentTableRow extends StatelessWidget {
             width: 108,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
-              children: const <Widget>[
-                _IconBox(Icons.visibility_outlined),
-                SizedBox(width: 8),
-                _IconBox(Icons.edit_outlined),
+              children: <Widget>[
+                _IconBox(
+                  Icons.visibility_outlined,
+                  tooltip: 'Ver treino',
+                  onTap: () => scope.onViewTraining(student),
+                ),
+                const SizedBox(width: 8),
+                _IconBox(
+                  Icons.edit_outlined,
+                  tooltip: 'Editar treino',
+                  onTap: () => scope.onEditTraining(student),
+                ),
               ],
             ),
           ),
@@ -885,6 +1010,8 @@ class _StudentMobileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final _ProfessorDashboardScope scope = _ProfessorDashboardScope.of(context);
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(color: _P.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: _P.borderSoft)),
@@ -917,6 +1044,23 @@ class _StudentMobileCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _ProgressCell(value: student.adherence),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+              _IconBox(
+                Icons.visibility_outlined,
+                tooltip: 'Ver treino',
+                onTap: () => scope.onViewTraining(student),
+              ),
+              const SizedBox(width: 8),
+              _IconBox(
+                Icons.edit_outlined,
+                tooltip: 'Editar treino',
+                onTap: () => scope.onEditTraining(student),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -1277,10 +1421,180 @@ class _NewStudentDialogState extends State<_NewStudentDialog> {
   }
 }
 
+class _TrainingPreviewDialog extends StatelessWidget {
+  const _TrainingPreviewDialog({required this.student, required this.training, required this.onEdit});
+
+  final _StudentData student;
+  final _TrainingData training;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool compact = MediaQuery.sizeOf(context).width < 720;
+
+    return Dialog(
+      insetPadding: EdgeInsets.symmetric(horizontal: compact ? 14 : 28, vertical: 24),
+      backgroundColor: Colors.transparent,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 760),
+        child: _PremiumPanel(
+          padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: _P.goldGradient,
+                        borderRadius: BorderRadius.circular(13),
+                        boxShadow: const <BoxShadow>[BoxShadow(color: _P.goldGlow, blurRadius: 20, offset: Offset(0, 8))],
+                      ),
+                      child: const Icon(Icons.visibility_outlined, color: _P.black, size: 23),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            training.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: _P.text, fontSize: 24, fontWeight: FontWeight.w900, height: 1),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${student.name} • ${training.exerciseCount} exercícios • ${training.createdAt}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: _P.muted, fontSize: 13, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Fechar',
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close_rounded, color: _P.gold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: <Widget>[
+                    _TinyBadge(student.objective),
+                    _TinyBadge(student.level),
+                    _TinyBadge(training.nextSession),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'PRESCRIÇÃO DO TREINO',
+                  style: TextStyle(color: _P.gold, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 0.6),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(color: _P.blackAlpha25, borderRadius: BorderRadius.circular(16), border: Border.all(color: _P.borderSoft)),
+                  child: Column(
+                    children: <Widget>[
+                      for (int i = 0; i < training.exercises.length; i++)
+                        _ExercisePreviewRow(index: i, exercise: training.exercises[i], showBorder: i != training.exercises.length - 1),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(color: _P.card, borderRadius: BorderRadius.circular(14), border: Border.all(color: _P.borderSoft)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const Text('OBSERVAÇÃO', style: TextStyle(color: _P.gold, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                      const SizedBox(height: 8),
+                      Text(training.notes.isEmpty ? 'Sem observações.' : training.notes, style: const TextStyle(color: _P.text, fontSize: 13, fontWeight: FontWeight.w700, height: 1.35)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  alignment: WrapAlignment.end,
+                  children: <Widget>[
+                    _DialogActionButton(label: 'Fechar', icon: Icons.close_rounded, onTap: () => Navigator.of(context).pop()),
+                    _DialogActionButton(
+                      label: 'Editar treino',
+                      icon: Icons.edit_outlined,
+                      filled: true,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        onEdit();
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExercisePreviewRow extends StatelessWidget {
+  const _ExercisePreviewRow({required this.index, required this.exercise, required this.showBorder});
+
+  final int index;
+  final String exercise;
+  final bool showBorder;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      decoration: BoxDecoration(border: showBorder ? const Border(bottom: BorderSide(color: _P.line)) : null),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 26,
+            height: 26,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(gradient: _P.goldGradient, borderRadius: BorderRadius.circular(8)),
+            child: Text('${index + 1}', style: const TextStyle(color: _P.black, fontSize: 12, fontWeight: FontWeight.w900)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(exercise, style: const TextStyle(color: _P.text, fontSize: 14, fontWeight: FontWeight.w800))),
+        ],
+      ),
+    );
+  }
+}
+
 class _CreateTrainingDialog extends StatefulWidget {
-  const _CreateTrainingDialog({required this.students});
+  const _CreateTrainingDialog({
+    required this.students,
+    this.initialTraining,
+    this.title = 'Criar treino',
+    this.subtitle = 'Monte uma prescrição simples para o aluno selecionado.',
+    this.submitLabel = 'Salvar treino',
+    this.lockStudent = false,
+  });
 
   final List<_StudentData> students;
+  final _TrainingData? initialTraining;
+  final String title;
+  final String subtitle;
+  final String submitLabel;
+  final bool lockStudent;
 
   @override
   State<_CreateTrainingDialog> createState() => _CreateTrainingDialogState();
@@ -1288,16 +1602,29 @@ class _CreateTrainingDialog extends StatefulWidget {
 
 class _CreateTrainingDialogState extends State<_CreateTrainingDialog> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _trainingNameController = TextEditingController(text: 'Treino A - Full Body');
-  final TextEditingController _nextSessionController = TextEditingController(text: 'Próxima sessão');
-  final TextEditingController _notesController = TextEditingController(text: 'Carga inicial conservadora e execução limpa.');
-  final List<TextEditingController> _exerciseControllers = <TextEditingController>[
-    TextEditingController(text: 'Agachamento livre - 3x10'),
-    TextEditingController(text: 'Supino reto - 3x10'),
-    TextEditingController(text: 'Remada baixa - 3x12'),
-  ];
+  late final TextEditingController _trainingNameController;
+  late final TextEditingController _nextSessionController;
+  late final TextEditingController _notesController;
+  late final List<TextEditingController> _exerciseControllers;
+  late String _selectedStudentName;
 
-  late String _selectedStudentName = widget.students.first.name;
+  @override
+  void initState() {
+    super.initState();
+
+    final _TrainingData? initialTraining = widget.initialTraining;
+    final List<String> initialExercises = initialTraining?.exercises ?? const <String>[
+      'Agachamento livre - 3x10',
+      'Supino reto - 3x10',
+      'Remada baixa - 3x12',
+    ];
+
+    _selectedStudentName = initialTraining?.studentName ?? widget.students.first.name;
+    _trainingNameController = TextEditingController(text: initialTraining?.name ?? 'Treino A - Full Body');
+    _nextSessionController = TextEditingController(text: initialTraining?.nextSession ?? 'Próxima sessão');
+    _notesController = TextEditingController(text: initialTraining?.notes ?? 'Carga inicial conservadora e execução limpa.');
+    _exerciseControllers = initialExercises.map((exercise) => TextEditingController(text: exercise)).toList();
+  }
 
   @override
   void dispose() {
@@ -1391,21 +1718,21 @@ class _CreateTrainingDialogState extends State<_CreateTrainingDialog> {
                           borderRadius: BorderRadius.circular(13),
                           boxShadow: const <BoxShadow>[BoxShadow(color: _P.goldGlow, blurRadius: 20, offset: Offset(0, 8))],
                         ),
-                        child: const Icon(Icons.add_task_rounded, color: _P.black, size: 23),
+                        child: Icon(widget.initialTraining == null ? Icons.add_task_rounded : Icons.edit_note_rounded, color: _P.black, size: 23),
                       ),
                       const SizedBox(width: 14),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              'Criar treino',
-                              style: TextStyle(color: _P.text, fontSize: 24, fontWeight: FontWeight.w900, height: 1),
+                              widget.title,
+                              style: const TextStyle(color: _P.text, fontSize: 24, fontWeight: FontWeight.w900, height: 1),
                             ),
-                            SizedBox(height: 6),
+                            const SizedBox(height: 6),
                             Text(
-                              'Monte uma prescrição simples para o aluno selecionado.',
-                              style: TextStyle(color: _P.muted, fontSize: 13, fontWeight: FontWeight.w600),
+                              widget.subtitle,
+                              style: const TextStyle(color: _P.muted, fontSize: 13, fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -1432,10 +1759,12 @@ class _CreateTrainingDialogState extends State<_CreateTrainingDialog> {
                           ),
                         )
                         .toList(),
-                    onChanged: (String? value) {
-                      if (value == null) return;
-                      setState(() => _selectedStudentName = value);
-                    },
+                    onChanged: widget.lockStudent
+                        ? null
+                        : (String? value) {
+                            if (value == null) return;
+                            setState(() => _selectedStudentName = value);
+                          },
                   ),
                   const SizedBox(height: 12),
                   compact
@@ -1484,7 +1813,7 @@ class _CreateTrainingDialogState extends State<_CreateTrainingDialog> {
                     alignment: WrapAlignment.end,
                     children: <Widget>[
                       _DialogActionButton(label: 'Cancelar', icon: Icons.close_rounded, onTap: () => Navigator.of(context).pop()),
-                      _DialogActionButton(label: 'Salvar treino', icon: Icons.check_rounded, filled: true, onTap: _save),
+                      _DialogActionButton(label: widget.submitLabel, icon: Icons.check_rounded, filled: true, onTap: _save),
                     ],
                   ),
                 ],
@@ -1941,13 +2270,27 @@ class _TinyBadge extends StatelessWidget {
 }
 
 class _IconBox extends StatelessWidget {
-  const _IconBox(this.icon);
+  const _IconBox(this.icon, {this.onTap, this.tooltip});
 
   final IconData icon;
+  final VoidCallback? onTap;
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
-    return Container(width: 30, height: 30, decoration: BoxDecoration(color: _P.blackGlass, borderRadius: BorderRadius.circular(8), border: Border.all(color: _P.border)), child: Icon(icon, color: _P.gold, size: 16));
+    final Widget box = InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(color: _P.blackGlass, borderRadius: BorderRadius.circular(8), border: Border.all(color: _P.border)),
+        child: Icon(icon, color: _P.gold, size: 16),
+      ),
+    );
+
+    if (tooltip == null || tooltip!.isEmpty) return box;
+    return Tooltip(message: tooltip!, child: box);
   }
 }
 
