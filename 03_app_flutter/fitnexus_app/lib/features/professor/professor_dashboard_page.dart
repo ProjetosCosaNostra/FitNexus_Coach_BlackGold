@@ -273,6 +273,18 @@ class _ProfessorDashboardPageState extends State<ProfessorDashboardPage> {
     return '$day/$month/${now.year}';
   }
 
+  Future<void> _openReportDialog() async {
+    await showDialog<void>(
+      context: context,
+      barrierColor: _P.black.withValues(alpha: 0.72),
+      builder: (BuildContext dialogContext) => _ReportDialog(
+        stats: _stats,
+        students: _students,
+        trainings: _trainings,
+      ),
+    );
+  }
+
   void _showNextStepMessage(String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -293,7 +305,7 @@ class _ProfessorDashboardPageState extends State<ProfessorDashboardPage> {
       onCreateTraining: _openCreateTrainingDialog,
       onViewTraining: _openViewTrainingDialog,
       onEditTraining: _openEditTrainingDialog,
-      onReport: () => _showNextStepMessage('Relatório'),
+      onReport: _openReportDialog,
       child: Scaffold(
         backgroundColor: _P.black,
         body: Stack(
@@ -1210,7 +1222,11 @@ class _EvolutionCard extends StatelessWidget {
                   SizedBox(height: 5),
                   Text('Carga e presença', style: TextStyle(color: _P.muted, fontSize: 11, fontWeight: FontWeight.w700)),
                   SizedBox(height: 16),
-                  SizedBox(height: 70, child: CustomPaint(painter: _LineChartPainter())),
+                  SizedBox(
+                    width: 152,
+                    height: 58,
+                    child: CustomPaint(painter: _LineChartPainter()),
+                  ),
                 ],
               ),
             ),
@@ -1545,6 +1561,222 @@ class _TrainingPreviewDialog extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+
+class _ReportDialog extends StatelessWidget {
+  const _ReportDialog({
+    required this.stats,
+    required this.students,
+    required this.trainings,
+  });
+
+  final List<_StatData> stats;
+  final List<_StudentData> students;
+  final List<_TrainingData> trainings;
+
+  int get _averageAdherence {
+    if (students.isEmpty) return 0;
+    final int total = students.fold<int>(0, (int sum, _StudentData student) => sum + student.adherence);
+    return (total / students.length).round();
+  }
+
+  List<_StudentData> get _attentionStudents {
+    final List<_StudentData> ordered = List<_StudentData>.of(students);
+    ordered.sort((_StudentData a, _StudentData b) => a.adherence.compareTo(b.adherence));
+    return ordered.take(3).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool compact = MediaQuery.sizeOf(context).width < 720;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 760),
+        child: _PremiumPanel(
+          padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: _P.goldGradient,
+                        borderRadius: BorderRadius.circular(13),
+                        boxShadow: const <BoxShadow>[BoxShadow(color: _P.goldGlow, blurRadius: 20, offset: Offset(0, 8))],
+                      ),
+                      child: const Icon(Icons.analytics_outlined, color: _P.black, size: 23),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            'Relatório do professor',
+                            style: TextStyle(color: _P.text, fontSize: 24, fontWeight: FontWeight.w900, height: 1),
+                          ),
+                          SizedBox(height: 6),
+                          Text(
+                            'Resumo funcional inicial do painel atual.',
+                            style: TextStyle(color: _P.muted, fontSize: 13, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Fechar',
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close_rounded, color: _P.gold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                compact
+                    ? Column(
+                        children: <Widget>[
+                          _ReportMetricCard(icon: Icons.groups_rounded, value: stats[0].value, label: 'Alunos ativos'),
+                          const SizedBox(height: 10),
+                          _ReportMetricCard(icon: Icons.assignment_turned_in_rounded, value: stats[1].value, label: 'Treinos criados'),
+                          const SizedBox(height: 10),
+                          _ReportMetricCard(icon: Icons.percent_rounded, value: '$_averageAdherence%', label: 'Aderência média'),
+                        ],
+                      )
+                    : Row(
+                        children: <Widget>[
+                          Expanded(child: _ReportMetricCard(icon: Icons.groups_rounded, value: stats[0].value, label: 'Alunos ativos')),
+                          const SizedBox(width: 10),
+                          Expanded(child: _ReportMetricCard(icon: Icons.assignment_turned_in_rounded, value: stats[1].value, label: 'Treinos criados')),
+                          const SizedBox(width: 10),
+                          Expanded(child: _ReportMetricCard(icon: Icons.percent_rounded, value: '$_averageAdherence%', label: 'Aderência média')),
+                        ],
+                      ),
+                const SizedBox(height: 18),
+                const Text(
+                  'PONTOS DE ATENÇÃO',
+                  style: TextStyle(color: _P.gold, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 0.6),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(color: _P.blackAlpha25, borderRadius: BorderRadius.circular(16), border: Border.all(color: _P.borderSoft)),
+                  child: Column(
+                    children: <Widget>[
+                      for (int i = 0; i < _attentionStudents.length; i++)
+                        _ReportListItem(
+                          icon: Icons.person_outline_rounded,
+                          title: _attentionStudents[i].name,
+                          subtitle: '${_attentionStudents[i].adherence}% de aderência • ${_attentionStudents[i].status}',
+                          showBorder: i != _attentionStudents.length - 1,
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(color: _P.card, borderRadius: BorderRadius.circular(14), border: Border.all(color: _P.borderSoft)),
+                  child: Text(
+                    trainings.isEmpty
+                        ? 'Nenhum treino local criado nesta sessão. Use Criar treino para alimentar o próximo relatório.'
+                        : '${trainings.length} treino(s) local(is) registrado(s) nesta sessão. Último treino: ${trainings.first.name}.',
+                    style: const TextStyle(color: _P.text, fontSize: 13, fontWeight: FontWeight.w700, height: 1.35),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  alignment: WrapAlignment.end,
+                  children: <Widget>[
+                    _DialogActionButton(label: 'Fechar', icon: Icons.close_rounded, onTap: () => Navigator.of(context).pop()),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ReportMetricCard extends StatelessWidget {
+  const _ReportMetricCard({required this.icon, required this.value, required this.label});
+
+  final IconData icon;
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: _P.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: _P.borderSoft)),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(gradient: _P.goldGradient, borderRadius: BorderRadius.circular(11)),
+            child: Icon(icon, color: _P.black, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(value, style: const TextStyle(color: _P.text, fontSize: 22, fontWeight: FontWeight.w900, height: 1)),
+                const SizedBox(height: 5),
+                Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: _P.muted, fontSize: 12, fontWeight: FontWeight.w700)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportListItem extends StatelessWidget {
+  const _ReportListItem({required this.icon, required this.title, required this.subtitle, required this.showBorder});
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool showBorder;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      decoration: BoxDecoration(border: showBorder ? const Border(bottom: BorderSide(color: _P.line)) : null),
+      child: Row(
+        children: <Widget>[
+          Icon(icon, color: _P.gold, size: 19),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(title, style: const TextStyle(color: _P.text, fontSize: 14, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 4),
+                Text(subtitle, style: const TextStyle(color: _P.muted, fontSize: 12, fontWeight: FontWeight.w700)),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2432,35 +2664,69 @@ class _LineChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final List<double> points = <double>[0.18, 0.32, 0.45, 0.58, 0.43, 0.52, 0.39, 0.55, 0.68, 0.82];
-    final Paint grid = Paint()
+    final Rect chartRect = Offset.zero & size;
+    final RRect panel = RRect.fromRectAndRadius(chartRect, const Radius.circular(16));
+    final Paint panelPaint = Paint()..color = _P.blackAlpha25;
+    canvas.drawRRect(panel, panelPaint);
+
+    final double left = 10;
+    final double right = size.width - 10;
+    final double top = 9;
+    final double bottom = size.height - 15;
+    final double width = right - left;
+    final double height = bottom - top;
+    final List<double> points = <double>[0.18, 0.24, 0.22, 0.31, 0.36, 0.42, 0.40, 0.49, 0.57, 0.64];
+
+    final Paint track = Paint()
       ..color = _P.line
-      ..strokeWidth = 1;
-    final Paint line = Paint()
-      ..color = _P.gold
-      ..strokeWidth = 2.2
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(left, bottom), Offset(right, bottom), track);
+
+    final Paint progress = Paint()
+      ..shader = const LinearGradient(colors: <Color>[_P.goldDeep, _P.gold, _P.gold2]).createShader(Rect.fromLTWH(left, bottom - 6, width * 0.62, 12))
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(left, bottom), Offset(left + width * 0.62, bottom), progress);
+
+    final Path trend = Path();
+    final Path area = Path();
+    for (int i = 0; i < points.length; i++) {
+      final double x = left + width * i / (points.length - 1);
+      final double y = top + height * (1 - points[i]);
+      if (i == 0) {
+        trend.moveTo(x, y);
+        area.moveTo(x, bottom);
+        area.lineTo(x, y);
+      } else {
+        trend.lineTo(x, y);
+        area.lineTo(x, y);
+      }
+    }
+    area.lineTo(right, bottom);
+    area.close();
+
+    final Paint areaPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: <Color>[_P.gold.withValues(alpha: 0.22), _P.gold.withValues(alpha: 0.02)],
+      ).createShader(Rect.fromLTWH(left, top, width, height));
+    canvas.drawPath(area, areaPaint);
+
+    final Paint trendPaint = Paint()
+      ..shader = const LinearGradient(colors: <Color>[_P.gold, _P.gold2]).createShader(Rect.fromLTWH(left, top, width, height))
+      ..strokeWidth = 2.6
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
-    final Paint dot = Paint()..color = _P.gold;
+    canvas.drawPath(trend, trendPaint);
 
-    for (int i = 1; i < 4; i++) {
-      final double y = size.height * i / 4;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), grid);
-    }
-
-    final Path path = Path();
-    for (int i = 0; i < points.length; i++) {
-      final double x = size.width * i / (points.length - 1);
-      final double y = size.height * (1 - points[i]);
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-      canvas.drawCircle(Offset(x, y), 3.2, dot);
-    }
-    canvas.drawPath(path, line);
+    final Offset lastPoint = Offset(left + width, top + height * (1 - points.last));
+    final Paint dotOuter = Paint()..color = _P.gold.withValues(alpha: 0.20);
+    final Paint dotInner = Paint()..color = _P.gold;
+    canvas.drawCircle(lastPoint, 7, dotOuter);
+    canvas.drawCircle(lastPoint, 3.4, dotInner);
   }
 
   @override
