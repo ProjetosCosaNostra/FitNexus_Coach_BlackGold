@@ -1584,126 +1584,136 @@ class _ReportDialog extends StatelessWidget {
     return (total / students.length).round();
   }
 
+  List<_StudentData> get _topStudents {
+    final List<_StudentData> ordered = List<_StudentData>.of(students);
+    ordered.sort((_StudentData a, _StudentData b) => b.adherence.compareTo(a.adherence));
+    return ordered.take(3).toList();
+  }
+
   List<_StudentData> get _attentionStudents {
     final List<_StudentData> ordered = List<_StudentData>.of(students);
     ordered.sort((_StudentData a, _StudentData b) => a.adherence.compareTo(b.adherence));
     return ordered.take(3).toList();
   }
 
+  int get _greenCount => students.where((_StudentData student) => student.adherence >= 75).length;
+  int get _yellowCount => students.where((_StudentData student) => student.adherence >= 55 && student.adherence < 75).length;
+  int get _redCount => students.where((_StudentData student) => student.adherence < 55).length;
+
   @override
   Widget build(BuildContext context) {
-    final bool compact = MediaQuery.sizeOf(context).width < 720;
+    final double width = MediaQuery.sizeOf(context).width;
+    final double height = MediaQuery.sizeOf(context).height;
+    final bool compact = width < 760;
+    final bool twoColumns = width >= 960;
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 760),
+        constraints: BoxConstraints(maxWidth: 980, maxHeight: height * 0.88),
         child: _PremiumPanel(
-          padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        gradient: _P.goldGradient,
-                        borderRadius: BorderRadius.circular(13),
-                        boxShadow: const <BoxShadow>[BoxShadow(color: _P.goldGlow, blurRadius: 20, offset: Offset(0, 8))],
-                      ),
-                      child: const Icon(Icons.analytics_outlined, color: _P.black, size: 23),
-                    ),
-                    const SizedBox(width: 14),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            'Relatório do professor',
-                            style: TextStyle(color: _P.text, fontSize: 24, fontWeight: FontWeight.w900, height: 1),
+          padding: EdgeInsets.zero,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(compact ? 18 : 24, compact ? 18 : 24, compact ? 18 : 24, 18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  _ReportHeader(onClose: () => Navigator.of(context).pop()),
+                  const SizedBox(height: 22),
+                  _ReportMetricGrid(
+                    compact: compact,
+                    stats: stats,
+                    averageAdherence: _averageAdherence,
+                    localTrainingCount: trainings.length,
+                  ),
+                  const SizedBox(height: 18),
+                  if (twoColumns)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Expanded(
+                          child: _ReportPerformancePanel(
+                            averageAdherence: _averageAdherence,
+                            greenCount: _greenCount,
+                            yellowCount: _yellowCount,
+                            redCount: _redCount,
+                            totalStudents: students.length,
                           ),
-                          SizedBox(height: 6),
-                          Text(
-                            'Resumo funcional inicial do painel atual.',
-                            style: TextStyle(color: _P.muted, fontSize: 13, fontWeight: FontWeight.w600),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'Fechar',
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close_rounded, color: _P.gold),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                compact
-                    ? Column(
-                        children: <Widget>[
-                          _ReportMetricCard(icon: Icons.groups_rounded, value: stats[0].value, label: 'Alunos ativos'),
-                          const SizedBox(height: 10),
-                          _ReportMetricCard(icon: Icons.assignment_turned_in_rounded, value: stats[1].value, label: 'Treinos criados'),
-                          const SizedBox(height: 10),
-                          _ReportMetricCard(icon: Icons.percent_rounded, value: '$_averageAdherence%', label: 'Aderência média'),
-                        ],
-                      )
-                    : Row(
-                        children: <Widget>[
-                          Expanded(child: _ReportMetricCard(icon: Icons.groups_rounded, value: stats[0].value, label: 'Alunos ativos')),
-                          const SizedBox(width: 10),
-                          Expanded(child: _ReportMetricCard(icon: Icons.assignment_turned_in_rounded, value: stats[1].value, label: 'Treinos criados')),
-                          const SizedBox(width: 10),
-                          Expanded(child: _ReportMetricCard(icon: Icons.percent_rounded, value: '$_averageAdherence%', label: 'Aderência média')),
-                        ],
-                      ),
-                const SizedBox(height: 18),
-                const Text(
-                  'PONTOS DE ATENÇÃO',
-                  style: TextStyle(color: _P.gold, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 0.6),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  decoration: BoxDecoration(color: _P.blackAlpha25, borderRadius: BorderRadius.circular(16), border: Border.all(color: _P.borderSoft)),
-                  child: Column(
-                    children: <Widget>[
-                      for (int i = 0; i < _attentionStudents.length; i++)
-                        _ReportListItem(
-                          icon: Icons.person_outline_rounded,
-                          title: _attentionStudents[i].name,
-                          subtitle: '${_attentionStudents[i].adherence}% de aderência • ${_attentionStudents[i].status}',
-                          showBorder: i != _attentionStudents.length - 1,
                         ),
+                        const SizedBox(width: 14),
+                        Expanded(child: _ReportActionPanel(attentionStudents: _attentionStudents, trainings: trainings)),
+                      ],
+                    )
+                  else ...<Widget>[
+                    _ReportPerformancePanel(
+                      averageAdherence: _averageAdherence,
+                      greenCount: _greenCount,
+                      yellowCount: _yellowCount,
+                      redCount: _redCount,
+                      totalStudents: students.length,
+                    ),
+                    const SizedBox(height: 14),
+                    _ReportActionPanel(attentionStudents: _attentionStudents, trainings: trainings),
+                  ],
+                  const SizedBox(height: 18),
+                  _ReportSectionTitle(
+                    icon: Icons.workspace_premium_rounded,
+                    title: 'Alunos em destaque',
+                    subtitle: 'Quem está com melhor aderência no painel atual.',
+                  ),
+                  const SizedBox(height: 10),
+                  _ReportListPanel(
+                    children: <Widget>[
+                      for (int i = 0; i < _topStudents.length; i++)
+                        _ReportStudentRow(student: _topStudents[i], showBorder: i != _topStudents.length - 1),
                     ],
                   ),
-                ),
-                const SizedBox(height: 14),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(color: _P.card, borderRadius: BorderRadius.circular(14), border: Border.all(color: _P.borderSoft)),
-                  child: Text(
-                    trainings.isEmpty
-                        ? 'Nenhum treino local criado nesta sessão. Use Criar treino para alimentar o próximo relatório.'
-                        : '${trainings.length} treino(s) local(is) registrado(s) nesta sessão. Último treino: ${trainings.first.name}.',
-                    style: const TextStyle(color: _P.text, fontSize: 13, fontWeight: FontWeight.w700, height: 1.35),
+                  const SizedBox(height: 18),
+                  _ReportSectionTitle(
+                    icon: Icons.warning_amber_rounded,
+                    title: 'Pontos de atenção',
+                    subtitle: 'Alunos que merecem revisão de rotina ou acompanhamento mais próximo.',
                   ),
-                ),
-                const SizedBox(height: 20),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  alignment: WrapAlignment.end,
-                  children: <Widget>[
-                    _DialogActionButton(label: 'Fechar', icon: Icons.close_rounded, onTap: () => Navigator.of(context).pop()),
-                  ],
-                ),
-              ],
+                  const SizedBox(height: 10),
+                  _ReportListPanel(
+                    children: <Widget>[
+                      for (int i = 0; i < _attentionStudents.length; i++)
+                        _ReportStudentRow(student: _attentionStudents[i], compactMode: true, showBorder: i != _attentionStudents.length - 1),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  _ReportSectionTitle(
+                    icon: Icons.assignment_rounded,
+                    title: 'Treinos locais da sessão',
+                    subtitle: trainings.isEmpty ? 'Ainda sem treino local novo nesta sessão.' : '${trainings.length} treino(s) salvo(s) localmente.',
+                  ),
+                  const SizedBox(height: 10),
+                  _ReportListPanel(
+                    children: trainings.isEmpty
+                        ? const <Widget>[
+                            _ReportEmptyState(),
+                          ]
+                        : <Widget>[
+                            for (int i = 0; i < trainings.take(4).length; i++)
+                              _ReportTrainingRow(training: trainings[i], showBorder: i != trainings.take(4).length - 1),
+                          ],
+                  ),
+                  const SizedBox(height: 22),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _DialogActionButton(
+                      label: 'Fechar relatório',
+                      icon: Icons.check_rounded,
+                      filled: true,
+                      onTap: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -1712,34 +1722,129 @@ class _ReportDialog extends StatelessWidget {
   }
 }
 
+class _ReportHeader extends StatelessWidget {
+  const _ReportHeader({required this.onClose});
+
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            gradient: _P.goldGradient,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: const <BoxShadow>[BoxShadow(color: _P.goldGlow, blurRadius: 22, offset: Offset(0, 8))],
+          ),
+          child: const Icon(Icons.analytics_outlined, color: _P.black, size: 25),
+        ),
+        const SizedBox(width: 14),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('Relatório do professor', style: TextStyle(color: _P.text, fontSize: 25, fontWeight: FontWeight.w900, height: 1)),
+              SizedBox(height: 7),
+              Text(
+                'Resumo funcional do painel: alunos, aderência, evolução e treinos locais.',
+                style: TextStyle(color: _P.muted, fontSize: 13, fontWeight: FontWeight.w700, height: 1.35),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          tooltip: 'Fechar',
+          onPressed: onClose,
+          icon: const Icon(Icons.close_rounded, color: _P.gold),
+        ),
+      ],
+    );
+  }
+}
+
+class _ReportMetricGrid extends StatelessWidget {
+  const _ReportMetricGrid({
+    required this.compact,
+    required this.stats,
+    required this.averageAdherence,
+    required this.localTrainingCount,
+  });
+
+  final bool compact;
+  final List<_StatData> stats;
+  final int averageAdherence;
+  final int localTrainingCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> cards = <Widget>[
+      _ReportMetricCard(icon: Icons.groups_rounded, value: stats[0].value, label: 'Alunos ativos', subtitle: stats[0].subtitle),
+      _ReportMetricCard(icon: Icons.assignment_turned_in_rounded, value: stats[1].value, label: 'Treinos criados', subtitle: localTrainingCount == 0 ? 'base do painel' : '$localTrainingCount novo(s) local(is)'),
+      _ReportMetricCard(icon: Icons.percent_rounded, value: '$averageAdherence%', label: 'Aderência média', subtitle: 'média dos alunos'),
+      _ReportMetricCard(icon: Icons.trending_up_rounded, value: stats[3].value, label: 'Evolução média', subtitle: stats[3].subtitle),
+    ];
+
+    if (compact) {
+      return Column(
+        children: <Widget>[
+          for (int i = 0; i < cards.length; i++) ...<Widget>[
+            cards[i],
+            if (i != cards.length - 1) const SizedBox(height: 10),
+          ],
+        ],
+      );
+    }
+
+    return Row(
+      children: <Widget>[
+        for (int i = 0; i < cards.length; i++) ...<Widget>[
+          Expanded(child: cards[i]),
+          if (i != cards.length - 1) const SizedBox(width: 10),
+        ],
+      ],
+    );
+  }
+}
+
 class _ReportMetricCard extends StatelessWidget {
-  const _ReportMetricCard({required this.icon, required this.value, required this.label});
+  const _ReportMetricCard({required this.icon, required this.value, required this.label, required this.subtitle});
 
   final IconData icon;
   final String value;
   final String label;
+  final String subtitle;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: _P.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: _P.borderSoft)),
+      decoration: BoxDecoration(
+        color: _P.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _P.borderSoft),
+      ),
       child: Row(
         children: <Widget>[
           Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(gradient: _P.goldGradient, borderRadius: BorderRadius.circular(11)),
-            child: Icon(icon, color: _P.black, size: 18),
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(gradient: _P.goldGradient, borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: _P.black, size: 19),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(value, style: const TextStyle(color: _P.text, fontSize: 22, fontWeight: FontWeight.w900, height: 1)),
+                Text(value, style: const TextStyle(color: _P.text, fontSize: 23, fontWeight: FontWeight.w900, height: 1)),
                 const SizedBox(height: 5),
-                Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: _P.muted, fontSize: 12, fontWeight: FontWeight.w700)),
+                Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: _P.text, fontSize: 12, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 3),
+                Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: _P.muted, fontSize: 11, fontWeight: FontWeight.w700)),
               ],
             ),
           ),
@@ -1749,12 +1854,183 @@ class _ReportMetricCard extends StatelessWidget {
   }
 }
 
-class _ReportListItem extends StatelessWidget {
-  const _ReportListItem({required this.icon, required this.title, required this.subtitle, required this.showBorder});
+class _ReportPerformancePanel extends StatelessWidget {
+  const _ReportPerformancePanel({
+    required this.averageAdherence,
+    required this.greenCount,
+    required this.yellowCount,
+    required this.redCount,
+    required this.totalStudents,
+  });
+
+  final int averageAdherence;
+  final int greenCount;
+  final int yellowCount;
+  final int redCount;
+  final int totalStudents;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: _P.blackAlpha25, borderRadius: BorderRadius.circular(18), border: Border.all(color: _P.borderSoft)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const _ReportSectionTitle(icon: Icons.insights_rounded, title: 'Resumo de performance', subtitle: 'Leitura rápida da carteira de alunos.'),
+          const SizedBox(height: 16),
+          _ReportBar(label: 'Aderência média', value: averageAdherence, trailing: '$averageAdherence%'),
+          const SizedBox(height: 14),
+          _ReportBar(label: 'Alunos em boa faixa', value: totalStudents == 0 ? 0 : ((greenCount / totalStudents) * 100).round(), trailing: '$greenCount aluno(s)'),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              _ReportStatusPill(label: 'Forte', value: greenCount.toString(), color: _P.green, bg: _P.greenBg),
+              _ReportStatusPill(label: 'Acompanhar', value: yellowCount.toString(), color: _P.gold, bg: _P.goldBadgeBg),
+              _ReportStatusPill(label: 'Revisar', value: redCount.toString(), color: _P.blue, bg: _P.blueBg),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportActionPanel extends StatelessWidget {
+  const _ReportActionPanel({required this.attentionStudents, required this.trainings});
+
+  final List<_StudentData> attentionStudents;
+  final List<_TrainingData> trainings;
+
+  @override
+  Widget build(BuildContext context) {
+    final String firstAttention = attentionStudents.isEmpty ? 'Sem aluno crítico agora' : '${attentionStudents.first.name}: ${attentionStudents.first.adherence}% de aderência';
+    final String trainingText = trainings.isEmpty ? 'Criar ao menos 1 treino local para alimentar histórico.' : 'Validar o treino ${trainings.first.name} com ${trainings.first.studentName}.';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: _P.blackAlpha25, borderRadius: BorderRadius.circular(18), border: Border.all(color: _P.borderSoft)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const _ReportSectionTitle(icon: Icons.task_alt_rounded, title: 'Ações recomendadas', subtitle: 'Próximos passos para o professor.'),
+          const SizedBox(height: 14),
+          _ReportInsightCard(icon: Icons.priority_high_rounded, title: 'Revisar menor aderência', text: firstAttention),
+          const SizedBox(height: 10),
+          _ReportInsightCard(icon: Icons.add_task_rounded, title: 'Próximo treino', text: trainingText),
+          const SizedBox(height: 10),
+          const _ReportInsightCard(icon: Icons.auto_graph_rounded, title: 'Evolução', text: 'Manter carga, presença e execução visíveis no painel.'),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportSectionTitle extends StatelessWidget {
+  const _ReportSectionTitle({required this.icon, required this.title, required this.subtitle});
 
   final IconData icon;
   final String title;
   final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Icon(icon, color: _P.gold, size: 18),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(title, style: const TextStyle(color: _P.gold, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 0.2)),
+              const SizedBox(height: 4),
+              Text(subtitle, style: const TextStyle(color: _P.muted, fontSize: 12, fontWeight: FontWeight.w700, height: 1.3)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ReportListPanel extends StatelessWidget {
+  const _ReportListPanel({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(color: _P.blackAlpha25, borderRadius: BorderRadius.circular(16), border: Border.all(color: _P.borderSoft)),
+      child: Column(children: children),
+    );
+  }
+}
+
+class _ReportStudentRow extends StatelessWidget {
+  const _ReportStudentRow({required this.student, required this.showBorder, this.compactMode = false});
+
+  final _StudentData student;
+  final bool showBorder;
+  final bool compactMode;
+
+  Color get _adherenceColor {
+    if (student.adherence >= 75) return _P.green;
+    if (student.adherence >= 55) return _P.gold;
+    return _P.blue;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: compactMode ? 12 : 14),
+      decoration: BoxDecoration(border: showBorder ? const Border(bottom: BorderSide(color: _P.line)) : null),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(gradient: _P.goldGradient, shape: BoxShape.circle, boxShadow: const <BoxShadow>[BoxShadow(color: _P.goldGlow, blurRadius: 16)]),
+            child: Text(student.initials, style: const TextStyle(color: _P.black, fontSize: 11, fontWeight: FontWeight.w900)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(student.name, style: const TextStyle(color: _P.text, fontSize: 14, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 4),
+                Text(
+                  compactMode ? '${student.status} • ${student.next}' : '${student.objective} • ${student.lastWorkout} • ${student.next}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: _P.muted, fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 112,
+            child: _MiniReportProgress(value: student.adherence, color: _adherenceColor),
+          ),
+          const SizedBox(width: 10),
+          Text('${student.adherence}%', style: TextStyle(color: _adherenceColor, fontSize: 13, fontWeight: FontWeight.w900)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportTrainingRow extends StatelessWidget {
+  const _ReportTrainingRow({required this.training, required this.showBorder});
+
+  final _TrainingData training;
   final bool showBorder;
 
   @override
@@ -1764,19 +2040,171 @@ class _ReportListItem extends StatelessWidget {
       decoration: BoxDecoration(border: showBorder ? const Border(bottom: BorderSide(color: _P.line)) : null),
       child: Row(
         children: <Widget>[
-          Icon(icon, color: _P.gold, size: 19),
+          const Icon(Icons.fitness_center_rounded, color: _P.gold, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(title, style: const TextStyle(color: _P.text, fontSize: 14, fontWeight: FontWeight.w900)),
+                Text(training.name, style: const TextStyle(color: _P.text, fontSize: 14, fontWeight: FontWeight.w900)),
                 const SizedBox(height: 4),
-                Text(subtitle, style: const TextStyle(color: _P.muted, fontSize: 12, fontWeight: FontWeight.w700)),
+                Text(
+                  '${training.studentName} • ${training.exerciseCount} exercício(s) • ${training.nextSession}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: _P.muted, fontSize: 12, fontWeight: FontWeight.w700),
+                ),
               ],
             ),
           ),
+          const SizedBox(width: 10),
+          _TinyBadge(training.createdAt),
         ],
+      ),
+    );
+  }
+}
+
+class _ReportEmptyState extends StatelessWidget {
+  const _ReportEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.all(14),
+      child: Row(
+        children: <Widget>[
+          Icon(Icons.info_outline_rounded, color: _P.gold, size: 20),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Nenhum treino local criado nesta sessão. Use Criar treino para alimentar este relatório.',
+              style: TextStyle(color: _P.muted, fontSize: 12, fontWeight: FontWeight.w700, height: 1.35),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportInsightCard extends StatelessWidget {
+  const _ReportInsightCard({required this.icon, required this.title, required this.text});
+
+  final IconData icon;
+  final String title;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(color: _P.goldBadgeBg, borderRadius: BorderRadius.circular(11), border: Border.all(color: _P.borderSoft)),
+          child: Icon(icon, color: _P.gold, size: 18),
+        ),
+        const SizedBox(width: 11),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(title, style: const TextStyle(color: _P.text, fontSize: 13, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 3),
+              Text(text, style: const TextStyle(color: _P.muted, fontSize: 12, fontWeight: FontWeight.w700, height: 1.35)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ReportStatusPill extends StatelessWidget {
+  const _ReportStatusPill({required this.label, required this.value, required this.color, required this.bg});
+
+  final String label;
+  final String value;
+  final Color color;
+  final Color bg;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999), border: Border.all(color: color.withValues(alpha: 0.45))),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text(value, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w900)),
+          const SizedBox(width: 6),
+          Text(label, style: const TextStyle(color: _P.text, fontSize: 11, fontWeight: FontWeight.w800)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportBar extends StatelessWidget {
+  const _ReportBar({required this.label, required this.value, required this.trailing});
+
+  final String label;
+  final int value;
+  final String trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final double progress = value.clamp(0, 100) / 100;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(child: Text(label, style: const TextStyle(color: _P.text, fontSize: 12, fontWeight: FontWeight.w900))),
+            Text(trailing, style: const TextStyle(color: _P.gold, fontSize: 12, fontWeight: FontWeight.w900)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            height: 10,
+            color: _P.blackAlpha72,
+            alignment: Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: progress,
+              child: Container(
+                decoration: const BoxDecoration(gradient: _P.goldGradient),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MiniReportProgress extends StatelessWidget {
+  const _MiniReportProgress({required this.value, required this.color});
+
+  final int value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        height: 8,
+        color: _P.blackAlpha72,
+        alignment: Alignment.centerLeft,
+        child: FractionallySizedBox(
+          widthFactor: value.clamp(0, 100) / 100,
+          child: Container(color: color),
+        ),
       ),
     );
   }
