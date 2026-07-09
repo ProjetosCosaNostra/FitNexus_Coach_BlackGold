@@ -1596,6 +1596,11 @@ class _ReportDialog extends StatelessWidget {
     return ordered.take(3).toList();
   }
 
+  List<_StudentData> get _sessionStudents {
+    final Set<String> initialNames = ProfessorDashboardPage._initialStudents.map((_StudentData student) => student.name).toSet();
+    return students.where((_StudentData student) => !initialNames.contains(student.name)).toList();
+  }
+
   int get _greenCount => students.where((_StudentData student) => student.adherence >= 75).length;
   int get _yellowCount => students.where((_StudentData student) => student.adherence >= 55 && student.adherence < 75).length;
   int get _redCount => students.where((_StudentData student) => student.adherence < 55).length;
@@ -1606,6 +1611,7 @@ class _ReportDialog extends StatelessWidget {
     final double height = MediaQuery.sizeOf(context).height;
     final bool compact = width < 760;
     final bool twoColumns = width >= 960;
+    final List<_StudentData> sessionStudents = _sessionStudents;
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -1630,6 +1636,12 @@ class _ReportDialog extends StatelessWidget {
                     averageAdherence: _averageAdherence,
                     localTrainingCount: trainings.length,
                   ),
+                  const SizedBox(height: 14),
+                  _ReportSessionPanel(
+                    localStudents: sessionStudents,
+                    trainings: trainings,
+                    compact: compact,
+                  ),
                   const SizedBox(height: 18),
                   if (twoColumns)
                     Row(
@@ -1645,7 +1657,7 @@ class _ReportDialog extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 14),
-                        Expanded(child: _ReportActionPanel(attentionStudents: _attentionStudents, trainings: trainings)),
+                        Expanded(child: _ReportActionPanel(attentionStudents: _attentionStudents, localStudents: sessionStudents, trainings: trainings)),
                       ],
                     )
                   else ...<Widget>[
@@ -1657,7 +1669,7 @@ class _ReportDialog extends StatelessWidget {
                       totalStudents: students.length,
                     ),
                     const SizedBox(height: 14),
-                    _ReportActionPanel(attentionStudents: _attentionStudents, trainings: trainings),
+                    _ReportActionPanel(attentionStudents: _attentionStudents, localStudents: sessionStudents, trainings: trainings),
                   ],
                   const SizedBox(height: 18),
                   _ReportSectionTitle(
@@ -1854,6 +1866,215 @@ class _ReportMetricCard extends StatelessWidget {
   }
 }
 
+class _ReportSessionPanel extends StatelessWidget {
+  const _ReportSessionPanel({required this.localStudents, required this.trainings, required this.compact});
+
+  final List<_StudentData> localStudents;
+  final List<_TrainingData> trainings;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final int movementCount = localStudents.length + trainings.length;
+    final bool hasMovements = movementCount > 0;
+    final String subtitle = hasMovements
+        ? '$movementCount movimento(s) local(is) registrado(s) nesta sessão.'
+        : 'Cadastre aluno ou crie treino para alimentar o relatório ao vivo.';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: hasMovements ? _P.goldBadgeBg : _P.blackAlpha25,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: hasMovements ? _P.goldDeep : _P.borderSoft),
+        boxShadow: hasMovements ? const <BoxShadow>[BoxShadow(color: _P.goldSoftGlow2, blurRadius: 24, offset: Offset(0, 10))] : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          _ReportSectionTitle(
+            icon: Icons.bolt_rounded,
+            title: 'Movimentos da sessão',
+            subtitle: subtitle,
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: <Widget>[
+              _ReportSessionChip(icon: Icons.person_add_alt_1_rounded, label: 'Novos alunos', value: localStudents.length.toString()),
+              _ReportSessionChip(icon: Icons.add_task_rounded, label: 'Treinos locais', value: trainings.length.toString()),
+              _ReportSessionChip(icon: Icons.sync_alt_rounded, label: 'Status', value: hasMovements ? 'Atualizado' : 'Aguardando'),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (!hasMovements)
+            const _ReportEmptyState(
+              text: 'Sem movimentação local nesta sessão. Use Novo aluno ou Criar treino para ver este bloco ganhar vida.',
+            )
+          else if (compact)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                if (localStudents.isNotEmpty) ...<Widget>[
+                  const _ReportMiniTitle(icon: Icons.person_add_alt_1_rounded, text: 'Alunos adicionados agora'),
+                  const SizedBox(height: 8),
+                  _ReportListPanel(
+                    children: <Widget>[
+                      for (int i = 0; i < localStudents.take(3).length; i++)
+                        _ReportSessionStudentRow(student: localStudents[i], showBorder: i != localStudents.take(3).length - 1),
+                    ],
+                  ),
+                ],
+                if (localStudents.isNotEmpty && trainings.isNotEmpty) const SizedBox(height: 12),
+                if (trainings.isNotEmpty) ...<Widget>[
+                  const _ReportMiniTitle(icon: Icons.fitness_center_rounded, text: 'Treinos salvos agora'),
+                  const SizedBox(height: 8),
+                  _ReportListPanel(
+                    children: <Widget>[
+                      for (int i = 0; i < trainings.take(3).length; i++)
+                        _ReportTrainingRow(training: trainings[i], showBorder: i != trainings.take(3).length - 1),
+                    ],
+                  ),
+                ],
+              ],
+            )
+          else
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const _ReportMiniTitle(icon: Icons.person_add_alt_1_rounded, text: 'Alunos adicionados agora'),
+                      const SizedBox(height: 8),
+                      _ReportListPanel(
+                        children: localStudents.isEmpty
+                            ? const <Widget>[_ReportEmptyState(text: 'Nenhum aluno novo nesta sessão.')]
+                            : <Widget>[
+                                for (int i = 0; i < localStudents.take(3).length; i++)
+                                  _ReportSessionStudentRow(student: localStudents[i], showBorder: i != localStudents.take(3).length - 1),
+                              ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const _ReportMiniTitle(icon: Icons.fitness_center_rounded, text: 'Treinos salvos agora'),
+                      const SizedBox(height: 8),
+                      _ReportListPanel(
+                        children: trainings.isEmpty
+                            ? const <Widget>[_ReportEmptyState(text: 'Nenhum treino local salvo nesta sessão.')]
+                            : <Widget>[
+                                for (int i = 0; i < trainings.take(3).length; i++)
+                                  _ReportTrainingRow(training: trainings[i], showBorder: i != trainings.take(3).length - 1),
+                              ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportSessionChip extends StatelessWidget {
+  const _ReportSessionChip({required this.icon, required this.label, required this.value});
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(color: _P.blackAlpha25, borderRadius: BorderRadius.circular(14), border: Border.all(color: _P.borderSoft)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, color: _P.gold, size: 18),
+          const SizedBox(width: 8),
+          Text(value, style: const TextStyle(color: _P.text, fontSize: 16, fontWeight: FontWeight.w900, height: 1)),
+          const SizedBox(width: 6),
+          Text(label, style: const TextStyle(color: _P.muted, fontSize: 12, fontWeight: FontWeight.w800)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportMiniTitle extends StatelessWidget {
+  const _ReportMiniTitle({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Icon(icon, color: _P.gold, size: 16),
+        const SizedBox(width: 8),
+        Text(text, style: const TextStyle(color: _P.gold, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 0.3)),
+      ],
+    );
+  }
+}
+
+class _ReportSessionStudentRow extends StatelessWidget {
+  const _ReportSessionStudentRow({required this.student, required this.showBorder});
+
+  final _StudentData student;
+  final bool showBorder;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      decoration: BoxDecoration(border: showBorder ? const Border(bottom: BorderSide(color: _P.line)) : null),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(gradient: _P.goldGradient, shape: BoxShape.circle, boxShadow: const <BoxShadow>[BoxShadow(color: _P.goldGlow, blurRadius: 16)]),
+            child: Text(student.initials, style: const TextStyle(color: _P.black, fontSize: 11, fontWeight: FontWeight.w900)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(student.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: _P.text, fontSize: 14, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 4),
+                Text(
+                  '${student.objective} • ${student.level} • ${student.next}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: _P.muted, fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          _TinyBadge(student.status),
+        ],
+      ),
+    );
+  }
+}
+
 class _ReportPerformancePanel extends StatelessWidget {
   const _ReportPerformancePanel({
     required this.averageAdherence,
@@ -1899,14 +2120,19 @@ class _ReportPerformancePanel extends StatelessWidget {
 }
 
 class _ReportActionPanel extends StatelessWidget {
-  const _ReportActionPanel({required this.attentionStudents, required this.trainings});
+  const _ReportActionPanel({required this.attentionStudents, required this.localStudents, required this.trainings});
 
   final List<_StudentData> attentionStudents;
+  final List<_StudentData> localStudents;
   final List<_TrainingData> trainings;
 
   @override
   Widget build(BuildContext context) {
     final String firstAttention = attentionStudents.isEmpty ? 'Sem aluno crítico agora' : '${attentionStudents.first.name}: ${attentionStudents.first.adherence}% de aderência';
+    final String studentActionTitle = localStudents.isEmpty ? 'Revisar menor aderência' : 'Acompanhar novo aluno';
+    final String studentActionText = localStudents.isEmpty
+        ? firstAttention
+        : '${localStudents.first.name}: conferir objetivo, treino inicial e próxima sessão.';
     final String trainingText = trainings.isEmpty ? 'Criar ao menos 1 treino local para alimentar histórico.' : 'Validar o treino ${trainings.first.name} com ${trainings.first.studentName}.';
 
     return Container(
@@ -1917,7 +2143,7 @@ class _ReportActionPanel extends StatelessWidget {
         children: <Widget>[
           const _ReportSectionTitle(icon: Icons.task_alt_rounded, title: 'Ações recomendadas', subtitle: 'Próximos passos para o professor.'),
           const SizedBox(height: 14),
-          _ReportInsightCard(icon: Icons.priority_high_rounded, title: 'Revisar menor aderência', text: firstAttention),
+          _ReportInsightCard(icon: Icons.priority_high_rounded, title: studentActionTitle, text: studentActionText),
           const SizedBox(height: 10),
           _ReportInsightCard(icon: Icons.add_task_rounded, title: 'Próximo treino', text: trainingText),
           const SizedBox(height: 10),
@@ -2066,20 +2292,22 @@ class _ReportTrainingRow extends StatelessWidget {
 }
 
 class _ReportEmptyState extends StatelessWidget {
-  const _ReportEmptyState();
+  const _ReportEmptyState({this.text = 'Nenhum treino local criado nesta sessão. Use Criar treino para alimentar este relatório.'});
+
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(14),
+    return Padding(
+      padding: const EdgeInsets.all(14),
       child: Row(
         children: <Widget>[
-          Icon(Icons.info_outline_rounded, color: _P.gold, size: 20),
-          SizedBox(width: 12),
+          const Icon(Icons.info_outline_rounded, color: _P.gold, size: 20),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Nenhum treino local criado nesta sessão. Use Criar treino para alimentar este relatório.',
-              style: TextStyle(color: _P.muted, fontSize: 12, fontWeight: FontWeight.w700, height: 1.35),
+              text,
+              style: const TextStyle(color: _P.muted, fontSize: 12, fontWeight: FontWeight.w700, height: 1.35),
             ),
           ),
         ],
