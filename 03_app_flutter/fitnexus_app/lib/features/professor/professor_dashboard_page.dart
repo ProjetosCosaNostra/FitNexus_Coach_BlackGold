@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfessorDashboardPage extends StatefulWidget {
   const ProfessorDashboardPage({super.key});
@@ -80,8 +82,81 @@ class ProfessorDashboardPage extends StatefulWidget {
 }
 
 class _ProfessorDashboardPageState extends State<ProfessorDashboardPage> {
+  static const String _studentsStorageKey = 'fitnexus_professor_students_v1';
+  static const String _trainingsStorageKey = 'fitnexus_professor_trainings_v1';
+
   late final List<_StudentData> _students = List<_StudentData>.of(ProfessorDashboardPage._initialStudents);
   final List<_TrainingData> _trainings = <_TrainingData>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreLocalSnapshot();
+  }
+
+  Future<void> _restoreLocalSnapshot() async {
+    try {
+      final SharedPreferences preferences = await SharedPreferences.getInstance();
+      final List<_StudentData> storedStudents = _decodeStudents(preferences.getString(_studentsStorageKey));
+      final List<_TrainingData> storedTrainings = _decodeTrainings(preferences.getString(_trainingsStorageKey));
+
+      if (!mounted || (storedStudents.isEmpty && storedTrainings.isEmpty)) return;
+
+      setState(() {
+        if (storedStudents.isNotEmpty) {
+          _students
+            ..clear()
+            ..addAll(storedStudents);
+        }
+
+        _trainings
+          ..clear()
+          ..addAll(storedTrainings);
+      });
+    } catch (_) {
+      // Se o navegador bloquear o armazenamento, o painel continua funcionando em memória.
+    }
+  }
+
+  Future<void> _saveLocalSnapshot() async {
+    try {
+      final SharedPreferences preferences = await SharedPreferences.getInstance();
+      await preferences.setString(
+        _studentsStorageKey,
+        jsonEncode(_students.map((student) => student.toJson()).toList()),
+      );
+      await preferences.setString(
+        _trainingsStorageKey,
+        jsonEncode(_trainings.map((training) => training.toJson()).toList()),
+      );
+    } catch (_) {
+      // Falha de gravação local não pode travar o fluxo do professor.
+    }
+  }
+
+  List<_StudentData> _decodeStudents(String? payload) {
+    if (payload == null || payload.trim().isEmpty) return <_StudentData>[];
+
+    final Object? decoded = jsonDecode(payload);
+    if (decoded is! List) return <_StudentData>[];
+
+    return decoded
+        .whereType<Map<String, dynamic>>()
+        .map(_StudentData.fromJson)
+        .toList();
+  }
+
+  List<_TrainingData> _decodeTrainings(String? payload) {
+    if (payload == null || payload.trim().isEmpty) return <_TrainingData>[];
+
+    final Object? decoded = jsonDecode(payload);
+    if (decoded is! List) return <_TrainingData>[];
+
+    return decoded
+        .whereType<Map<String, dynamic>>()
+        .map(_TrainingData.fromJson)
+        .toList();
+  }
 
   List<_StatData> get _stats {
     final int activeStudents = 18 + (_students.length - ProfessorDashboardPage._initialStudents.length);
@@ -113,6 +188,10 @@ class _ProfessorDashboardPageState extends State<ProfessorDashboardPage> {
     setState(() {
       _students.insert(0, student);
     });
+
+    await _saveLocalSnapshot();
+
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -150,6 +229,10 @@ class _ProfessorDashboardPageState extends State<ProfessorDashboardPage> {
         );
       }
     });
+
+    await _saveLocalSnapshot();
+
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -256,6 +339,10 @@ class _ProfessorDashboardPageState extends State<ProfessorDashboardPage> {
         );
       }
     });
+
+    await _saveLocalSnapshot();
+
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -1700,8 +1787,8 @@ class _ReportDialog extends StatelessWidget {
                   const SizedBox(height: 18),
                   _ReportSectionTitle(
                     icon: Icons.assignment_rounded,
-                    title: 'Treinos locais da sessão',
-                    subtitle: trainings.isEmpty ? 'Ainda sem treino local novo nesta sessão.' : '${trainings.length} treino(s) salvo(s) localmente.',
+                    title: 'Treinos locais salvos',
+                    subtitle: trainings.isEmpty ? 'Ainda sem treino local salvo no navegador.' : '${trainings.length} treino(s) salvo(s) localmente.',
                   ),
                   const SizedBox(height: 10),
                   _ReportListPanel(
@@ -1878,7 +1965,7 @@ class _ReportSessionPanel extends StatelessWidget {
     final int movementCount = localStudents.length + trainings.length;
     final bool hasMovements = movementCount > 0;
     final String subtitle = hasMovements
-        ? '$movementCount movimento(s) local(is) registrado(s) nesta sessão.'
+        ? '$movementCount movimento(s) local(is) salvo(s) neste navegador.'
         : 'Cadastre aluno ou crie treino para alimentar o relatório ao vivo.';
 
     return Container(
@@ -1895,7 +1982,7 @@ class _ReportSessionPanel extends StatelessWidget {
         children: <Widget>[
           _ReportSectionTitle(
             icon: Icons.bolt_rounded,
-            title: 'Movimentos da sessão',
+            title: 'Movimentos locais',
             subtitle: subtitle,
           ),
           const SizedBox(height: 14),
@@ -1911,14 +1998,14 @@ class _ReportSessionPanel extends StatelessWidget {
           const SizedBox(height: 14),
           if (!hasMovements)
             const _ReportEmptyState(
-              text: 'Sem movimentação local nesta sessão. Use Novo aluno ou Criar treino para ver este bloco ganhar vida.',
+              text: 'Sem movimentação local salva. Use Novo aluno ou Criar treino para ver este bloco ganhar vida.',
             )
           else if (compact)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 if (localStudents.isNotEmpty) ...<Widget>[
-                  const _ReportMiniTitle(icon: Icons.person_add_alt_1_rounded, text: 'Alunos adicionados agora'),
+                  const _ReportMiniTitle(icon: Icons.person_add_alt_1_rounded, text: 'Alunos salvos localmente'),
                   const SizedBox(height: 8),
                   _ReportListPanel(
                     children: <Widget>[
@@ -1929,7 +2016,7 @@ class _ReportSessionPanel extends StatelessWidget {
                 ],
                 if (localStudents.isNotEmpty && trainings.isNotEmpty) const SizedBox(height: 12),
                 if (trainings.isNotEmpty) ...<Widget>[
-                  const _ReportMiniTitle(icon: Icons.fitness_center_rounded, text: 'Treinos salvos agora'),
+                  const _ReportMiniTitle(icon: Icons.fitness_center_rounded, text: 'Treinos salvos localmente'),
                   const SizedBox(height: 8),
                   _ReportListPanel(
                     children: <Widget>[
@@ -1948,11 +2035,11 @@ class _ReportSessionPanel extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      const _ReportMiniTitle(icon: Icons.person_add_alt_1_rounded, text: 'Alunos adicionados agora'),
+                      const _ReportMiniTitle(icon: Icons.person_add_alt_1_rounded, text: 'Alunos salvos localmente'),
                       const SizedBox(height: 8),
                       _ReportListPanel(
                         children: localStudents.isEmpty
-                            ? const <Widget>[_ReportEmptyState(text: 'Nenhum aluno novo nesta sessão.')]
+                            ? const <Widget>[_ReportEmptyState(text: 'Nenhum aluno novo salvo localmente.')]
                             : <Widget>[
                                 for (int i = 0; i < localStudents.take(3).length; i++)
                                   _ReportSessionStudentRow(student: localStudents[i], showBorder: i != localStudents.take(3).length - 1),
@@ -1966,11 +2053,11 @@ class _ReportSessionPanel extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      const _ReportMiniTitle(icon: Icons.fitness_center_rounded, text: 'Treinos salvos agora'),
+                      const _ReportMiniTitle(icon: Icons.fitness_center_rounded, text: 'Treinos salvos localmente'),
                       const SizedBox(height: 8),
                       _ReportListPanel(
                         children: trainings.isEmpty
-                            ? const <Widget>[_ReportEmptyState(text: 'Nenhum treino local salvo nesta sessão.')]
+                            ? const <Widget>[_ReportEmptyState(text: 'Nenhum treino local salvo neste navegador.')]
                             : <Widget>[
                                 for (int i = 0; i < trainings.take(3).length; i++)
                                   _ReportTrainingRow(training: trainings[i], showBorder: i != trainings.take(3).length - 1),
@@ -2292,7 +2379,7 @@ class _ReportTrainingRow extends StatelessWidget {
 }
 
 class _ReportEmptyState extends StatelessWidget {
-  const _ReportEmptyState({this.text = 'Nenhum treino local criado nesta sessão. Use Criar treino para alimentar este relatório.'});
+  const _ReportEmptyState({this.text = 'Nenhum treino local salvo no navegador. Use Criar treino para alimentar este relatório.'});
 
   final String text;
 
@@ -3467,6 +3554,28 @@ class _TrainingData {
   final String createdAt;
 
   int get exerciseCount => exercises.length;
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'studentName': studentName,
+      'name': name,
+      'nextSession': nextSession,
+      'notes': notes,
+      'exercises': exercises,
+      'createdAt': createdAt,
+    };
+  }
+
+  factory _TrainingData.fromJson(Map<String, dynamic> json) {
+    return _TrainingData(
+      studentName: (json['studentName'] as String?) ?? '',
+      name: (json['name'] as String?) ?? 'Treino local',
+      nextSession: (json['nextSession'] as String?) ?? 'Próxima sessão',
+      notes: (json['notes'] as String?) ?? '',
+      exercises: ((json['exercises'] as List?) ?? const <String>[]).whereType<String>().toList(),
+      createdAt: (json['createdAt'] as String?) ?? '',
+    );
+  }
 }
 
 class _StudentData {
@@ -3519,6 +3628,47 @@ class _StudentData {
       tone: tone ?? this.tone,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'name': name,
+      'initials': initials,
+      'objective': objective,
+      'level': level,
+      'lastWorkout': lastWorkout,
+      'lastDate': lastDate,
+      'adherence': adherence,
+      'next': next,
+      'status': status,
+      'tone': tone.name,
+    };
+  }
+
+  factory _StudentData.fromJson(Map<String, dynamic> json) {
+    return _StudentData(
+      name: (json['name'] as String?) ?? 'Aluno',
+      initials: (json['initials'] as String?) ?? 'AL',
+      objective: (json['objective'] as String?) ?? 'Hipertrofia',
+      level: (json['level'] as String?) ?? 'Iniciante',
+      lastWorkout: (json['lastWorkout'] as String?) ?? 'Avaliação inicial',
+      lastDate: (json['lastDate'] as String?) ?? '',
+      adherence: (json['adherence'] as num?)?.round() ?? 0,
+      next: (json['next'] as String?) ?? 'Hoje 18:00',
+      status: (json['status'] as String?) ?? 'Novo aluno',
+      tone: _StatusToneCodec.fromName(json['tone'] as String?),
+    );
+  }
+}
+
+class _StatusToneCodec {
+  const _StatusToneCodec._();
+
+  static _StatusTone fromName(String? name) {
+    return _StatusTone.values.firstWhere(
+      (tone) => tone.name == name,
+      orElse: () => _StatusTone.gold,
+    );
+  }
 }
 
 class _ScheduleData {
@@ -3530,4 +3680,5 @@ class _ScheduleData {
 }
 
 enum _StatusTone { green, gold, blue, purple }
+
 
