@@ -47,16 +47,16 @@ class _StudentFeedbackSheetState extends State<StudentFeedbackSheet> {
       _error = null;
     });
     try {
-      final StudentFeedbackContext context =
+      final StudentFeedbackContext feedbackContext =
           await _repository.fetchContext(widget.token);
       if (!mounted) return;
-      _context = context;
-      if (context.submitted) {
-        _exertion = context.perceivedExertion ?? _exertion;
-        _pain = context.painScore ?? _pain;
-        _energy = context.energyScore ?? _energy;
-        _painLocationController.text = context.painLocation ?? '';
-        _noteController.text = context.note ?? '';
+      _context = feedbackContext;
+      if (feedbackContext.submitted) {
+        _exertion = feedbackContext.perceivedExertion ?? _exertion;
+        _pain = feedbackContext.painScore ?? _pain;
+        _energy = feedbackContext.energyScore ?? _energy;
+        _painLocationController.text = feedbackContext.painLocation ?? '';
+        _noteController.text = feedbackContext.note ?? '';
       }
       setState(() {});
     } catch (error) {
@@ -68,8 +68,8 @@ class _StudentFeedbackSheetState extends State<StudentFeedbackSheet> {
   }
 
   Future<void> _submit() async {
-    final StudentFeedbackContext? context = _context;
-    final String sessionId = context?.sessionId ?? '';
+    final StudentFeedbackContext? feedbackContext = _context;
+    final String sessionId = feedbackContext?.sessionId ?? '';
     if (_saving || sessionId.isEmpty) return;
 
     setState(() {
