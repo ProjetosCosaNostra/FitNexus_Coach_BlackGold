@@ -216,11 +216,13 @@ class ProfessorDataRepository {
     String? nextSession,
     String? notes,
     String? decisionReason,
+    String? decisionIntelligenceRunId,
   }) async {
     if (exercises.isEmpty) {
       throw ArgumentError.value(exercises, 'exercises', 'Informe pelo menos um exercício.');
     }
 
+    final String? intelligenceRun = _nullable(decisionIntelligenceRunId);
     final dynamic result = await _client.rpc(
       'create_training_plan_v2',
       params: <String, dynamic>{
@@ -234,8 +236,12 @@ class ProfessorDataRepository {
         'p_decision_reason': _nullable(decisionReason),
         'p_source_template_id': null,
         'p_trigger_context': <String, dynamic>{
-          'source': 'professor_dashboard',
+          'source': intelligenceRun == null
+              ? 'professor_dashboard'
+              : 'decision_intelligence',
           'human_confirmed': true,
+          if (intelligenceRun != null)
+            'decision_intelligence_run_id': intelligenceRun,
         },
       },
     );
