@@ -107,4 +107,35 @@ void main() {
       'HIGH_PAIN_REQUIRES_HUMAN_REVIEW',
     );
   });
+
+  test('calibration parses human decision outcomes without clinical claims', () {
+    final DecisionCalibrationSnapshot snapshot =
+        DecisionCalibrationSnapshot.fromJson(<String, dynamic>{
+      'summary': <String, dynamic>{
+        'total_runs': 10,
+        'resolved_runs': 8,
+        'unresolved_runs': 2,
+        'accepted': 3,
+        'modified': 2,
+        'rejected': 2,
+        'no_action': 1,
+        'adoption_rate': 63,
+        'exact_acceptance_rate': 38,
+        'modification_rate': 25,
+      },
+      'interpretation':
+          'Calibração de uso e decisão humana; não mede eficácia clínica nem autoriza automação de prescrição.',
+      'generated_at': '2026-08-18T21:20:00Z',
+    });
+
+    expect(snapshot.summary.totalRuns, 10);
+    expect(snapshot.summary.resolvedRuns, 8);
+    expect(snapshot.summary.unresolvedRuns, 2);
+    expect(snapshot.summary.accepted, 3);
+    expect(snapshot.summary.modified, 2);
+    expect(snapshot.summary.rejected, 2);
+    expect(snapshot.summary.noAction, 1);
+    expect(snapshot.summary.adoptionRate, 63);
+    expect(snapshot.interpretation, contains('não mede eficácia clínica'));
+  });
 }
