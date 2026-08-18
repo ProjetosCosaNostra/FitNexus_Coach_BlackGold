@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../auth/auth_service.dart';
 import 'professor_data_repository.dart';
 import 'professor_lineage_repository.dart';
 
@@ -186,6 +187,70 @@ class DecisionIntelligenceHistoryItem {
   }
 }
 
+class DecisionCalibrationSummary {
+  const DecisionCalibrationSummary({
+    required this.totalRuns,
+    required this.resolvedRuns,
+    required this.unresolvedRuns,
+    required this.accepted,
+    required this.modified,
+    required this.rejected,
+    required this.noAction,
+    required this.adoptionRate,
+    required this.exactAcceptanceRate,
+    required this.modificationRate,
+  });
+
+  final int totalRuns;
+  final int resolvedRuns;
+  final int unresolvedRuns;
+  final int accepted;
+  final int modified;
+  final int rejected;
+  final int noAction;
+  final int adoptionRate;
+  final int exactAcceptanceRate;
+  final int modificationRate;
+
+  factory DecisionCalibrationSummary.fromJson(Map<String, dynamic> json) {
+    int number(String key) => (json[key] as num?)?.toInt() ?? 0;
+    return DecisionCalibrationSummary(
+      totalRuns: number('total_runs'),
+      resolvedRuns: number('resolved_runs'),
+      unresolvedRuns: number('unresolved_runs'),
+      accepted: number('accepted'),
+      modified: number('modified'),
+      rejected: number('rejected'),
+      noAction: number('no_action'),
+      adoptionRate: number('adoption_rate'),
+      exactAcceptanceRate: number('exact_acceptance_rate'),
+      modificationRate: number('modification_rate'),
+    );
+  }
+}
+
+class DecisionCalibrationSnapshot {
+  const DecisionCalibrationSnapshot({
+    required this.summary,
+    required this.interpretation,
+    required this.generatedAt,
+  });
+
+  final DecisionCalibrationSummary summary;
+  final String interpretation;
+  final DateTime generatedAt;
+
+  factory DecisionCalibrationSnapshot.fromJson(Map<String, dynamic> json) {
+    return DecisionCalibrationSnapshot(
+      summary: DecisionCalibrationSummary.fromJson(_map(json['summary'])),
+      interpretation: json['interpretation'] as String? ??
+          'Calibração de uso e decisão humana.',
+      generatedAt: DateTime.tryParse(json['generated_at']?.toString() ?? '') ??
+          DateTime.now(),
+    );
+  }
+}
+
 class ProfessorDecisionIntelligenceRepository {
   ProfessorDecisionIntelligenceRepository._();
 
@@ -223,6 +288,36 @@ class ProfessorDecisionIntelligenceRepository {
         )
         .toList(growable: false);
   }
+
+  Future<void> recordOutcome({
+    required String runId,
+    required String outcome,
+    String? note,
+  }) async {
+    await _client.rpc(
+      'record_decision_intelligence_outcome',
+      params: <String, dynamic>{
+        'p_run_id': runId,
+        'p_outcome': outcome,
+        'p_note': _nullable(note),
+      },
+    );
+  }
+
+  Future<DecisionCalibrationSnapshot> fetchCalibration() async {
+    final String organizationId =
+        await AuthService.instance.ensureProfessorOrganization();
+    final dynamic response = await _client.rpc(
+      'get_decision_intelligence_calibration',
+      params: <String, dynamic>{'p_organization_id': organizationId},
+    );
+    return DecisionCalibrationSnapshot.fromJson(_map(response));
+  }
+}
+
+String? _nullable(String? value) {
+  final String normalized = (value ?? '').trim();
+  return normalized.isEmpty ? null : normalized;
 }
 
 Map<String, dynamic> _map(dynamic value) {

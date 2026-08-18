@@ -5,6 +5,7 @@ on:
     paths:
       - '03_app_flutter/fitnexus_app/**'
       - '04_backend_supabase/project_identity.json'
+      - '04_backend_supabase/migrations/**'
       - '04_backend_supabase/tools/**'
       - '.github/workflows/flutter_quality_gate.yml'
   push:
@@ -14,6 +15,7 @@ on:
     paths:
       - '03_app_flutter/fitnexus_app/**'
       - '04_backend_supabase/project_identity.json'
+      - '04_backend_supabase/migrations/**'
       - '04_backend_supabase/tools/**'
       - '.github/workflows/flutter_quality_gate.yml'
 
@@ -33,6 +35,9 @@ jobs:
 
       - name: Supabase project identity guard
         run: python ../../04_backend_supabase/tools/verify_project_identity.py
+
+      - name: Decision Intelligence contract guard
+        run: python ../../04_backend_supabase/tools/verify_decision_intelligence_contract.py
 
       - name: Set up Flutter stable
         uses: subosito/flutter-action@v2
