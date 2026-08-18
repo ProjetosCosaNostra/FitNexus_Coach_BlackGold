@@ -10,6 +10,17 @@ import '../features/student/student_workout_page.dart';
 class FitNexusApp extends StatelessWidget {
   const FitNexusApp({super.key});
 
+  Route<dynamic>? _onGenerateRoute(RouteSettings settings) {
+    final Uri uri = Uri.tryParse(settings.name ?? '') ?? Uri();
+    if (uri.path == '/student') {
+      return MaterialPageRoute<void>(
+        settings: settings,
+        builder: (_) => StudentWorkoutPage(token: uri.queryParameters['token']),
+      );
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -34,6 +45,7 @@ class FitNexusApp extends StatelessWidget {
         '/professor': (_) => const AuthenticatedProfessorPage(),
         '/student': (_) => const StudentWorkoutPage(),
       },
+      onGenerateRoute: _onGenerateRoute,
     );
   }
 }
