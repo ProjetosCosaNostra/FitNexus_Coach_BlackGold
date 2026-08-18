@@ -76,6 +76,7 @@ class TrainingLineageRecord {
         'initial_prescription' => 'Prescrição inicial',
         'template_assignment' => 'Smart Template',
         'manual_revision' => 'Revisão manual',
+        'restoration' => 'Restauração controlada',
         'legacy_import' => 'Histórico recuperado',
         _ => 'Decisão registrada',
       };
@@ -141,6 +142,8 @@ class TrainingChangePreview {
   final List<String> removed;
   final List<String> changed;
 
+  bool get hasChanges => added.isNotEmpty || removed.isNotEmpty || changed.isNotEmpty;
+
   factory TrainingChangePreview.fromJson(Map<String, dynamic> json) {
     String itemName(dynamic row) => _map(row)['name'] as String? ?? 'Exercício';
     String changedLabel(dynamic row) {
@@ -193,10 +196,33 @@ class ProfessorLineageRepository {
     );
     return TrainingChangePreview.fromJson(_map(response));
   }
+
+  Future<String> restoreVersion({
+    required String planId,
+    String? decisionReason,
+  }) async {
+    final dynamic response = await _client.rpc(
+      'restore_training_plan_version',
+      params: <String, dynamic>{
+        'p_plan_id': planId,
+        'p_decision_reason': _nullable(decisionReason),
+      },
+    );
+    final String restoredPlanId = response?.toString() ?? '';
+    if (restoredPlanId.isEmpty) {
+      throw StateError('O FitNexus não retornou a versão restaurada.');
+    }
+    return restoredPlanId;
+  }
 }
 
 Map<String, dynamic> _map(dynamic value) {
   if (value is Map<String, dynamic>) return value;
   if (value is Map) return Map<String, dynamic>.from(value);
   return <String, dynamic>{};
+}
+
+String? _nullable(String? value) {
+  final String normalized = (value ?? '').trim();
+  return normalized.isEmpty ? null : normalized;
 }
