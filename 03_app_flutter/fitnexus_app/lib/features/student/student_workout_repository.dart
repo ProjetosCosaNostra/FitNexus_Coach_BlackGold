@@ -58,7 +58,10 @@ class StudentWorkoutHistoryItem {
 
   int get percent => totalExercises == 0
       ? 0
-      : ((completedExercises / totalExercises) * 100).round().clamp(0, 100);
+      : ((completedExercises / totalExercises) * 100)
+          .round()
+          .clamp(0, 100)
+          .toInt();
 
   factory StudentWorkoutHistoryItem.fromJson(Map<String, dynamic> json) {
     return StudentWorkoutHistoryItem(
@@ -113,14 +116,19 @@ class StudentWorkoutSnapshot {
 
   int get completionPercent => exercises.isEmpty
       ? 0
-      : ((completedExercises / exercises.length) * 100).round().clamp(0, 100);
+      : ((completedExercises / exercises.length) * 100)
+          .round()
+          .clamp(0, 100)
+          .toInt();
 
   factory StudentWorkoutSnapshot.fromJson(Map<String, dynamic> json) {
     final Map<String, dynamic> student = _map(json['student']);
     final Map<String, dynamic> plan = _map(json['plan']);
     final Map<String, dynamic> session = _map(json['session']);
-    final List<dynamic> exerciseRows = json['exercises'] as List<dynamic>? ?? const <dynamic>[];
-    final List<dynamic> historyRows = json['history'] as List<dynamic>? ?? const <dynamic>[];
+    final List<dynamic> exerciseRows =
+        json['exercises'] as List<dynamic>? ?? const <dynamic>[];
+    final List<dynamic> historyRows =
+        json['history'] as List<dynamic>? ?? const <dynamic>[];
 
     return StudentWorkoutSnapshot(
       studentName: student['name'] as String? ?? 'Aluno FitNexus',
