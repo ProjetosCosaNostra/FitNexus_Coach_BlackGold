@@ -12,6 +12,7 @@ class TrainingDecisionStudioPage extends StatefulWidget {
     this.initialNotes,
     this.initialExercises = const <TrainingExerciseDraft>[],
     this.initialDecisionIntelligenceRunId,
+    this.initialSourceTemplateId,
   });
 
   final String? initialStudentId;
@@ -20,6 +21,7 @@ class TrainingDecisionStudioPage extends StatefulWidget {
   final String? initialNotes;
   final List<TrainingExerciseDraft> initialExercises;
   final String? initialDecisionIntelligenceRunId;
+  final String? initialSourceTemplateId;
 
   @override
   State<TrainingDecisionStudioPage> createState() =>
@@ -189,6 +191,7 @@ class _TrainingDecisionStudioPageState
         notes: _notesController.text,
         decisionReason: _reasonController.text,
         decisionIntelligenceRunId: widget.initialDecisionIntelligenceRunId,
+        sourceTemplateId: widget.initialSourceTemplateId,
       );
 
       if (!mounted) return;
