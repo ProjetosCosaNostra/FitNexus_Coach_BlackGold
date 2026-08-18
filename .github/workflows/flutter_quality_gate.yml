@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - '03_app_flutter/fitnexus_app/**'
+      - '04_backend_supabase/project_identity.json'
+      - '04_backend_supabase/tools/**'
       - '.github/workflows/flutter_quality_gate.yml'
   push:
     branches:
@@ -11,6 +13,8 @@ on:
       - 'blackgold/**'
     paths:
       - '03_app_flutter/fitnexus_app/**'
+      - '04_backend_supabase/project_identity.json'
+      - '04_backend_supabase/tools/**'
       - '.github/workflows/flutter_quality_gate.yml'
 
 permissions:
@@ -26,6 +30,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+
+      - name: Supabase project identity guard
+        run: python ../../04_backend_supabase/tools/verify_project_identity.py
 
       - name: Set up Flutter stable
         uses: subosito/flutter-action@v2

@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "project_name": "FitNexus Coach BlackGold",
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "project_url": "https://mceukeondizkwlpfxzgf.supabase.co",
+  "region": "sa-east-1",
+  "authority": "versioned_project_identity",
+  "rule": "Never choose a migration target from an account-wide project listing alone. Verify this manifest against the Flutter Supabase config and the resolved Supabase project before any remote schema mutation."
+}
