@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../auth/auth_gate.dart';
 import '../auth/auth_service.dart';
+import 'professor_decision_intelligence_page.dart';
 import 'professor_feedback_page.dart';
 import 'professor_lineage_page.dart';
 import 'professor_live_dashboard_page.dart';
@@ -38,6 +39,14 @@ class _AuthenticatedProfessorPageState
   void _openLineage(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const ProfessorLineagePage()),
+    );
+  }
+
+  void _openDecisionIntelligence(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const ProfessorDecisionIntelligencePage(),
+      ),
     );
   }
 
@@ -144,6 +153,18 @@ class _AuthenticatedProfessorPageState
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: <Widget>[
+                      FloatingActionButton.extended(
+                        heroTag: 'fitnexus_decision_intelligence',
+                        onPressed: () => _openDecisionIntelligence(context),
+                        backgroundColor: const Color(0xFF171717),
+                        foregroundColor: const Color(0xFF8EBBFF),
+                        icon: const Icon(Icons.psychology_alt_rounded),
+                        label: const Text(
+                          'Inteligência',
+                          style: TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       FloatingActionButton.extended(
                         heroTag: 'fitnexus_lineage',
                         onPressed: () => _openLineage(context),
