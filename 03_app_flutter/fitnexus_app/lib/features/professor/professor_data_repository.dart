@@ -215,13 +215,14 @@ class ProfessorDataRepository {
     required List<TrainingExerciseDraft> exercises,
     String? nextSession,
     String? notes,
+    String? decisionReason,
   }) async {
     if (exercises.isEmpty) {
       throw ArgumentError.value(exercises, 'exercises', 'Informe pelo menos um exercício.');
     }
 
     final dynamic result = await _client.rpc(
-      'create_training_plan',
+      'create_training_plan_v2',
       params: <String, dynamic>{
         'p_student_id': studentId,
         'p_name': name.trim(),
@@ -230,6 +231,12 @@ class ProfessorDataRepository {
         'p_exercises': exercises
             .map((TrainingExerciseDraft exercise) => exercise.toJson())
             .toList(growable: false),
+        'p_decision_reason': _nullable(decisionReason),
+        'p_source_template_id': null,
+        'p_trigger_context': <String, dynamic>{
+          'source': 'professor_dashboard',
+          'human_confirmed': true,
+        },
       },
     );
 
