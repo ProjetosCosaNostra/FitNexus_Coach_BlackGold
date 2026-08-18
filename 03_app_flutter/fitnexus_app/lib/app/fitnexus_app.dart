@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../features/auth/auth_gate.dart';
 import '../features/auth/auth_preview_page.dart';
 import '../features/demo/demo_home_page.dart';
 import '../features/landing/ecosystem_links_page.dart';
 import '../features/landing/landing_page.dart';
-import '../features/professor/professor_dashboard_page.dart';
+import '../features/professor/authenticated_professor_page.dart';
 import '../features/student/student_workout_page.dart';
 
 class FitNexusApp extends StatelessWidget {
@@ -32,7 +31,7 @@ class FitNexusApp extends StatelessWidget {
         '/links': (_) => const EcosystemLinksPage(),
         '/demo': (_) => const DemoHomePage(),
         '/auth': (_) => const AuthPreviewPage(),
-        '/professor': (_) => const AuthGate(child: ProfessorDashboardPage()),
+        '/professor': (_) => const AuthenticatedProfessorPage(),
         '/student': (_) => const StudentWorkoutPage(),
       },
     );
