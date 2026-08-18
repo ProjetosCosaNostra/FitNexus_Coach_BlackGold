@@ -1,0 +1,46 @@
+name: Flutter Quality Gate
+
+on:
+  pull_request:
+    paths:
+      - '03_app_flutter/fitnexus_app/**'
+      - '.github/workflows/flutter_quality_gate.yml'
+  push:
+    branches:
+      - main
+      - 'blackgold/**'
+    paths:
+      - '03_app_flutter/fitnexus_app/**'
+      - '.github/workflows/flutter_quality_gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 03_app_flutter/fitnexus_app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Static analysis
+        run: flutter analyze
+
+      - name: Widget and unit tests
+        run: flutter test
