@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../auth/auth_gate.dart';
 import '../auth/auth_service.dart';
 import 'professor_feedback_page.dart';
+import 'professor_lineage_page.dart';
 import 'professor_live_dashboard_page.dart';
 import 'professor_progress_page.dart';
 import 'professor_templates_page.dart';
@@ -32,6 +33,12 @@ class _AuthenticatedProfessorPageState
     final NavigatorState navigator = Navigator.of(context);
     await AuthService.instance.signOut();
     navigator.pushNamedAndRemoveUntil('/auth', (Route<dynamic> route) => false);
+  }
+
+  void _openLineage(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const ProfessorLineagePage()),
+    );
   }
 
   @override
@@ -133,16 +140,34 @@ class _AuthenticatedProfessorPageState
                 right: 22,
                 bottom: wide ? 22 : 92,
                 child: SafeArea(
-                  child: FloatingActionButton.extended(
-                    heroTag: 'fitnexus_logout',
-                    onPressed: () => _signOut(context),
-                    backgroundColor: const Color(0xFFE1B92F),
-                    foregroundColor: Colors.black,
-                    icon: const Icon(Icons.logout_rounded),
-                    label: const Text(
-                      'Sair',
-                      style: TextStyle(fontWeight: FontWeight.w900),
-                    ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: <Widget>[
+                      FloatingActionButton.extended(
+                        heroTag: 'fitnexus_lineage',
+                        onPressed: () => _openLineage(context),
+                        backgroundColor: const Color(0xFF171717),
+                        foregroundColor: const Color(0xFFFFD45A),
+                        icon: const Icon(Icons.account_tree_rounded),
+                        label: const Text(
+                          'Decisões',
+                          style: TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      FloatingActionButton.extended(
+                        heroTag: 'fitnexus_logout',
+                        onPressed: () => _signOut(context),
+                        backgroundColor: const Color(0xFFE1B92F),
+                        foregroundColor: Colors.black,
+                        icon: const Icon(Icons.logout_rounded),
+                        label: const Text(
+                          'Sair',
+                          style: TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
