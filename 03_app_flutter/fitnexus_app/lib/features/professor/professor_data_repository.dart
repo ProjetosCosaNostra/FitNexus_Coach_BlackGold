@@ -234,9 +234,10 @@ class ProfessorDataRepository {
 
     if (intelligenceRun != null) {
       final dynamic response = await _client.rpc(
-        'create_training_plan_from_decision_intelligence',
+        'create_training_plan_from_decision_intelligence_v2',
         params: <String, dynamic>{
           'p_run_id': intelligenceRun,
+          'p_student_id': studentId,
           'p_name': name.trim(),
           'p_next_session': _nullable(nextSession),
           'p_notes': _nullable(notes),
