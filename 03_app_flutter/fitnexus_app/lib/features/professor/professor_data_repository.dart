@@ -241,6 +241,19 @@ class ProfessorDataRepository {
     return planId;
   }
 
+  Future<String> issueStudentAccessToken(String studentId) async {
+    final dynamic result = await _client.rpc(
+      'issue_student_access_token',
+      params: <String, dynamic>{'p_student_id': studentId},
+    );
+
+    final String token = result?.toString() ?? '';
+    if (!RegExp(r'^[0-9a-fA-F]{64}$').hasMatch(token)) {
+      throw StateError('O FitNexus não retornou um acesso de aluno válido.');
+    }
+    return token;
+  }
+
   String? _nullable(String? value) {
     final String normalized = (value ?? '').trim();
     return normalized.isEmpty ? null : normalized;
