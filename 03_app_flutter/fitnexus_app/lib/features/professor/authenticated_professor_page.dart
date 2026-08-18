@@ -4,6 +4,7 @@ import '../auth/auth_gate.dart';
 import '../auth/auth_service.dart';
 import 'professor_live_dashboard_page.dart';
 import 'professor_progress_page.dart';
+import 'professor_templates_page.dart';
 import 'student_access_management_page.dart';
 
 class AuthenticatedProfessorPage extends StatefulWidget {
@@ -21,6 +22,7 @@ class _AuthenticatedProfessorPageState
   static const List<Widget> _pages = <Widget>[
     ProfessorLiveDashboardPage(),
     ProfessorProgressPage(),
+    ProfessorTemplatesPage(),
     StudentAccessManagementPage(),
   ];
 
@@ -68,6 +70,10 @@ class _AuthenticatedProfessorPageState
                           label: Text('Acompanhamento'),
                         ),
                         NavigationRailDestination(
+                          icon: Icon(Icons.auto_awesome_rounded),
+                          label: Text('Templates'),
+                        ),
+                        NavigationRailDestination(
                           icon: Icon(Icons.qr_code_2_rounded),
                           label: Text('Acessos'),
                         ),
@@ -96,6 +102,10 @@ class _AuthenticatedProfessorPageState
                         NavigationDestination(
                           icon: Icon(Icons.monitor_heart_rounded),
                           label: 'Progresso',
+                        ),
+                        NavigationDestination(
+                          icon: Icon(Icons.auto_awesome_rounded),
+                          label: 'Templates',
                         ),
                         NavigationDestination(
                           icon: Icon(Icons.qr_code_2_rounded),
