@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../auth/auth_gate.dart';
 import '../auth/auth_service.dart';
-import 'professor_dashboard_page.dart';
+import 'professor_live_dashboard_page.dart';
 
 class AuthenticatedProfessorPage extends StatelessWidget {
   const AuthenticatedProfessorPage({super.key});
@@ -18,7 +18,7 @@ class AuthenticatedProfessorPage extends StatelessWidget {
     return AuthGate(
       child: Stack(
         children: <Widget>[
-          const ProfessorDashboardPage(),
+          const ProfessorLiveDashboardPage(),
           Positioned(
             right: 22,
             bottom: 22,
