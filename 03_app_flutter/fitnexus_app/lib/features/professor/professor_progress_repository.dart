@@ -13,6 +13,8 @@ class ProfessorProgressSummary {
     required this.highRisk,
     required this.mediumRisk,
     required this.newStudents,
+    required this.feedback7d,
+    required this.painAlerts7d,
   });
 
   final int students;
@@ -24,6 +26,8 @@ class ProfessorProgressSummary {
   final int highRisk;
   final int mediumRisk;
   final int newStudents;
+  final int feedback7d;
+  final int painAlerts7d;
 
   factory ProfessorProgressSummary.fromJson(Map<String, dynamic> json) {
     int number(String key) => (json[key] as num?)?.toInt() ?? 0;
@@ -38,6 +42,41 @@ class ProfessorProgressSummary {
       highRisk: number('high_risk'),
       mediumRisk: number('medium_risk'),
       newStudents: number('new_students'),
+      feedback7d: number('feedback_7d'),
+      painAlerts7d: number('pain_alerts_7d'),
+    );
+  }
+}
+
+class StudentLatestFeedback {
+  const StudentLatestFeedback({
+    required this.sessionId,
+    required this.perceivedExertion,
+    required this.painScore,
+    required this.energyScore,
+    required this.submittedAt,
+    this.painLocation,
+    this.note,
+  });
+
+  final String sessionId;
+  final int perceivedExertion;
+  final int painScore;
+  final int energyScore;
+  final String? painLocation;
+  final String? note;
+  final DateTime submittedAt;
+
+  factory StudentLatestFeedback.fromJson(Map<String, dynamic> json) {
+    return StudentLatestFeedback(
+      sessionId: json['session_id'] as String? ?? '',
+      perceivedExertion: (json['perceived_exertion'] as num?)?.toInt() ?? 0,
+      painScore: (json['pain_score'] as num?)?.toInt() ?? 0,
+      energyScore: (json['energy_score'] as num?)?.toInt() ?? 0,
+      painLocation: json['pain_location'] as String?,
+      note: json['note'] as String?,
+      submittedAt:
+          _dateTime(json['submitted_at']) ?? DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
 }
@@ -58,6 +97,7 @@ class StudentProgressRecord {
     required this.nextBestAction,
     this.lastSessionAt,
     this.lastCompletedAt,
+    this.latestFeedback,
   });
 
   final String studentId;
@@ -74,8 +114,10 @@ class StudentProgressRecord {
   final String riskLevel;
   final String riskReason;
   final String nextBestAction;
+  final StudentLatestFeedback? latestFeedback;
 
   factory StudentProgressRecord.fromJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> feedback = _map(json['latest_feedback']);
     return StudentProgressRecord(
       studentId: json['student_id'] as String? ?? '',
       name: json['name'] as String? ?? 'Aluno',
@@ -93,6 +135,8 @@ class StudentProgressRecord {
       riskReason: json['risk_reason'] as String? ?? 'Sem dados suficientes',
       nextBestAction: json['next_best_action'] as String? ??
           'Acompanhar a próxima execução',
+      latestFeedback:
+          feedback.isEmpty ? null : StudentLatestFeedback.fromJson(feedback),
     );
   }
 }
@@ -187,7 +231,7 @@ class ProfessorProgressRepository {
         await AuthService.instance.ensureProfessorOrganization();
 
     final dynamic result = await _client.rpc(
-      'get_professor_progress_dashboard',
+      'get_professor_progress_dashboard_v2',
       params: <String, dynamic>{'p_organization_id': organizationId},
     );
 

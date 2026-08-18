@@ -5,7 +5,7 @@ import '../features/demo/demo_home_page.dart';
 import '../features/landing/ecosystem_links_page.dart';
 import '../features/landing/responsive_landing_page.dart';
 import '../features/professor/authenticated_professor_page.dart';
-import '../features/student/student_workout_page.dart';
+import '../features/student/student_experience_page.dart';
 
 class FitNexusApp extends StatelessWidget {
   const FitNexusApp({super.key});
@@ -15,7 +15,7 @@ class FitNexusApp extends StatelessWidget {
     if (uri.path == '/student') {
       return MaterialPageRoute<void>(
         settings: settings,
-        builder: (_) => StudentWorkoutPage(token: uri.queryParameters['token']),
+        builder: (_) => StudentExperiencePage(token: uri.queryParameters['token']),
       );
     }
     return null;
@@ -43,7 +43,7 @@ class FitNexusApp extends StatelessWidget {
         '/demo': (_) => const DemoHomePage(),
         '/auth': (_) => const AuthPreviewPage(),
         '/professor': (_) => const AuthenticatedProfessorPage(),
-        '/student': (_) => const StudentWorkoutPage(),
+        '/student': (_) => const StudentExperiencePage(),
       },
       onGenerateRoute: _onGenerateRoute,
     );
