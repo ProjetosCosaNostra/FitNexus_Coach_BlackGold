@@ -220,10 +220,40 @@ class ProfessorDataRepository {
     String? sourceTemplateId,
   }) async {
     if (exercises.isEmpty) {
-      throw ArgumentError.value(exercises, 'exercises', 'Informe pelo menos um exercício.');
+      throw ArgumentError.value(
+        exercises,
+        'exercises',
+        'Informe pelo menos um exercício.',
+      );
     }
 
+    final List<Map<String, dynamic>> payload = exercises
+        .map((TrainingExerciseDraft exercise) => exercise.toJson())
+        .toList(growable: false);
     final String? intelligenceRun = _nullable(decisionIntelligenceRunId);
+
+    if (intelligenceRun != null) {
+      final dynamic response = await _client.rpc(
+        'create_training_plan_from_decision_intelligence',
+        params: <String, dynamic>{
+          'p_run_id': intelligenceRun,
+          'p_name': name.trim(),
+          'p_next_session': _nullable(nextSession),
+          'p_notes': _nullable(notes),
+          'p_exercises': payload,
+          'p_decision_reason': _nullable(decisionReason),
+        },
+      );
+      final Map<String, dynamic> result = _map(response);
+      final String planId = result['plan_id']?.toString() ?? '';
+      if (planId.isEmpty) {
+        throw StateError(
+          'A decisão foi processada sem retornar o novo plano.',
+        );
+      }
+      return planId;
+    }
+
     final String? templateId = _nullable(sourceTemplateId);
     final dynamic result = await _client.rpc(
       'create_training_plan_v2',
@@ -232,18 +262,12 @@ class ProfessorDataRepository {
         'p_name': name.trim(),
         'p_next_session': _nullable(nextSession),
         'p_notes': _nullable(notes),
-        'p_exercises': exercises
-            .map((TrainingExerciseDraft exercise) => exercise.toJson())
-            .toList(growable: false),
+        'p_exercises': payload,
         'p_decision_reason': _nullable(decisionReason),
         'p_source_template_id': templateId,
         'p_trigger_context': <String, dynamic>{
-          'source': intelligenceRun == null
-              ? 'professor_dashboard'
-              : 'decision_intelligence',
+          'source': 'professor_dashboard',
           'human_confirmed': true,
-          if (intelligenceRun != null)
-            'decision_intelligence_run_id': intelligenceRun,
           if (templateId != null) 'source_template_id': templateId,
         },
       },
@@ -251,7 +275,9 @@ class ProfessorDataRepository {
 
     final String planId = result?.toString() ?? '';
     if (planId.isEmpty) {
-      throw StateError('O treino foi processado sem retornar um identificador.');
+      throw StateError(
+        'O treino foi processado sem retornar um identificador.',
+      );
     }
 
     return planId;
@@ -274,4 +300,10 @@ class ProfessorDataRepository {
     final String normalized = (value ?? '').trim();
     return normalized.isEmpty ? null : normalized;
   }
+}
+
+Map<String, dynamic> _map(dynamic value) {
+  if (value is Map<String, dynamic>) return value;
+  if (value is Map) return Map<String, dynamic>.from(value);
+  return <String, dynamic>{};
 }
