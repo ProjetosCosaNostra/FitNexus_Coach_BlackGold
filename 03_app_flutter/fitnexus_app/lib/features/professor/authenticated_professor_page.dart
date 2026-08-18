@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../auth/auth_gate.dart';
 import '../auth/auth_service.dart';
+import 'professor_feedback_page.dart';
 import 'professor_live_dashboard_page.dart';
 import 'professor_progress_page.dart';
 import 'professor_templates_page.dart';
@@ -22,6 +23,7 @@ class _AuthenticatedProfessorPageState
   static const List<Widget> _pages = <Widget>[
     ProfessorLiveDashboardPage(),
     ProfessorProgressPage(),
+    ProfessorFeedbackPage(),
     ProfessorTemplatesPage(),
     StudentAccessManagementPage(),
   ];
@@ -70,6 +72,10 @@ class _AuthenticatedProfessorPageState
                           label: Text('Acompanhamento'),
                         ),
                         NavigationRailDestination(
+                          icon: Icon(Icons.forum_rounded),
+                          label: Text('Feedbacks'),
+                        ),
+                        NavigationRailDestination(
                           icon: Icon(Icons.auto_awesome_rounded),
                           label: Text('Templates'),
                         ),
@@ -102,6 +108,10 @@ class _AuthenticatedProfessorPageState
                         NavigationDestination(
                           icon: Icon(Icons.monitor_heart_rounded),
                           label: 'Progresso',
+                        ),
+                        NavigationDestination(
+                          icon: Icon(Icons.forum_rounded),
+                          label: 'Feedbacks',
                         ),
                         NavigationDestination(
                           icon: Icon(Icons.auto_awesome_rounded),
