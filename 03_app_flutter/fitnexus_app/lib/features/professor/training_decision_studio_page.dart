@@ -4,9 +4,22 @@ import 'professor_data_repository.dart';
 import 'professor_lineage_repository.dart';
 
 class TrainingDecisionStudioPage extends StatefulWidget {
-  const TrainingDecisionStudioPage({super.key, this.initialStudentId});
+  const TrainingDecisionStudioPage({
+    super.key,
+    this.initialStudentId,
+    this.initialName,
+    this.initialDecisionReason,
+    this.initialNotes,
+    this.initialExercises = const <TrainingExerciseDraft>[],
+    this.initialDecisionIntelligenceRunId,
+  });
 
   final String? initialStudentId;
+  final String? initialName;
+  final String? initialDecisionReason;
+  final String? initialNotes;
+  final List<TrainingExerciseDraft> initialExercises;
+  final String? initialDecisionIntelligenceRunId;
 
   @override
   State<TrainingDecisionStudioPage> createState() =>
@@ -36,6 +49,15 @@ class _TrainingDecisionStudioPageState
   @override
   void initState() {
     super.initState();
+    _nameController.text = widget.initialName ?? '';
+    _reasonController.text = widget.initialDecisionReason ?? '';
+    _notesController.text = widget.initialNotes ?? '';
+    _exercisesController.text = widget.initialExercises
+        .map(
+          (TrainingExerciseDraft item) =>
+              '${item.name.trim()} | ${item.prescription.trim()}',
+        )
+        .join('\n');
     _loadStudents();
   }
 
@@ -166,6 +188,7 @@ class _TrainingDecisionStudioPageState
         nextSession: _nextSessionController.text,
         notes: _notesController.text,
         decisionReason: _reasonController.text,
+        decisionIntelligenceRunId: widget.initialDecisionIntelligenceRunId,
       );
 
       if (!mounted) return;
@@ -188,6 +211,9 @@ class _TrainingDecisionStudioPageState
 
   @override
   Widget build(BuildContext context) {
+    final bool intelligenceCandidate =
+        (widget.initialDecisionIntelligenceRunId ?? '').isNotEmpty;
+
     return Scaffold(
       backgroundColor: const Color(0xFF050505),
       appBar: AppBar(
@@ -225,6 +251,13 @@ class _TrainingDecisionStudioPageState
               'O banco só recebe a nova versão depois de uma prévia válida e de uma confirmação humana explícita.',
               style: TextStyle(color: Color(0xFFAAAAAA), height: 1.45),
             ),
+            if (intelligenceCandidate) ...<Widget>[
+              const SizedBox(height: 14),
+              const _Notice(
+                text:
+                    'Candidato recebido do Decision Intelligence. Revise todos os campos: a análise é apenas uma sugestão e não tem permissão para confirmar a prescrição.',
+              ),
+            ],
             const SizedBox(height: 20),
             if (_loading)
               const Center(child: CircularProgressIndicator())
