@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'professor_data_repository.dart';
 import 'professor_lineage_repository.dart';
+import 'training_decision_studio_page.dart';
 
 class ProfessorLineagePage extends StatefulWidget {
   const ProfessorLineagePage({super.key});
@@ -18,6 +19,7 @@ class _ProfessorLineagePageState extends State<ProfessorLineagePage> {
   String? _studentId;
   TrainingLineageSnapshot? _snapshot;
   bool _loading = true;
+  bool _restoring = false;
   String? _error;
 
   @override
@@ -69,6 +71,95 @@ class _ProfessorLineagePageState extends State<ProfessorLineagePage> {
     }
   }
 
+  Future<void> _openDecisionStudio() async {
+    final bool? changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => TrainingDecisionStudioPage(initialStudentId: _studentId),
+      ),
+    );
+    if (!mounted || changed != true) return;
+    final String? studentId = _studentId;
+    if (studentId != null) await _loadLineage(studentId);
+  }
+
+  Future<void> _restoreVersion(TrainingLineageRecord record) async {
+    if (_restoring || record.isActive) return;
+
+    final TextEditingController reasonController = TextEditingController(
+      text: 'Restaurar ${record.planName} após revisão do histórico',
+    );
+    final String? reason = await showDialog<String>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.72),
+      builder: (BuildContext dialogContext) => AlertDialog(
+        title: const Text('Restaurar como nova versão?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text(
+              'A versão “${record.planName}” não será reativada diretamente. O FitNexus criará uma nova cópia, preservando a versão ativa atual como predecessora.',
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: reasonController,
+              maxLength: 500,
+              minLines: 2,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                labelText: 'Motivo da restauração',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final String normalized = reasonController.text.trim();
+              if (normalized.length < 2) return;
+              Navigator.of(dialogContext).pop(normalized);
+            },
+            child: const Text('Confirmar restauração'),
+          ),
+        ],
+      ),
+    );
+    reasonController.dispose();
+
+    if (reason == null || !mounted) return;
+
+    setState(() {
+      _restoring = true;
+      _error = null;
+    });
+
+    try {
+      await _lineage.restoreVersion(
+        planId: record.planId,
+        decisionReason: reason,
+      );
+      final String? studentId = _studentId;
+      if (studentId != null) await _loadLineage(studentId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text('Versão restaurada como uma nova decisão auditável.'),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _error = error.toString());
+    } finally {
+      if (mounted) setState(() => _restoring = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,6 +171,14 @@ class _ProfessorLineagePageState extends State<ProfessorLineagePage> {
           'Training Lineage',
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
+        actions: <Widget>[
+          TextButton.icon(
+            onPressed: _students.isEmpty ? null : _openDecisionStudio,
+            icon: const Icon(Icons.add_task_rounded),
+            label: const Text('Nova decisão'),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: RefreshIndicator(
@@ -136,7 +235,7 @@ class _ProfessorLineagePageState extends State<ProfessorLineagePage> {
                         ),
                       )
                       .toList(growable: false),
-                  onChanged: _loading
+                  onChanged: _loading || _restoring
                       ? null
                       : (String? value) {
                           if (value == null) return;
@@ -151,7 +250,7 @@ class _ProfessorLineagePageState extends State<ProfessorLineagePage> {
                   title: 'Não foi possível carregar a linhagem',
                   text: _error!,
                 )
-              else if (_loading && _snapshot == null)
+              else if ((_loading || _restoring) && _snapshot == null)
                 const SizedBox(
                   height: 280,
                   child: Center(child: CircularProgressIndicator()),
@@ -172,7 +271,11 @@ class _ProfessorLineagePageState extends State<ProfessorLineagePage> {
                 ..._snapshot!.items.map(
                   (TrainingLineageRecord record) => Padding(
                     padding: const EdgeInsets.only(bottom: 14),
-                    child: _LineageCard(record: record),
+                    child: _LineageCard(
+                      record: record,
+                      restoring: _restoring,
+                      onRestore: _restoreVersion,
+                    ),
                   ),
                 ),
             ],
@@ -184,9 +287,15 @@ class _ProfessorLineagePageState extends State<ProfessorLineagePage> {
 }
 
 class _LineageCard extends StatelessWidget {
-  const _LineageCard({required this.record});
+  const _LineageCard({
+    required this.record,
+    required this.restoring,
+    required this.onRestore,
+  });
 
   final TrainingLineageRecord record;
+  final bool restoring;
+  final Future<void> Function(TrainingLineageRecord record) onRestore;
 
   @override
   Widget build(BuildContext context) {
@@ -301,6 +410,14 @@ class _LineageCard extends StatelessWidget {
                 _DiffSection(title: 'Removidos', items: record.diff.removed),
                 _DiffSection(title: 'Alterados', items: record.diff.changed),
               ],
+            ),
+          ],
+          if (!record.isActive) ...<Widget>[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: restoring ? null : () => onRestore(record),
+              icon: const Icon(Icons.restore_rounded),
+              label: const Text('Restaurar como nova versão'),
             ),
           ],
         ],
