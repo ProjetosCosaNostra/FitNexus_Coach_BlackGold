@@ -48,7 +48,7 @@ class AuthService {
   Future<String> ensureProfessorOrganization({String? preferredName}) async {
     final User? user = currentUser;
     if (user == null) {
-      throw const AuthException('Sessão não encontrada. Entre novamente.');
+      throw StateError('Sessão não encontrada. Entre novamente.');
     }
 
     final Map<String, dynamic> metadata = user.userMetadata ?? <String, dynamic>{};
@@ -71,7 +71,7 @@ class AuthService {
 
     final String organizationId = result?.toString() ?? '';
     if (organizationId.isEmpty) {
-      throw const PostgrestException(message: 'Não foi possível preparar a organização do professor.');
+      throw StateError('Não foi possível preparar a organização do professor.');
     }
 
     return organizationId;
