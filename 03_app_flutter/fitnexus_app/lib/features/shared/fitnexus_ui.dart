@@ -160,7 +160,7 @@ class GoldButton extends StatelessWidget {
   });
 
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final IconData? icon;
 
   @override
