@@ -11,7 +11,7 @@ class ResponsiveLandingPage extends StatelessWidget {
   const ResponsiveLandingPage({super.key});
 
   double _minimumLogicalHeight(double width) {
-    if (width < 720) return 900;
+    if (width < 720) return 1180;
     if (width < 1100) return 1180;
     return 980;
   }
