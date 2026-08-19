@@ -110,6 +110,18 @@ It includes:
 
 The public RPC remains `SECURITY INVOKER` and delegates privileged reads to a private definer bridge.
 
+### Private bridge revalidation
+
+A private `SECURITY DEFINER` helper is not allowed to trust the public wrapper as its only authorization layer. Even when the `private` schema is not exposed through the normal API surface, future schema exposure, SQL access paths, or permission changes could make a direct helper call possible.
+
+`private.get_growth_funnel_snapshot_authority(...)` therefore independently requires:
+
+- a non-null `auth.uid()`;
+- `private.is_org_member(p_organization_id)` to pass;
+- a valid measurement window.
+
+The public wrapper performs the same tenant check before delegation. This duplicate validation is deliberate defense-in-depth and closes `BGF-GROWTH-PRIVATE-BRIDGE-DIRECT-CALL-114`.
+
 ## North Star operational definition
 
 The strategic candidate North Star was coaches who delivered at least one training to an active student in the week.
@@ -169,6 +181,7 @@ A second advisor pass reports no Stage 18 unindexed foreign-key finding. Remaini
 - `BGF-GROWTH-REVENUE-AUTHORITY-111`: trial, checkout and paid milestones originate from subscription/billing authority.
 - `BGF-GROWTH-FK-INDEX-112`: growth foreign keys receive covering indexes before promotion.
 - `BGF-GROWTH-TELEMETRY-CORE-BLOCK-113`: server telemetry exceptions are contained and fingerprinted; analytics cannot roll back core product writes.
+- `BGF-GROWTH-PRIVATE-BRIDGE-DIRECT-CALL-114`: every private definer bridge revalidates caller authentication and tenant authority internally; it cannot rely only on an exposed wrapper.
 
 ## Current release posture
 
