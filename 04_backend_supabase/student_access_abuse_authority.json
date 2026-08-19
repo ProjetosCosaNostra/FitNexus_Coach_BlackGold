@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "failure_classes": [
+    "BGF-STUDENT-ACCESS-ABUSE-BLIND-SPOT-160",
+    "BGF-STUDENT-ACCESS-ABUSE-THRESHOLD-DRIFT-161",
+    "BGF-INCIDENT-GATE-SELF-ATTESTATION-162"
+  ],
+  "purpose": "Versioned authority for server-derived abuse signals on the student possession-token boundary. This authority is operational observability only and is not incident-response evidence or launch authority.",
+  "source_table": "private.student_access_security_events",
+  "signal_table": "private.student_access_security_signals",
+  "posture_view": "private.student_access_security_posture_v1",
+  "signals": [
+    {
+      "signal_type": "rate_limit_burst",
+      "source_outcome": "rate_limited",
+      "subject": "link_id+operation",
+      "rolling_window_seconds": 300,
+      "dedupe_bucket_seconds": 300,
+      "threshold": 10,
+      "severity": "high"
+    },
+    {
+      "signal_type": "command_replay_burst",
+      "source_outcome": "replay",
+      "subject": "link_id+operation",
+      "rolling_window_seconds": 600,
+      "dedupe_bucket_seconds": 600,
+      "threshold": 3,
+      "severity": "high"
+    },
+    {
+      "signal_type": "token_rotation_burst",
+      "source_outcome": "rotated",
+      "subject": "organization_id+student_id",
+      "rolling_window_seconds": 1800,
+      "dedupe_bucket_seconds": 1800,
+      "threshold": 4,
+      "severity": "medium"
+    }
+  ],
+  "posture": {
+    "window_seconds": 3600,
+    "quiet": "no recent derived signals",
+    "observe": "one or more recent medium signals and no high/critical signal",
+    "investigate": "one or more recent high/critical signals"
+  },
+  "privacy": {
+    "raw_token_stored": false,
+    "ip_address_stored": false,
+    "arbitrary_request_payload_stored": false,
+    "subject_key": "internal pseudonymous UUID-derived key only"
+  },
+  "known_external_boundary": {
+    "blind_spot": "Invalid-token brute force and network-origin abuse cannot be attributed reliably inside PostgreSQL because rejected tokens have no stable link_id and the database does not own the trustworthy client IP boundary.",
+    "required_future_control": "Deploy-layer or edge-layer network-origin abuse control and alert delivery before production deployment evidence can be promoted."
+  },
+  "launch_authority": {
+    "can_promote_incident_response_gate": false,
+    "can_promote_production_deployment_gate": false,
+    "can_enable_paid_ads": false
+  }
+}
