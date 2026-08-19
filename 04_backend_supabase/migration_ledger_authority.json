@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "9bcd1b74f9a1c0b429ad3567566357254762b4d6",
-  "observed_at_utc": "2026-08-19T15:04:40Z",
+  "baseline_main_sha": "3be885215705c7929c367119a5043b40e9fb121a",
+  "observed_at_utc": "2026-08-19T22:21:00Z",
   "source": "Supabase.list_migrations",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -36,6 +36,13 @@
       "reason": "Historical no-op ledger row created during advisor guard misuse; preserved as remote history evidence and intentionally has no repository SQL file.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-MIGRATION-TOOL-MISROUTE-097"
+    },
+    {
+      "direction": "repo_only",
+      "name": "stage24_student_access_abuse_observability",
+      "reason": "Repo-first promotion: abuse-signal derivation, posture view and trigger must pass repository CI and merge to main before remote application.",
+      "owner": "BlackGold Forge",
+      "related_failure_class": "BGF-STUDENT-ACCESS-ABUSE-BLIND-SPOT-160"
     }
   ],
   "remote_migrations": [
