@@ -39,16 +39,20 @@ def main() -> int:
         ("PRICING_DECISION_VERSION_CONFLICT", "BGF-PRICING-IDEMPOTENCY-087", "pricing decision replay/conflict guard disappeared"),
         ("provider_fee_assumptions_contractual', false", "BGF-PRICING-FEE-EVIDENCE-088", "public provider fees must not be treated as contractual account rates"),
         ("pricing_decision_version", "BGF-PRICING-CHECKOUT-BINDING-089", "checkout intent lost pricing decision binding"),
-        ("security definer", "BGF-BILLING-RPC-PRIVILEGE-DEADPATH-082", "billing mutation RPC must close underlying table privilege path"),
+        ("private.create_billing_checkout_intent_authority", "BGF-BILLING-RPC-PRIVILEGE-DEADPATH-082", "private mutation authority bridge disappeared"),
+        ("grant execute on function private.create_billing_checkout_intent_authority(uuid,text,text,uuid) to authenticated", "BGF-BILLING-RPC-PRIVILEGE-DEADPATH-082", "authenticated wrapper lost the private authority bridge execution path"),
+        ("language plpgsql\nsecurity invoker\nset search_path = ''\nas $$\nbegin", "BGF-BILLING-RPC-EXPOSED-DEFINER-095", "public billing RPC must remain an invoker wrapper, not an exposed definer"),
         ("get_pricing_catalog", "BGF-PRICING-CATALOG-090", "authoritative pricing catalog RPC disappeared"),
         ("expected_price_count', 6", "BGF-PRICING-COMPLETE-SET-091", "readiness no longer requires the complete six-offer set"),
         ("PricingCatalogSnapshot", "BGF-PRICING-FLUTTER-BINDING-092", "Flutter pricing authority model disappeared"),
+        ("billing_fee_assumptions_service_read", "BGF-PRICING-FEE-RLS-096", "internal fee assumptions lost explicit RLS policy coverage"),
     ]
     for needle, code, detail in checks:
         require(migrations + "\n" + billing, needle, code, detail)
 
     forbid(migrations, "grant insert on public.subscription_plan_prices to authenticated", "BGF-PRICING-CLIENT-MUTATION-093", "client must not insert prices")
     forbid(migrations, "grant update on public.subscription_plan_prices to authenticated", "BGF-PRICING-CLIENT-MUTATION-093", "client must not update prices")
+    forbid(migrations, "grant insert on public.billing_checkout_intents to authenticated", "BGF-BILLING-RPC-PRIVILEGE-DEADPATH-082", "direct checkout table insert must stay denied")
     forbid(migrations, "grant execute on function public.promote_subscription_pricing(text,text,text,text,text,jsonb,text,timestamptz,jsonb) to authenticated", "BGF-PRICING-PROMOTION-AUTHORITY-094", "normal users must not promote pricing")
 
     print("PRICING_AUTHORITY_CONTRACT_GATE=PASS")
@@ -56,6 +60,8 @@ def main() -> int:
     print("PRICE_SET=6_OFFERS")
     print("ANNUAL_STRATEGY=TEN_MONTHS_FOR_TWELVE")
     print("CHECKOUT_DECISION_BINDING=PASS")
+    print("CHECKOUT_PUBLIC_WRAPPER=SECURITY_INVOKER")
+    print("CHECKOUT_PRIVATE_AUTHORITY=SECURITY_DEFINER")
     print("PUBLIC_FEE_ASSUMPTIONS=NON_CONTRACTUAL")
     print("CLIENT_PRICE_MUTATION=DENIED")
     print("FLUTTER_PRICING_BINDING=PASS")
