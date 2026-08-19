@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../auth/auth_gate.dart';
 import '../auth/auth_service.dart';
+import 'professor_coach_action_center_page.dart';
 import 'professor_decision_intelligence_page.dart';
 import 'professor_feedback_page.dart';
 import 'professor_lineage_page.dart';
-import 'professor_live_dashboard_page.dart';
 import 'professor_progress_page.dart';
 import 'professor_templates_page.dart';
 import 'student_access_management_page.dart';
@@ -23,7 +23,7 @@ class _AuthenticatedProfessorPageState
   int _index = 0;
 
   static const List<Widget> _pages = <Widget>[
-    ProfessorLiveDashboardPage(),
+    ProfessorCoachActionCenterPage(),
     ProfessorProgressPage(),
     ProfessorFeedbackPage(),
     ProfessorTemplatesPage(),
@@ -80,8 +80,8 @@ class _AuthenticatedProfessorPageState
                           const TextStyle(color: Color(0xFFB7B7B7)),
                       destinations: const <NavigationRailDestination>[
                         NavigationRailDestination(
-                          icon: Icon(Icons.dashboard_rounded),
-                          label: Text('Painel'),
+                          icon: Icon(Icons.today_rounded),
+                          label: Text('Hoje'),
                         ),
                         NavigationRailDestination(
                           icon: Icon(Icons.monitor_heart_rounded),
@@ -118,8 +118,8 @@ class _AuthenticatedProfessorPageState
                           const Color(0xFFE1B92F).withValues(alpha: 0.18),
                       destinations: const <NavigationDestination>[
                         NavigationDestination(
-                          icon: Icon(Icons.dashboard_rounded),
-                          label: 'Painel',
+                          icon: Icon(Icons.today_rounded),
+                          label: 'Hoje',
                         ),
                         NavigationDestination(
                           icon: Icon(Icons.monitor_heart_rounded),
