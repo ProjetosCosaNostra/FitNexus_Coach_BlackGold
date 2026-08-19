@@ -286,7 +286,7 @@ class ProfessorDataRepository {
 
   Future<String> issueStudentAccessToken(String studentId) async {
     final dynamic result = await _client.rpc(
-      'issue_student_access_token',
+      'issue_student_access_token_v2',
       params: <String, dynamic>{'p_student_id': studentId},
     );
 
