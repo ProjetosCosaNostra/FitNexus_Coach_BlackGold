@@ -42,6 +42,7 @@ class FitNexusApp extends StatelessWidget {
         '/links': (_) => const EcosystemLinksPage(),
         '/demo': (_) => const DemoHomePage(),
         '/auth': (_) => const AuthPreviewPage(),
+        '/start': (_) => const AuthPreviewPage(initialRegisterMode: true),
         '/professor': (_) => const AuthenticatedProfessorPage(),
         '/student': (_) => const StudentExperiencePage(),
       },
