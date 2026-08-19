@@ -12,9 +12,9 @@ class StudentExperiencePage extends StatelessWidget {
     final String direct = (token ?? '').trim();
     if (direct.isNotEmpty) return direct;
 
-    final String queryToken = (Uri.base.queryParameters['token'] ?? '').trim();
-    if (queryToken.isNotEmpty) return queryToken;
-
+    // Student bearer tokens are intentionally accepted only from the URL
+    // fragment. Fragments are not sent in HTTP requests and avoid leaking the
+    // possession token through normal server logs/referrer query handling.
     final String fragment = Uri.base.fragment;
     if (fragment.isEmpty) return '';
     final Uri? fragmentUri = Uri.tryParse(

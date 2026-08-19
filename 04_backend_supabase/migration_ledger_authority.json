@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "50f89b7048d5409f7f33fc81425950a2c20d4470",
-  "observed_at_utc": "2026-08-19T13:00:58Z",
+  "baseline_main_sha": "653dd186cc31754d6d21a096ebd38a73b4e1f4c1",
+  "observed_at_utc": "2026-08-19T13:37:00Z",
   "source": "Supabase.list_migrations",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -36,6 +36,20 @@
       "reason": "Historical no-op ledger row created during advisor guard misuse; preserved as remote history evidence and intentionally has no repository SQL file.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-MIGRATION-TOOL-MISROUTE-097"
+    },
+    {
+      "direction": "repo_only",
+      "name": "stage21_student_access_security_boundary",
+      "reason": "Two-phase repo-first promotion: Stage 21 must pass repository CI and merge before the already-versioned SQL is applied to the authoritative Supabase project.",
+      "owner": "BlackGold Forge",
+      "related_failure_class": "BGF-STUDENT-ACCESS-UNBOUNDED-BEARER-147"
+    },
+    {
+      "direction": "repo_only",
+      "name": "stage21_student_access_issuance_authority_hardening",
+      "reason": "Two-phase repo-first hardening: token issuance must authorize the manager before reading rotation state, and this SQL must enter main before remote application.",
+      "owner": "BlackGold Forge",
+      "related_failure_class": "BGF-STUDENT-ACCESS-ISSUANCE-AUTHORITY-153"
     }
   ],
   "remote_migrations": [

@@ -3,10 +3,15 @@
 <head>
   <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
   <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet">
+  <meta name="referrer" content="no-referrer">
   <!--
     Launch remains controlled/blocked. Keep the page non-indexable until the
     legal/privacy/security/payment/deployment admission gates are genuinely
     promoted with evidence.
+
+    Student possession tokens live only inside the URL fragment. The explicit
+    no-referrer policy adds a second browser boundary against accidental URL
+    disclosure when the student follows external links.
 
     The base href placeholder is replaced by Flutter's --base-href argument.
   -->

@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'student_access_command_id.dart';
+
 class StudentFeedbackContext {
   const StudentFeedbackContext({
     required this.eligible,
@@ -74,10 +76,12 @@ class StudentFeedbackRepository {
 
   Future<StudentFeedbackContext> fetchContext(String token) async {
     final dynamic response = await _client.rpc(
-      'get_student_feedback_context',
+      'get_student_feedback_context_v2',
       params: <String, dynamic>{'p_token': token.trim()},
     );
-    return StudentFeedbackContext.fromJson(_map(response));
+    final Map<String, dynamic> result = _map(response);
+    _throwStudentAccessError(result);
+    return StudentFeedbackContext.fromJson(result);
   }
 
   Future<StudentFeedbackResult> submit({
@@ -90,7 +94,7 @@ class StudentFeedbackRepository {
     String? note,
   }) async {
     final dynamic response = await _client.rpc(
-      'submit_student_workout_feedback',
+      'submit_student_workout_feedback_v2',
       params: <String, dynamic>{
         'p_token': token.trim(),
         'p_session_id': sessionId,
@@ -99,9 +103,30 @@ class StudentFeedbackRepository {
         'p_energy_score': energyScore,
         'p_pain_location': _nullable(painLocation),
         'p_note': _nullable(note),
+        'p_command_id': newStudentAccessCommandId(),
       },
     );
-    return StudentFeedbackResult.fromJson(_map(response));
+    final Map<String, dynamic> result = _map(response);
+    _throwStudentAccessError(result);
+    return StudentFeedbackResult.fromJson(result);
+  }
+}
+
+void _throwStudentAccessError(Map<String, dynamic> value) {
+  final String code = value['error']?.toString() ?? '';
+  if (code.isEmpty) return;
+
+  switch (code) {
+    case 'STUDENT_ACCESS_INVALID':
+      throw StateError('Este link de aluno é inválido, expirou ou foi substituído.');
+    case 'STUDENT_ACCESS_RATE_LIMITED':
+      throw StateError('Muitas ações em pouco tempo. Aguarde alguns segundos e tente novamente.');
+    case 'STUDENT_COMMAND_IN_PROGRESS':
+      throw StateError('Este feedback ainda está sendo confirmado. Tente novamente em instantes.');
+    case 'STUDENT_COMMAND_ID_INVALID':
+      throw StateError('A proteção do feedback recusou um identificador inválido.');
+    default:
+      throw StateError('O acesso do aluno foi recusado pelo limite de segurança: $code');
   }
 }
 

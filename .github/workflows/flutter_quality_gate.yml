@@ -76,6 +76,12 @@ jobs:
       - name: Web release contract guard
         run: python ../../04_backend_supabase/tools/verify_web_release_contract.py
 
+      - name: Student access security contract guard
+        run: python ../../04_backend_supabase/tools/verify_student_access_security_contract.py
+
+      - name: Student access issuance authority guard
+        run: python ../../04_backend_supabase/tools/verify_student_access_issuance_authority.py
+
       - name: Set up Flutter stable
         uses: subosito/flutter-action@v2
         with:
