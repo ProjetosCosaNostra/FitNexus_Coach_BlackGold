@@ -7,6 +7,9 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 MIGRATIONS = ROOT / "04_backend_supabase" / "migrations"
 APP = ROOT / "03_app_flutter" / "fitnexus_app" / "lib"
+PRIVATE_SNAPSHOT_HARDENING = (
+    MIGRATIONS / "20260819055000_stage18_private_snapshot_authority_hardening.sql"
+)
 
 
 def fail(code: str, detail: str) -> None:
@@ -33,6 +36,13 @@ def main() -> int:
     ).lower()
     auth = (APP / "features" / "auth" / "auth_service.dart").read_text(encoding="utf-8")
     capture = (APP / "features" / "growth" / "growth_attribution_capture.dart").read_text(encoding="utf-8")
+
+    if not PRIVATE_SNAPSHOT_HARDENING.exists():
+        fail(
+            "BGF-GROWTH-PRIVATE-BRIDGE-DIRECT-CALL-114",
+            "private snapshot authority hardening migration disappeared",
+        )
+    snapshot_hardening = PRIVATE_SNAPSHOT_HARDENING.read_text(encoding="utf-8").lower()
 
     checks = [
         (migrations, "private.growth_event_catalog", "BGF-GROWTH-FUNNEL-AUTHORITY-100", "growth event catalog disappeared"),
@@ -68,6 +78,9 @@ def main() -> int:
         (capture, "uri.path", "BGF-GROWTH-LANDING-PII-109", "relative landing-path capture disappeared"),
         (auth, "_attachGrowthAttributionIfPresent", "BGF-GROWTH-ATTRIBUTION-FAILOPEN-108", "organization bootstrap lost attribution attachment"),
         (auth, "Growth attribution capture failed without blocking core auth.", "BGF-GROWTH-ATTRIBUTION-FAILOPEN-108", "telemetry failure must remain observable and non-blocking"),
+        (snapshot_hardening, "if auth.uid() is null", "BGF-GROWTH-PRIVATE-BRIDGE-DIRECT-CALL-114", "private snapshot authority must revalidate authentication internally"),
+        (snapshot_hardening, "not private.is_org_member(p_organization_id)", "BGF-GROWTH-PRIVATE-BRIDGE-DIRECT-CALL-114", "private snapshot authority must revalidate tenant membership internally"),
+        (snapshot_hardening, "security definer", "BGF-GROWTH-PRIVATE-BRIDGE-DIRECT-CALL-114", "private snapshot authority hardening lost its explicit definer boundary"),
     ]
     for text, needle, code, detail in checks:
         require(text, needle, code, detail)
@@ -112,7 +125,7 @@ def main() -> int:
     ):
         forbid(migrations, forbidden_grant, code, detail)
 
-    # Public wrappers must remain invokers; private bridges own elevated mutation/read authority.
+    # Public wrappers remain invokers; private bridges own elevated authority and revalidate callers.
     for fn_name in ("attach_growth_attribution", "get_growth_funnel_snapshot"):
         pattern = rf"create or replace function public\.{fn_name}\(.*?security invoker"
         if re.search(pattern, migrations, flags=re.DOTALL) is None:
@@ -130,6 +143,7 @@ def main() -> int:
     print("PUBLIC_WRAPPERS=SECURITY_INVOKER")
     print("SERVER_TELEMETRY=FAIL_OPEN_OBSERVABLE")
     print("GROWTH_FK_INDEX_COVERAGE=PASS")
+    print("PRIVATE_BRIDGE_TENANT_REVALIDATION=PASS")
     return 0
 
 
