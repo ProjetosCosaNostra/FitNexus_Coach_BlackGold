@@ -11,7 +11,7 @@ The system now has four independent authorities:
 3. **Usage** — derives real student/team consumption from authoritative tenant data.
 4. **Provider event authority** — accepts future billing-provider state transitions through an idempotent service-role-only command.
 
-The commercial core works before Stripe, Mercado Pago, Pagar.me or any other provider is selected. Provider choice can therefore change without rewriting student, training, intelligence or tenant tables.
+The commercial core works before any payment processor is selected. Provider choice can therefore change without rewriting student, training, intelligence or tenant tables.
 
 ## Trial bootstrap
 
@@ -83,6 +83,14 @@ It is:
 
 The function stores only provider identifiers and an optional SHA-256 payload fingerprint. It does not require raw webhook bodies to be stored in the tenant domain.
 
+The provider runtime follows least privilege:
+
+- plan catalog: SELECT only;
+- organization subscription state: SELECT + UPDATE;
+- authority-event ledger: SELECT + INSERT only.
+
+It cannot rewrite plan definitions or UPDATE/DELETE historical authority events.
+
 ## Entitlement snapshot
 
 `get_subscription_entitlement_snapshot(organization_id)` returns one server-authoritative object containing:
@@ -109,6 +117,10 @@ Authenticated clients can read their RLS-protected subscription state but cannot
 - expand their own capacity;
 - extend their own trial.
 
+## Performance hardening
+
+The Stage 15 migrations include covering indexes for every new plan-code foreign key detected by the Supabase advisor. This prevents the commercial domain from introducing known unindexed-FK debt at promotion time.
+
 ## Permanent prevention classes
 
 - `BGF-SUBSCRIPTION-FILE-MISSING-046`: required commercial-core artifacts cannot silently disappear.
@@ -132,7 +144,9 @@ Authenticated clients can read their RLS-protected subscription state but cannot
 - `BGF-SUBSCRIPTION-CLIENT-MUTATION-064`: normal clients cannot mutate subscription authority.
 - `BGF-SUBSCRIPTION-PROVIDER-AUTHORITY-065`: provider events require service-role authority.
 - `BGF-SUBSCRIPTION-RPC-AUTHORITY-066`: entitlement snapshots remain authenticated-only.
+- `BGF-SUBSCRIPTION-SERVICE-LEAST-PRIVILEGE-067`: billing service authority must receive only the table privileges required by the adapter contract.
+- `BGF-SUBSCRIPTION-FK-INDEX-068`: every new commercial-domain foreign key must have covering index evidence before promotion.
 
 ## Construction gate
 
-`verify_subscription_entitlements_contract.py` runs in GitHub Actions before Flutter analysis and tests. It fails closed if capacity gates, trial authority, provider-neutrality, service-role isolation, direct-client mutation denial or Flutter bindings drift.
+`verify_subscription_entitlements_contract.py` runs in GitHub Actions before Flutter analysis and tests. It fails closed if capacity gates, trial authority, provider-neutrality, service-role isolation, foreign-key coverage, direct-client mutation denial or Flutter bindings drift.
