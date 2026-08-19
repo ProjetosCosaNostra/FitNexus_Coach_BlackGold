@@ -36,18 +36,41 @@ class BillingProviderDescriptor {
 class BillingPricingReadiness {
   const BillingPricingReadiness({
     required this.state,
+    required this.mode,
+    required this.decisionVersion,
+    required this.annualStrategy,
     required this.activePriceCount,
+    required this.expectedPriceCount,
+    required this.complete,
   });
 
   final String state;
+  final String mode;
+  final String decisionVersion;
+  final String annualStrategy;
   final int activePriceCount;
+  final int expectedPriceCount;
+  final bool complete;
 
-  bool get promoted => state == 'PROMOTED' && activePriceCount > 0;
+  bool get promoted =>
+      state == 'PROMOTED' &&
+      complete &&
+      expectedPriceCount > 0 &&
+      activePriceCount == expectedPriceCount;
+
+  bool get experiment => mode == 'EXPERIMENT';
 
   factory BillingPricingReadiness.fromJson(Map<String, dynamic> json) {
+    final int active = (json['active_price_count'] as num?)?.toInt() ?? 0;
+    final int expected = (json['expected_price_count'] as num?)?.toInt() ?? 0;
     return BillingPricingReadiness(
       state: json['state'] as String? ?? 'UNFROZEN',
-      activePriceCount: (json['active_price_count'] as num?)?.toInt() ?? 0,
+      mode: json['mode'] as String? ?? 'NONE',
+      decisionVersion: json['decision_version'] as String? ?? '',
+      annualStrategy: json['annual_strategy'] as String? ?? '',
+      activePriceCount: active,
+      expectedPriceCount: expected,
+      complete: json['complete'] as bool? ?? (expected > 0 && active == expected),
     );
   }
 }
@@ -77,12 +100,14 @@ class BillingCheckoutReadiness {
     required this.serverAmountAuthority,
     required this.clientAmountAllowed,
     required this.silentProviderFallback,
+    required this.pricingDecisionBound,
   });
 
   final bool ready;
   final bool serverAmountAuthority;
   final bool clientAmountAllowed;
   final bool silentProviderFallback;
+  final bool pricingDecisionBound;
 
   factory BillingCheckoutReadiness.fromJson(Map<String, dynamic> json) {
     return BillingCheckoutReadiness(
@@ -90,6 +115,7 @@ class BillingCheckoutReadiness {
       serverAmountAuthority: json['server_amount_authority'] as bool? ?? true,
       clientAmountAllowed: json['client_amount_allowed'] as bool? ?? false,
       silentProviderFallback: json['silent_provider_fallback'] as bool? ?? false,
+      pricingDecisionBound: json['pricing_decision_bound'] as bool? ?? false,
     );
   }
 }
@@ -133,6 +159,82 @@ class BillingProviderReadiness {
   }
 }
 
+class PricingCatalogOffer {
+  const PricingCatalogOffer({
+    required this.planCode,
+    required this.displayName,
+    required this.studentLimit,
+    required this.memberLimit,
+    required this.monthlyAmountMinor,
+    required this.annualAmountMinor,
+    required this.annualSavingsMinor,
+    required this.annualMonthlyEquivalentMinor,
+    required this.pricingDecisionVersion,
+  });
+
+  final String planCode;
+  final String displayName;
+  final int studentLimit;
+  final int memberLimit;
+  final int monthlyAmountMinor;
+  final int annualAmountMinor;
+  final int annualSavingsMinor;
+  final int annualMonthlyEquivalentMinor;
+  final String pricingDecisionVersion;
+
+  factory PricingCatalogOffer.fromJson(Map<String, dynamic> json) {
+    int number(String key) => (json[key] as num?)?.toInt() ?? 0;
+    return PricingCatalogOffer(
+      planCode: json['plan_code'] as String? ?? 'unknown',
+      displayName: json['display_name'] as String? ?? 'FitNexus',
+      studentLimit: number('student_limit'),
+      memberLimit: number('member_limit'),
+      monthlyAmountMinor: number('monthly_amount_minor'),
+      annualAmountMinor: number('annual_amount_minor'),
+      annualSavingsMinor: number('annual_savings_minor'),
+      annualMonthlyEquivalentMinor: number('annual_monthly_equivalent_minor'),
+      pricingDecisionVersion: json['pricing_decision_version'] as String? ?? '',
+    );
+  }
+}
+
+class PricingCatalogSnapshot {
+  const PricingCatalogSnapshot({
+    required this.currency,
+    required this.decisionVersion,
+    required this.mode,
+    required this.annualStrategy,
+    required this.offers,
+    required this.generatedAt,
+  });
+
+  final String currency;
+  final String decisionVersion;
+  final String mode;
+  final String annualStrategy;
+  final List<PricingCatalogOffer> offers;
+  final DateTime generatedAt;
+
+  bool get experiment => mode == 'EXPERIMENT';
+
+  factory PricingCatalogSnapshot.fromJson(Map<String, dynamic> json) {
+    final List<dynamic> rawOffers = json['offers'] is List
+        ? json['offers'] as List<dynamic>
+        : const <dynamic>[];
+    return PricingCatalogSnapshot(
+      currency: json['currency'] as String? ?? 'BRL',
+      decisionVersion: json['decision_version'] as String? ?? '',
+      mode: json['mode'] as String? ?? 'NONE',
+      annualStrategy: json['annual_strategy'] as String? ?? '',
+      offers: rawOffers
+          .map((dynamic value) => PricingCatalogOffer.fromJson(_map(value)))
+          .toList(growable: false),
+      generatedAt: DateTime.tryParse(json['generated_at']?.toString() ?? '') ??
+          DateTime.now(),
+    );
+  }
+}
+
 class ProfessorBillingRepository {
   ProfessorBillingRepository._();
 
@@ -152,6 +254,14 @@ class ProfessorBillingRepository {
       },
     );
     return BillingProviderReadiness.fromJson(_map(response));
+  }
+
+  Future<PricingCatalogSnapshot> fetchPricingCatalog({String currency = 'BRL'}) async {
+    final dynamic response = await _client.rpc(
+      'get_pricing_catalog',
+      params: <String, dynamic>{'p_currency': currency},
+    );
+    return PricingCatalogSnapshot.fromJson(_map(response));
   }
 }
 
