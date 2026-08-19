@@ -6,6 +6,7 @@ on:
       - '03_app_flutter/fitnexus_app/**'
       - '04_backend_supabase/project_identity.json'
       - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/external_gate_evidence_placeholders.json'
       - '04_backend_supabase/migrations/**'
       - '04_backend_supabase/tools/**'
       - '.github/workflows/flutter_quality_gate.yml'
@@ -17,6 +18,7 @@ on:
       - '03_app_flutter/fitnexus_app/**'
       - '04_backend_supabase/project_identity.json'
       - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/external_gate_evidence_placeholders.json'
       - '04_backend_supabase/migrations/**'
       - '04_backend_supabase/tools/**'
       - '.github/workflows/flutter_quality_gate.yml'
@@ -67,6 +69,9 @@ jobs:
 
       - name: Controlled launch admission contract guard
         run: python ../../04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+
+      - name: External gate evidence placeholder guard
+        run: python ../../04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py
 
       - name: Set up Flutter stable
         uses: subosito/flutter-action@v2
