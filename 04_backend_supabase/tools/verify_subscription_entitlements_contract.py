@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -17,6 +18,11 @@ def fail(code: str, detail: str) -> None:
 
 def require(text: str, needle: str, code: str, detail: str) -> None:
     if needle not in text:
+        fail(code, detail)
+
+
+def require_regex(text: str, pattern: str, code: str, detail: str) -> None:
+    if re.search(pattern, text, flags=re.IGNORECASE | re.MULTILINE | re.DOTALL) is None:
         fail(code, detail)
 
 
@@ -53,7 +59,6 @@ def main() -> int:
         (migrations, "subscription_plans", "BGF-SUBSCRIPTION-PLAN-AUTHORITY-047", "provider-neutral plan catalog disappeared"),
         (migrations, "organization_subscriptions", "BGF-SUBSCRIPTION-STATE-AUTHORITY-048", "organization subscription authority disappeared"),
         (migrations, "subscription_authority_events", "BGF-SUBSCRIPTION-EVENT-EVIDENCE-049", "immutable subscription authority event ledger disappeared"),
-        (migrations, "'trial','BlackGold Trial','active',10,1,14", "BGF-SUBSCRIPTION-TRIAL-BOOTSTRAP-050", "14-day trial bootstrap contract drifted"),
         (migrations, "aa_on_organization_subscription_created", "BGF-SUBSCRIPTION-TRIAL-BOOTSTRAP-050", "automatic trial initialization trigger disappeared"),
         (migrations, "students_subscription_limit_gate", "BGF-SUBSCRIPTION-STUDENT-LIMIT-051", "server-side student capacity gate disappeared"),
         (migrations, "organization_members_subscription_limit_gate", "BGF-SUBSCRIPTION-MEMBER-LIMIT-052", "server-side team capacity gate disappeared"),
@@ -71,6 +76,15 @@ def main() -> int:
 
     for text, needle, code, detail in checks:
         require(text, needle, code, detail)
+
+    # BGF-CONTRACT-GATE-FORMAT-BRITTLENESS-069:
+    # semantic contracts must not depend on commas/newlines/indentation in SQL.
+    require_regex(
+        migrations,
+        r"\(\s*'trial'\s*,\s*'BlackGold Trial'\s*,\s*'active'\s*,\s*10\s*,\s*1\s*,\s*14\s*,",
+        "BGF-SUBSCRIPTION-TRIAL-BOOTSTRAP-050",
+        "14-day trial bootstrap semantic contract drifted",
+    )
 
     for table in (
         "public.subscription_plans",
@@ -179,6 +193,7 @@ def main() -> int:
     print("SUBSCRIPTION_ENTITLEMENT_CONTRACT_GATE=PASS")
     print("PLAN_AUTHORITY=PASS")
     print("TRIAL_BOOTSTRAP=PASS")
+    print("TRIAL_SEMANTIC_MATCH=PASS")
     print("STUDENT_LIMIT_GATE=PASS")
     print("MEMBER_LIMIT_GATE=PASS")
     print("TRAINING_WRITE_GATE=PASS")
