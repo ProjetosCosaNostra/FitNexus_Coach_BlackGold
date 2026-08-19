@@ -7,6 +7,7 @@ on:
       - '04_backend_supabase/project_identity.json'
       - '04_backend_supabase/migration_ledger_authority.json'
       - '04_backend_supabase/security_definer_exposure_authority.json'
+      - '04_backend_supabase/student_access_abuse_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
       - '04_backend_supabase/migrations/**'
       - '04_backend_supabase/tools/**'
@@ -20,6 +21,7 @@ on:
       - '04_backend_supabase/project_identity.json'
       - '04_backend_supabase/migration_ledger_authority.json'
       - '04_backend_supabase/security_definer_exposure_authority.json'
+      - '04_backend_supabase/student_access_abuse_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
       - '04_backend_supabase/migrations/**'
       - '04_backend_supabase/tools/**'
@@ -86,6 +88,9 @@ jobs:
 
       - name: SECURITY DEFINER exposure authority guard
         run: python ../../04_backend_supabase/tools/verify_security_definer_exposure_authority.py
+
+      - name: Student access abuse observability guard
+        run: python ../../04_backend_supabase/tools/verify_student_access_abuse_observability.py
 
       - name: Tenant isolation adversarial guard
         run: python ../../04_backend_supabase/tools/verify_tenant_isolation_contract.py
