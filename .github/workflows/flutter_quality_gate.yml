@@ -48,6 +48,9 @@ jobs:
       - name: Billing provider contract guard
         run: python ../../04_backend_supabase/tools/verify_billing_provider_contract.py
 
+      - name: Pricing authority contract guard
+        run: python ../../04_backend_supabase/tools/verify_pricing_authority_contract.py
+
       - name: Set up Flutter stable
         uses: subosito/flutter-action@v2
         with:
