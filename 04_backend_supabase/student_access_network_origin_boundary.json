@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "failure_classes": [
+    "BGF-NETWORK-ORIGIN-ABUSE-BYPASS-163",
+    "BGF-EDGE-ORIGIN-TRUST-164",
+    "BGF-STUDENT-ACCESS-PARTIAL-EDGE-CUTOVER-165",
+    "BGF-ALERT-DELIVERY-SELF-ATTESTATION-166"
+  ],
+  "purpose": "Fail-closed cutover authority for the network-origin abuse boundary that PostgreSQL cannot own for invalid possession-token attempts.",
+  "current_state": "NOT_ENFORCED_DIRECT_RPC_PATH_ACTIVE",
+  "observed_runtime": {
+    "edge_function_name": "student-access-gateway",
+    "edge_function_deployed": false,
+    "observed_edge_function_count": 0,
+    "observed_at_utc": "2026-08-19T22:36:00Z",
+    "source": "Supabase.list_edge_functions"
+  },
+  "current_client_boundary": {
+    "direct_v2_rpc_calls": [
+      "get_student_workout_v2",
+      "start_student_workout_v2",
+      "set_student_exercise_completion_v2",
+      "get_student_feedback_context_v2",
+      "submit_student_workout_feedback_v2"
+    ],
+    "anonymous_v2_rpc_execute_required_by_current_client": true,
+    "network_origin_rate_limit_for_invalid_token": false,
+    "edge_alert_delivery_verified": false
+  },
+  "target_cutover_invariants": {
+    "single_student_gateway": true,
+    "network_origin_must_come_from_trusted_runtime_metadata": true,
+    "client_supplied_forwarded_headers_must_not_be_trusted": true,
+    "invalid_token_attempts_rate_limited_by_network_origin_and_route": true,
+    "valid_token_database_rate_limits_remain_active": true,
+    "raw_possession_token_logging_forbidden": true,
+    "arbitrary_request_payload_logging_forbidden": true,
+    "direct_anon_v2_rpc_execute_revoked_after_verified_cutover": true,
+    "client_direct_rpc_fallback_forbidden_after_verified_cutover": true,
+    "alert_delivery_requires_real_runtime_receipt": true,
+    "rollback_requires_real_runtime_receipt": true
+  },
+  "promotion_preconditions": [
+    "gateway repository implementation passes CI",
+    "gateway deployed to the authoritative Supabase project",
+    "runtime health test succeeds without exposing a raw token",
+    "trusted network-origin extraction is verified in the deployed runtime",
+    "invalid-token network-origin throttle is verified with a controlled runtime test",
+    "Flutter student traffic is cut over to the gateway",
+    "direct anon execute on student v2 RPCs is revoked only after gateway cutover verification",
+    "no direct-RPC fallback remains in the client",
+    "alert delivery is tested against a controlled signal",
+    "rollback path is tested",
+    "remote migration ledger is reconciled for any privilege-changing DDL"
+  ],
+  "launch_authority": {
+    "can_promote_incident_response_gate": false,
+    "can_promote_production_deployment_gate": false,
+    "can_enable_paid_ads": false,
+    "current_state_is_security_readiness": false
+  }
+}

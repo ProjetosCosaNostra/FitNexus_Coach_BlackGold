@@ -8,8 +8,10 @@ on:
       - '04_backend_supabase/migration_ledger_authority.json'
       - '04_backend_supabase/security_definer_exposure_authority.json'
       - '04_backend_supabase/student_access_abuse_authority.json'
+      - '04_backend_supabase/student_access_network_origin_boundary.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
       - '04_backend_supabase/migrations/**'
+      - '04_backend_supabase/functions/**'
       - '04_backend_supabase/tools/**'
       - '.github/workflows/flutter_quality_gate.yml'
   push:
@@ -22,8 +24,10 @@ on:
       - '04_backend_supabase/migration_ledger_authority.json'
       - '04_backend_supabase/security_definer_exposure_authority.json'
       - '04_backend_supabase/student_access_abuse_authority.json'
+      - '04_backend_supabase/student_access_network_origin_boundary.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
       - '04_backend_supabase/migrations/**'
+      - '04_backend_supabase/functions/**'
       - '04_backend_supabase/tools/**'
       - '.github/workflows/flutter_quality_gate.yml'
 
@@ -91,6 +95,9 @@ jobs:
 
       - name: Student access abuse observability guard
         run: python ../../04_backend_supabase/tools/verify_student_access_abuse_observability.py
+
+      - name: Student network-origin cutover guard
+        run: python ../../04_backend_supabase/tools/verify_student_access_network_origin_boundary.py
 
       - name: Tenant isolation adversarial guard
         run: python ../../04_backend_supabase/tools/verify_tenant_isolation_contract.py
