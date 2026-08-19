@@ -11,7 +11,7 @@ The project continuity adendum explicitly classified pricing as a gate. Its vali
 - Studio: R$ 119,90–179,90 per month;
 - annual: approximately ten monthly payments for twelve months, subject to unit economics.
 
-Stage 17 promotes the **upper-bound validation experiment** so willingness-to-pay can be measured without changing the product domain later.
+Stage 17 promotes the **upper-bound validation experiment** so willingness-to-pay can be measured while preserving a versioned path for later price changes.
 
 ## BR V1 experiment prices
 
@@ -23,24 +23,17 @@ Decision version: `BR_V1_PRICING_EXPERIMENT_001`
 | Coach Pro | 100 students / 3 members | R$ 79,90 | R$ 799,00 | 10 months paid / 12 months |
 | Studio | 300 students / 10 members | R$ 179,90 | R$ 1.799,00 | 10 months paid / 12 months |
 
-These values are **promoted experiment prices**, not a claim that pricing is permanently frozen. Any future change requires a new `decision_version`; the same version cannot be replayed with different values.
+These values are **promoted experiment prices**, not a permanent price freeze. Any future change requires a new `decision_version`; the same version cannot be replayed with different values.
 
-## Why these values
+## Evidence model
 
 The decision uses three evidence layers:
 
 1. **FitNexus source contract** — the project adendum provided hypothesis ranges and required pricing to remain a commercial gate until validated.
-2. **Current market anchors checked on 2026-08-19** — public competitor offers showed coach software around R$ 49 for ~10 students, R$ 79–99 around 25–50 students, and R$ 149–199 around 100 students, with some lower and higher outliers. The FitNexus experiment deliberately stays inside its original hypothesis ranges instead of copying a competitor.
-3. **Current provider public-cost evidence** — Asaas publicly states that recurring billing itself has no platform monthly fee and that transaction costs depend on payment method. The public starting credit-card rate observed was 2.99% + R$ 0.49 per received charge; public Pix-invoice receipt pricing observed was R$ 1.99. These are planning assumptions only, not account-specific contracted rates.
+2. **Market evidence snapshot** — current public competitor offers were checked as non-authoritative anchors. They inform the experiment but never mutate FitNexus pricing automatically.
+3. **Provider cost evidence** — current public Asaas rates are stored only as planning assumptions. `contractual = false` is mandatory so a public rate can never masquerade as the account-specific commercial contract.
 
-### Public market anchors used as non-authoritative evidence
-
-- Nexur public plans: R$ 49,90 up to 25 students; R$ 79,90 up to 50; R$ 149,90 up to 100; R$ 249,90 up to 250.
-- Welltrainer public plans: R$ 47 up to 10; R$ 97 up to 50; R$ 197 unlimited, with temporary pioneer discounts shown separately.
-- Trainer Connect public plans: R$ 49 up to 10; R$ 99 up to 30; R$ 199 up to 100; R$ 349 unlimited.
-- PersonalGO PRO public help: R$ 79,90 monthly for trainers.
-
-Market anchors are evidence snapshots, not dependencies. A competitor changing price must never silently change FitNexus pricing.
+Market anchors and provider rates are evidence snapshots, not runtime dependencies. Any future evidence refresh requires a deliberate pricing decision, not silent drift.
 
 ## Unit-economics evidence boundary
 
@@ -60,11 +53,11 @@ At the current monthly experiment prices, the approximate amount remaining after
 | Pro R$ 79,90 | ~R$ 77,02 | R$ 77,91 |
 | Studio R$ 179,90 | ~R$ 174,03 | R$ 177,91 |
 
-These figures do **not** include taxes, hosting, support, AI, storage, chargebacks, discounts, refunds or future contracted provider pricing. They therefore cannot be used as a final gross-margin statement.
+These figures do **not** include taxes, hosting, support, AI, storage, chargebacks, discounts, refunds or future contracted provider pricing. They are therefore not final gross-margin claims.
 
 ## Atomic price-set promotion
 
-`promote_subscription_pricing(...)` is the only service-role promotion command introduced for price-set changes.
+`promote_subscription_pricing(...)` is the service-authority promotion command for price-set changes.
 
 It fails closed when:
 
@@ -81,31 +74,35 @@ A new price decision retires the previous current decision and its active prices
 
 ## Checkout lineage
 
-Every new `billing_checkout_intents` row now stores `pricing_decision_version`.
+Every new `billing_checkout_intents` row stores `pricing_decision_version`.
 
-This creates the chain:
+The commercial evidence chain is therefore:
 
 `pricing decision -> promoted price -> checkout intent -> provider checkout -> webhook -> subscription authority`
 
-A paid conversion can therefore be attributed to the exact pricing experiment that produced it.
+A paid conversion can be attributed to the exact pricing experiment that produced it.
 
-## Latent Stage 16 defect found and repaired
+## Stage 16 privilege dead-path found and permanently repaired
 
-During Stage 17 privilege-closure review, `create_billing_checkout_intent(...)` was found to be `SECURITY INVOKER` while authenticated clients had no direct INSERT privilege on `billing_checkout_intents`.
+During Stage 17 privilege-closure review, `create_billing_checkout_intent(...)` was found to be `SECURITY INVOKER` while authenticated clients intentionally had no direct INSERT privilege on `billing_checkout_intents`.
 
-That meant the RPC had execute permission but its underlying mutation path was dead.
+The exposed RPC had execute permission, but its intended INSERT path would be dead once provider credentials became active.
 
-Stage 17 repairs this by making the RPC `SECURITY DEFINER` while preserving its explicit internal controls:
+An intermediate repair changed the public RPC to `SECURITY DEFINER`. The Supabase Security Advisor correctly surfaced that public exposed definer as a new warning, so that intermediate form was not accepted as the final architecture.
 
-- `auth.uid()` required;
-- organization billing-manager authority required;
+The final authority pattern is:
+
+- `public.create_billing_checkout_intent(...)` — exposed **SECURITY INVOKER** wrapper;
+- `private.create_billing_checkout_intent_authority(...)` — non-public **SECURITY DEFINER** mutation bridge;
+- direct authenticated INSERT on `billing_checkout_intents` remains denied;
+- both layers validate authenticated billing-manager authority;
 - provider must be active;
-- amount/currency/interval come from the active server price;
-- current pricing decision must match;
+- amount/currency/interval come from the promoted server price;
+- the current pricing decision must match;
 - idempotency conflict checks remain;
-- direct client table mutation remains denied.
+- the private authority bridge is outside the public PostgREST RPC surface.
 
-This failure class is permanently registered as `BGF-BILLING-RPC-PRIVILEGE-DEADPATH-082`.
+This permanently closes `BGF-BILLING-RPC-PRIVILEGE-DEADPATH-082` without leaving a new public-definer warning. The intermediate advisor finding became an additional prevention class, `BGF-BILLING-RPC-EXPOSED-DEFINER-095`.
 
 ## Pricing catalog
 
@@ -120,26 +117,34 @@ This failure class is permanently registered as `BGF-BILLING-RPC-PRIVILEGE-DEADP
 - annual savings;
 - annual monthly equivalent.
 
-Flutter now has typed models for this contract. It does not calculate or invent server prices.
+Flutter has typed models for this contract. It does not calculate or invent server prices.
+
+## RLS and advisor closure
+
+Stage 17 enables RLS on both pricing authority tables. `pricing_decisions` exposes only current experiment/frozen decisions to authenticated clients. `billing_fee_assumptions` remains internal; an explicit service-role read policy prevents an ambiguous `RLS enabled, no policy` state.
+
+Foreign-key indexes were added for pricing-decision lineage and provider fee assumptions. The performance advisor no longer reports Stage 17 unindexed foreign keys. Unused-index INFO notices are expected while the project contains little/no production traffic.
 
 ## Permanent prevention classes
 
-- `BGF-BILLING-RPC-PRIVILEGE-DEADPATH-082`: executable RPC cannot depend on table privileges the caller does not possess unless the command deliberately closes that authority path.
+- `BGF-BILLING-RPC-PRIVILEGE-DEADPATH-082`: executable mutation RPC cannot depend on table privileges the caller intentionally does not possess.
 - `BGF-PRICING-UNVERSIONED-083`: no promoted price exists without pricing decision identity.
 - `BGF-PRICING-DECISION-DRIFT-084`: price changes require a new decision version.
 - `BGF-PRICING-ANNUAL-STRATEGY-085`: annual strategy is explicit and regression-gated.
 - `BGF-PRICING-PARTIAL-PROMOTION-086`: incomplete price sets cannot be promoted.
 - `BGF-PRICING-IDEMPOTENCY-087`: a decision version cannot be reused for different price content.
 - `BGF-PRICING-FEE-EVIDENCE-088`: public provider fees are evidence, never silently treated as contracted account rates.
-- `BGF-PRICING-CHECKOUT-BINDING-089`: each checkout must preserve pricing-decision lineage.
+- `BGF-PRICING-CHECKOUT-BINDING-089`: each checkout preserves pricing-decision lineage.
 - `BGF-PRICING-CATALOG-090`: clients consume one authoritative pricing catalog.
 - `BGF-PRICING-COMPLETE-SET-091`: billing readiness requires the complete six-offer set.
 - `BGF-PRICING-FLUTTER-BINDING-092`: Flutter pricing models remain bound to server authority.
 - `BGF-PRICING-CLIENT-MUTATION-093`: normal clients cannot write pricing authority.
 - `BGF-PRICING-PROMOTION-AUTHORITY-094`: pricing promotion remains service-authority-only.
+- `BGF-BILLING-RPC-EXPOSED-DEFINER-095`: a public RPC must not be promoted to SECURITY DEFINER when a private definer bridge can close the authority path.
+- `BGF-PRICING-FEE-RLS-096`: internal fee-evidence tables must have explicit RLS policy semantics, even when not exposed to normal clients.
 
 ## Remaining commercial boundary
 
-The price gate is now promoted as an experiment. Checkout still remains blocked because the external Asaas credential/account boundary has not been activated.
+The pricing gate is now promoted as a versioned experiment. Checkout remains blocked because the external Asaas credential/account boundary has not been activated.
 
-That separation is intentional: price validation and provider credential authorization are independent authorities.
+That separation is intentional: pricing validation and provider credential authorization are independent authorities.
