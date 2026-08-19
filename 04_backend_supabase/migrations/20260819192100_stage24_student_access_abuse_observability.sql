@@ -42,6 +42,10 @@ create index if not exists student_access_security_events_abuse_window_idx
 create index if not exists student_access_security_events_rotation_subject_idx
   on private.student_access_security_events(outcome, organization_id, student_id, occurred_at desc);
 
+-- service_role had SELECT on Stage 21 security events but no USAGE on the private
+-- schema. Granting schema visibility is required for the security-invoker posture view;
+-- object privileges remain explicitly fail-closed.
+grant usage on schema private to service_role;
 revoke all on private.student_access_security_signals from public, anon, authenticated;
 grant select on private.student_access_security_signals to service_role;
 
