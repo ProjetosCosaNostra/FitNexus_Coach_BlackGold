@@ -10,6 +10,9 @@ APP = ROOT / "03_app_flutter" / "fitnexus_app" / "lib"
 PRIVATE_SNAPSHOT_HARDENING = (
     MIGRATIONS / "20260819055000_stage18_private_snapshot_authority_hardening.sql"
 )
+PUBLIC_FUNNEL_CAPTURE = (
+    MIGRATIONS / "20260819060000_stage19_public_funnel_capture.sql"
+)
 
 
 def fail(code: str, detail: str) -> None:
@@ -49,8 +52,6 @@ def main() -> int:
         (migrations, "private.growth_events", "BGF-GROWTH-FUNNEL-AUTHORITY-100", "private growth event ledger disappeared"),
         (migrations, "private.growth_attribution", "BGF-GROWTH-ATTRIBUTION-FIRST-LAST-101", "first/last attribution authority disappeared"),
         (migrations, "private.growth_capture_failures", "BGF-GROWTH-TELEMETRY-CORE-BLOCK-113", "telemetry failure evidence disappeared"),
-        (migrations, "('landing_view','acquisition','future_public_capture','pending'", "BGF-GROWTH-PUBLIC-CAPTURE-GAP-105", "landing_view must remain explicitly pending until public capture exists"),
-        (migrations, "('signup_started','signup','future_public_capture','pending'", "BGF-GROWTH-PUBLIC-CAPTURE-GAP-105", "signup_started must remain explicitly pending until public capture exists"),
         (migrations, "'signup_completed'", "BGF-GROWTH-FUNNEL-AUTHORITY-100", "signup_completed server event disappeared"),
         (migrations, "'student_created'", "BGF-GROWTH-FUNNEL-AUTHORITY-100", "student_created server event disappeared"),
         (migrations, "'training_created_or_duplicated'", "BGF-GROWTH-FUNNEL-AUTHORITY-100", "training creation event disappeared"),
@@ -64,7 +65,6 @@ def main() -> int:
         (migrations, "growth_attribution_last_actor_user_id_idx", "BGF-GROWTH-FK-INDEX-112", "last-touch actor FK index disappeared"),
         (migrations, "coaches_with_at_least_one_training_delivery_in_last_7_days", "BGF-GROWTH-NORTH-STAR-SEMANTICS-103", "north-star operational definition drifted"),
         (migrations, "time_to_first_value_seconds", "BGF-GROWTH-TTFV-104", "time-to-first-value calculation disappeared"),
-        (migrations, "blocked_tracking_incomplete", "BGF-GROWTH-PAID-MEDIA-PREMATURE-102", "paid-media gate no longer fails closed while public funnel capture is pending"),
         (migrations, "sensitive_health_payload_in_growth_events',false", "BGF-GROWTH-SENSITIVE-PAYLOAD-099", "growth snapshot lost explicit sensitive-health exclusion"),
         (migrations, "private.attach_growth_attribution_authority", "BGF-GROWTH-RPC-EXPOSED-DEFINER-106", "private attribution authority bridge disappeared"),
         (migrations, "private.get_growth_funnel_snapshot_authority", "BGF-GROWTH-RPC-EXPOSED-DEFINER-106", "private snapshot authority bridge disappeared"),
@@ -84,6 +84,56 @@ def main() -> int:
     ]
     for text, needle, code, detail in checks:
         require(text, needle, code, detail)
+
+    public_capture_state = "PENDING_EXPLICIT"
+    tracking_core_state = "BLOCKED_TRACKING_INCOMPLETE"
+    if PUBLIC_FUNNEL_CAPTURE.exists():
+        public_capture = PUBLIC_FUNNEL_CAPTURE.read_text(encoding="utf-8").lower()
+        require(
+            public_capture,
+            "capture_authority = 'public_capture'",
+            "BGF-CONTRACT-GATE-HISTORICAL-SHADOW-115",
+            "Stage 19 exists but current public-capture authority was not promoted",
+        )
+        require(
+            public_capture,
+            "capture_status = 'active'",
+            "BGF-CONTRACT-GATE-HISTORICAL-SHADOW-115",
+            "Stage 19 exists but current public-capture status is not active",
+        )
+        require(
+            public_capture,
+            "'tracking_core_gate'",
+            "BGF-CONTRACT-GATE-HISTORICAL-SHADOW-115",
+            "current growth snapshot lost the Stage 19 tracking-core gate",
+        )
+        require(
+            public_capture,
+            "'ads_release_gate', 'blocked_by_separate_release_gates'",
+            "BGF-GROWTH-PAID-MEDIA-PREMATURE-102",
+            "tracking completion must not silently open the overall ads release gate",
+        )
+        public_capture_state = "ACTIVE"
+        tracking_core_state = "READY__ADS_SEPARATE_GATE_BLOCKED"
+    else:
+        require(
+            migrations,
+            "('landing_view','acquisition','future_public_capture','pending'",
+            "BGF-GROWTH-PUBLIC-CAPTURE-GAP-105",
+            "landing_view must remain explicitly pending until public capture exists",
+        )
+        require(
+            migrations,
+            "('signup_started','signup','future_public_capture','pending'",
+            "BGF-GROWTH-PUBLIC-CAPTURE-GAP-105",
+            "signup_started must remain explicitly pending until public capture exists",
+        )
+        require(
+            migrations,
+            "blocked_tracking_incomplete",
+            "BGF-GROWTH-PAID-MEDIA-PREMATURE-102",
+            "tracking must fail closed while public funnel capture is pending",
+        )
 
     growth_table_match = re.search(
         r"create table if not exists private\.growth_events \((.*?)\);",
@@ -125,7 +175,6 @@ def main() -> int:
     ):
         forbid(migrations, forbidden_grant, code, detail)
 
-    # Public wrappers remain invokers; private bridges own elevated authority and revalidate callers.
     for fn_name in ("attach_growth_attribution", "get_growth_funnel_snapshot"):
         pattern = rf"create or replace function public\.{fn_name}\(.*?security invoker"
         if re.search(pattern, migrations, flags=re.DOTALL) is None:
@@ -133,8 +182,9 @@ def main() -> int:
 
     print("GROWTH_INSTRUMENTATION_CONTRACT_GATE=PASS")
     print("SERVER_FUNNEL_EVENTS=ACTIVE")
-    print("PUBLIC_FUNNEL_CAPTURE=PENDING_EXPLICIT")
-    print("PAID_MEDIA_GATE=BLOCKED_TRACKING_INCOMPLETE")
+    print(f"PUBLIC_FUNNEL_CAPTURE={public_capture_state}")
+    print(f"TRACKING_CORE={tracking_core_state}")
+    print("ADS_RELEASE_GATE=SEPARATE_FAIL_CLOSED")
     print("GROWTH_EVENT_ARBITRARY_PAYLOAD=DENIED")
     print("DIRECT_CLIENT_EVENT_FABRICATION=DENIED")
     print("UTM_ATTRIBUTION=PRIVACY_MINIMIZED")
@@ -144,6 +194,7 @@ def main() -> int:
     print("SERVER_TELEMETRY=FAIL_OPEN_OBSERVABLE")
     print("GROWTH_FK_INDEX_COVERAGE=PASS")
     print("PRIVATE_BRIDGE_TENANT_REVALIDATION=PASS")
+    print("HISTORICAL_MIGRATION_SHADOW=DENIED")
     return 0
 
 
