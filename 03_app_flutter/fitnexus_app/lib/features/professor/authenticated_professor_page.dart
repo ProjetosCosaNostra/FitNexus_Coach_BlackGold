@@ -7,6 +7,7 @@ import 'professor_decision_intelligence_page.dart';
 import 'professor_feedback_page.dart';
 import 'professor_lineage_page.dart';
 import 'professor_progress_page.dart';
+import 'professor_subscription_page.dart';
 import 'professor_templates_page.dart';
 import 'student_access_management_page.dart';
 
@@ -46,6 +47,14 @@ class _AuthenticatedProfessorPageState
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => const ProfessorDecisionIntelligencePage(),
+      ),
+    );
+  }
+
+  void _openSubscription(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const ProfessorSubscriptionPage(),
       ),
     );
   }
@@ -153,6 +162,18 @@ class _AuthenticatedProfessorPageState
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: <Widget>[
+                      FloatingActionButton.extended(
+                        heroTag: 'fitnexus_subscription',
+                        onPressed: () => _openSubscription(context),
+                        backgroundColor: const Color(0xFF171717),
+                        foregroundColor: const Color(0xFF75E39B),
+                        icon: const Icon(Icons.workspace_premium_rounded),
+                        label: const Text(
+                          'Plano',
+                          style: TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       FloatingActionButton.extended(
                         heroTag: 'fitnexus_decision_intelligence',
                         onPressed: () => _openDecisionIntelligence(context),
