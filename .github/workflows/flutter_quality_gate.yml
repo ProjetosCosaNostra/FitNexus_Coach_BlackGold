@@ -5,6 +5,7 @@ on:
     paths:
       - '03_app_flutter/fitnexus_app/**'
       - '04_backend_supabase/project_identity.json'
+      - '04_backend_supabase/migration_ledger_authority.json'
       - '04_backend_supabase/migrations/**'
       - '04_backend_supabase/tools/**'
       - '.github/workflows/flutter_quality_gate.yml'
@@ -15,6 +16,7 @@ on:
     paths:
       - '03_app_flutter/fitnexus_app/**'
       - '04_backend_supabase/project_identity.json'
+      - '04_backend_supabase/migration_ledger_authority.json'
       - '04_backend_supabase/migrations/**'
       - '04_backend_supabase/tools/**'
       - '.github/workflows/flutter_quality_gate.yml'
@@ -35,6 +37,12 @@ jobs:
 
       - name: Supabase project identity guard
         run: python ../../04_backend_supabase/tools/verify_project_identity.py
+
+      - name: Migration ledger contract guard
+        run: python ../../04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Migration ledger reconciler regression
+        run: python ../../04_backend_supabase/tools/test_migration_ledger_reconciler.py
 
       - name: Decision Intelligence contract guard
         run: python ../../04_backend_supabase/tools/verify_decision_intelligence_contract.py
