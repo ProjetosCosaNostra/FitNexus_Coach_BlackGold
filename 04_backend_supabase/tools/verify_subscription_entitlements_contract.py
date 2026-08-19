@@ -126,9 +126,6 @@ def main() -> int:
         "provider adapter authority must be isolated to service_role",
     )
 
-    # BGF-SUBSCRIPTION-SERVICE-LEAST-PRIVILEGE-067:
-    # the provider adapter may read the catalog, update subscription state and
-    # append authority evidence. It must not rewrite plans or historical events.
     require(
         migrations,
         "revoke all on public.subscription_plans from service_role;",
@@ -154,6 +151,18 @@ def main() -> int:
         "provider adapter must append but not rewrite subscription evidence",
     )
 
+    for index_name in (
+        "organization_subscriptions_plan_code_idx",
+        "subscription_authority_events_from_plan_code_idx",
+        "subscription_authority_events_to_plan_code_idx",
+    ):
+        require(
+            migrations,
+            index_name,
+            "BGF-SUBSCRIPTION-FK-INDEX-068",
+            f"foreign-key index coverage missing: {index_name}",
+        )
+
     require(
         migrations,
         "revoke execute on function public.get_subscription_entitlement_snapshot(uuid) from public, anon;",
@@ -177,6 +186,7 @@ def main() -> int:
     print("PROVIDER_NEUTRAL_CORE=PASS")
     print("PROVIDER_EVENT_IDEMPOTENCY=PASS")
     print("SERVICE_ROLE_LEAST_PRIVILEGE=PASS")
+    print("FOREIGN_KEY_INDEX_COVERAGE=PASS")
     print("DIRECT_CLIENT_MUTATION=DENIED")
     print("FLUTTER_BINDING=PASS")
     return 0
