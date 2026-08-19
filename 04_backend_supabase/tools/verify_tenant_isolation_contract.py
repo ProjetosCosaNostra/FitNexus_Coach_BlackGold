@@ -10,12 +10,14 @@ STAGE5 = MIGRATIONS / "20260818152500_stage5_student_access_workout_execution.sq
 DIRECT_DENY = MIGRATIONS / "20260818203000_stage8_student_access_direct_deny_policy.sql"
 STAGE21 = MIGRATIONS / "20260819103700_stage21_student_access_security_boundary.sql"
 STAGE22 = MIGRATIONS / "20260819114500_stage22_tenant_isolation_relational_interlock.sql"
+STAGE22_INDEX = MIGRATIONS / "20260819115300_stage22_tenant_isolation_fk_index_hardening.sql"
 
 FAILURE_CLASSES = (
     "BGF-TENANT-RELATIONSHIP-DECOUPLING-154",
     "BGF-TENANT-ANON-RPC-DOWNGRADE-155",
     "BGF-TENANT-DIRECT-TABLE-BYPASS-156",
     "BGF-TENANT-CLIENT-RPC-DOWNGRADE-157",
+    "BGF-TENANT-FK-INDEX-COVERAGE-158",
 )
 
 
@@ -38,6 +40,7 @@ def require(text: str, fragments: list[str], label: str) -> None:
 def main() -> None:
     stage5 = read(STAGE5).lower()
     stage22 = read(STAGE22).lower()
+    stage22_index = read(STAGE22_INDEX).lower()
     stage21 = read(STAGE21).lower()
     direct_deny = read(DIRECT_DENY).lower()
     all_sql = "\n".join(
@@ -61,6 +64,18 @@ def main() -> None:
             "drop constraint if exists student_access_links_rotated_from_link_id_fkey",
         ],
         FAILURE_CLASSES[0],
+    )
+
+    require(
+        stage22_index,
+        [
+            "bgf-tenant-fk-index-coverage-158",
+            "student_access_links_rotation_same_student_org_fk_idx",
+            "on public.student_access_links(rotated_from_link_id, student_id, organization_id)",
+            "workout_sessions_access_link_same_student_org_fk_idx",
+            "on public.workout_sessions(student_access_link_id, student_id, organization_id)",
+        ],
+        FAILURE_CLASSES[4],
     )
 
     legacy_rpcs = [
@@ -167,6 +182,7 @@ def main() -> None:
     print("TENANT_ISOLATION_CONTRACT_GUARD=PASS")
     print("RELATIONAL_BINDING=STUDENT_ACCESS_LINK+STUDENT+ORGANIZATION")
     print("ROTATION_LINEAGE=SAME_STUDENT_SAME_ORGANIZATION")
+    print("COMPOSITE_FK_INDEX_COVERAGE=PASS")
     print("ANON_STUDENT_RPCS=V2_ONLY")
     print("DIRECT_STUDENT_TABLE_BYPASS=DENIED")
     print("CLIENT_LEGACY_RPC_CALLS=0")

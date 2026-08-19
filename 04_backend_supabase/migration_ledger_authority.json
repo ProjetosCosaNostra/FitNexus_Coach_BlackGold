@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "2ac01c3c033e35ae02011edc6bb2cb3918da193c",
-  "observed_at_utc": "2026-08-19T14:48:00Z",
+  "baseline_main_sha": "8cbc37dcbf61f4cc4ace31e3c6b91e05c972a286",
+  "observed_at_utc": "2026-08-19T14:58:11Z",
   "source": "Supabase.list_migrations",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -39,10 +39,10 @@
     },
     {
       "direction": "repo_only",
-      "name": "stage22_tenant_isolation_relational_interlock",
-      "reason": "Repo-first promotion: tenant-isolation relational constraints must pass repository CI and merge to main before remote application.",
+      "name": "stage22_tenant_isolation_fk_index_hardening",
+      "reason": "Repo-first follow-up after Supabase Performance Advisor identified the two new Stage 22 composite foreign keys without covering indexes.",
       "owner": "BlackGold Forge",
-      "related_failure_class": "BGF-TENANT-RELATIONSHIP-DECOUPLING-154"
+      "related_failure_class": "BGF-TENANT-FK-INDEX-COVERAGE-158"
     }
   ],
   "remote_migrations": [
@@ -86,6 +86,7 @@
     {"version": "20260819083950", "name": "stage19_public_funnel_capture"},
     {"version": "20260819085840", "name": "stage20_controlled_launch_admission"},
     {"version": "20260819135747", "name": "stage21_student_access_security_boundary"},
-    {"version": "20260819135808", "name": "stage21_student_access_issuance_authority_hardening"}
+    {"version": "20260819135808", "name": "stage21_student_access_issuance_authority_hardening"},
+    {"version": "20260819145811", "name": "stage22_tenant_isolation_relational_interlock"}
   ]
 }
