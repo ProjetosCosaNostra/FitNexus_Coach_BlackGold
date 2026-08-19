@@ -43,6 +43,13 @@
       "reason": "Two-phase repo-first promotion: Stage 21 must pass repository CI and merge before the already-versioned SQL is applied to the authoritative Supabase project.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-STUDENT-ACCESS-UNBOUNDED-BEARER-147"
+    },
+    {
+      "direction": "repo_only",
+      "name": "stage21_student_access_issuance_authority_hardening",
+      "reason": "Two-phase repo-first hardening: token issuance must authorize the manager before reading rotation state, and this SQL must enter main before remote application.",
+      "owner": "BlackGold Forge",
+      "related_failure_class": "BGF-STUDENT-ACCESS-ISSUANCE-AUTHORITY-153"
     }
   ],
   "remote_migrations": [
