@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'student_access_command_id.dart';
+
 class StudentWorkoutExercise {
   const StudentWorkoutExercise({
     required this.id,
@@ -70,7 +72,8 @@ class StudentWorkoutHistoryItem {
       status: json['status'] as String? ?? 'in_progress',
       completedExercises: (json['completed_exercises'] as num?)?.toInt() ?? 0,
       totalExercises: (json['total_exercises'] as num?)?.toInt() ?? 0,
-      startedAt: _dateTime(json['started_at']) ?? DateTime.fromMillisecondsSinceEpoch(0),
+      startedAt: _dateTime(json['started_at']) ??
+          DateTime.fromMillisecondsSinceEpoch(0),
       completedAt: _dateTime(json['completed_at']),
     );
   }
@@ -161,18 +164,25 @@ class StudentWorkoutRepository {
 
   Future<StudentWorkoutSnapshot> fetchSnapshot(String token) async {
     final dynamic response = await _client.rpc(
-      'get_student_workout',
+      'get_student_workout_v2',
       params: <String, dynamic>{'p_token': token.trim()},
     );
-    return StudentWorkoutSnapshot.fromJson(_map(response));
+    final Map<String, dynamic> result = _map(response);
+    _throwStudentAccessError(result);
+    return StudentWorkoutSnapshot.fromJson(result);
   }
 
   Future<String> startWorkout(String token) async {
     final dynamic response = await _client.rpc(
-      'start_student_workout',
-      params: <String, dynamic>{'p_token': token.trim()},
+      'start_student_workout_v2',
+      params: <String, dynamic>{
+        'p_token': token.trim(),
+        'p_command_id': newStudentAccessCommandId(),
+      },
     );
-    final String id = response?.toString() ?? '';
+    final Map<String, dynamic> result = _map(response);
+    _throwStudentAccessError(result);
+    final String id = result['session_id']?.toString() ?? '';
     if (id.isEmpty) {
       throw StateError('O FitNexus não retornou a sessão iniciada.');
     }
@@ -185,15 +195,35 @@ class StudentWorkoutRepository {
     required String exerciseId,
     required bool completed,
   }) async {
-    await _client.rpc(
-      'set_student_exercise_completion',
+    final dynamic response = await _client.rpc(
+      'set_student_exercise_completion_v2',
       params: <String, dynamic>{
         'p_token': token.trim(),
         'p_session_id': sessionId,
         'p_exercise_id': exerciseId,
         'p_completed': completed,
+        'p_command_id': newStudentAccessCommandId(),
       },
     );
+    _throwStudentAccessError(_map(response));
+  }
+}
+
+void _throwStudentAccessError(Map<String, dynamic> value) {
+  final String code = value['error']?.toString() ?? '';
+  if (code.isEmpty) return;
+
+  switch (code) {
+    case 'STUDENT_ACCESS_INVALID':
+      throw StateError('Este link de aluno é inválido, expirou ou foi substituído.');
+    case 'STUDENT_ACCESS_RATE_LIMITED':
+      throw StateError('Muitas ações em pouco tempo. Aguarde alguns segundos e tente novamente.');
+    case 'STUDENT_COMMAND_IN_PROGRESS':
+      throw StateError('Esta ação ainda está sendo confirmada. Tente novamente em instantes.');
+    case 'STUDENT_COMMAND_ID_INVALID':
+      throw StateError('A proteção da ação do aluno recusou um identificador inválido.');
+    default:
+      throw StateError('O acesso do aluno foi recusado pelo limite de segurança: $code');
   }
 }
 
