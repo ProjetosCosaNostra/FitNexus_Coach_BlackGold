@@ -90,7 +90,8 @@ This makes the product answer the daily question first:
 - `BGF-ACTION-DAILY-ENTRYPOINT-042`: the daily workspace must remain visible and first-class.
 - `BGF-ACTION-LEDGER-WRITE-AUTHORITY-043`: clients cannot directly fabricate action evidence rows.
 - `BGF-ACTION-RPC-AUTHORITY-044`: public Action Center commands stay authenticated-only.
+- `BGF-SQL-THREE-VALUED-LEFT-JOIN-045`: a `LEFT JOIN` suppression predicate cannot rely on `NOT (nullable_expression)` because SQL three-valued logic turns `NOT NULL` into `NULL` and can silently hide fresh rows. Suppression predicates must explicitly `coalesce(..., false)` and are regression-gated.
 
 ## Construction gate
 
-`verify_coach_action_center_contract.py` is executed by GitHub Actions before Flutter analysis/tests. It fails closed if the daily-action authority, stale-context protection, human guardrails, RPC authority or Flutter bindings drift.
+`verify_coach_action_center_contract.py` is executed by GitHub Actions before Flutter analysis/tests. It fails closed if the daily-action authority, stale-context protection, SQL null-visibility semantics, human guardrails, RPC authority or Flutter bindings drift.
