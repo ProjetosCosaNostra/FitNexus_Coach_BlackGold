@@ -71,11 +71,11 @@ def main() -> None:
         "submit_student_workout_feedback(text,uuid,integer,integer,integer,text,text)",
     ]
     for signature in legacy_rpcs:
-        expected = (
-            f"revoke all on function public.{signature} from public, anon, authenticated;"
-        )
+        expected = f"revoke execute on function public.{signature} from anon, authenticated;"
         if expected not in stage21:
             fail(f"{FAILURE_CLASSES[1]} legacy anonymous RPC not fail-closed: {signature}")
+        if f"grant execute on function public.{signature} to public" in all_sql:
+            fail(f"{FAILURE_CLASSES[1]} legacy RPC granted back to PUBLIC: {signature}")
 
     v2_rpcs = [
         "get_student_workout_v2(text)",
