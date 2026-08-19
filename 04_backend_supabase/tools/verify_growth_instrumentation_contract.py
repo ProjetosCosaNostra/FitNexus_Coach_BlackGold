@@ -38,6 +38,7 @@ def main() -> int:
         (migrations, "private.growth_event_catalog", "BGF-GROWTH-FUNNEL-AUTHORITY-100", "growth event catalog disappeared"),
         (migrations, "private.growth_events", "BGF-GROWTH-FUNNEL-AUTHORITY-100", "private growth event ledger disappeared"),
         (migrations, "private.growth_attribution", "BGF-GROWTH-ATTRIBUTION-FIRST-LAST-101", "first/last attribution authority disappeared"),
+        (migrations, "private.growth_capture_failures", "BGF-GROWTH-TELEMETRY-CORE-BLOCK-113", "telemetry failure evidence disappeared"),
         (migrations, "('landing_view','acquisition','future_public_capture','pending'", "BGF-GROWTH-PUBLIC-CAPTURE-GAP-105", "landing_view must remain explicitly pending until public capture exists"),
         (migrations, "('signup_started','signup','future_public_capture','pending'", "BGF-GROWTH-PUBLIC-CAPTURE-GAP-105", "signup_started must remain explicitly pending until public capture exists"),
         (migrations, "'signup_completed'", "BGF-GROWTH-FUNNEL-AUTHORITY-100", "signup_completed server event disappeared"),
@@ -49,6 +50,8 @@ def main() -> int:
         (migrations, "'checkout_started'", "BGF-GROWTH-REVENUE-AUTHORITY-111", "checkout event disappeared"),
         (migrations, "'paid'", "BGF-GROWTH-REVENUE-AUTHORITY-111", "paid transition event disappeared"),
         (migrations, "growth_events_entity_uidx", "BGF-GROWTH-TRIGGER-IDEMPOTENCY-107", "entity-level event deduplication disappeared"),
+        (migrations, "growth_attribution_first_actor_user_id_idx", "BGF-GROWTH-FK-INDEX-112", "first-touch actor FK index disappeared"),
+        (migrations, "growth_attribution_last_actor_user_id_idx", "BGF-GROWTH-FK-INDEX-112", "last-touch actor FK index disappeared"),
         (migrations, "coaches_with_at_least_one_training_delivery_in_last_7_days", "BGF-GROWTH-NORTH-STAR-SEMANTICS-103", "north-star operational definition drifted"),
         (migrations, "time_to_first_value_seconds", "BGF-GROWTH-TTFV-104", "time-to-first-value calculation disappeared"),
         (migrations, "blocked_tracking_incomplete", "BGF-GROWTH-PAID-MEDIA-PREMATURE-102", "paid-media gate no longer fails closed while public funnel capture is pending"),
@@ -57,6 +60,8 @@ def main() -> int:
         (migrations, "private.get_growth_funnel_snapshot_authority", "BGF-GROWTH-RPC-EXPOSED-DEFINER-106", "private snapshot authority bridge disappeared"),
         (migrations, "public.attach_growth_attribution", "BGF-GROWTH-ATTRIBUTION-FIRST-LAST-101", "public attribution wrapper disappeared"),
         (migrations, "public.get_growth_funnel_snapshot", "BGF-GROWTH-FUNNEL-AUTHORITY-100", "public growth snapshot wrapper disappeared"),
+        (migrations, "exception when others then", "BGF-GROWTH-TELEMETRY-CORE-BLOCK-113", "server telemetry lost its exception containment boundary"),
+        (migrations, "error_fingerprint", "BGF-GROWTH-TELEMETRY-CORE-BLOCK-113", "telemetry failures lost non-payload diagnostic fingerprinting"),
         (capture, "utm_source", "BGF-GROWTH-ATTRIBUTION-FIRST-LAST-101", "UTM source capture disappeared"),
         (capture, "utm_medium", "BGF-GROWTH-ATTRIBUTION-FIRST-LAST-101", "UTM medium capture disappeared"),
         (capture, "utm_campaign", "BGF-GROWTH-ATTRIBUTION-FIRST-LAST-101", "UTM campaign capture disappeared"),
@@ -83,37 +88,29 @@ def main() -> int:
             f"growth event ledger must not carry arbitrary/sensitive field: {forbidden_column}",
         )
 
-    forbid(
+    failure_table_match = re.search(
+        r"create table if not exists private\.growth_capture_failures \((.*?)\);",
         migrations,
-        "grant insert on private.growth_events to authenticated",
-        "BGF-GROWTH-CLIENT-EVENT-FABRICATION-098",
-        "authenticated clients must not fabricate growth events",
+        flags=re.DOTALL,
     )
-    forbid(
-        migrations,
-        "grant update on private.growth_events to authenticated",
-        "BGF-GROWTH-CLIENT-EVENT-FABRICATION-098",
-        "authenticated clients must not rewrite growth events",
-    )
-    forbid(
-        migrations,
-        "grant select on private.growth_events to authenticated",
-        "BGF-GROWTH-SENSITIVE-PAYLOAD-099",
-        "raw growth ledger must remain private",
-    )
+    if failure_table_match is None:
+        fail("BGF-GROWTH-TELEMETRY-CORE-BLOCK-113", "could not isolate growth_capture_failures contract")
+    failure_table = failure_table_match.group(1)
+    for forbidden_failure_column in ("error_message", "payload", "metadata", "email", "student_id"):
+        forbid(
+            failure_table,
+            forbidden_failure_column,
+            "BGF-GROWTH-SENSITIVE-PAYLOAD-099",
+            f"growth failure evidence must not persist raw/sensitive field: {forbidden_failure_column}",
+        )
 
-    require(
-        migrations,
-        "create or replace function public.attach_growth_attribution",
-        "BGF-GROWTH-RPC-EXPOSED-DEFINER-106",
-        "attribution wrapper missing",
-    )
-    require(
-        migrations,
-        "create or replace function public.get_growth_funnel_snapshot",
-        "BGF-GROWTH-RPC-EXPOSED-DEFINER-106",
-        "snapshot wrapper missing",
-    )
+    for forbidden_grant, code, detail in (
+        ("grant insert on private.growth_events to authenticated", "BGF-GROWTH-CLIENT-EVENT-FABRICATION-098", "authenticated clients must not fabricate growth events"),
+        ("grant update on private.growth_events to authenticated", "BGF-GROWTH-CLIENT-EVENT-FABRICATION-098", "authenticated clients must not rewrite growth events"),
+        ("grant select on private.growth_events to authenticated", "BGF-GROWTH-SENSITIVE-PAYLOAD-099", "raw growth ledger must remain private"),
+        ("grant select on private.growth_capture_failures to authenticated", "BGF-GROWTH-SENSITIVE-PAYLOAD-099", "failure fingerprints must remain internal"),
+    ):
+        forbid(migrations, forbidden_grant, code, detail)
 
     # Public wrappers must remain invokers; private bridges own elevated mutation/read authority.
     for fn_name in ("attach_growth_attribution", "get_growth_funnel_snapshot"):
@@ -131,6 +128,8 @@ def main() -> int:
     print("NORTH_STAR=TRAINING_DELIVERY_7D")
     print("TTFV=SERVER_DERIVED")
     print("PUBLIC_WRAPPERS=SECURITY_INVOKER")
+    print("SERVER_TELEMETRY=FAIL_OPEN_OBSERVABLE")
+    print("GROWTH_FK_INDEX_COVERAGE=PASS")
     return 0
 
 
