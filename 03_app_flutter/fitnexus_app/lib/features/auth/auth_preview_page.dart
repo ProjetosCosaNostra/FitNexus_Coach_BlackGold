@@ -1,11 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../growth/public_funnel_telemetry.dart';
 import '../shared/fitnexus_ui.dart';
 import 'auth_service.dart';
 
 class AuthPreviewPage extends StatefulWidget {
-  const AuthPreviewPage({super.key});
+  const AuthPreviewPage({
+    super.key,
+    this.initialRegisterMode = false,
+  });
+
+  final bool initialRegisterMode;
 
   @override
   State<AuthPreviewPage> createState() => _AuthPreviewPageState();
@@ -28,6 +36,10 @@ class _AuthPreviewPageState extends State<AuthPreviewPage> {
   @override
   void initState() {
     super.initState();
+    _registerMode = widget.initialRegisterMode;
+    if (_registerMode) {
+      unawaited(PublicFunnelTelemetry.instance.captureSignupStarted());
+    }
     if (AuthService.instance.currentSession != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _finishAuthenticatedFlow());
     }
@@ -44,6 +56,9 @@ class _AuthPreviewPageState extends State<AuthPreviewPage> {
 
   void _setMode(bool register) {
     if (_busy) return;
+    if (register && !_registerMode) {
+      unawaited(PublicFunnelTelemetry.instance.captureSignupStarted());
+    }
     setState(() {
       _registerMode = register;
       _message = null;
