@@ -1,9 +1,15 @@
+import 'dart:developer' as developer;
+
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../growth/growth_attribution_capture.dart';
 
 class AuthService {
   AuthService._();
 
   static final AuthService instance = AuthService._();
+
+  String? _lastAttributionFingerprint;
 
   SupabaseClient get _client => Supabase.instance.client;
 
@@ -74,8 +80,36 @@ class AuthService {
       throw StateError('Não foi possível preparar a organização do professor.');
     }
 
+    await _attachGrowthAttributionIfPresent(organizationId);
     return organizationId;
   }
 
-  Future<void> signOut() => _client.auth.signOut();
+  Future<void> _attachGrowthAttributionIfPresent(String organizationId) async {
+    final GrowthAttributionTouch? touch =
+        GrowthAttributionTouch.fromUri(Uri.base);
+    if (touch == null) return;
+
+    final String fingerprint = '$organizationId|${touch.fingerprint}';
+    if (_lastAttributionFingerprint == fingerprint) return;
+
+    try {
+      await _client.rpc(
+        'attach_growth_attribution',
+        params: touch.rpcParams(organizationId),
+      );
+      _lastAttributionFingerprint = fingerprint;
+    } catch (error, stackTrace) {
+      developer.log(
+        'Growth attribution capture failed without blocking core auth.',
+        name: 'fitnexus.growth',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  Future<void> signOut() {
+    _lastAttributionFingerprint = null;
+    return _client.auth.signOut();
+  }
 }
