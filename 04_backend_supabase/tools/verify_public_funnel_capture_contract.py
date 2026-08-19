@@ -36,6 +36,24 @@ def read(path: Path, code: str) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def declared_columns(create_table_body: str) -> set[str]:
+    """Extract declared identifiers without treating substrings as columns.
+
+    This deliberately prevents `name` from matching a legitimate column such as
+    `event_name`. Historical substring gates created false positives and are not
+    acceptable for privacy contracts.
+    """
+    columns: set[str] = set()
+    for line in create_table_body.splitlines():
+        candidate = line.strip().rstrip(",")
+        if not candidate or candidate.startswith(("check ", "constraint ", "primary ", "unique ", "foreign ")):
+            continue
+        match = re.match(r"^([a-z_][a-z0-9_]*)\s+", candidate)
+        if match is not None:
+            columns.add(match.group(1))
+    return columns
+
+
 def main() -> int:
     migration = read(MIGRATION, "BGF-PUBLIC-FUNNEL-FILE-MISSING-116").lower()
     telemetry = read(TELEMETRY, "BGF-PUBLIC-FUNNEL-FILE-MISSING-116")
@@ -85,8 +103,9 @@ def main() -> int:
     )
     if table_match is None:
         fail("BGF-PUBLIC-FUNNEL-ROW-AUTHORITY-118", "could not isolate public growth event table")
-    table = table_match.group(1)
-    for forbidden_column in (
+
+    columns = declared_columns(table_match.group(1))
+    forbidden_columns = {
         "email",
         "name",
         "phone",
@@ -97,12 +116,12 @@ def main() -> int:
         "query_string",
         "referrer_url",
         "ip_address",
-    ):
-        forbid(
-            table,
-            forbidden_column,
+    }
+    violations = sorted(columns.intersection(forbidden_columns))
+    if violations:
+        fail(
             "BGF-PUBLIC-FUNNEL-PII-BOUNDARY-119",
-            f"anonymous acquisition table must not persist sensitive/arbitrary field: {forbidden_column}",
+            f"anonymous acquisition table contains forbidden columns: {', '.join(violations)}",
         )
 
     for forbidden_grant, detail in (
@@ -115,7 +134,6 @@ def main() -> int:
     ):
         forbid(migration, forbidden_grant, "BGF-PUBLIC-FUNNEL-ROW-AUTHORITY-118", detail)
 
-    # Do not broaden the application's existing private schema to anonymous users.
     forbid(
         migration,
         "grant usage on schema private to anon",
@@ -123,7 +141,6 @@ def main() -> int:
         "anonymous public capture must use telemetry_private rather than exposing the application private schema",
     )
 
-    # Public wrapper must be invoker even though the dedicated non-exposed helper is a definer.
     wrapper_match = re.search(
         r"create or replace function public\.capture_public_growth_event\(.*?\$\$;",
         migration,
@@ -152,6 +169,7 @@ def main() -> int:
     print("PUBLIC_TELEMETRY=FAIL_OPEN")
     print("TRACKING_CORE=READY")
     print("ADS_RELEASE_GATE=SEPARATE_BLOCKED")
+    print("PII_COLUMN_CHECK=EXACT_IDENTIFIER_MATCH")
     return 0
 
 
