@@ -141,7 +141,7 @@ class _StudentAccessManagementPageState
                         ),
                         SizedBox(height: 8),
                         Text(
-                          'Ao gerar novamente, o link anterior é invalidado automaticamente. O token bruto não fica salvo no banco.',
+                          'O link expira em 30 dias. Ao gerar novamente, o acesso anterior é revogado automaticamente. O token bruto não fica salvo no banco.',
                           style: TextStyle(
                             color: _AccessColors.muted,
                             height: 1.45,
@@ -348,7 +348,7 @@ class _AccessDialog extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               const Text(
-                'Este endereço funciona como uma chave privada. Compartilhe somente com o aluno correspondente.',
+                'Este endereço funciona como uma chave privada e expira em 30 dias. Compartilhe somente com o aluno correspondente.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: _AccessColors.text,
