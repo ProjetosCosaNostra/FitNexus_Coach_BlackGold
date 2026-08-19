@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "purpose": "Stage 20 external-gate evidence shape only; this file is not launch authority and must never contain production attestation values.",
+  "template_state": "PLACEHOLDER_ONLY_NOT_ATTESTATION",
+  "created_from_main_sha": "c23dcc8e4e4c5c0c4f29773800a8cff9fe7364a6",
+  "reviewed_sources_at": "2026-08-19",
+  "rules": {
+    "this_file_can_mark_gate_ready": false,
+    "this_file_can_hold_evidence_ref": false,
+    "this_file_can_hold_evidence_digest": false,
+    "promotion_authority": "dedicated_versioned_evidence_migration_after_real_external_review_or_operational_test"
+  },
+  "gates": {
+    "billing_provider_credentials": {
+      "authority_mode": "external_authorization",
+      "placeholder_only": true,
+      "evidence_ref": null,
+      "evidence_digest": null,
+      "required_evidence": [
+        "provider account owner authorization",
+        "credential activation evidence without committing secrets",
+        "provider environment identifier",
+        "webhook authentication and replay/idempotency test receipt",
+        "checkout end-to-end receipt",
+        "activation timestamp from authoritative billing state"
+      ]
+    },
+    "legal_privacy_notice": {
+      "authority_mode": "evidence_migration",
+      "placeholder_only": true,
+      "evidence_ref": null,
+      "evidence_digest": null,
+      "required_evidence": [
+        "legal reviewer/reference",
+        "approved document version",
+        "stable published privacy URL",
+        "approved document sha256 digest",
+        "effective date",
+        "processor/subprocessor inventory reference",
+        "retention matrix reference",
+        "international-transfer review reference when applicable",
+        "encarregado or lawful-exemption/contact-channel review reference"
+      ]
+    },
+    "legal_terms_of_use": {
+      "authority_mode": "evidence_migration",
+      "placeholder_only": true,
+      "evidence_ref": null,
+      "evidence_digest": null,
+      "required_evidence": [
+        "legal reviewer/reference",
+        "approved terms version",
+        "stable published terms URL",
+        "approved document sha256 digest",
+        "effective date",
+        "billing/cancellation/refund policy reference",
+        "contract acceptance/versioning evidence"
+      ]
+    },
+    "legal_role_mapping": {
+      "authority_mode": "evidence_migration",
+      "placeholder_only": true,
+      "evidence_ref": null,
+      "evidence_digest": null,
+      "required_evidence": [
+        "legal reviewer/reference",
+        "approved processing-role matrix version",
+        "purpose-to-role mapping",
+        "purpose-to-legal-basis review",
+        "sensitive-data treatment review",
+        "processor/subprocessor map",
+        "international-transfer mechanism map when applicable",
+        "approved matrix sha256 digest"
+      ]
+    },
+    "data_subject_request_channel": {
+      "authority_mode": "evidence_migration",
+      "placeholder_only": true,
+      "evidence_ref": null,
+      "evidence_digest": null,
+      "required_evidence": [
+        "stable published titular contact route",
+        "owner and backup owner assignment",
+        "identity verification procedure",
+        "tenant-scoped access/export test receipt",
+        "correction workflow test receipt",
+        "deletion/anonymization/blocking plus retention-hold test receipt",
+        "controller/operator handoff procedure",
+        "reviewed response-time policy",
+        "tabletop request receipt"
+      ]
+    },
+    "incident_response": {
+      "authority_mode": "evidence_migration",
+      "placeholder_only": true,
+      "evidence_ref": null,
+      "evidence_digest": null,
+      "required_evidence": [
+        "incident commander/privacy owner/technical owner assignment",
+        "risk classification matrix",
+        "operator-to-controller handoff procedure",
+        "ANPD/data-subject communication decision procedure",
+        "incident registry retention control",
+        "cross-tenant exposure tabletop receipt",
+        "credential compromise tabletop receipt",
+        "potentially sensitive student-data tabletop receipt",
+        "final drill/postmortem digest"
+      ]
+    },
+    "production_deployment": {
+      "authority_mode": "evidence_migration",
+      "placeholder_only": true,
+      "evidence_ref": null,
+      "evidence_digest": null,
+      "required_evidence": [
+        "stable production domain",
+        "TLS evidence",
+        "environment configuration receipt without secrets",
+        "release commit sha",
+        "production smoke-test receipt",
+        "rollback test receipt",
+        "monitoring/alerting readiness receipt",
+        "backup/restore readiness reference",
+        "release evidence digest"
+      ]
+    }
+  }
+}
