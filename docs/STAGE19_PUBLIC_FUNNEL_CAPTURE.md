@@ -127,6 +127,35 @@ This is permanently registered as:
 
 Future gates that validate mutable database functions/state must inspect the latest authority file or otherwise resolve final migration order, not merely search all historical SQL.
 
+## Exact-identifier static privacy checks
+
+Before CI promotion, the first Stage 19 privacy guard was found to test forbidden column names through raw substring search. That would incorrectly treat the legitimate `event_name` column as a forbidden `name` column.
+
+The guard was repaired before promotion: it now extracts declared SQL identifiers and compares forbidden names by exact identifier equality.
+
+This is permanently registered as:
+
+`BGF-CONTRACT-GATE-SUBSTRING-COLLISION-129`
+
+Static privacy/security gates must never use unconstrained substring matching when one identifier can legally contain another identifier's text.
+
+## Remote authority attestation
+
+The authoritative Supabase project confirms:
+
+- application schema `private`: anonymous `USAGE = false`;
+- dedicated schema `telemetry_private`: anonymous `USAGE = true`;
+- public capture wrapper: anonymous/authenticated `EXECUTE = true`, service-role direct public-wrapper execution intentionally false;
+- public capture wrapper: `SECURITY INVOKER`;
+- dedicated telemetry authority helper: `SECURITY DEFINER`;
+- anonymous raw acquisition-table `SELECT = false`, `INSERT = false`;
+- authenticated raw acquisition-table `SELECT = false`, `INSERT = false`;
+- `landing_view` and `signup_started`: `public_capture / active`;
+- no public-funnel rows were fabricated for validation;
+- database remains without fabricated organizations/students.
+
+The latest Security Advisor shows no new Stage 19 exposed public-definer warning; remaining warnings are the older possession-token student RPC boundary. The latest Performance Advisor shows no unindexed-foreign-key Stage 19 finding; only unused-index INFO notices appear on the empty/low-traffic database.
+
 ## Permanent prevention classes
 
 - `BGF-CONTRACT-GATE-HISTORICAL-SHADOW-115`: historical migration text cannot satisfy a gate for current authority after a later migration supersedes it.
@@ -143,6 +172,7 @@ Future gates that validate mutable database functions/state must inspect the lat
 - `BGF-PUBLIC-FUNNEL-FAILOPEN-126`: public telemetry failures are observable but cannot block landing, navigation or signup.
 - `BGF-PUBLIC-FUNNEL-LANDING-ENTRY-127`: the public landing route continues to emit `landing_view`.
 - `BGF-PUBLIC-FUNNEL-SIGNUP-ENTRY-128`: an explicit online signup route opens registration mode and emits `signup_started`.
+- `BGF-CONTRACT-GATE-SUBSTRING-COLLISION-129`: static contract gates compare parsed identifiers exactly rather than accepting unsafe substring matches.
 
 ## Current release posture
 
