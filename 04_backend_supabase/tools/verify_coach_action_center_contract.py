@@ -105,6 +105,12 @@ def main() -> int:
             "human authority contract disappeared",
         ),
         (
+            migrations,
+            "where not coalesce(",
+            "BGF-SQL-THREE-VALUED-LEFT-JOIN-045",
+            "LEFT JOIN suppression must coalesce NULL to FALSE so fresh actions stay visible",
+        ),
+        (
             repository,
             "get_coach_action_center",
             "BGF-ACTION-FLUTTER-BINDING-040",
@@ -178,6 +184,7 @@ def main() -> int:
     print("COACH_ACTION_CENTER_CONTRACT_GATE=PASS")
     print("PRIORITY_CONTRACT=PASS")
     print("STALE_CONTEXT_INTERLOCK=PASS")
+    print("NULL_VISIBILITY_SEMANTICS=PASS")
     print("ACTION_LEDGER_AUTHORITY=PASS")
     print("NO_AUTO_PRESCRIPTION=PASS")
     print("NO_AUTO_CONTACT=PASS")
