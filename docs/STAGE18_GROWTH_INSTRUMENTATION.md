@@ -14,7 +14,8 @@ Growth telemetry lives in the non-exposed `private` schema:
 
 - `private.growth_event_catalog` — versionable semantic registry;
 - `private.growth_events` — append-only operational event evidence;
-- `private.growth_attribution` — first-touch and last-touch campaign attribution.
+- `private.growth_attribution` — first-touch and last-touch campaign attribution;
+- `private.growth_capture_failures` — telemetry failure fingerprints without user payloads.
 
 Normal authenticated clients have no direct SELECT/INSERT/UPDATE privileges on the raw growth ledger.
 
@@ -33,6 +34,19 @@ Normal authenticated clients have no direct SELECT/INSERT/UPDATE privileges on t
 | `paid` | Revenue | subscription transition to `active` |
 
 The ledger does not copy student name, email, objective, exercise content, pain, feedback or arbitrary metadata/property bags.
+
+## Server telemetry cannot block the product
+
+Database telemetry is downstream evidence, not business authority. An analytics failure must never roll back signup, student creation, training creation, delivery, workout completion or billing state.
+
+`private.append_growth_event(...)` therefore runs the telemetry write inside an internal exception boundary. If capture fails:
+
+1. the original domain/auth write continues;
+2. a minimal record is attempted in `private.growth_capture_failures`;
+3. only event name, source table/entity id, SQLSTATE and an MD5 diagnostic fingerprint of the database error are retained;
+4. if even failure-evidence insertion fails, that secondary failure is swallowed rather than propagating into the product transaction.
+
+No raw error text or user payload is stored in the failure ledger. This closes `BGF-GROWTH-TELEMETRY-CORE-BLOCK-113`.
 
 ## Explicitly incomplete public acquisition capture
 
@@ -71,7 +85,7 @@ Attribution attachment uses the same authority pattern established in billing:
 - first touch is preserved;
 - later valid touches update only last-touch fields.
 
-Telemetry failure is fail-open for core authentication/organization bootstrap: the error is logged through `dart:developer`, while sign-in and tenant preparation continue.
+Flutter-side telemetry failure is also fail-open for core authentication/organization bootstrap: the error is logged through `dart:developer`, while sign-in and tenant preparation continue.
 
 ## Server-derived funnel snapshot
 
@@ -149,11 +163,12 @@ A second advisor pass reports no Stage 18 unindexed foreign-key finding. Remaini
 - `BGF-GROWTH-PUBLIC-CAPTURE-GAP-105`: unavailable public events are marked pending, never fabricated from backend substitutes.
 - `BGF-GROWTH-RPC-EXPOSED-DEFINER-106`: public growth RPCs remain SECURITY INVOKER wrappers around private authority bridges.
 - `BGF-GROWTH-TRIGGER-IDEMPOTENCY-107`: entity-backed server events are deduplicated by event/source entity identity.
-- `BGF-GROWTH-ATTRIBUTION-FAILOPEN-108`: telemetry failure must be observable but cannot break authentication or tenant bootstrap.
+- `BGF-GROWTH-ATTRIBUTION-FAILOPEN-108`: Flutter attribution failure must be observable but cannot break authentication or tenant bootstrap.
 - `BGF-GROWTH-LANDING-PII-109`: attribution capture stores bounded UTM fields and relative path only, never arbitrary query payloads.
 - `BGF-GROWTH-RETENTION-AUTHORITY-110`: completed workout sessions, not UI impressions, provide retention usage evidence.
 - `BGF-GROWTH-REVENUE-AUTHORITY-111`: trial, checkout and paid milestones originate from subscription/billing authority.
 - `BGF-GROWTH-FK-INDEX-112`: growth foreign keys receive covering indexes before promotion.
+- `BGF-GROWTH-TELEMETRY-CORE-BLOCK-113`: server telemetry exceptions are contained and fingerprinted; analytics cannot roll back core product writes.
 
 ## Current release posture
 
