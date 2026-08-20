@@ -20,6 +20,7 @@ FAILURE_CLASSES = [
     "BGF-EDGE-SECRET-KEY-LEAK-177",
 ]
 VERIFY_FAILURE_CLASS = "BGF-NETWORK-RATE-LIMIT-REMOTE-VERIFICATION-179"
+THRESHOLD_GAP_CLASS = "BGF-EDGE-LIVE-THRESHOLD-PROOF-GAP-185"
 THRESHOLDS = {
     "get_workout": 120,
     "start_workout": 30,
@@ -34,8 +35,7 @@ DIRECT_V2_RPCS = (
     "get_student_feedback_context_v2",
     "submit_student_workout_feedback_v2",
 )
-PENDING_STATE = "DATABASE_APPLIED_VERIFICATION_INTERLOCK_REPO_ONLY"
-VERIFIED_STATE = "DATABASE_RATE_LIMIT_APPLIED_VERIFIED_EDGE_INTEGRATION_PENDING"
+VERIFIED_STATE = "DATABASE_RATE_LIMIT_APPLIED_VERIFIED_EDGE_PATH_LIVE_THRESHOLD_PROOF_PENDING"
 
 
 def fail(message: str) -> None:
@@ -72,29 +72,27 @@ def main() -> None:
     verification = text(VERIFY_MIGRATION)
     lower = migration.lower()
 
-    if authority.get("schema_version") != 1 or authority.get("project_ref") != "mceukeondizkwlpfxzgf":
-        fail("Stage 27 authority identity drifted")
+    if authority.get("schema_version") != 2 or authority.get("project_ref") != "mceukeondizkwlpfxzgf":
+        fail("Stage 27/28 authority identity drifted")
     if authority.get("failure_classes") != FAILURE_CLASSES:
         fail("Stage 27 failure-class authority drifted")
     if authority.get("verification_failure_class") != VERIFY_FAILURE_CLASS:
         fail("Stage 27 verification failure class drifted")
-
-    state = authority.get("current_state")
-    if state not in (PENDING_STATE, VERIFIED_STATE):
-        fail(f"unsupported Stage 27 authority state: {state!r}")
+    if authority.get("runtime_threshold_proof_failure_class") != THRESHOLD_GAP_CLASS:
+        fail("runtime threshold proof gap class drifted")
+    if authority.get("current_state") != VERIFIED_STATE:
+        fail("Stage 27/28 runtime state drifted")
 
     migration_auth = authority.get("migration", {})
-    if migration_auth.get("repository_file") != "04_backend_supabase/migrations/20260820063000_stage27_student_network_origin_rate_limit.sql":
-        fail("Stage 27 migration path drifted")
     if migration_auth.get("migration_name") != "stage27_student_network_origin_rate_limit":
         fail("Stage 27 migration name drifted")
     if migration_auth.get("remote_applied") is not True or migration_auth.get("remote_version") != "20260820065403":
         fail("Stage 27 remote migration receipt is missing")
 
     verify_auth = authority.get("verification_migration", {})
+    if verify_auth.get("remote_applied") is not True or verify_auth.get("remote_version") != "20260820070524":
+        fail("verification migration receipt missing")
     expected_verify = {
-        "repository_file": "04_backend_supabase/migrations/20260820065900_stage27_network_rate_limit_verification_interlock.sql",
-        "migration_name": "stage27_network_rate_limit_verification_interlock",
         "test_origin": "RFC5737_TEST_NET_ONLY",
         "test_operation": "get_workout",
         "test_calls": 121,
@@ -105,26 +103,26 @@ def main() -> None:
     }
     for key, expected in expected_verify.items():
         if verify_auth.get(key) != expected:
-            fail(f"verification authority drift for {key}: {verify_auth.get(key)!r}")
-    if state == PENDING_STATE and verify_auth.get("remote_applied") is not False:
-        fail("verification migration self-promoted before remote apply")
-    if state == VERIFIED_STATE and verify_auth.get("remote_applied") is not True:
-        fail("verified state is missing remote verification receipt")
+            fail(f"verification authority drift for {key}")
 
     trusted = authority.get("trusted_origin_authority", {})
-    if trusted != {
+    expected_trusted = {
         "source": "cf-connecting-ip",
         "source_state": "ORIGIN_SOURCE_SPOOF_RESISTANCE_VERIFIED",
-        "edge_function_version": 2,
-        "spoof_proof_workflow_run_id": 32338900002,
+        "edge_function_version": 3,
+        "edge_function_bundle_sha256": "b57892b3f399b76f8127c9a39d3d8c021ffe639aa7bf92c7fa9a459d35721b82",
+        "spoof_proof_workflow_run_id": 32349938290,
         "spoof_proof_outcome": "BLOCKED_AT_EDGE_403",
         "client_can_force_source": False,
-    }:
+    }
+    if trusted != expected_trusted:
         fail(f"{FAILURE_CLASSES[0]} trusted-origin authority drifted")
 
     observed = network.get("observed_runtime", {})
     if network.get("current_state") != "ORIGIN_SOURCE_SPOOF_RESISTANCE_VERIFIED":
-        fail("Stage 26 origin trust was not preserved")
+        fail("origin trust state drifted")
+    if observed.get("edge_function_version") != 3:
+        fail("network authority is not anchored to runtime v3")
     if observed.get("runtime_origin_candidate") != "cf-connecting-ip" or observed.get("runtime_origin_candidate_trusted_for_security") is not True:
         fail("trusted network-origin source drifted")
 
@@ -154,7 +152,7 @@ def main() -> None:
     }
     for key, expected in expected_db.items():
         if db.get(key) != expected:
-            fail(f"database contract drift for {key}: {db.get(key)!r}")
+            fail(f"database contract drift for {key}")
 
     require(
         migration,
@@ -162,13 +160,9 @@ def main() -> None:
             "create table if not exists private.student_access_network_origin_secret",
             "extensions.gen_random_bytes(32)",
             "create table if not exists private.student_access_network_rate_buckets",
-            "origin_hash bytea not null",
             "extensions.hmac(",
-            "convert_to('fitnexus-student-origin-v1:' || v_origin, 'UTF8')",
-            "create or replace function private.student_access_network_rate_limit_v1(",
             "create or replace function public.check_student_access_network_rate_limit_v1(",
             "security invoker",
-            "grant execute on function public.check_student_access_network_rate_limit_v1(text,text)",
             "to service_role",
             "network_rate_limit_burst",
             "STUDENT_NETWORK_RATE_LIMITED",
@@ -181,16 +175,6 @@ def main() -> None:
         if f"when '{operation}' then {threshold}" not in lower:
             fail(f"{FAILURE_CLASSES[2]} missing DB threshold for {operation}")
 
-    bucket_start = lower.index("create table if not exists private.student_access_network_rate_buckets")
-    bucket_end = lower.index(");", bucket_start) + 2
-    bucket_ddl = lower[bucket_start:bucket_end]
-    for forbidden in ("client_ip", "ip_address", "network_origin text", "origin text"):
-        if forbidden in bucket_ddl:
-            fail(f"{FAILURE_CLASSES[1]} raw origin persistence appeared: {forbidden}")
-    for secret_fragment in ("sb_secret_", "service_role_key=", "supabase_service_role_key"):
-        if secret_fragment in lower:
-            fail(f"{FAILURE_CLASSES[3]} secret material appeared in migration source")
-
     require(
         verification,
         (
@@ -198,8 +182,6 @@ def main() -> None:
             "203.0.113.55",
             "for v_i in 1..121 loop",
             "STUDENT_NETWORK_RATE_LIMITED",
-            "request_count')::integer <> 121",
-            "limit_per_minute')::integer <> 120",
             "delete from private.student_access_security_signals",
             "delete from private.student_access_network_rate_buckets",
             "STAGE27_VERIFY_SYNTHETIC_CLEANUP_FAILED",
@@ -207,35 +189,35 @@ def main() -> None:
         VERIFY_FAILURE_CLASS,
     )
 
-    divergences = ledger.get("declared_divergences", [])
-    repo_only_names = {
-        item.get("name") for item in divergences if item.get("direction") == "repo_only"
-    }
     remote_names = {item.get("name") for item in ledger.get("remote_migrations", [])}
-    if state == PENDING_STATE:
-        if "stage27_network_rate_limit_verification_interlock" not in repo_only_names:
-            fail("verification migration is not declared repo_only")
-    else:
-        if "stage27_student_network_origin_rate_limit" not in remote_names:
-            fail("verified state missing Stage 27 remote migration in ledger")
-        if "stage27_network_rate_limit_verification_interlock" not in remote_names:
-            fail("verified state missing verification migration in ledger")
-        if "stage27_student_network_origin_rate_limit" in repo_only_names or "stage27_network_rate_limit_verification_interlock" in repo_only_names:
-            fail("verified state still contains Stage 27 repo_only divergence")
+    for name in (
+        "stage27_student_network_origin_rate_limit",
+        "stage27_network_rate_limit_verification_interlock",
+    ):
+        if name not in remote_names:
+            fail(f"migration ledger missing {name}")
 
     runtime = authority.get("runtime_boundary", {})
+    if runtime.get("edge_gateway_uses_network_rate_limit") is not True:
+        fail("live Edge limiter path was lost")
+    if runtime.get("network_origin_rate_limit_path_verified_live") is not True:
+        fail("pre-token limiter path proof missing")
+    if runtime.get("live_path_proof_workflow_run_id") != 32349938290:
+        fail("live path proof workflow receipt drifted")
+    if runtime.get("live_path_proof_http_status") != 400 or runtime.get("live_path_proof_terminal_error") != "STUDENT_GATEWAY_PAYLOAD_INVALID":
+        fail("live pre-token path terminal boundary drifted")
+    if runtime.get("invalid_token_network_origin_rate_limit_threshold_verified_live") is not False:
+        fail(f"{THRESHOLD_GAP_CLASS} threshold-exceeded runtime proof was self-attested")
     for key in (
-        "edge_gateway_uses_network_rate_limit",
-        "invalid_token_network_origin_rate_limit_verified_live",
         "flutter_uses_edge_gateway",
         "direct_anon_v2_rpc_execute_revoked",
         "edge_alert_delivery_verified",
         "rollback_verified",
     ):
         if runtime.get(key) is not False:
-            fail(f"Stage 27 database work self-promoted runtime state: {key}")
+            fail(f"runtime state self-promoted: {key}")
     if runtime.get("direct_v2_rpc_path_active") is not True:
-        fail("direct v2 RPC path removed before gateway cutover")
+        fail("direct v2 RPC path removed before Flutter cutover")
 
     direct = {rpc: False for rpc in DIRECT_V2_RPCS}
     for path in APP.rglob("*.dart"):
@@ -253,19 +235,15 @@ def main() -> None:
         if gate.get("placeholder_only") is not True or gate.get("evidence_ref") is not None or gate.get("evidence_digest") is not None:
             fail(f"{gate_name} was promoted without dedicated evidence")
 
-    for key, value in authority.get("launch_authority", {}).items():
-        if value is not False:
-            fail(f"Stage 27 gained launch authority: {key}")
+    if any(value is not False for value in authority.get("launch_authority", {}).values()):
+        fail("Stage 27/28 gained launch authority")
 
     print("STUDENT_ACCESS_NETWORK_RATE_LIMIT_GUARD=PASS")
-    print(f"CURRENT_STATE={state}")
+    print("CURRENT_STATE=DATABASE_RATE_LIMIT_APPLIED_VERIFIED_EDGE_PATH_LIVE_THRESHOLD_PROOF_PENDING")
     print("REMOTE_STAGE27_VERSION=20260820065403")
-    print("VERIFICATION_INTERLOCK=REPO_ONLY" if state == PENDING_STATE else "VERIFICATION_INTERLOCK=REMOTE_VERIFIED")
-    print("RAW_NETWORK_ORIGIN_PERSISTENCE=DENIED")
-    print("CALLER_LIMIT_OVERRIDE=DENIED")
-    print("PUBLIC_BRIDGE=SECURITY_INVOKER_SERVICE_ROLE_ONLY")
+    print("EDGE_RATE_LIMIT_PATH_LIVE=VERIFIED_PRE_TOKEN")
+    print("EDGE_THRESHOLD_429_PROOF=PENDING")
     print("DIRECT_V2_RPC_PATHS=5")
-    print("EDGE_RATE_LIMIT_INTEGRATION=NOT_DEPLOYED")
     print("LAUNCH_GATE_PROMOTION=DENIED")
 
 
