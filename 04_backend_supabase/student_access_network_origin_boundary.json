@@ -8,7 +8,8 @@
     "BGF-ALERT-DELIVERY-SELF-ATTESTATION-166",
     "BGF-EDGE-RUNTIME-ORIGIN-ASSUMPTION-167",
     "BGF-EDGE-PROBE-DATA-LEAK-168",
-    "BGF-EDGE-PROBE-PREMATURE-CUTOVER-169"
+    "BGF-EDGE-PROBE-PREMATURE-CUTOVER-169",
+    "BGF-EDGE-HEADER-PRESENCE-ASSUMPTION-170"
   ],
   "purpose": "Fail-closed cutover authority for the network-origin abuse boundary that PostgreSQL cannot own for invalid possession-token attempts.",
   "current_state": "ORIGIN_PROBE_DEPLOYED_LIVE_CHECK_PENDING",
@@ -27,6 +28,12 @@
     "runtime_origin_candidate_verified": false,
     "runtime_origin_candidate": null,
     "live_probe_receipt": null,
+    "live_probe_failure_receipt": {
+      "workflow_run_id": 32336914881,
+      "failure_class": "BGF-EDGE-HEADER-PRESENCE-ASSUMPTION-170",
+      "safe_finding": "cf-connecting-ip candidate checks passed; x-forwarded-for TEST-NET header was preserved as untrusted presence; x-real-ip TEST-NET header was stripped or absent; no raw network-origin value was printed or persisted",
+      "corrective_policy": "Client-supplied forwarded-header presence is diagnostic only. Intermediaries may strip or normalize it, and no such header may become security authority merely because it is present."
+    },
     "probe_repository_entrypoint_present": true
   },
   "probe_contract": {
@@ -57,6 +64,7 @@
     "single_student_gateway": true,
     "network_origin_must_come_from_trusted_runtime_metadata": true,
     "client_supplied_forwarded_headers_must_not_be_trusted": true,
+    "client_forwarded_header_presence_must_not_be_required": true,
     "invalid_token_attempts_rate_limited_by_network_origin_and_route": true,
     "valid_token_database_rate_limits_remain_active": true,
     "raw_possession_token_logging_forbidden": true,
