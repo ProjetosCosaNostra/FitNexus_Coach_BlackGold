@@ -1,20 +1,39 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "project_ref": "mceukeondizkwlpfxzgf",
   "failure_classes": [
     "BGF-NETWORK-ORIGIN-ABUSE-BYPASS-163",
     "BGF-EDGE-ORIGIN-TRUST-164",
     "BGF-STUDENT-ACCESS-PARTIAL-EDGE-CUTOVER-165",
-    "BGF-ALERT-DELIVERY-SELF-ATTESTATION-166"
+    "BGF-ALERT-DELIVERY-SELF-ATTESTATION-166",
+    "BGF-EDGE-RUNTIME-ORIGIN-ASSUMPTION-167",
+    "BGF-EDGE-PROBE-DATA-LEAK-168",
+    "BGF-EDGE-PROBE-PREMATURE-CUTOVER-169"
   ],
   "purpose": "Fail-closed cutover authority for the network-origin abuse boundary that PostgreSQL cannot own for invalid possession-token attempts.",
-  "current_state": "NOT_ENFORCED_DIRECT_RPC_PATH_ACTIVE",
+  "current_state": "ORIGIN_PROBE_REPOSITORY_READY_NOT_DEPLOYED",
+  "baseline_main_sha": "f3e32dd12fdc1ac8d4267419989ecc21121e940c",
   "observed_runtime": {
     "edge_function_name": "student-access-gateway",
     "edge_function_deployed": false,
     "observed_edge_function_count": 0,
     "observed_at_utc": "2026-08-19T22:36:00Z",
-    "source": "Supabase.list_edge_functions"
+    "source": "Supabase.list_edge_functions",
+    "runtime_origin_candidate_verified": false,
+    "runtime_origin_candidate": null,
+    "probe_repository_entrypoint_present": true
+  },
+  "probe_contract": {
+    "mode": "origin_probe_not_student_gateway_cutover",
+    "allowed_method": "GET",
+    "candidate_header": "cf-connecting-ip",
+    "candidate_header_basis": "Supabase documentation shows Cloudflare metadata and cf-connecting-ip in platform request/log metadata; deployed runtime must still verify availability before trust promotion.",
+    "returns_raw_ip": false,
+    "logs_raw_ip": false,
+    "reads_request_body": false,
+    "forwards_student_rpc": false,
+    "accepts_client_forwarded_header_as_authority": false,
+    "launch_gate_authority": false
   },
   "current_client_boundary": {
     "direct_v2_rpc_calls": [
@@ -42,10 +61,14 @@
     "rollback_requires_real_runtime_receipt": true
   },
   "promotion_preconditions": [
-    "gateway repository implementation passes CI",
+    "origin probe repository implementation passes CI",
+    "origin probe deployed to the authoritative Supabase project",
+    "runtime probe confirms the chosen network-origin metadata is actually present without returning the raw value",
+    "spoof-resistance test verifies a client-supplied forwarded header cannot override the chosen authoritative source",
+    "full gateway repository implementation passes CI",
+    "durable invalid-token network-origin throttle is applied repo-first and remotely reconciled",
     "gateway deployed to the authoritative Supabase project",
     "runtime health test succeeds without exposing a raw token",
-    "trusted network-origin extraction is verified in the deployed runtime",
     "invalid-token network-origin throttle is verified with a controlled runtime test",
     "Flutter student traffic is cut over to the gateway",
     "direct anon execute on student v2 RPCs is revoked only after gateway cutover verification",
