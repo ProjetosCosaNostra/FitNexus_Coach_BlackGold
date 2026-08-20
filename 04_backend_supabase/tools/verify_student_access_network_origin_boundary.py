@@ -23,6 +23,7 @@ FAILURE_CLASSES = (
     "BGF-EDGE-RUNTIME-ORIGIN-ASSUMPTION-167",
     "BGF-EDGE-PROBE-DATA-LEAK-168",
     "BGF-EDGE-PROBE-PREMATURE-CUTOVER-169",
+    "BGF-EDGE-HEADER-PRESENCE-ASSUMPTION-170",
 )
 
 DIRECT_V2_RPCS = (
@@ -35,6 +36,7 @@ DIRECT_V2_RPCS = (
 
 DEPLOYMENT_ID = "2f85d9e1-39b3-46d7-a6c2-902eed7b4233"
 DEPLOYMENT_BUNDLE_SHA256 = "a67cfccbab1f89377afab63cf6100e6fff7baa2f9ff67ba3b58203198f079de9"
+FAILED_LIVE_RUN_ID = 32336914881
 PENDING_STATE = "ORIGIN_PROBE_DEPLOYED_LIVE_CHECK_PENDING"
 OBSERVED_STATE = "ORIGIN_PROBE_RUNTIME_CANDIDATE_OBSERVED"
 
@@ -104,6 +106,20 @@ def main() -> None:
     if "Supabase.deploy_edge_function" not in source or "Supabase.list_edge_functions" not in source:
         fail(f"{FAILURE_CLASSES[6]} runtime deployment evidence source is incomplete")
 
+    failure_receipt = runtime.get("live_probe_failure_receipt")
+    if not isinstance(failure_receipt, dict):
+        fail(f"{FAILURE_CLASSES[7]} normalization failure receipt is missing")
+    if failure_receipt.get("workflow_run_id") != FAILED_LIVE_RUN_ID:
+        fail(f"{FAILURE_CLASSES[7]} normalization failure run id drifted")
+    if failure_receipt.get("failure_class") != FAILURE_CLASSES[7]:
+        fail(f"{FAILURE_CLASSES[7]} normalization failure class drifted")
+    safe_finding = str(failure_receipt.get("safe_finding", "")).lower()
+    if "x-forwarded-for" not in safe_finding or "x-real-ip" not in safe_finding:
+        fail(f"{FAILURE_CLASSES[7]} normalization finding lost its evidence boundary")
+    corrective = str(failure_receipt.get("corrective_policy", "")).lower()
+    if "diagnostic only" not in corrective or "security authority" not in corrective:
+        fail(f"{FAILURE_CLASSES[7]} normalization corrective policy weakened")
+
     receipt = runtime.get("live_probe_receipt")
     if state == PENDING_STATE:
         if runtime.get("runtime_origin_candidate_verified") is not False:
@@ -123,17 +139,21 @@ def main() -> None:
             "check_name": "Live Edge origin probe",
             "baseline_candidate_available": True,
             "forwarded_header_probe": True,
+            "x_forwarded_for_client_header_preserved": True,
             "raw_network_origin_observed": False,
             "raw_network_origin_persisted": False,
             "student_rpc_forwarding_observed": False,
             "launch_gate_authority_observed": False,
+            "cf_connecting_ip_spoof_resistance_verified": False,
         }
         for key, expected in required_receipt.items():
             if receipt.get(key) != expected:
                 fail(f"{FAILURE_CLASSES[4]} live receipt drift for {key}: {receipt.get(key)!r}")
+        if not isinstance(receipt.get("x_real_ip_client_header_preserved"), bool):
+            fail(f"{FAILURE_CLASSES[7]} x-real-ip normalization receipt must be boolean")
         run_id = receipt.get("workflow_run_id")
-        if not isinstance(run_id, int) or run_id <= 0:
-            fail(f"{FAILURE_CLASSES[4]} live receipt lacks a valid workflow_run_id")
+        if not isinstance(run_id, int) or run_id <= FAILED_LIVE_RUN_ID:
+            fail(f"{FAILURE_CLASSES[4]} live receipt lacks a later successful workflow_run_id")
 
     probe = authority.get("probe_contract", {})
     expected_probe = {
@@ -166,6 +186,7 @@ def main() -> None:
         "single_student_gateway",
         "network_origin_must_come_from_trusted_runtime_metadata",
         "client_supplied_forwarded_headers_must_not_be_trusted",
+        "client_forwarded_header_presence_must_not_be_required",
         "invalid_token_attempts_rate_limited_by_network_origin_and_route",
         "valid_token_database_rate_limits_remain_active",
         "raw_possession_token_logging_forbidden",
@@ -193,8 +214,6 @@ def main() -> None:
     if "invalid-token" not in blind_spot or "client ip" not in blind_spot:
         fail(f"{FAILURE_CLASSES[0]} Stage 24 network-origin blind spot disappeared")
 
-    # A runtime metadata probe is still not a client cutover. Keep every direct Flutter
-    # callsite and its temporary anon grant until the full gateway has been proven.
     direct_calls: dict[str, list[str]] = {rpc: [] for rpc in DIRECT_V2_RPCS}
     for path in APP.rglob("*.dart"):
         text = path.read_text(encoding="utf-8")
@@ -267,9 +286,12 @@ def main() -> None:
             '"launch_gate_authority": False',
             '"x-forwarded-for": "203.0.113.10"',
             '"x-real-ip": "203.0.113.11"',
+            "UNTRUSTED_REGARDLESS_OF_NORMALIZATION",
         ),
         FAILURE_CLASSES[4],
     )
+    if "x-real-ip probe was not observed as untrusted presence" in live_probe_lower:
+        fail(f"{FAILURE_CLASSES[7]} obsolete client-header presence assumption returned")
     forbidden_live_probe = (
         "print(raw",
         "print(value",
@@ -302,6 +324,7 @@ def main() -> None:
     print("PROBE_CANDIDATE=cf-connecting-ip")
     print("PROBE_RAW_IP_RETURN=DENIED")
     print("PROBE_STUDENT_RPC_FORWARDING=DENIED")
+    print("FORWARDED_HEADER_PRESENCE=DIAGNOSTIC_ONLY")
     print(
         "TRUSTED_NETWORK_ORIGIN_EXTRACTION="
         + ("CANDIDATE_OBSERVED_NOT_SPOOF_VERIFIED" if state == OBSERVED_STATE else "LIVE_CHECK_PENDING")
