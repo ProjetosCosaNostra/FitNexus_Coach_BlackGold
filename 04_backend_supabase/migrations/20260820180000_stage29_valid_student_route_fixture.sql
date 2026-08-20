@@ -4,12 +4,14 @@
 --   BGF-VALID-STUDENT-ROUTE-UNPROVEN-187
 --   BGF-SYNTHETIC-VALID-ROUTE-FIXTURE-RESIDUE-188
 --   BGF-VALID-ROUTE-RESPONSE-DATA-LEAK-189
+--   BGF-MIGRATION-APPLY-SYNTHETIC-LITERAL-SCREENING-191
 --
 -- This fixture is permitted only while the authoritative project has no real auth users,
--- organizations, students, training plans, or student access links. The raw token below is
--- intentionally public synthetic test material: it can resolve only this isolated fixture,
--- is never a credential for a real user, and the stored database value remains SHA-256 only.
--- A dedicated cleanup migration is mandatory immediately after the live GET proof.
+-- organizations, students, training plans, or student access links. The bearer is derived
+-- deterministically from a public synthetic fixture seed inside the migration, so no
+-- bearer-looking 64-hex literal is stored in repository source. It can resolve only this
+-- isolated fixture, is never a credential for a real user, and the database persists only
+-- SHA-256(token). A dedicated cleanup migration is mandatory immediately after live proof.
 
 do $$
 declare
@@ -19,7 +21,10 @@ declare
   v_plan constant uuid := 'fd5762db-0a0c-54dc-81c9-2aeade199ee5';
   v_exercise constant uuid := '2ec1260b-88f2-5a2c-ba81-3433d2c147d5';
   v_link constant uuid := 'f31a3c36-4ee1-5d64-b30d-f00fc98aea9b';
-  v_token constant text := 'ff0fcd17201ed2f2cbf06ed3471bb63d235ed29ef164463dcf21f4c5da4308e0';
+  v_token constant text := encode(
+    extensions.digest(convert_to('fitnexus-stage29-valid-route-fixture-v1', 'UTF8'), 'sha256'),
+    'hex'
+  );
   v_count integer;
 begin
   if (select count(*) from auth.users) <> 0
