@@ -1,24 +1,31 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "project_ref": "mceukeondizkwlpfxzgf",
   "failure_classes": [
     "BGF-EDGE-RATE-LIMIT-ORDER-BYPASS-180",
     "BGF-EDGE-SECRET-MATERIAL-EXPOSURE-181",
     "BGF-EDGE-RAW-TOKEN-LOGGING-182",
     "BGF-EDGE-ACTION-RPC-MAPPING-DRIFT-183",
-    "BGF-EDGE-CANDIDATE-DEPLOYMENT-SELF-ATTESTATION-184"
+    "BGF-EDGE-CANDIDATE-DEPLOYMENT-SELF-ATTESTATION-184",
+    "BGF-EDGE-LIVE-THRESHOLD-PROOF-GAP-185"
   ],
-  "purpose": "Repository-first implementation authority for the student Edge gateway that must apply the verified Stage 27 network-origin limiter before any possession-token validation or student v2 RPC.",
-  "current_state": "REPOSITORY_GATEWAY_RATE_LIMIT_IMPLEMENTED_NOT_DEPLOYED",
-  "baseline_main_sha": "8a864b8736305a976fe0d06cf2161c1a5f0e1e17",
+  "purpose": "Runtime authority for the student Edge gateway. The verified Stage 27 network-origin limiter must execute before any possession-token validation or student v2 RPC, while deployment proof, threshold-exceeded proof, Flutter cutover and privilege revocation remain separate gates.",
+  "current_state": "EDGE_GATEWAY_V3_DEPLOYED_PRETOKEN_LIMITER_PATH_VERIFIED_THRESHOLD_PROOF_PENDING",
+  "baseline_main_sha": "dfb0c3a81031ae3a13605be9c9fe969940f9878a",
   "repository_source": "04_backend_supabase/functions/student-access-gateway/index.ts",
   "observed_deployed_runtime": {
-    "version": 2,
+    "version": 3,
     "deployment_id": "2f85d9e1-39b3-46d7-a6c2-902eed7b4233",
-    "mode": "origin_probe_not_student_gateway_cutover",
-    "candidate_source_deployed": false,
-    "student_rpc_forwarding_observed": false,
-    "network_origin_rate_limit_observed": false
+    "bundle_sha256": "b57892b3f399b76f8127c9a39d3d8c021ffe639aa7bf92c7fa9a459d35721b82",
+    "status": "ACTIVE",
+    "verify_jwt": false,
+    "mode": "stage28_gateway_candidate_repository_source",
+    "candidate_source_deployed": true,
+    "deployment_main_sha": "dfb0c3a81031ae3a13605be9c9fe969940f9878a",
+    "deployment_updated_at_epoch_ms": 1787214958929,
+    "deployment_evidence_source": "Supabase.deploy_edge_function + Supabase.list_edge_functions",
+    "student_rpc_forwarding_enabled_observed": true,
+    "network_origin_rate_limit_enabled_observed": true
   },
   "candidate_contract": {
     "verify_jwt": false,
@@ -49,7 +56,10 @@
   },
   "stage27_dependency": {
     "authority": "04_backend_supabase/student_access_network_rate_limit_authority.json",
-    "required_state": "DATABASE_RATE_LIMIT_APPLIED_VERIFIED_EDGE_INTEGRATION_PENDING",
+    "accepted_states": [
+      "DATABASE_RATE_LIMIT_APPLIED_VERIFIED_EDGE_INTEGRATION_PENDING",
+      "DATABASE_RATE_LIMIT_APPLIED_VERIFIED_EDGE_PATH_LIVE_THRESHOLD_PROOF_PENDING"
+    ],
     "durable_migration_remote_version": "20260820065403",
     "verification_migration_remote_version": "20260820070524"
   },
@@ -60,19 +70,38 @@
     "client_direct_rpc_fallback_removed": false
   },
   "runtime_verification": {
-    "candidate_deployed": false,
-    "health_probe_verified": false,
-    "invalid_token_network_origin_rate_limit_verified_live": false,
-    "student_rpc_forwarding_verified_live": false,
+    "candidate_deployed": true,
+    "health_probe_verified": true,
+    "network_origin_rate_limit_path_verified_live": true,
+    "invalid_token_network_origin_rate_limit_threshold_verified_live": false,
+    "student_rpc_forwarding_enabled_observed": true,
+    "student_rpc_forwarding_with_valid_token_verified_live": false,
     "edge_alert_delivery_verified": false,
-    "rollback_verified": false
+    "rollback_verified": false,
+    "live_proof_workflow_run_id": 32349938290,
+    "live_proof_result": "PASS",
+    "live_proof_observed_at_utc": "2026-08-20T08:40:02Z",
+    "health_http_status": 200,
+    "pre_token_limiter_proof_http_status": 400,
+    "pre_token_limiter_proof_error": "STUDENT_GATEWAY_PAYLOAD_INVALID",
+    "spoof_attempt_http_status": 403,
+    "spoof_proof_outcome": "BLOCKED_AT_EDGE_403",
+    "real_student_token_used": false,
+    "real_student_data_mutated": false,
+    "raw_network_origin_returned": false
+  },
+  "proof_semantics": {
+    "pre_token_path_proof": "A live POST with action=start_workout and no possession token returned STUDENT_GATEWAY_PAYLOAD_INVALID. In the merged v3 source this response is reachable only after the service-role-only network-origin limiter call succeeds, proving the limiter is on the live pre-token path.",
+    "threshold_proof_not_claimed": "The live proof did not intentionally exceed the database threshold. Therefore a real HTTP 429/STUDENT_NETWORK_RATE_LIMITED runtime outcome remains a separate pending proof and must not be inferred from the successful pre-token path proof."
   },
   "promotion_rule": {
     "may_deploy_after_ci_and_merge": true,
+    "deployment_completed": true,
     "may_cutover_flutter_now": false,
     "may_revoke_direct_rpc_execute_now": false,
     "deployment_does_not_equal_client_cutover": true,
-    "runtime_rate_limit_proof_required_before_client_cutover": true,
+    "runtime_threshold_exceeded_proof_required_before_client_cutover": true,
+    "valid_student_route_proof_required_before_client_cutover": true,
     "rollback_proof_required_before_direct_rpc_revocation": true
   },
   "launch_authority": {
