@@ -12,6 +12,7 @@ Stage 26 established the prerequisite source authority: in the authoritative Sup
 - `BGF-NETWORK-ORIGIN-RAW-PERSISTENCE-175` — raw IP/network-origin values must not become durable database telemetry.
 - `BGF-NETWORK-THROTTLE-CALLER-LIMIT-OVERRIDE-176` — a caller must not be able to supply or weaken its own rate-limit threshold.
 - `BGF-EDGE-SECRET-KEY-LEAK-177` — elevated backend key material and the network-origin pseudonymization pepper must never enter source, client code or public responses.
+- `BGF-POSTGRES-VIEW-COLUMN-ORDER-178` — `CREATE OR REPLACE VIEW` must preserve every existing output-column name and ordinal position; new columns are append-only unless a deliberate drop/recreate migration is separately reviewed.
 
 ## Repository migration
 
@@ -61,9 +62,15 @@ When a network-origin route exceeds its minute threshold, the limiter returns `S
 
 The signal subject is a truncated keyed digest such as `origin:<digest-prefix>`, never the raw client/network address. The Stage 24 posture view is extended with `network_rate_limit_burst_signals_60m`; a high signal keeps the existing `investigate` posture semantics.
 
+## View replacement compatibility incident and permanent prevention
+
+The first remote Stage 27 application attempt was rejected transactionally because the proposed `CREATE OR REPLACE VIEW private.student_access_security_posture_v1` inserted the new Stage 27 output column before existing Stage 24 output columns. PostgreSQL does not permit an existing view column to be silently renamed/reordered through `CREATE OR REPLACE VIEW`. The migration did not enter the remote migration ledger, so no partial Stage 27 schema was accepted as authority.
+
+The repair preserves the nine existing Stage 24 columns in their live ordinal order and appends `network_rate_limit_burst_signals_60m` as the tenth column. This rule is now machine-enforced by `04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py` and the dedicated `Postgres View Replace Compatibility` CI workflow. Future migrations that reorder/rename an existing output column while using `CREATE OR REPLACE VIEW` fail before merge.
+
 ## Mandatory promotion sequence
 
-1. Repository migration, authority and guard pass CI.
+1. Repository migration, authority and guards pass CI.
 2. Merge to `main`.
 3. Apply exact merged migration to project `mceukeondizkwlpfxzgf`.
 4. Verify schema, privileges and absence of raw-origin columns.
