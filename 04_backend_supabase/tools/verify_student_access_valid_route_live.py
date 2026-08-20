@@ -17,8 +17,13 @@ EXPECTED_EXERCISE_ID = "2ec1260b-88f2-5a2c-ba81-3433d2c147d5"
 FAILURE_CLASS = "BGF-VALID-STUDENT-ROUTE-UNPROVEN-187"
 DATA_LEAK_CLASS = "BGF-VALID-ROUTE-RESPONSE-DATA-LEAK-189"
 REEXECUTION_CLASS = "BGF-LIVE-PROOF-REEXECUTION-192"
+LIFECYCLE_CLASS = "BGF-SEALED-PROOF-LIFECYCLE-STATE-194"
 PENDING_STATE = "VALID_ROUTE_SYNTHETIC_FIXTURE_REMOTE_LIVE_PROOF_PENDING"
-SEALED_STATE = "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_PENDING"
+SEALED_STATES = {
+    "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_PENDING",
+    "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_REPO_ONLY",
+    "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_COMPLETE",
+}
 EXPECTED_SEALED_RUN = 32409055932
 
 
@@ -50,11 +55,13 @@ def walk_keys(value: object) -> set[str]:
 
 def sealed_skip(auth: dict) -> bool:
     state = auth.get("current_state")
-    if state != SEALED_STATE:
+    if state not in SEALED_STATES:
         return False
 
     if auth.get("proof_reexecution_failure_class") != REEXECUTION_CLASS:
         fail("sealed proof lost reexecution failure-class authority")
+    if auth.get("sealed_proof_lifecycle_failure_class") != LIFECYCLE_CLASS:
+        fail(f"{LIFECYCLE_CLASS} sealed lifecycle authority missing")
     receipt = auth.get("live_proof_receipt", {})
     runtime = auth.get("runtime_verification", {})
     if receipt.get("workflow_run_id") != EXPECTED_SEALED_RUN or receipt.get("result") != "PASS":
@@ -73,11 +80,13 @@ def sealed_skip(auth: dict) -> bool:
     print("LIVE_PROOF_MODE=SEALED_SKIP_REEXECUTION")
     print(f"SEALED_WORKFLOW_RUN_ID={EXPECTED_SEALED_RUN}")
     print(f"REEXECUTION_PREVENTION={REEXECUTION_CLASS}")
+    print(f"SEALED_LIFECYCLE_PREVENTION={LIFECYCLE_CLASS}")
+    print(f"SEALED_AUTHORITY_STATE={state}")
     print("NETWORK_CALL_EXECUTED=false")
     print("VALID_SYNTHETIC_POSSESSION_TOKEN=PREVIOUSLY_VERIFIED")
     print("STUDENT_RPC_FORWARDING_WITH_VALID_TOKEN=VERIFIED")
     print("RESPONSE_MATCHES_SYNTHETIC_FIXTURE=true")
-    print("FIXTURE_CLEANUP=REQUIRED")
+    print(f"FIXTURE_CLEANUP_COMPLETE={str(runtime.get('cleanup_completed') is True).lower()}")
     print("FLUTTER_CUTOVER=false")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
     print("LAUNCH_GATE_PROMOTION=DENIED")
@@ -178,9 +187,7 @@ def main() -> None:
         "adherence": 0,
         "status": "Ativo",
     }
-    mismatched_student = [
-        key for key, expected in expected_student.items() if student.get(key) != expected
-    ]
+    mismatched_student = [key for key, expected in expected_student.items() if student.get(key) != expected]
     if mismatched_student:
         fail(f"{FAILURE_CLASS} student fixture mismatch: {mismatched_student}")
 
@@ -192,9 +199,7 @@ def main() -> None:
         "notes": "Controlled live GET proof; no real student data.",
         "next_session": "Synthetic proof only",
     }
-    mismatched_plan = [
-        key for key, expected in expected_plan.items() if plan.get(key) != expected
-    ]
+    mismatched_plan = [key for key, expected in expected_plan.items() if plan.get(key) != expected]
     if mismatched_plan:
         fail(f"{FAILURE_CLASS} plan fixture mismatch: {mismatched_plan}")
 
@@ -216,9 +221,7 @@ def main() -> None:
         "completed": False,
         "completed_at": None,
     }
-    mismatched_exercise = [
-        key for key, expected in expected_exercise.items() if exercise.get(key) != expected
-    ]
+    mismatched_exercise = [key for key, expected in expected_exercise.items() if exercise.get(key) != expected]
     if mismatched_exercise:
         fail(f"{FAILURE_CLASS} exercise fixture mismatch: {mismatched_exercise}")
 

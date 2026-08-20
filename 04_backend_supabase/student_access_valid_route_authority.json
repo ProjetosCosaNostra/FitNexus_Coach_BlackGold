@@ -8,9 +8,11 @@
   ],
   "apply_compatibility_failure_class": "BGF-MIGRATION-APPLY-SYNTHETIC-LITERAL-SCREENING-191",
   "proof_reexecution_failure_class": "BGF-LIVE-PROOF-REEXECUTION-192",
-  "purpose": "Repository-first authority for a controlled synthetic valid-possession-token GET proof through the deployed Edge v3 student gateway, without mutating real student data or prematurely cutting over Flutter.",
-  "current_state": "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_PENDING",
-  "baseline_main_sha": "0036ec710017311428f38e533266dfa69c0eb21d",
+  "cleanup_scope_failure_class": "BGF-STAGE29-CLEANUP-SCOPE-DRIFT-193",
+  "sealed_proof_lifecycle_failure_class": "BGF-SEALED-PROOF-LIFECYCLE-STATE-194",
+  "purpose": "Repository-first authority for a controlled synthetic valid-possession-token GET proof through the deployed Edge v3 student gateway, with mandatory fail-closed cleanup before any client cutover.",
+  "current_state": "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_REPO_ONLY",
+  "baseline_main_sha": "3f4c2fa25e52985d892db3a1beba64a51e68baa1",
   "fixture_migration": {
     "repository_file": "04_backend_supabase/migrations/20260820180000_stage29_valid_student_route_fixture.sql",
     "migration_name": "stage29_valid_student_route_fixture",
@@ -31,6 +33,33 @@
     "database_stores_token_hash_only": true,
     "fixture_expiry_hours": 2,
     "cleanup_migration_required": true
+  },
+  "cleanup_migration": {
+    "repository_file": "04_backend_supabase/migrations/20260820194000_stage29_valid_route_fixture_cleanup.sql",
+    "migration_name": "stage29_valid_route_fixture_cleanup",
+    "remote_applied": false,
+    "migration_ledger_state": "repo_only",
+    "customer_domain_must_remain_synthetic_only": true,
+    "expected_total_auth_users_before_cleanup": 1,
+    "expected_total_organizations_before_cleanup": 1,
+    "expected_total_students_before_cleanup": 1,
+    "expected_total_training_plans_before_cleanup": 1,
+    "expected_total_training_exercises_before_cleanup": 1,
+    "expected_total_access_links_before_cleanup": 1,
+    "expected_workout_sessions_before_cleanup": 0,
+    "expected_workout_logs_before_cleanup": 0,
+    "expected_workout_feedback_before_cleanup": 0,
+    "expected_growth_events_for_fixture_org": 4,
+    "expected_link_rate_bucket_rows": 1,
+    "expected_link_rate_bucket_request_count": 2,
+    "expected_network_proof_bucket_rows": 2,
+    "network_proof_selector_operation": "get_workout",
+    "network_proof_selector_window_utc": "2026-08-20T19:30:00Z",
+    "network_proof_selector_request_count": 1,
+    "origin_hash_embedded_in_repository": false,
+    "raw_network_origin_embedded_in_repository": false,
+    "organization_deleted_before_auth_user": true,
+    "transactional_postcondition_required": true
   },
   "fixture_identifiers": {
     "user_id": "2615749d-ffca-5319-84e0-b775578ceaf6",
@@ -99,6 +128,16 @@
     "network_get_workout_buckets_observed_in_proof_minute": 2,
     "proof_reexecution_allowed": false
   },
+  "proof_reexecution_receipt": {
+    "workflow_run_id": 32409427563,
+    "check_name": "Live valid student route proof",
+    "result": "PASS",
+    "mode": "SEALED_SKIP_REEXECUTION",
+    "network_proof_bucket_rows_before": 2,
+    "network_proof_bucket_rows_after": 2,
+    "new_network_proof_bucket_created": false,
+    "proof_reexecution_prevention_verified": true
+  },
   "runtime_verification": {
     "fixture_deployed": true,
     "valid_token_edge_route_verified_live": true,
@@ -123,12 +162,13 @@
     "valid_route_live_proof_required": true,
     "fixture_cleanup_required": true,
     "rollback_proof_required_before_direct_rpc_revocation": true,
-    "live_proof_must_not_reexecute_after_seal": true
+    "live_proof_must_not_reexecute_after_seal": true,
+    "sealed_proof_remains_sealed_across_cleanup_lifecycle_states": true
   },
   "next_stage": {
-    "name": "SYNTHETIC_VALID_ROUTE_FIXTURE_CLEANUP",
+    "name": "APPLY_SYNTHETIC_VALID_ROUTE_FIXTURE_CLEANUP",
     "allowed_now": true,
-    "cleanup_required_immediately_after_proof": true,
+    "requires_ci_and_merge_first": true,
     "client_cutover_allowed_now": false
   },
   "launch_authority": {
