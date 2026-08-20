@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "project_ref": "mceukeondizkwlpfxzgf",
   "failure_classes": [
     "BGF-NETWORK-ORIGIN-ABUSE-BYPASS-163",
@@ -11,16 +11,22 @@
     "BGF-EDGE-PROBE-PREMATURE-CUTOVER-169"
   ],
   "purpose": "Fail-closed cutover authority for the network-origin abuse boundary that PostgreSQL cannot own for invalid possession-token attempts.",
-  "current_state": "ORIGIN_PROBE_REPOSITORY_READY_NOT_DEPLOYED",
-  "baseline_main_sha": "f3e32dd12fdc1ac8d4267419989ecc21121e940c",
+  "current_state": "ORIGIN_PROBE_DEPLOYED_LIVE_CHECK_PENDING",
+  "baseline_main_sha": "ca6d754527c95f840fb0becb68736aab1c10de69",
   "observed_runtime": {
     "edge_function_name": "student-access-gateway",
-    "edge_function_deployed": false,
-    "observed_edge_function_count": 0,
-    "observed_at_utc": "2026-08-19T22:36:00Z",
-    "source": "Supabase.list_edge_functions",
+    "edge_function_deployed": true,
+    "observed_edge_function_count": 1,
+    "edge_function_version": 1,
+    "edge_function_status": "ACTIVE",
+    "verify_jwt": false,
+    "deployment_id": "2f85d9e1-39b3-46d7-a6c2-902eed7b4233",
+    "deployment_bundle_sha256": "a67cfccbab1f89377afab63cf6100e6fff7baa2f9ff67ba3b58203198f079de9",
+    "observed_at_utc": "2026-08-20T05:42:29Z",
+    "source": "Supabase.deploy_edge_function + Supabase.list_edge_functions",
     "runtime_origin_candidate_verified": false,
     "runtime_origin_candidate": null,
+    "live_probe_receipt": null,
     "probe_repository_entrypoint_present": true
   },
   "probe_contract": {
