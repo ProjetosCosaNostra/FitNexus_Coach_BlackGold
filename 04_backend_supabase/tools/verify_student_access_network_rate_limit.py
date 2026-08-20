@@ -11,6 +11,7 @@ VERIFY_MIGRATION = BACKEND / "migrations" / "20260820065900_stage27_network_rate
 CLEANUP_MIGRATION = BACKEND / "migrations" / "20260820085600_stage28_threshold_proof_synthetic_cleanup.sql"
 AUTHORITY = BACKEND / "student_access_network_rate_limit_authority.json"
 NETWORK_AUTHORITY = BACKEND / "student_access_network_origin_boundary.json"
+VALID_ROUTE_AUTHORITY = BACKEND / "student_access_valid_route_authority.json"
 LEDGER = BACKEND / "migration_ledger_authority.json"
 EXTERNAL_GATES = BACKEND / "external_gate_evidence_placeholders.json"
 
@@ -24,6 +25,7 @@ VERIFY_FAILURE_CLASS = "BGF-NETWORK-RATE-LIMIT-REMOTE-VERIFICATION-179"
 THRESHOLD_GAP_CLASS = "BGF-EDGE-LIVE-THRESHOLD-PROOF-GAP-185"
 CLEANUP_FAILURE_CLASS = "BGF-SYNTHETIC-SECURITY-PROOF-RESIDUE-186"
 FINAL_STATE = "DATABASE_AND_EDGE_THRESHOLD_VERIFIED_SYNTHETIC_CLEANUP_COMPLETE"
+NEXT_STAGE_REPO_ONLY = "stage29_valid_student_route_fixture"
 THRESHOLDS = {
     "get_workout": 120,
     "start_workout": 30,
@@ -61,6 +63,7 @@ def data(path: Path) -> dict:
 def main() -> None:
     authority = data(AUTHORITY)
     network = data(NETWORK_AUTHORITY)
+    valid_route = data(VALID_ROUTE_AUTHORITY) if VALID_ROUTE_AUTHORITY.is_file() else None
     ledger = data(LEDGER)
     external = data(EXTERNAL_GATES)
     migration = text(MIGRATION).lower()
@@ -177,8 +180,36 @@ def main() -> None:
     }.items():
         if remote.get(name) != version:
             fail(f"migration ledger missing reconciled {name}")
-    if any(row.get("direction") == "repo_only" for row in ledger.get("declared_divergences", [])):
-        fail("unexpected repo_only divergence remains after Stage 28 reconciliation")
+
+    repo_only = {
+        row.get("name")
+        for row in ledger.get("declared_divergences", [])
+        if row.get("direction") == "repo_only"
+    }
+    if not repo_only:
+        declared_next_stage = "NONE"
+    elif repo_only == {NEXT_STAGE_REPO_ONLY}:
+        if valid_route is None:
+            fail("Stage 29 repo_only divergence exists without valid-route authority")
+        if valid_route.get("schema_version") != 1 or valid_route.get("project_ref") != "mceukeondizkwlpfxzgf":
+            fail("Stage 29 valid-route authority identity drifted")
+        if valid_route.get("current_state") != "VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY":
+            fail("Stage 29 repo_only divergence is not backed by repository-only authority")
+        fixture = valid_route.get("fixture_migration", {})
+        if fixture.get("migration_name") != NEXT_STAGE_REPO_ONLY:
+            fail("Stage 29 fixture migration name drifted")
+        if fixture.get("remote_applied") is not False or fixture.get("migration_ledger_state") != "repo_only":
+            fail("Stage 29 fixture authority self-promoted before remote apply")
+        verification_state = valid_route.get("runtime_verification", {})
+        if verification_state.get("fixture_deployed") is not False:
+            fail("Stage 29 fixture deployment self-attested")
+        if verification_state.get("valid_token_edge_route_verified_live") is not False:
+            fail("Stage 29 valid route proof self-attested")
+        if verification_state.get("cleanup_completed") is not False:
+            fail("Stage 29 cleanup self-attested before fixture deployment")
+        declared_next_stage = NEXT_STAGE_REPO_ONLY
+    else:
+        fail(f"unexpected repo_only divergence set: {sorted(repo_only)}")
 
     for key in (
         "flutter_uses_edge_gateway",
@@ -218,6 +249,7 @@ def main() -> None:
     print("EDGE_RATE_LIMIT_PATH_LIVE=VERIFIED_PRE_TOKEN")
     print("EDGE_THRESHOLD_429_PROOF=VERIFIED")
     print("SYNTHETIC_PROOF_RESIDUE=ZERO")
+    print(f"DECLARED_NEXT_STAGE_REPO_ONLY={declared_next_stage}")
     print("VALID_STUDENT_ROUTE_PROOF=PENDING")
     print("DIRECT_V2_RPC_PATHS=5")
     print("LAUNCH_GATE_PROMOTION=DENIED")

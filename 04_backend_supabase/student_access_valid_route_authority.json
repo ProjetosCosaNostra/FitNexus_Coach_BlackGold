@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "failure_classes": [
+    "BGF-VALID-STUDENT-ROUTE-UNPROVEN-187",
+    "BGF-SYNTHETIC-VALID-ROUTE-FIXTURE-RESIDUE-188",
+    "BGF-VALID-ROUTE-RESPONSE-DATA-LEAK-189"
+  ],
+  "purpose": "Repository-first authority for a controlled synthetic valid-possession-token GET proof through the deployed Edge v3 student gateway, without mutating real student data or prematurely cutting over Flutter.",
+  "current_state": "VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY",
+  "baseline_main_sha": "031178c4b0ea526c7ade1667261cd629c8bb1aa8",
+  "fixture_migration": {
+    "repository_file": "04_backend_supabase/migrations/20260820180000_stage29_valid_student_route_fixture.sql",
+    "migration_name": "stage29_valid_student_route_fixture",
+    "remote_applied": false,
+    "migration_ledger_state": "repo_only",
+    "requires_empty_customer_domain": true,
+    "synthetic_auth_user": true,
+    "synthetic_organization": true,
+    "synthetic_student": true,
+    "synthetic_training_plan": true,
+    "synthetic_exercise": true,
+    "synthetic_access_link": true,
+    "raw_token_is_public_synthetic_test_material": true,
+    "database_stores_token_hash_only": true,
+    "fixture_expiry_hours": 2,
+    "cleanup_migration_required": true
+  },
+  "fixture_identifiers": {
+    "user_id": "2615749d-ffca-5319-84e0-b775578ceaf6",
+    "organization_id": "13678787-eeae-5f6a-8828-190723a22594",
+    "student_id": "659eafee-0508-5dfb-9fcb-d285d9e846db",
+    "plan_id": "fd5762db-0a0c-54dc-81c9-2aeade199ee5",
+    "exercise_id": "2ec1260b-88f2-5a2c-ba81-3433d2c147d5",
+    "link_id": "f31a3c36-4ee1-5d64-b30d-f00fc98aea9b"
+  },
+  "expected_live_contract": {
+    "edge_runtime_version": 3,
+    "method": "POST",
+    "action": "get_workout",
+    "expected_http_status": 200,
+    "expected_student_name": "Stage29 Synthetic Student",
+    "expected_plan_name": "Stage29 Synthetic Plan",
+    "expected_exercise_name": "Stage29 Synthetic Exercise",
+    "expected_exercise_count": 1,
+    "expected_history_count": 0,
+    "expected_session": null,
+    "raw_token_returned": false,
+    "raw_network_origin_returned": false,
+    "real_student_data_used": false,
+    "real_student_data_mutated": false
+  },
+  "runtime_verification": {
+    "fixture_deployed": false,
+    "valid_token_edge_route_verified_live": false,
+    "student_rpc_forwarding_with_valid_token_verified_live": false,
+    "response_matches_synthetic_fixture": false,
+    "cleanup_completed": false,
+    "synthetic_business_rows_remaining": null,
+    "edge_alert_delivery_verified": false,
+    "rollback_verified": false
+  },
+  "client_boundary": {
+    "flutter_uses_edge_gateway": false,
+    "direct_v2_rpc_path_active": true,
+    "direct_anon_v2_rpc_execute_revoked": false,
+    "client_direct_rpc_fallback_removed": false
+  },
+  "promotion_rule": {
+    "may_apply_fixture_after_ci_and_merge": true,
+    "may_cutover_flutter_before_live_valid_route_proof": false,
+    "may_cutover_flutter_before_fixture_cleanup": false,
+    "may_revoke_direct_rpc_execute_now": false,
+    "valid_route_live_proof_required": true,
+    "fixture_cleanup_required": true,
+    "rollback_proof_required_before_direct_rpc_revocation": true
+  },
+  "launch_authority": {
+    "can_promote_incident_response_gate": false,
+    "can_promote_production_deployment_gate": false,
+    "can_enable_paid_ads": false,
+    "current_state_is_launch_readiness": false
+  }
+}
