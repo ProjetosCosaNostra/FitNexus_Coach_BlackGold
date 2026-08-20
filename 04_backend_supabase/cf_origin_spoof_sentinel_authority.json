@@ -1,26 +1,28 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "project_ref": "mceukeondizkwlpfxzgf",
   "failure_classes": [
     "BGF-CF-ORIGIN-SPOOF-171",
-    "BGF-EDGE-SENTINEL-DATA-LEAK-172"
+    "BGF-EDGE-SENTINEL-DATA-LEAK-172",
+    "BGF-CF-SPOOF-PROOF-OUTCOME-ASSUMPTION-173"
   ],
-  "purpose": "Repo-first authority for proving whether a client can force the deployed Edge runtime cf-connecting-ip candidate to a known TEST-NET sentinel without ever returning the raw runtime origin.",
-  "state": "SPOOF_SENTINEL_SOURCE_READY_V1_RUNTIME",
-  "baseline_main_sha": "8d3d857a9c5ba658f29f5387c25a6b6dca65c956",
+  "purpose": "Authoritative runtime proof that a client cannot force the deployed Edge runtime cf-connecting-ip candidate to a known TEST-NET sentinel, without returning, logging or persisting the raw runtime origin.",
+  "state": "SPOOF_RESISTANCE_VERIFIED_EDGE_BLOCK_403",
+  "source_main_sha": "0215cb417e0fafe659649d60a4d889b947d489cb",
   "current_runtime": {
     "edge_function_name": "student-access-gateway",
-    "version": 1,
+    "version": 2,
     "deployment_id": "2f85d9e1-39b3-46d7-a6c2-902eed7b4233",
-    "bundle_sha256": "a67cfccbab1f89377afab63cf6100e6fff7baa2f9ff67ba3b58203198f079de9",
+    "bundle_sha256": "6d67c45bdd23694bcfbe24503c84d1d0e7c540a43d7c54e104a376a7c2a18c5a",
     "status": "ACTIVE",
+    "verify_jwt": false,
+    "deployed_at_utc": "2026-08-20T06:01:01Z",
     "origin_candidate": "cf-connecting-ip",
     "origin_candidate_available": true,
-    "origin_candidate_trusted_for_security": false,
-    "spoof_resistance_verified": false
+    "origin_candidate_trusted_for_security": true,
+    "spoof_resistance_verified": true
   },
-  "next_source": {
-    "expected_edge_function_version_after_deploy": 2,
+  "sentinel_contract": {
     "sentinel": "203.0.113.77",
     "sentinel_standard": "RFC5737_TEST_NET_3",
     "response_field": "candidate_equals_known_client_spoof_sentinel",
@@ -31,15 +33,40 @@
     "student_rpc_forwarding_enabled": false,
     "launch_gate_authority": false
   },
+  "live_spoof_receipt": {
+    "workflow_run_id": 32338900002,
+    "check_name": "Live CF origin spoof sentinel",
+    "observed_at_utc": "2026-08-20T06:16:38Z",
+    "baseline_http_status": 200,
+    "spoof_attempt_http_status": 403,
+    "spoof_proof_outcome": "BLOCKED_AT_EDGE_403",
+    "client_can_force_cf_connecting_ip": false,
+    "raw_runtime_origin_returned": false,
+    "raw_runtime_origin_persisted": false,
+    "student_rpc_forwarding_observed": false,
+    "launch_gate_authority_observed": false
+  },
+  "live_spoof_failure_receipt": {
+    "workflow_run_id": 32338828582,
+    "failure_class": "BGF-CF-SPOOF-PROOF-OUTCOME-ASSUMPTION-173",
+    "safe_finding": "The deliberate client-supplied cf-connecting-ip sentinel request was rejected with HTTP 403 before the Edge Function executed; the original verifier failed only because it incorrectly required HTTP 200 plus sentinel equality false.",
+    "corrective_policy": "A deliberate spoof attempt is proven safe when the platform rejects the protected header at the edge with HTTP 403, or when the function executes and reports sentinel equality false. HTTP 200 with equality true, missing evidence, or any ambiguous outcome remains fail-closed. Rejection bodies are never inspected or printed."
+  },
   "promotion_rule": {
-    "deploy_only_after_source_ci_green_and_merge_to_main": true,
-    "trusted_only_if_deployed_v2_live_probe_returns_sentinel_equality_false": true,
+    "trusted_if_platform_blocks_client_cf_connecting_ip_with_403": true,
+    "trusted_if_function_executes_and_sentinel_equality_false": true,
     "trusted_if_sentinel_equality_true": false,
     "trusted_if_live_probe_missing_or_ambiguous": false,
     "client_forwarded_headers_are_never_authority": true,
     "no_student_cutover_in_this_stage": true
   },
-  "live_spoof_receipt": null,
+  "remaining_boundaries": {
+    "invalid_token_network_origin_rate_limit_implemented": false,
+    "flutter_student_gateway_cutover_complete": false,
+    "direct_anon_v2_rpc_execute_revoked": false,
+    "alert_delivery_verified": false,
+    "rollback_verified": false
+  },
   "launch_authority": {
     "can_promote_incident_response_gate": false,
     "can_promote_production_deployment_gate": false,
