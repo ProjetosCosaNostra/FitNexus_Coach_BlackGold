@@ -7,13 +7,28 @@
     "BGF-NETWORK-THROTTLE-CALLER-LIMIT-OVERRIDE-176",
     "BGF-EDGE-SECRET-KEY-LEAK-177"
   ],
+  "verification_failure_class": "BGF-NETWORK-RATE-LIMIT-REMOTE-VERIFICATION-179",
   "purpose": "Durable pre-token-validation network-origin throttle for the student Edge boundary, with privacy-minimized keyed pseudonymization and database-owned route thresholds.",
-  "current_state": "REPO_ONLY_DDL_NOT_APPLIED",
+  "current_state": "DATABASE_APPLIED_VERIFICATION_INTERLOCK_REPO_ONLY",
   "migration": {
     "repository_file": "04_backend_supabase/migrations/20260820063000_stage27_student_network_origin_rate_limit.sql",
     "migration_name": "stage27_student_network_origin_rate_limit",
+    "remote_applied": true,
+    "remote_version": "20260820065403",
+    "migration_ledger_state": "remote_reconciled_verification_repo_only"
+  },
+  "verification_migration": {
+    "repository_file": "04_backend_supabase/migrations/20260820065900_stage27_network_rate_limit_verification_interlock.sql",
+    "migration_name": "stage27_network_rate_limit_verification_interlock",
     "remote_applied": false,
-    "migration_ledger_state": "repo_only_declared"
+    "migration_ledger_state": "repo_only_declared",
+    "test_origin": "RFC5737_TEST_NET_ONLY",
+    "test_operation": "get_workout",
+    "test_calls": 121,
+    "expected_allowed_calls": 120,
+    "expected_rate_limited_calls": 1,
+    "synthetic_bucket_cleanup_required": true,
+    "synthetic_signal_cleanup_required": true
   },
   "trusted_origin_authority": {
     "source": "cf-connecting-ip",
@@ -61,6 +76,48 @@
     ],
     "posture_view_stage27_appended_column": "network_rate_limit_burst_signals_60m"
   },
+  "remote_schema_receipt": {
+    "observed_at_utc": "2026-08-20T06:56:36Z",
+    "remote_migration_version": "20260820065403",
+    "secret_rows": 1,
+    "pepper_length_bytes": 32,
+    "bucket_rows_before_verification": 0,
+    "network_rate_limit_signals_before_verification": 0,
+    "raw_network_origin_columns_present": false,
+    "posture_view_columns": [
+      "evaluated_at",
+      "posture",
+      "signals_60m",
+      "rate_limit_burst_signals_60m",
+      "command_replay_burst_signals_60m",
+      "token_rotation_burst_signals_60m",
+      "security_events_15m",
+      "rate_limited_events_15m",
+      "replay_events_15m",
+      "network_rate_limit_burst_signals_60m"
+    ],
+    "service_role_can_select_secret": false,
+    "service_role_can_select_buckets": false,
+    "service_role_can_execute_public_bridge": true,
+    "anon_can_execute_public_bridge": false,
+    "authenticated_can_execute_public_bridge": false,
+    "service_role_can_execute_private_function": true,
+    "anon_can_execute_private_function": false,
+    "authenticated_can_execute_private_function": false,
+    "private_function_security_definer": true,
+    "public_bridge_security_definer": false,
+    "execute_sql_connector_role": "supabase_read_only_user",
+    "direct_transactional_write_probe_available_through_execute_sql": false
+  },
+  "advisor_receipt": {
+    "security_new_stage27_actionable_findings": 0,
+    "security_existing_intentional_student_security_definer_warnings_preserved": true,
+    "performance_new_stage27_actionable_findings": 0,
+    "stage27_unused_index_info": [
+      "student_access_network_rate_buckets_last_seen_idx"
+    ],
+    "unused_index_info_is_not_removal_authority": true
+  },
   "runtime_boundary": {
     "edge_gateway_uses_network_rate_limit": false,
     "invalid_token_network_origin_rate_limit_verified_live": false,
@@ -77,7 +134,7 @@
     "service_role can execute only the public SECURITY INVOKER bridge",
     "anon and authenticated cannot execute the bridge",
     "raw network-origin columns are absent",
-    "controlled transactional rate-limit probe reaches STUDENT_NETWORK_RATE_LIMITED and rolls back",
+    "controlled transactional rate-limit probe reaches STUDENT_NETWORK_RATE_LIMITED and removes synthetic bucket/signal evidence before commit",
     "security and performance advisors show no new unresolved actionable finding",
     "remote migration ledger is reconciled",
     "Edge gateway integration is deployed only after database throttle authority is remotely reconciled"
