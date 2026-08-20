@@ -133,6 +133,8 @@ def main() -> None:
             fail(f"{FAILURE_CLASSES[4]} observed state lacks candidate verification")
         if runtime.get("runtime_origin_candidate") != "cf-connecting-ip":
             fail(f"{FAILURE_CLASSES[4]} observed candidate authority drifted")
+        if runtime.get("runtime_origin_candidate_trusted_for_security") is not False:
+            fail(f"{FAILURE_CLASSES[4]} candidate was trusted before spoof-resistance proof")
         if not isinstance(receipt, dict):
             fail(f"{FAILURE_CLASSES[4]} observed state requires a structured live receipt")
         required_receipt = {
