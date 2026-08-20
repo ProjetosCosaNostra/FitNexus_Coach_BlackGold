@@ -5,7 +5,8 @@
     "BGF-EDGE-INVALID-TOKEN-RATE-LIMIT-174",
     "BGF-NETWORK-ORIGIN-RAW-PERSISTENCE-175",
     "BGF-NETWORK-THROTTLE-CALLER-LIMIT-OVERRIDE-176",
-    "BGF-EDGE-SECRET-KEY-LEAK-177"
+    "BGF-EDGE-SECRET-KEY-LEAK-177",
+    "BGF-POSTGRES-VIEW-COLUMN-ORDER-178"
   ],
   "purpose": "Durable pre-token-validation network-origin throttle for the student Edge boundary, with privacy-minimized keyed pseudonymization and database-owned route thresholds.",
   "current_state": "REPO_ONLY_DDL_NOT_APPLIED",
@@ -46,7 +47,20 @@
     "bucket_retention_days": 2,
     "rate_limit_error": "STUDENT_NETWORK_RATE_LIMITED",
     "signal_type": "network_rate_limit_burst",
-    "signal_severity": "high"
+    "signal_severity": "high",
+    "posture_view_replace_policy": "preserve_existing_columns_in_order_append_new_columns_only",
+    "posture_view_existing_columns": [
+      "evaluated_at",
+      "posture",
+      "signals_60m",
+      "rate_limit_burst_signals_60m",
+      "command_replay_burst_signals_60m",
+      "token_rotation_burst_signals_60m",
+      "security_events_15m",
+      "rate_limited_events_15m",
+      "replay_events_15m"
+    ],
+    "posture_view_stage27_appended_column": "network_rate_limit_burst_signals_60m"
   },
   "runtime_boundary": {
     "edge_gateway_uses_network_rate_limit": false,
