@@ -5,8 +5,7 @@
     "BGF-EDGE-INVALID-TOKEN-RATE-LIMIT-174",
     "BGF-NETWORK-ORIGIN-RAW-PERSISTENCE-175",
     "BGF-NETWORK-THROTTLE-CALLER-LIMIT-OVERRIDE-176",
-    "BGF-EDGE-SECRET-KEY-LEAK-177",
-    "BGF-POSTGRES-VIEW-COLUMN-ORDER-178"
+    "BGF-EDGE-SECRET-KEY-LEAK-177"
   ],
   "purpose": "Durable pre-token-validation network-origin throttle for the student Edge boundary, with privacy-minimized keyed pseudonymization and database-owned route thresholds.",
   "current_state": "REPO_ONLY_DDL_NOT_APPLIED",
