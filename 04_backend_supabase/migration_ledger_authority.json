@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "0036ec710017311428f38e533266dfa69c0eb21d",
-  "observed_at_utc": "2026-08-20T19:26:31Z",
+  "baseline_main_sha": "3f4c2fa25e52985d892db3a1beba64a51e68baa1",
+  "observed_at_utc": "2026-08-20T19:38:49Z",
   "source": "Supabase.list_migrations",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -36,6 +36,13 @@
       "reason": "Historical no-op ledger row created during advisor guard misuse; preserved as remote history evidence and intentionally has no repository SQL file.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-MIGRATION-TOOL-MISROUTE-097"
+    },
+    {
+      "direction": "repo_only",
+      "name": "stage29_valid_route_fixture_cleanup",
+      "reason": "Fail-closed cleanup for the already-proven Stage 29 synthetic valid-route fixture. Apply only after CI/merge; it requires the customer domain to remain synthetic-only and removes exactly the observed fixture/proof residue without embedding origin digests.",
+      "owner": "BlackGold Forge",
+      "related_failure_class": "BGF-SYNTHETIC-VALID-ROUTE-FIXTURE-RESIDUE-188"
     }
   ],
   "remote_migrations": [
