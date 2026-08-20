@@ -1,0 +1,138 @@
+name: Stage 28 Edge Gateway Live Proof
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/stage28_edge_gateway_live_proof.yml'
+  push:
+    branches:
+      - blackgold/stage28-live-runtime-proof
+    paths:
+      - '.github/workflows/stage28_edge_gateway_live_proof.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-proof:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stage 28 health, pre-token limiter, and spoof proof
+        shell: bash
+        run: |
+          python - <<'PY'
+          from __future__ import annotations
+
+          import json
+          import urllib.error
+          import urllib.request
+
+          endpoint = "https://mceukeondizkwlpfxzgf.supabase.co/functions/v1/student-access-gateway"
+          publishable = "sb_publishable_aggqgASWuWfgBJAlrRKoeg_Gg2qnjHQ"
+          sentinel = "203.0.113.77"
+          expected_mode = "stage28_gateway_candidate_repository_source"
+
+          def fail(message: str) -> None:
+              raise SystemExit("STAGE28_EDGE_GATEWAY_LIVE_PROOF=FAIL\n" + message)
+
+          def call(method: str, payload=None, extra_headers=None, allow_403=False):
+              headers = {
+                  "apikey": publishable,
+                  "accept": "application/json",
+                  "user-agent": "FitNexus-Stage28-Live-Proof/1.0",
+              }
+              if extra_headers:
+                  headers.update(extra_headers)
+              data = None
+              if payload is not None:
+                  headers["content-type"] = "application/json"
+                  data = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+              req = urllib.request.Request(endpoint, headers=headers, data=data, method=method)
+              try:
+                  with urllib.request.urlopen(req, timeout=25) as response:
+                      status = response.status
+                      raw = response.read(16384)
+              except urllib.error.HTTPError as exc:
+                  if allow_403 and exc.code == 403:
+                      return 403, None
+                  status = exc.code
+                  raw = exc.read(16384)
+              except urllib.error.URLError as exc:
+                  fail(f"endpoint unreachable: {type(exc.reason).__name__}")
+              try:
+                  value = json.loads(raw.decode("utf-8"))
+              except (UnicodeDecodeError, json.JSONDecodeError):
+                  fail(f"HTTP {status} response is not valid UTF-8 JSON")
+              if not isinstance(value, dict):
+                  fail(f"HTTP {status} response must be a JSON object")
+              return status, value
+
+          def no_raw_keys(value: dict, label: str) -> None:
+              forbidden = {
+                  "ip", "client_ip", "network_origin", "raw_ip", "token",
+                  "authorization", "request_body", "headers", "secret", "service_role",
+              }
+              present = sorted(forbidden.intersection(value))
+              if present:
+                  fail(f"{label} exposed forbidden raw-data keys: {present}")
+
+          status, health = call("GET")
+          if status != 200:
+              fail(f"health HTTP {status}, expected 200")
+          expected = {
+              "ok": True,
+              "mode": expected_mode,
+              "network_origin_source_candidate": "cf-connecting-ip",
+              "network_origin_candidate_available": True,
+              "raw_network_origin_returned": False,
+              "request_body_read": False,
+              "network_origin_rate_limit_enabled": True,
+              "student_rpc_forwarding_enabled": True,
+              "launch_gate_authority": False,
+          }
+          mismatches = [k for k, v in expected.items() if health.get(k) != v]
+          if mismatches:
+              fail(f"health contract mismatch: {mismatches}")
+          no_raw_keys(health, "health")
+          if health.get("candidate_equals_known_client_spoof_sentinel") is not False:
+              fail("baseline unexpectedly equals TEST-NET spoof sentinel")
+
+          # Deliberately omit the possession token. In the merged Stage 28 source, the
+          # durable network-origin limiter executes before payload/token validation.
+          # Reaching this 400 boundary proves that live limiter invocation succeeded
+          # without using a real student token or mutating student data.
+          status, invalid = call("POST", {"action": "start_workout"})
+          if status != 400:
+              fail(f"pre-token limiter HTTP {status}, expected 400")
+          if invalid.get("ok") is not False or invalid.get("error") != "STUDENT_GATEWAY_PAYLOAD_INVALID":
+              fail("pre-token limiter proof did not reach post-limiter validation boundary")
+          no_raw_keys(invalid, "pre-token limiter proof")
+
+          spoof_status, spoof = call(
+              "GET",
+              extra_headers={"cf-connecting-ip": sentinel},
+              allow_403=True,
+          )
+          if spoof_status == 403:
+              spoof_outcome = "BLOCKED_AT_EDGE_403"
+          elif spoof_status == 200 and spoof is not None:
+              no_raw_keys(spoof, "spoof attempt")
+              if spoof.get("candidate_equals_known_client_spoof_sentinel") is not False:
+                  fail("client-supplied cf-connecting-ip reached trusted candidate unchanged")
+              spoof_outcome = "RUNTIME_CANDIDATE_OVERRIDES_CLIENT_SENTINEL"
+          else:
+              fail(f"ambiguous spoof outcome HTTP {spoof_status}")
+
+          print("STAGE28_EDGE_GATEWAY_LIVE_PROOF=PASS")
+          print("EDGE_RUNTIME_EXPECTED_VERSION=3")
+          print("EDGE_RUNTIME_MODE=stage28_gateway_candidate_repository_source")
+          print("NETWORK_ORIGIN_SOURCE=cf-connecting-ip")
+          print("NETWORK_ORIGIN_RATE_LIMIT_LIVE_PATH=VERIFIED_PRE_TOKEN")
+          print("REAL_STUDENT_TOKEN_USED=false")
+          print("REAL_STUDENT_DATA_MUTATED=false")
+          print(f"SPOOF_PROOF_OUTCOME={spoof_outcome}")
+          print("CLIENT_CAN_FORCE_CF_CONNECTING_IP=false")
+          print("RAW_NETWORK_ORIGIN_RETURNED=false")
+          print("LAUNCH_GATE_AUTHORITY=false")
+          PY

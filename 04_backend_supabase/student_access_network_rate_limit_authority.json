@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "project_ref": "mceukeondizkwlpfxzgf",
   "failure_classes": [
     "BGF-EDGE-INVALID-TOKEN-RATE-LIMIT-174",
@@ -8,8 +8,9 @@
     "BGF-EDGE-SECRET-KEY-LEAK-177"
   ],
   "verification_failure_class": "BGF-NETWORK-RATE-LIMIT-REMOTE-VERIFICATION-179",
+  "runtime_threshold_proof_failure_class": "BGF-EDGE-LIVE-THRESHOLD-PROOF-GAP-185",
   "purpose": "Durable pre-token-validation network-origin throttle for the student Edge boundary, with privacy-minimized keyed pseudonymization and database-owned route thresholds.",
-  "current_state": "DATABASE_RATE_LIMIT_APPLIED_VERIFIED_EDGE_INTEGRATION_PENDING",
+  "current_state": "DATABASE_RATE_LIMIT_APPLIED_VERIFIED_EDGE_PATH_LIVE_THRESHOLD_PROOF_PENDING",
   "migration": {
     "repository_file": "04_backend_supabase/migrations/20260820063000_stage27_student_network_origin_rate_limit.sql",
     "migration_name": "stage27_student_network_origin_rate_limit",
@@ -48,8 +49,9 @@
   "trusted_origin_authority": {
     "source": "cf-connecting-ip",
     "source_state": "ORIGIN_SOURCE_SPOOF_RESISTANCE_VERIFIED",
-    "edge_function_version": 2,
-    "spoof_proof_workflow_run_id": 32338900002,
+    "edge_function_version": 3,
+    "edge_function_bundle_sha256": "b57892b3f399b76f8127c9a39d3d8c021ffe639aa7bf92c7fa9a459d35721b82",
+    "spoof_proof_workflow_run_id": 32349938290,
     "spoof_proof_outcome": "BLOCKED_AT_EDGE_403",
     "client_can_force_source": false
   },
@@ -133,20 +135,31 @@
     "unused_index_info_is_not_removal_authority": true
   },
   "runtime_boundary": {
-    "edge_gateway_uses_network_rate_limit": false,
-    "invalid_token_network_origin_rate_limit_verified_live": false,
+    "edge_gateway_uses_network_rate_limit": true,
+    "network_origin_rate_limit_path_verified_live": true,
+    "invalid_token_network_origin_rate_limit_threshold_verified_live": false,
+    "live_path_proof_workflow_run_id": 32349938290,
+    "live_path_proof_http_status": 400,
+    "live_path_proof_terminal_error": "STUDENT_GATEWAY_PAYLOAD_INVALID",
     "flutter_uses_edge_gateway": false,
     "direct_v2_rpc_path_active": true,
     "direct_anon_v2_rpc_execute_revoked": false,
     "edge_alert_delivery_verified": false,
     "rollback_verified": false
   },
+  "proof_semantics": {
+    "database_threshold_verified": true,
+    "edge_pre_token_limiter_path_verified": true,
+    "edge_threshold_exceeded_http_429_verified": false,
+    "threshold_gap_policy": "Do not treat a successful pre-token limiter invocation as proof that the live Edge path returns HTTP 429 at the configured threshold. A controlled threshold-exceeded runtime proof remains mandatory before Flutter cutover."
+  },
   "next_stage": {
-    "name": "EDGE_GATEWAY_RATE_LIMIT_INTEGRATION",
+    "name": "EDGE_GATEWAY_THRESHOLD_AND_ROUTE_RUNTIME_PROOF",
     "allowed_now": true,
-    "must_run_before_token_validation": true,
     "must_preserve_direct_rpc_fallback_until_full_client_cutover": true,
-    "may_revoke_direct_rpc_execute_now": false
+    "may_revoke_direct_rpc_execute_now": false,
+    "must_verify_http_429_threshold_outcome": true,
+    "must_verify_valid_student_route_before_client_cutover": true
   },
   "launch_authority": {
     "can_promote_incident_response_gate": false,

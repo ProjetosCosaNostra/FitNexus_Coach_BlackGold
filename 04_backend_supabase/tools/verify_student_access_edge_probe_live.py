@@ -6,7 +6,7 @@ import urllib.request
 
 ENDPOINT = "https://mceukeondizkwlpfxzgf.supabase.co/functions/v1/student-access-gateway"
 PUBLISHABLE_KEY = "sb_publishable_aggqgASWuWfgBJAlrRKoeg_Gg2qnjHQ"
-EXPECTED_MODE = "origin_probe_not_student_gateway_cutover"
+EXPECTED_MODE = "stage28_gateway_candidate_repository_source"
 EXPECTED_CANDIDATE = "cf-connecting-ip"
 
 
@@ -17,7 +17,7 @@ def fail(message: str) -> None:
 def fetch(extra_headers: dict[str, str] | None = None) -> dict:
     headers = {
         "apikey": PUBLISHABLE_KEY,
-        "user-agent": "FitNexus-Stage26-Origin-Probe/1.1",
+        "user-agent": "FitNexus-Stage28-Origin-Probe/2.0",
         "accept": "application/json",
     }
     if extra_headers:
@@ -54,7 +54,8 @@ def require_common(value: dict, label: str) -> None:
         "network_origin_candidate_available": True,
         "raw_network_origin_returned": False,
         "request_body_read": False,
-        "student_rpc_forwarding_enabled": False,
+        "network_origin_rate_limit_enabled": True,
+        "student_rpc_forwarding_enabled": True,
         "launch_gate_authority": False,
     }
     mismatches = {
@@ -74,6 +75,8 @@ def require_common(value: dict, label: str) -> None:
         "authorization",
         "request_body",
         "headers",
+        "secret",
+        "service_role",
     }
     present = sorted(forbidden_keys.intersection(value))
     if present:
@@ -110,23 +113,23 @@ def main() -> None:
         "forwarded-header probe",
     )
 
-    # GitHub Actions run 32336914881 proved an important intermediary-normalization
-    # property: x-forwarded-for reached the function, while a client-supplied x-real-ip
-    # was stripped/absent. Presence of either header is diagnostic only; neither can ever
-    # become network-origin authority. Do not fail merely because an intermediary strips
-    # or normalizes a client-supplied untrusted header.
+    # Client-supplied forwarding headers remain diagnostic only. Intermediaries may strip
+    # or normalize them; neither may become network-origin authority.
     if not xff_present:
         fail("x-forwarded-for TEST-NET probe was unexpectedly absent")
 
     print("STUDENT_ACCESS_EDGE_PROBE_LIVE=PASS")
     print("EDGE_HTTP_STATUS=200")
+    print("EDGE_RUNTIME_EXPECTED_VERSION=3")
+    print("EDGE_RUNTIME_MODE=stage28_gateway_candidate_repository_source")
     print("NETWORK_ORIGIN_CANDIDATE=cf-connecting-ip")
     print("NETWORK_ORIGIN_CANDIDATE_AVAILABLE=true")
     print("X_FORWARDED_FOR_CLIENT_HEADER_PRESERVED=true")
     print(f"X_REAL_IP_CLIENT_HEADER_PRESERVED={str(xreal_present).lower()}")
     print("CLIENT_FORWARDED_HEADERS=UNTRUSTED_REGARDLESS_OF_NORMALIZATION")
     print("RAW_NETWORK_ORIGIN_RETURNED=false")
-    print("STUDENT_RPC_FORWARDING=false")
+    print("NETWORK_ORIGIN_RATE_LIMIT_ENABLED=true")
+    print("STUDENT_RPC_FORWARDING_ENABLED=true")
     print("LAUNCH_GATE_AUTHORITY=false")
 
 

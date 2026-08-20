@@ -7,7 +7,7 @@ import urllib.request
 ENDPOINT = "https://mceukeondizkwlpfxzgf.supabase.co/functions/v1/student-access-gateway"
 PUBLISHABLE_KEY = "sb_publishable_aggqgASWuWfgBJAlrRKoeg_Gg2qnjHQ"
 SENTINEL = "203.0.113.77"
-EXPECTED_MODE = "origin_probe_not_student_gateway_cutover"
+EXPECTED_MODE = "stage28_gateway_candidate_repository_source"
 EXPECTED_CANDIDATE = "cf-connecting-ip"
 
 
@@ -22,7 +22,7 @@ def fetch(
 ) -> tuple[int, dict | None]:
     headers = {
         "apikey": PUBLISHABLE_KEY,
-        "user-agent": "FitNexus-Stage26-CF-Origin-Spoof-Sentinel/1.1",
+        "user-agent": "FitNexus-Stage28-CF-Origin-Spoof-Sentinel/2.0",
         "accept": "application/json",
     }
     if extra_headers:
@@ -34,10 +34,6 @@ def fetch(
             status = response.status
             raw = response.read(16384)
     except urllib.error.HTTPError as exc:
-        # Run 32338828582 proved that the platform may reject a client-supplied
-        # cf-connecting-ip before the function executes. A 403 on the deliberate spoof
-        # request is a stronger safe outcome than allowing the request through with a
-        # rewritten value. Never inspect or print the rejection body.
         if allow_edge_block and exc.code == 403:
             return 403, None
         fail(f"unexpected HTTP status: {exc.code}")
@@ -65,7 +61,8 @@ def require_safe_contract(value: dict, label: str) -> bool:
         "network_origin_candidate_available": True,
         "raw_network_origin_returned": False,
         "request_body_read": False,
-        "student_rpc_forwarding_enabled": False,
+        "network_origin_rate_limit_enabled": True,
+        "student_rpc_forwarding_enabled": True,
         "launch_gate_authority": False,
     }
     mismatches = sorted(
@@ -83,6 +80,8 @@ def require_safe_contract(value: dict, label: str) -> bool:
         "authorization",
         "request_body",
         "headers",
+        "secret",
+        "service_role",
     }
     present = sorted(forbidden_keys.intersection(value))
     if present:
@@ -97,7 +96,7 @@ def require_safe_contract(value: dict, label: str) -> bool:
 def main() -> None:
     baseline_status, baseline = fetch()
     if baseline_status != 200 or baseline is None:
-        fail("baseline request did not reach the safe probe")
+        fail("baseline request did not reach the safe gateway health endpoint")
     baseline_equal = require_safe_contract(baseline, "baseline")
     if baseline_equal:
         fail("baseline unexpectedly equals the TEST-NET spoof sentinel")
@@ -124,13 +123,15 @@ def main() -> None:
 
     print("CF_ORIGIN_SPOOF_SENTINEL_LIVE=PASS")
     print("BASELINE_HTTP_STATUS=200")
-    print("RUNTIME_VERSION_EXPECTED=2")
+    print("RUNTIME_VERSION_EXPECTED=3")
+    print("EDGE_RUNTIME_MODE=stage28_gateway_candidate_repository_source")
     print("NETWORK_ORIGIN_CANDIDATE=cf-connecting-ip")
     print("SENTINEL_STANDARD=RFC5737_TEST_NET_3")
     print(f"SPOOF_PROOF_OUTCOME={outcome}")
     print("CLIENT_CAN_FORCE_CF_CONNECTING_IP=false")
     print("RAW_RUNTIME_ORIGIN_RETURNED=false")
-    print("STUDENT_RPC_FORWARDING=false")
+    print("NETWORK_ORIGIN_RATE_LIMIT_ENABLED=true")
+    print("STUDENT_RPC_FORWARDING_ENABLED=true")
     print("LAUNCH_GATE_AUTHORITY=false")
 
 
