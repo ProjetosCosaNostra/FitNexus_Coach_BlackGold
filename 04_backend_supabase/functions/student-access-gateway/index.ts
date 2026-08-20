@@ -17,6 +17,11 @@ const ALLOWED_BROWSER_ORIGINS = new Set([
   "http://127.0.0.1",
 ]);
 
+// RFC 5737 TEST-NET-3 sentinel. It is intentionally not a real user/network address.
+// The runtime probe returns only whether the platform-owned candidate equals this known
+// client-supplied sentinel. The raw candidate is never returned, stored or logged.
+const SPOOF_SENTINEL = "203.0.113.77";
+
 function corsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("origin")?.trim() ?? "";
   const allowed = ALLOWED_BROWSER_ORIGINS.has(origin)
@@ -69,6 +74,8 @@ Deno.serve((req: Request) => {
       mode: "origin_probe_not_student_gateway_cutover",
       network_origin_source_candidate: "cf-connecting-ip",
       network_origin_candidate_available: plausibleNetworkOrigin(cloudflareOrigin),
+      candidate_equals_known_client_spoof_sentinel:
+        cloudflareOrigin?.trim() === SPOOF_SENTINEL,
       cloudflare_ray_available: Boolean(cloudflareRay?.trim()),
       x_forwarded_for_present_but_untrusted: Boolean(req.headers.get("x-forwarded-for")),
       x_real_ip_present_but_untrusted: Boolean(req.headers.get("x-real-ip")),
