@@ -4,7 +4,10 @@ import hashlib
 import json
 import urllib.error
 import urllib.request
+from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[2]
+AUTHORITY = ROOT / "04_backend_supabase" / "student_access_valid_route_authority.json"
 ENDPOINT = "https://mceukeondizkwlpfxzgf.supabase.co/functions/v1/student-access-gateway"
 PUBLISHABLE_KEY = "sb_publishable_aggqgASWuWfgBJAlrRKoeg_Gg2qnjHQ"
 TOKEN_SEED = "fitnexus-stage29-valid-route-fixture-v1"
@@ -13,10 +16,24 @@ EXPECTED_PLAN_ID = "fd5762db-0a0c-54dc-81c9-2aeade199ee5"
 EXPECTED_EXERCISE_ID = "2ec1260b-88f2-5a2c-ba81-3433d2c147d5"
 FAILURE_CLASS = "BGF-VALID-STUDENT-ROUTE-UNPROVEN-187"
 DATA_LEAK_CLASS = "BGF-VALID-ROUTE-RESPONSE-DATA-LEAK-189"
+REEXECUTION_CLASS = "BGF-LIVE-PROOF-REEXECUTION-192"
+PENDING_STATE = "VALID_ROUTE_SYNTHETIC_FIXTURE_REMOTE_LIVE_PROOF_PENDING"
+SEALED_STATE = "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_PENDING"
+EXPECTED_SEALED_RUN = 32409055932
 
 
 def fail(message: str) -> None:
     raise SystemExit("STUDENT_ACCESS_VALID_ROUTE_LIVE=FAIL\n" + message)
+
+
+def authority() -> dict:
+    try:
+        value = json.loads(AUTHORITY.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        fail(f"authority unavailable: {type(exc).__name__}")
+    if not isinstance(value, dict):
+        fail("authority must be a JSON object")
+    return value
 
 
 def walk_keys(value: object) -> set[str]:
@@ -31,7 +48,61 @@ def walk_keys(value: object) -> set[str]:
     return keys
 
 
+def sealed_skip(auth: dict) -> bool:
+    state = auth.get("current_state")
+    if state != SEALED_STATE:
+        return False
+
+    if auth.get("proof_reexecution_failure_class") != REEXECUTION_CLASS:
+        fail("sealed proof lost reexecution failure-class authority")
+    receipt = auth.get("live_proof_receipt", {})
+    runtime = auth.get("runtime_verification", {})
+    if receipt.get("workflow_run_id") != EXPECTED_SEALED_RUN or receipt.get("result") != "PASS":
+        fail("sealed proof receipt is incomplete or drifted")
+    for key in (
+        "valid_token_edge_route_verified_live",
+        "student_rpc_forwarding_with_valid_token_verified_live",
+        "response_matches_synthetic_fixture",
+    ):
+        if runtime.get(key) is not True:
+            fail(f"sealed runtime proof missing: {key}")
+    if receipt.get("proof_reexecution_allowed") is not False:
+        fail(f"{REEXECUTION_CLASS} sealed proof permits reexecution")
+
+    print("STUDENT_ACCESS_VALID_ROUTE_LIVE=PASS")
+    print("LIVE_PROOF_MODE=SEALED_SKIP_REEXECUTION")
+    print(f"SEALED_WORKFLOW_RUN_ID={EXPECTED_SEALED_RUN}")
+    print(f"REEXECUTION_PREVENTION={REEXECUTION_CLASS}")
+    print("NETWORK_CALL_EXECUTED=false")
+    print("VALID_SYNTHETIC_POSSESSION_TOKEN=PREVIOUSLY_VERIFIED")
+    print("STUDENT_RPC_FORWARDING_WITH_VALID_TOKEN=VERIFIED")
+    print("RESPONSE_MATCHES_SYNTHETIC_FIXTURE=true")
+    print("FIXTURE_CLEANUP=REQUIRED")
+    print("FLUTTER_CUTOVER=false")
+    print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
+    print("LAUNCH_GATE_PROMOTION=DENIED")
+    return True
+
+
 def main() -> None:
+    auth = authority()
+    if sealed_skip(auth):
+        return
+    if auth.get("current_state") != PENDING_STATE:
+        fail(f"unsupported live-proof authority state: {auth.get('current_state')}")
+
+    runtime = auth.get("runtime_verification", {})
+    if runtime.get("fixture_deployed") is not True:
+        fail("synthetic fixture is not deployed")
+    for key in (
+        "valid_token_edge_route_verified_live",
+        "student_rpc_forwarding_with_valid_token_verified_live",
+        "response_matches_synthetic_fixture",
+        "cleanup_completed",
+    ):
+        if runtime.get(key) is not False:
+            fail(f"pending proof state self-attested: {key}")
+
     token = hashlib.sha256(TOKEN_SEED.encode("utf-8")).hexdigest()
     payload = json.dumps(
         {"action": "get_workout", "token": token},
@@ -152,6 +223,7 @@ def main() -> None:
         fail(f"{FAILURE_CLASS} exercise fixture mismatch: {mismatched_exercise}")
 
     print("STUDENT_ACCESS_VALID_ROUTE_LIVE=PASS")
+    print("LIVE_PROOF_MODE=EXECUTED")
     print("EDGE_RUNTIME_EXPECTED_VERSION=3")
     print("HTTP_STATUS=200")
     print("ACTION=get_workout")
