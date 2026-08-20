@@ -12,6 +12,7 @@ AUTHORITY = BACKEND / "student_access_valid_route_authority.json"
 GATEWAY_AUTHORITY = BACKEND / "student_access_edge_gateway_authority.json"
 LEDGER = BACKEND / "migration_ledger_authority.json"
 MIGRATION = BACKEND / "migrations" / "20260820180000_stage29_valid_student_route_fixture.sql"
+LIVE = BACKEND / "tools" / "verify_student_access_valid_route_live.py"
 
 FAILURE_CLASSES = (
     "BGF-VALID-STUDENT-ROUTE-UNPROVEN-187",
@@ -20,11 +21,14 @@ FAILURE_CLASSES = (
 )
 GUARD_CONTRADICTION_CLASS = "BGF-GUARD-REQUIRED-FORBIDDEN-CONTRADICTION-190"
 APPLY_COMPATIBILITY_CLASS = "BGF-MIGRATION-APPLY-SYNTHETIC-LITERAL-SCREENING-191"
+REEXECUTION_CLASS = "BGF-LIVE-PROOF-REEXECUTION-192"
 TOKEN_SEED = "fitnexus-stage29-valid-route-fixture-v1"
 FIXTURE_TOKEN = hashlib.sha256(TOKEN_SEED.encode("utf-8")).hexdigest()
 FIXTURE_REMOTE_VERSION = "20260820192415"
+SEALED_WORKFLOW_RUN = 32409055932
 STATE_REPO_ONLY = "VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY"
 STATE_REMOTE_PENDING = "VALID_ROUTE_SYNTHETIC_FIXTURE_REMOTE_LIVE_PROOF_PENDING"
+STATE_VERIFIED = "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_PENDING"
 FIXTURE_IDS = {
     "user_id": "2615749d-ffca-5319-84e0-b775578ceaf6",
     "organization_id": "13678787-eeae-5f6a-8828-190723a22594",
@@ -65,6 +69,7 @@ def main() -> None:
     gateway = read_json(GATEWAY_AUTHORITY)
     ledger = read_json(LEDGER)
     migration = read_text(MIGRATION)
+    live = read_text(LIVE)
     lower = migration.lower()
 
     if authority.get("schema_version") != 1 or authority.get("project_ref") != "mceukeondizkwlpfxzgf":
@@ -75,8 +80,10 @@ def main() -> None:
         fail("Stage 29 apply-compatibility failure class drifted")
 
     state = authority.get("current_state")
-    if state not in {STATE_REPO_ONLY, STATE_REMOTE_PENDING}:
+    if state not in {STATE_REPO_ONLY, STATE_REMOTE_PENDING, STATE_VERIFIED}:
         fail(f"unsupported Stage 29 fixture state: {state}")
+    if state == STATE_VERIFIED and authority.get("proof_reexecution_failure_class") != REEXECUTION_CLASS:
+        fail("verified state lost proof reexecution prevention class")
 
     fixture = authority.get("fixture_migration", {})
     common_fixture = {
@@ -152,7 +159,7 @@ def main() -> None:
             "edge_alert_delivery_verified": False,
             "rollback_verified": False,
         }
-    else:
+    elif state == STATE_REMOTE_PENDING:
         expected_runtime = {
             "fixture_deployed": True,
             "valid_token_edge_route_verified_live": False,
@@ -163,11 +170,22 @@ def main() -> None:
             "edge_alert_delivery_verified": False,
             "rollback_verified": False,
         }
+    else:
+        expected_runtime = {
+            "fixture_deployed": True,
+            "valid_token_edge_route_verified_live": True,
+            "student_rpc_forwarding_with_valid_token_verified_live": True,
+            "response_matches_synthetic_fixture": True,
+            "cleanup_completed": False,
+            "synthetic_business_rows_remaining": 14,
+            "edge_alert_delivery_verified": False,
+            "rollback_verified": False,
+        }
     for key, expected in expected_runtime.items():
         if runtime.get(key) != expected:
             fail(f"runtime verification drift for {key}")
 
-    if state == STATE_REMOTE_PENDING:
+    if state != STATE_REPO_ONLY:
         receipt = authority.get("fixture_apply_receipt", {})
         expected_counts = {
             "auth_users": 1,
@@ -191,6 +209,44 @@ def main() -> None:
             if receipt.get(key) != expected:
                 fail(f"remote fixture apply receipt drift for {key}")
 
+    if state == STATE_VERIFIED:
+        proof = authority.get("live_proof_receipt", {})
+        expected_proof = {
+            "workflow_run_id": SEALED_WORKFLOW_RUN,
+            "check_name": "Live valid student route proof",
+            "result": "PASS",
+            "edge_runtime_version": 3,
+            "http_status": 200,
+            "action": "get_workout",
+            "valid_synthetic_possession_token_accepted": True,
+            "student_rpc_forwarding_with_valid_token_verified": True,
+            "response_matches_synthetic_fixture": True,
+            "raw_synthetic_token_returned": False,
+            "raw_network_origin_returned": False,
+            "real_student_data_used": False,
+            "real_student_data_mutated": False,
+            "workout_sessions_after_proof": 0,
+            "workout_logs_after_proof": 0,
+            "workout_feedback_after_proof": 0,
+            "link_rate_buckets_after_proof": 1,
+            "command_receipts_after_proof": 0,
+            "security_events_after_proof": 0,
+            "security_signals_after_proof": 0,
+            "network_get_workout_buckets_observed_in_proof_minute": 2,
+            "proof_reexecution_allowed": False,
+        }
+        for key, expected in expected_proof.items():
+            if proof.get(key) != expected:
+                fail(f"live proof receipt drift for {key}")
+        for fragment in (
+            REEXECUTION_CLASS,
+            "SEALED_SKIP_REEXECUTION",
+            "NETWORK_CALL_EXECUTED=false",
+            f"EXPECTED_SEALED_RUN = {SEALED_WORKFLOW_RUN}",
+        ):
+            if fragment not in live:
+                fail(f"{REEXECUTION_CLASS} live verifier sealing drift: {fragment}")
+
     if gateway.get("current_state") != "EDGE_GATEWAY_V3_THRESHOLD_429_VERIFIED_SYNTHETIC_CLEANUP_COMPLETE_VALID_ROUTE_PROOF_PENDING":
         fail("Stage 28 prerequisite state drifted")
     gv = gateway.get("runtime_verification", {})
@@ -198,8 +254,10 @@ def main() -> None:
         fail("Edge v3 deployment prerequisite missing")
     if gv.get("invalid_token_network_origin_rate_limit_threshold_verified_live") is not True:
         fail("Stage 28 exact threshold prerequisite missing")
+    # Gateway authority is intentionally updated only after Stage 29 cleanup. Until then it
+    # remains the older fail-closed authority, while this Stage 29 authority owns the proof.
     if gv.get("student_rpc_forwarding_with_valid_token_verified_live") is not False:
-        fail("valid-route proof was already self-attested")
+        fail("gateway authority advanced before Stage 29 cleanup reconciliation")
 
     repo_only = {
         row.get("name")
@@ -303,7 +361,8 @@ def main() -> None:
     print("REPOSITORY_BEARER_LITERAL=false")
     print("DATABASE_TOKEN_STORAGE=SHA256_ONLY")
     print(f"FIXTURE_REMOTE_APPLIED={str(fixture.get('remote_applied')).lower()}")
-    print("LIVE_VALID_ROUTE_PROOF=PENDING")
+    print(f"LIVE_VALID_ROUTE_PROOF={'VERIFIED' if state == STATE_VERIFIED else 'PENDING'}")
+    print(f"LIVE_PROOF_REEXECUTION={'DENIED' if state == STATE_VERIFIED else 'PENDING'}")
     print("CLEANUP_MIGRATION=REQUIRED_AFTER_PROOF")
     print("FLUTTER_CUTOVER=false")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
