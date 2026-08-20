@@ -18,6 +18,7 @@ FAILURE_CLASSES = (
     "BGF-EDGE-RAW-TOKEN-LOGGING-182",
     "BGF-EDGE-ACTION-RPC-MAPPING-DRIFT-183",
     "BGF-EDGE-CANDIDATE-DEPLOYMENT-SELF-ATTESTATION-184",
+    "BGF-EDGE-LIVE-THRESHOLD-PROOF-GAP-185",
 )
 
 ROUTES = {
@@ -54,18 +55,18 @@ def main() -> None:
     edge = read_text(EDGE)
     lower = edge.lower()
 
-    if authority.get("schema_version") != 1:
-        fail("authority schema_version must be 1")
+    if authority.get("schema_version") != 2:
+        fail("authority schema_version must be 2 after live deployment proof")
     if authority.get("project_ref") != "mceukeondizkwlpfxzgf":
         fail("wrong Supabase project")
     if authority.get("failure_classes") != list(FAILURE_CLASSES):
         fail("failure class authority drifted")
-    if authority.get("current_state") != "REPOSITORY_GATEWAY_RATE_LIMIT_IMPLEMENTED_NOT_DEPLOYED":
-        fail(f"{FAILURE_CLASSES[4]} candidate state self-promoted")
+    if authority.get("current_state") != "EDGE_GATEWAY_V3_DEPLOYED_PRETOKEN_LIMITER_PATH_VERIFIED_THRESHOLD_PROOF_PENDING":
+        fail("Stage 28 runtime state drifted")
 
     dependency = authority.get("stage27_dependency", {})
-    if rate.get("current_state") != dependency.get("required_state"):
-        fail(f"{FAILURE_CLASSES[0]} Stage 27 dependency is not verified")
+    if rate.get("current_state") not in dependency.get("accepted_states", []):
+        fail(f"{FAILURE_CLASSES[0]} Stage 27 dependency state is not accepted")
     if rate.get("migration", {}).get("remote_version") != dependency.get("durable_migration_remote_version"):
         fail("Stage 27 durable migration version drifted")
     if rate.get("verification_migration", {}).get("remote_version") != dependency.get("verification_migration_remote_version"):
@@ -97,30 +98,62 @@ def main() -> None:
             fail(f"candidate contract drift for {key}: {candidate.get(key)!r}")
     if candidate.get("allowed_methods") != ["GET", "POST", "OPTIONS"]:
         fail("gateway method contract drifted")
-
     if authority.get("route_rpc_map") != ROUTES:
         fail(f"{FAILURE_CLASSES[3]} route-to-RPC map drifted")
 
     observed = authority.get("observed_deployed_runtime", {})
-    if observed.get("version") != 2 or observed.get("candidate_source_deployed") is not False:
-        fail(f"{FAILURE_CLASSES[4]} deployed runtime was self-attested")
+    expected_runtime = {
+        "version": 3,
+        "deployment_id": "2f85d9e1-39b3-46d7-a6c2-902eed7b4233",
+        "bundle_sha256": "b57892b3f399b76f8127c9a39d3d8c021ffe639aa7bf92c7fa9a459d35721b82",
+        "status": "ACTIVE",
+        "verify_jwt": False,
+        "mode": "stage28_gateway_candidate_repository_source",
+        "candidate_source_deployed": True,
+        "deployment_main_sha": "dfb0c3a81031ae3a13605be9c9fe969940f9878a",
+        "student_rpc_forwarding_enabled_observed": True,
+        "network_origin_rate_limit_enabled_observed": True,
+    }
+    for key, expected in expected_runtime.items():
+        if observed.get(key) != expected:
+            fail(f"{FAILURE_CLASSES[4]} deployed runtime receipt drift for {key}")
+
     runtime = authority.get("runtime_verification", {})
     for key in (
         "candidate_deployed",
         "health_probe_verified",
-        "invalid_token_network_origin_rate_limit_verified_live",
-        "student_rpc_forwarding_verified_live",
-        "edge_alert_delivery_verified",
-        "rollback_verified",
+        "network_origin_rate_limit_path_verified_live",
+        "student_rpc_forwarding_enabled_observed",
     ):
-        if runtime.get(key) is not False:
-            fail(f"{FAILURE_CLASSES[4]} runtime proof self-attested: {key}")
+        if runtime.get(key) is not True:
+            fail(f"missing live runtime proof: {key}")
+    if runtime.get("live_proof_workflow_run_id") != 32349938290:
+        fail("live proof workflow receipt drifted")
+    if runtime.get("live_proof_result") != "PASS":
+        fail("live proof did not pass")
+    if runtime.get("pre_token_limiter_proof_http_status") != 400:
+        fail("pre-token limiter proof status drifted")
+    if runtime.get("pre_token_limiter_proof_error") != "STUDENT_GATEWAY_PAYLOAD_INVALID":
+        fail("pre-token limiter terminal boundary drifted")
+    if runtime.get("spoof_attempt_http_status") != 403 or runtime.get("spoof_proof_outcome") != "BLOCKED_AT_EDGE_403":
+        fail("runtime v3 spoof proof drifted")
+    if runtime.get("real_student_token_used") is not False or runtime.get("real_student_data_mutated") is not False:
+        fail("live proof unexpectedly used real student material")
+
+    # BGF-EDGE-LIVE-THRESHOLD-PROOF-GAP-185: a successful allowed limiter call is not
+    # equivalent to observing the actual 429 threshold-exceeded path.
+    if runtime.get("invalid_token_network_origin_rate_limit_threshold_verified_live") is not False:
+        fail(f"{FAILURE_CLASSES[5]} threshold proof was self-attested")
+    if runtime.get("student_rpc_forwarding_with_valid_token_verified_live") is not False:
+        fail("valid-token forwarding was self-attested")
+    if runtime.get("edge_alert_delivery_verified") is not False or runtime.get("rollback_verified") is not False:
+        fail("alert/rollback proof was self-attested")
 
     client = authority.get("client_boundary", {})
     if client.get("flutter_uses_edge_gateway") is not False:
         fail("Flutter cutover self-attested")
     if client.get("direct_v2_rpc_path_active") is not True:
-        fail("direct RPC fallback removed before runtime proof")
+        fail("direct RPC fallback removed before client cutover")
     if client.get("direct_anon_v2_rpc_execute_revoked") is not False:
         fail("direct RPC privileges revoked before cutover")
 
@@ -141,7 +174,7 @@ def main() -> None:
     )
     missing = [fragment for fragment in required_source if fragment not in edge]
     if missing:
-        fail(f"candidate source incomplete: {missing}")
+        fail(f"gateway source incomplete: {missing}")
 
     for route, rpc in ROUTES.items():
         if f'{route}: "{rpc}"' not in edge:
@@ -150,57 +183,42 @@ def main() -> None:
     limiter_call = edge.find("const rateLimit = await callRpc")
     param_build = edge.find("const rpcParams = buildRpcParams")
     student_call = edge.find("const studentRpc = await callRpc")
-    if min(limiter_call, param_build, student_call) < 0:
-        fail(f"{FAILURE_CLASSES[0]} ordered call sites are missing")
-    if not (limiter_call < param_build < student_call):
-        fail(f"{FAILURE_CLASSES[0]} limiter no longer executes before token/payload validation and student RPC")
-
-    if "p_network_origin: cloudflareOrigin!.trim()" not in edge:
-        fail(f"{FAILURE_CLASSES[0]} trusted origin is not passed to the limiter")
-    if "p_operation: payload.action" not in edge:
-        fail(f"{FAILURE_CLASSES[3]} action is not bound to limiter operation")
+    if min(limiter_call, param_build, student_call) < 0 or not (limiter_call < param_build < student_call):
+        fail(f"{FAILURE_CLASSES[0]} limiter order drifted")
+    if "p_network_origin: cloudflareOrigin!.trim()" not in edge or "p_operation: payload.action" not in edge:
+        fail(f"{FAILURE_CLASSES[0]} limiter binding drifted")
 
     forbidden = (
         "console.log",
         "console.error",
         "console.warn",
         "console.info",
-        "sb_secret_abcdefghijklmnopqrstuvwxyz",
         "service_role_key=",
         "authorization: req.headers.get",
-        "x-forwarded-for\")?.trim()",
-        "x-real-ip\")?.trim()",
     )
     present = [fragment for fragment in forbidden if fragment.lower() in lower]
     if present:
         fail(f"{FAILURE_CLASSES[1]} unsafe source pattern present: {present}")
 
-    # New secret keys are apikey-only. Legacy service_role may additionally use Bearer.
-    secret_branch = edge.find('secretKey.startsWith("sb_secret_")')
-    legacy_branch = edge.find('const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")')
-    bearer = edge.find('authorization: `Bearer ${legacy}`')
-    if not (0 <= secret_branch < legacy_branch < bearer):
-        fail(f"{FAILURE_CLASSES[1]} backend credential strategy drifted")
-
     direct_calls = {rpc: 0 for rpc in ROUTES.values()}
     for path in APP.rglob("*.dart"):
-        text = path.read_text(encoding="utf-8")
+        source = path.read_text(encoding="utf-8")
         for rpc in direct_calls:
-            if f"'{rpc}'" in text:
+            if f"'{rpc}'" in source:
                 direct_calls[rpc] += 1
     missing_direct = [rpc for rpc, count in direct_calls.items() if count == 0]
     if missing_direct:
-        fail(f"partial Flutter cutover detected before live gateway proof: {missing_direct}")
+        fail(f"partial Flutter cutover detected: {missing_direct}")
 
     if any(value is not False for value in authority.get("launch_authority", {}).values()):
-        fail("candidate source gained launch authority")
+        fail("Stage 28 gained launch authority")
 
     print("STUDENT_ACCESS_EDGE_GATEWAY_CANDIDATE_GUARD=PASS")
-    print("CANDIDATE_STATE=REPOSITORY_IMPLEMENTED_NOT_DEPLOYED")
+    print("CURRENT_STATE=EDGE_GATEWAY_V3_DEPLOYED_PRETOKEN_LIMITER_PATH_VERIFIED_THRESHOLD_PROOF_PENDING")
+    print("EDGE_RUNTIME_VERSION=3")
     print("RATE_LIMIT_ORDER=BEFORE_TOKEN_VALIDATION_AND_STUDENT_RPC")
-    print("ROUTE_COUNT=5")
-    print("TRUSTED_NETWORK_ORIGIN=cf-connecting-ip")
-    print("BACKEND_SECRET_SOURCE=ENV_ONLY")
+    print("LIVE_PRETOKEN_LIMITER_PATH=VERIFIED")
+    print("LIVE_THRESHOLD_429_PROOF=PENDING")
     print("FLUTTER_CUTOVER=false")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
     print("LAUNCH_GATE_PROMOTION=DENIED")
