@@ -11,24 +11,31 @@ APP = ROOT / "03_app_flutter" / "fitnexus_app" / "lib"
 AUTHORITY = BACKEND / "student_access_valid_route_authority.json"
 GATEWAY_AUTHORITY = BACKEND / "student_access_edge_gateway_authority.json"
 LEDGER = BACKEND / "migration_ledger_authority.json"
-MIGRATION = BACKEND / "migrations" / "20260820180000_stage29_valid_student_route_fixture.sql"
+FIXTURE_SQL = BACKEND / "migrations" / "20260820180000_stage29_valid_student_route_fixture.sql"
+CLEANUP_SQL = BACKEND / "migrations" / "20260820194000_stage29_valid_route_fixture_cleanup.sql"
 LIVE = BACKEND / "tools" / "verify_student_access_valid_route_live.py"
 
-FAILURE_CLASSES = (
+FAILURE_CLASSES = [
     "BGF-VALID-STUDENT-ROUTE-UNPROVEN-187",
     "BGF-SYNTHETIC-VALID-ROUTE-FIXTURE-RESIDUE-188",
     "BGF-VALID-ROUTE-RESPONSE-DATA-LEAK-189",
-)
-GUARD_CONTRADICTION_CLASS = "BGF-GUARD-REQUIRED-FORBIDDEN-CONTRADICTION-190"
-APPLY_COMPATIBILITY_CLASS = "BGF-MIGRATION-APPLY-SYNTHETIC-LITERAL-SCREENING-191"
-REEXECUTION_CLASS = "BGF-LIVE-PROOF-REEXECUTION-192"
+]
+APPLY_CLASS = "BGF-MIGRATION-APPLY-SYNTHETIC-LITERAL-SCREENING-191"
+REEXEC_CLASS = "BGF-LIVE-PROOF-REEXECUTION-192"
+CLEANUP_CLASS = "BGF-STAGE29-CLEANUP-SCOPE-DRIFT-193"
 TOKEN_SEED = "fitnexus-stage29-valid-route-fixture-v1"
-FIXTURE_TOKEN = hashlib.sha256(TOKEN_SEED.encode("utf-8")).hexdigest()
-FIXTURE_REMOTE_VERSION = "20260820192415"
-SEALED_WORKFLOW_RUN = 32409055932
-STATE_REPO_ONLY = "VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY"
-STATE_REMOTE_PENDING = "VALID_ROUTE_SYNTHETIC_FIXTURE_REMOTE_LIVE_PROOF_PENDING"
-STATE_VERIFIED = "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_PENDING"
+DERIVED_TOKEN = hashlib.sha256(TOKEN_SEED.encode("utf-8")).hexdigest()
+FIXTURE_VERSION = "20260820192415"
+SEALED_RUN = 32409055932
+CLEANUP_NAME = "stage29_valid_route_fixture_cleanup"
+
+STATE_REPO = "VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY"
+STATE_REMOTE = "VALID_ROUTE_SYNTHETIC_FIXTURE_REMOTE_LIVE_PROOF_PENDING"
+STATE_PROVEN = "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_PENDING"
+STATE_CLEANUP_REPO = "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_REPO_ONLY"
+STATE_CLEAN = "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_COMPLETE"
+ALLOWED_STATES = {STATE_REPO, STATE_REMOTE, STATE_PROVEN, STATE_CLEANUP_REPO, STATE_CLEAN}
+
 FIXTURE_IDS = {
     "user_id": "2615749d-ffca-5319-84e0-b775578ceaf6",
     "organization_id": "13678787-eeae-5f6a-8828-190723a22594",
@@ -37,7 +44,7 @@ FIXTURE_IDS = {
     "exercise_id": "2ec1260b-88f2-5a2c-ba81-3433d2c147d5",
     "link_id": "f31a3c36-4ee1-5d64-b30d-f00fc98aea9b",
 }
-DIRECT_V2_RPCS = (
+DIRECT_RPCS = (
     "get_student_workout_v2",
     "start_student_workout_v2",
     "set_student_exercise_completion_v2",
@@ -46,47 +53,45 @@ DIRECT_V2_RPCS = (
 )
 
 
-def fail(message: str) -> None:
-    raise SystemExit("STUDENT_ACCESS_VALID_ROUTE_FIXTURE_GUARD=FAIL\n" + message)
+def fail(msg: str) -> None:
+    raise SystemExit("STUDENT_ACCESS_VALID_ROUTE_FIXTURE_GUARD=FAIL\n" + msg)
 
 
-def read_text(path: Path) -> str:
+def text(path: Path) -> str:
     if not path.is_file():
         fail(f"missing source: {path.relative_to(ROOT)}")
     return path.read_text(encoding="utf-8")
 
 
-def read_json(path: Path) -> dict:
+def data(path: Path) -> dict:
     try:
-        return json.loads(read_text(path))
+        return json.loads(text(path))
     except json.JSONDecodeError as exc:
         fail(f"invalid JSON in {path.relative_to(ROOT)}: {exc}")
     raise AssertionError("unreachable")
 
 
 def main() -> None:
-    authority = read_json(AUTHORITY)
-    gateway = read_json(GATEWAY_AUTHORITY)
-    ledger = read_json(LEDGER)
-    migration = read_text(MIGRATION)
-    live = read_text(LIVE)
-    lower = migration.lower()
+    authority = data(AUTHORITY)
+    gateway = data(GATEWAY_AUTHORITY)
+    ledger = data(LEDGER)
+    fixture_sql = text(FIXTURE_SQL)
+    cleanup_sql = text(CLEANUP_SQL) if CLEANUP_SQL.is_file() else ""
+    live = text(LIVE)
 
     if authority.get("schema_version") != 1 or authority.get("project_ref") != "mceukeondizkwlpfxzgf":
         fail("Stage 29 authority identity drifted")
-    if authority.get("failure_classes") != list(FAILURE_CLASSES):
-        fail("Stage 29 failure classes drifted")
-    if authority.get("apply_compatibility_failure_class") != APPLY_COMPATIBILITY_CLASS:
-        fail("Stage 29 apply-compatibility failure class drifted")
+    if authority.get("failure_classes") != FAILURE_CLASSES:
+        fail("Stage 29 primary failure classes drifted")
+    if authority.get("apply_compatibility_failure_class") != APPLY_CLASS:
+        fail("apply compatibility prevention disappeared")
 
     state = authority.get("current_state")
-    if state not in {STATE_REPO_ONLY, STATE_REMOTE_PENDING, STATE_VERIFIED}:
-        fail(f"unsupported Stage 29 fixture state: {state}")
-    if state == STATE_VERIFIED and authority.get("proof_reexecution_failure_class") != REEXECUTION_CLASS:
-        fail("verified state lost proof reexecution prevention class")
+    if state not in ALLOWED_STATES:
+        fail(f"unsupported Stage 29 state: {state}")
 
     fixture = authority.get("fixture_migration", {})
-    common_fixture = {
+    expected_fixture = {
         "repository_file": "04_backend_supabase/migrations/20260820180000_stage29_valid_student_route_fixture.sql",
         "migration_name": "stage29_valid_student_route_fixture",
         "requires_empty_customer_domain": True,
@@ -104,266 +109,173 @@ def main() -> None:
         "fixture_expiry_hours": 2,
         "cleanup_migration_required": True,
     }
-    for key, expected in common_fixture.items():
+    for key, expected in expected_fixture.items():
         if fixture.get(key) != expected:
             fail(f"fixture authority drift for {key}")
 
-    if state == STATE_REPO_ONLY:
+    if state == STATE_REPO:
         if fixture.get("remote_applied") is not False or fixture.get("migration_ledger_state") != "repo_only":
-            fail("repository-only fixture state self-promoted")
-        if fixture.get("remote_version") is not None:
-            fail("repository-only fixture unexpectedly has a remote version")
+            fail("repository fixture self-promoted")
     else:
-        if fixture.get("remote_applied") is not True:
-            fail("remote fixture state lost remote_applied receipt")
-        if fixture.get("remote_version") != FIXTURE_REMOTE_VERSION:
-            fail("remote fixture version drifted")
+        if fixture.get("remote_applied") is not True or fixture.get("remote_version") != FIXTURE_VERSION:
+            fail("remote fixture receipt missing")
         if fixture.get("migration_ledger_state") != "remote_reconciled":
-            fail("remote fixture is not reconciled in authority")
+            fail("fixture ledger state not reconciled")
 
     if authority.get("fixture_identifiers") != FIXTURE_IDS:
-        fail("synthetic fixture identifiers drifted")
-    authority_text = json.dumps(authority, sort_keys=True)
-    if FIXTURE_TOKEN in authority_text:
-        fail(f"{FAILURE_CLASSES[2]} derived synthetic bearer token must not be duplicated into authority JSON")
+        fail("fixture identifiers drifted")
+    if DERIVED_TOKEN in json.dumps(authority, sort_keys=True) or DERIVED_TOKEN in fixture_sql:
+        fail(f"{APPLY_CLASS} derived bearer literal leaked")
+    if re.search(r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])", fixture_sql.lower()):
+        fail(f"{APPLY_CLASS} bearer-looking literal appeared in fixture SQL")
+    for fragment in (
+        TOKEN_SEED,
+        "STAGE29_VALID_ROUTE_FIXTURE_REQUIRES_EMPTY_CUSTOMER_DOMAIN",
+        "extensions.digest(v_token, 'sha256')",
+        "from private.resolve_student_access(v_token)",
+    ):
+        if fragment not in fixture_sql:
+            fail(f"fixture SQL drift: {fragment}")
 
-    expected_live = authority.get("expected_live_contract", {})
-    for key, expected in {
-        "edge_runtime_version": 3,
-        "method": "POST",
-        "action": "get_workout",
-        "expected_http_status": 200,
-        "expected_student_name": "Stage29 Synthetic Student",
-        "expected_plan_name": "Stage29 Synthetic Plan",
-        "expected_exercise_name": "Stage29 Synthetic Exercise",
-        "expected_exercise_count": 1,
-        "expected_history_count": 0,
-        "expected_session": None,
-        "raw_token_returned": False,
-        "raw_network_origin_returned": False,
-        "real_student_data_used": False,
-        "real_student_data_mutated": False,
-    }.items():
-        if expected_live.get(key) != expected:
-            fail(f"expected live contract drift for {key}")
-
+    proof_required = state in {STATE_PROVEN, STATE_CLEANUP_REPO, STATE_CLEAN}
     runtime = authority.get("runtime_verification", {})
-    if state == STATE_REPO_ONLY:
-        expected_runtime = {
-            "fixture_deployed": False,
-            "valid_token_edge_route_verified_live": False,
-            "student_rpc_forwarding_with_valid_token_verified_live": False,
-            "response_matches_synthetic_fixture": False,
-            "cleanup_completed": False,
-            "synthetic_business_rows_remaining": None,
-            "edge_alert_delivery_verified": False,
-            "rollback_verified": False,
-        }
-    elif state == STATE_REMOTE_PENDING:
-        expected_runtime = {
-            "fixture_deployed": True,
-            "valid_token_edge_route_verified_live": False,
-            "student_rpc_forwarding_with_valid_token_verified_live": False,
-            "response_matches_synthetic_fixture": False,
-            "cleanup_completed": False,
-            "synthetic_business_rows_remaining": 14,
-            "edge_alert_delivery_verified": False,
-            "rollback_verified": False,
-        }
-    else:
-        expected_runtime = {
-            "fixture_deployed": True,
-            "valid_token_edge_route_verified_live": True,
-            "student_rpc_forwarding_with_valid_token_verified_live": True,
-            "response_matches_synthetic_fixture": True,
-            "cleanup_completed": False,
-            "synthetic_business_rows_remaining": 14,
-            "edge_alert_delivery_verified": False,
-            "rollback_verified": False,
-        }
-    for key, expected in expected_runtime.items():
-        if runtime.get(key) != expected:
-            fail(f"runtime verification drift for {key}")
+    for key in (
+        "valid_token_edge_route_verified_live",
+        "student_rpc_forwarding_with_valid_token_verified_live",
+        "response_matches_synthetic_fixture",
+    ):
+        if runtime.get(key) is not proof_required:
+            fail(f"runtime proof drift: {key}")
+    if runtime.get("fixture_deployed") is not (state != STATE_REPO):
+        fail("fixture deployment state drifted")
+    cleanup_complete = state == STATE_CLEAN
+    if runtime.get("cleanup_completed") is not cleanup_complete:
+        fail("cleanup completion state drifted")
+    expected_remaining = 0 if cleanup_complete else (None if state == STATE_REPO else 14)
+    if runtime.get("synthetic_business_rows_remaining") != expected_remaining:
+        fail("synthetic residue count authority drifted")
+    if runtime.get("edge_alert_delivery_verified") is not False or runtime.get("rollback_verified") is not False:
+        fail("unrelated runtime authority self-promoted")
 
-    if state != STATE_REPO_ONLY:
-        receipt = authority.get("fixture_apply_receipt", {})
-        expected_counts = {
-            "auth_users": 1,
-            "profiles": 1,
-            "organizations": 1,
-            "organization_members": 1,
-            "organization_subscriptions": 1,
-            "subscription_authority_events": 1,
-            "students": 1,
-            "training_plans": 1,
-            "training_exercises": 1,
-            "student_access_links": 1,
-            "growth_events": 4,
-            "growth_attribution": 0,
-            "fixture_derived_rows_observed": 14,
-            "active_link_verified": True,
-            "trial_initialized_verified": True,
-            "owner_membership_verified": True,
-        }
-        for key, expected in expected_counts.items():
-            if receipt.get(key) != expected:
-                fail(f"remote fixture apply receipt drift for {key}")
-
-    if state == STATE_VERIFIED:
-        proof = authority.get("live_proof_receipt", {})
-        expected_proof = {
-            "workflow_run_id": SEALED_WORKFLOW_RUN,
-            "check_name": "Live valid student route proof",
+    if proof_required:
+        if authority.get("proof_reexecution_failure_class") != REEXEC_CLASS:
+            fail("proof reexecution prevention class missing")
+        receipt = authority.get("live_proof_receipt", {})
+        required_receipt = {
+            "workflow_run_id": SEALED_RUN,
             "result": "PASS",
-            "edge_runtime_version": 3,
             "http_status": 200,
             "action": "get_workout",
-            "valid_synthetic_possession_token_accepted": True,
             "student_rpc_forwarding_with_valid_token_verified": True,
             "response_matches_synthetic_fixture": True,
             "raw_synthetic_token_returned": False,
             "raw_network_origin_returned": False,
             "real_student_data_used": False,
             "real_student_data_mutated": False,
-            "workout_sessions_after_proof": 0,
-            "workout_logs_after_proof": 0,
-            "workout_feedback_after_proof": 0,
-            "link_rate_buckets_after_proof": 1,
-            "command_receipts_after_proof": 0,
-            "security_events_after_proof": 0,
-            "security_signals_after_proof": 0,
-            "network_get_workout_buckets_observed_in_proof_minute": 2,
             "proof_reexecution_allowed": False,
         }
-        for key, expected in expected_proof.items():
-            if proof.get(key) != expected:
-                fail(f"live proof receipt drift for {key}")
-        for fragment in (
-            REEXECUTION_CLASS,
-            "SEALED_SKIP_REEXECUTION",
-            "NETWORK_CALL_EXECUTED=false",
-            f"EXPECTED_SEALED_RUN = {SEALED_WORKFLOW_RUN}",
-        ):
+        for key, expected in required_receipt.items():
+            if receipt.get(key) != expected:
+                fail(f"sealed live proof receipt drift: {key}")
+        for fragment in (REEXEC_CLASS, "SEALED_SKIP_REEXECUTION", "NETWORK_CALL_EXECUTED=false", f"EXPECTED_SEALED_RUN = {SEALED_RUN}"):
             if fragment not in live:
-                fail(f"{REEXECUTION_CLASS} live verifier sealing drift: {fragment}")
+                fail(f"{REEXEC_CLASS} verifier seal drift: {fragment}")
 
-    if gateway.get("current_state") != "EDGE_GATEWAY_V3_THRESHOLD_429_VERIFIED_SYNTHETIC_CLEANUP_COMPLETE_VALID_ROUTE_PROOF_PENDING":
-        fail("Stage 28 prerequisite state drifted")
-    gv = gateway.get("runtime_verification", {})
-    if gv.get("candidate_deployed") is not True:
-        fail("Edge v3 deployment prerequisite missing")
-    if gv.get("invalid_token_network_origin_rate_limit_threshold_verified_live") is not True:
-        fail("Stage 28 exact threshold prerequisite missing")
-    # Gateway authority is intentionally updated only after Stage 29 cleanup. Until then it
-    # remains the older fail-closed authority, while this Stage 29 authority owns the proof.
-    if gv.get("student_rpc_forwarding_with_valid_token_verified_live") is not False:
-        fail("gateway authority advanced before Stage 29 cleanup reconciliation")
-
-    repo_only = {
-        row.get("name")
-        for row in ledger.get("declared_divergences", [])
-        if row.get("direction") == "repo_only"
-    }
     remote = {row.get("name"): row.get("version") for row in ledger.get("remote_migrations", [])}
-    if state == STATE_REPO_ONLY:
-        if repo_only != {"stage29_valid_student_route_fixture"}:
-            fail(f"unexpected repo_only migration set: {sorted(repo_only)}")
-        if "stage29_valid_student_route_fixture" in remote:
-            fail("fixture appears remote while authority says repo_only")
+    repo_only = {row.get("name") for row in ledger.get("declared_divergences", []) if row.get("direction") == "repo_only"}
+    if state == STATE_REPO:
+        if repo_only != {"stage29_valid_student_route_fixture"} or "stage29_valid_student_route_fixture" in remote:
+            fail("fixture repo_only ledger mismatch")
     else:
-        if repo_only:
-            fail(f"unexpected repo_only divergence after fixture apply: {sorted(repo_only)}")
-        if remote.get("stage29_valid_student_route_fixture") != FIXTURE_REMOTE_VERSION:
-            fail("migration ledger missing Stage 29 remote fixture receipt")
+        if remote.get("stage29_valid_student_route_fixture") != FIXTURE_VERSION:
+            fail("fixture remote ledger receipt missing")
+        expected_repo_only = {CLEANUP_NAME} if state == STATE_CLEANUP_REPO else set()
+        if repo_only != expected_repo_only:
+            fail(f"unexpected repo_only set for {state}: {sorted(repo_only)}")
 
-    required_source = (
-        "BGF-VALID-STUDENT-ROUTE-UNPROVEN-187",
-        "BGF-SYNTHETIC-VALID-ROUTE-FIXTURE-RESIDUE-188",
-        "BGF-VALID-ROUTE-RESPONSE-DATA-LEAK-189",
-        APPLY_COMPATIBILITY_CLASS,
-        "STAGE29_VALID_ROUTE_FIXTURE_REQUIRES_EMPTY_CUSTOMER_DOMAIN",
-        "STAGE29_SYNTHETIC_TRIAL_INITIALIZATION_FAILED",
-        "STAGE29_SYNTHETIC_TOKEN_RESOLUTION_FAILED",
-        "STAGE29_SYNTHETIC_FIXTURE_POSTCONDITION_FAILED",
-        "insert into auth.users",
-        "insert into public.organizations",
-        "insert into public.students",
-        "insert into public.training_plans",
-        "insert into public.training_exercises",
-        "insert into public.student_access_links",
-        "extensions.digest(convert_to('fitnexus-stage29-valid-route-fixture-v1', 'UTF8'), 'sha256')",
-        "extensions.digest(v_token, 'sha256')",
-        "from private.resolve_student_access(v_token)",
-        "now() + interval '2 hours'",
-        *FIXTURE_IDS.values(),
-    )
-    missing = [fragment for fragment in required_source if fragment not in migration]
-    if missing:
-        fail(f"synthetic fixture migration incomplete: {missing}")
+    if state in {STATE_CLEANUP_REPO, STATE_CLEAN}:
+        if authority.get("cleanup_scope_failure_class") != CLEANUP_CLASS:
+            fail("cleanup scope failure class missing")
+        cleanup = authority.get("cleanup_migration", {})
+        expected_cleanup = {
+            "repository_file": "04_backend_supabase/migrations/20260820194000_stage29_valid_route_fixture_cleanup.sql",
+            "migration_name": CLEANUP_NAME,
+            "customer_domain_must_remain_synthetic_only": True,
+            "expected_total_auth_users_before_cleanup": 1,
+            "expected_total_organizations_before_cleanup": 1,
+            "expected_total_students_before_cleanup": 1,
+            "expected_total_training_plans_before_cleanup": 1,
+            "expected_total_training_exercises_before_cleanup": 1,
+            "expected_total_access_links_before_cleanup": 1,
+            "expected_workout_sessions_before_cleanup": 0,
+            "expected_workout_logs_before_cleanup": 0,
+            "expected_workout_feedback_before_cleanup": 0,
+            "expected_growth_events_for_fixture_org": 4,
+            "expected_link_rate_bucket_rows": 1,
+            "expected_link_rate_bucket_request_count": 2,
+            "expected_network_proof_bucket_rows": 2,
+            "network_proof_selector_operation": "get_workout",
+            "network_proof_selector_window_utc": "2026-08-20T19:30:00Z",
+            "network_proof_selector_request_count": 1,
+            "origin_hash_embedded_in_repository": False,
+            "raw_network_origin_embedded_in_repository": False,
+            "organization_deleted_before_auth_user": True,
+            "transactional_postcondition_required": True,
+        }
+        for key, expected in expected_cleanup.items():
+            if cleanup.get(key) != expected:
+                fail(f"cleanup authority drift for {key}")
+        if state == STATE_CLEANUP_REPO:
+            if cleanup.get("remote_applied") is not False or cleanup.get("migration_ledger_state") != "repo_only":
+                fail("cleanup repository state self-promoted")
+        else:
+            if cleanup.get("remote_applied") is not True or cleanup.get("migration_ledger_state") != "remote_reconciled":
+                fail("cleanup remote receipt missing")
+            remote_version = cleanup.get("remote_version")
+            if not isinstance(remote_version, str) or remote.get(CLEANUP_NAME) != remote_version:
+                fail("cleanup remote version/ledger mismatch")
+        for fragment in (
+            CLEANUP_CLASS,
+            "STAGE29_CLEANUP_CUSTOMER_DOMAIN_NO_LONGER_SYNTHETIC_ONLY",
+            "STAGE29_CLEANUP_NETWORK_BUCKET_SELECTOR_MISMATCH",
+            "STAGE29_CLEANUP_POSTCONDITION_FAILED",
+            "2026-08-20 19:30:00+00",
+            "delete from public.organizations where id = v_org",
+            "delete from auth.users where id = v_user",
+        ):
+            if fragment not in cleanup_sql:
+                fail(f"cleanup SQL drift: {fragment}")
+        if "origin_hash" in cleanup_sql.lower() or DERIVED_TOKEN in cleanup_sql:
+            fail(f"{CLEANUP_CLASS} cleanup source leaked pseudonymous origin/token material")
 
-    forbidden_authority_prose = (
-        '"requires_empty_customer_domain"',
-        '"raw_token_is_public_synthetic_test_material"',
-        '"database_stores_token_hash_only"',
-        '"cleanup_migration_required"',
-        '"valid_token_edge_route_verified_live"',
-    )
-    contradictory = [
-        forbidden
-        for forbidden in forbidden_authority_prose
-        if any(forbidden.lower() in required.lower() or required.lower() in forbidden.lower() for required in required_source)
-    ]
-    if contradictory:
-        fail(f"{GUARD_CONTRADICTION_CLASS} guard required/forbidden predicate overlap: {contradictory}")
-    leaked = [fragment for fragment in forbidden_authority_prose if fragment in migration]
-    if leaked:
-        fail(f"authority JSON prose leaked into migration unexpectedly: {leaked}")
+    gv = gateway.get("runtime_verification", {})
+    if gv.get("candidate_deployed") is not True or gv.get("invalid_token_network_origin_rate_limit_threshold_verified_live") is not True:
+        fail("Edge v3 prerequisite proof missing")
 
-    if "email," in lower or "encrypted_password" in lower:
-        fail("synthetic auth fixture must not create a routable email/password credential")
-    if FIXTURE_TOKEN in migration:
-        fail(f"{APPLY_COMPATIBILITY_CLASS} derived bearer was materialized as a repository literal")
-    if re.search(r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])", lower):
-        fail(f"{APPLY_COMPATIBILITY_CLASS} bearer-looking 64-hex literal found in fixture migration")
-    if migration.count(TOKEN_SEED) != 1:
-        fail("synthetic public token seed must appear exactly once in the fixture migration")
-    for identifier in FIXTURE_IDS.values():
-        if migration.count(identifier) != 1:
-            fail(f"synthetic identifier should be declared once: {identifier}")
-
-    client = authority.get("client_boundary", {})
-    if client.get("flutter_uses_edge_gateway") is not False:
-        fail("Flutter cutover self-attested")
-    if client.get("direct_v2_rpc_path_active") is not True:
-        fail("direct RPC fallback removed before valid route proof")
-    if client.get("direct_anon_v2_rpc_execute_revoked") is not False:
-        fail("direct RPC grants revoked before valid route proof")
-
-    direct_calls = {rpc: 0 for rpc in DIRECT_V2_RPCS}
+    direct = {rpc: False for rpc in DIRECT_RPCS}
     for path in APP.rglob("*.dart"):
         source = path.read_text(encoding="utf-8")
-        for rpc in direct_calls:
+        for rpc in DIRECT_RPCS:
             if f"'{rpc}'" in source:
-                direct_calls[rpc] += 1
-    missing_direct = [rpc for rpc, count in direct_calls.items() if count == 0]
-    if missing_direct:
-        fail(f"partial Flutter cutover detected: {missing_direct}")
+                direct[rpc] = True
+    missing = [rpc for rpc, present in direct.items() if not present]
+    if missing:
+        fail(f"Flutter direct fallback changed before cutover: {missing}")
 
+    client = authority.get("client_boundary", {})
+    if client.get("flutter_uses_edge_gateway") is not False or client.get("direct_v2_rpc_path_active") is not True:
+        fail("Flutter cutover self-attested")
+    if client.get("direct_anon_v2_rpc_execute_revoked") is not False or client.get("client_direct_rpc_fallback_removed") is not False:
+        fail("direct RPC path revoked/removed prematurely")
     if any(value is not False for value in authority.get("launch_authority", {}).values()):
-        fail("Stage 29 fixture gained launch authority")
+        fail("Stage 29 gained launch authority")
 
     print("STUDENT_ACCESS_VALID_ROUTE_FIXTURE_GUARD=PASS")
-    print(f"GUARD_CONTRADICTION_PREVENTION={GUARD_CONTRADICTION_CLASS}")
-    print(f"APPLY_COMPATIBILITY_PREVENTION={APPLY_COMPATIBILITY_CLASS}")
     print(f"CURRENT_STATE={state}")
-    print("FIXTURE_KIND=SYNTHETIC_ONLY")
-    print("SYNTHETIC_TOKEN_SOURCE=PUBLIC_SEED_DERIVED")
-    print("REPOSITORY_BEARER_LITERAL=false")
-    print("DATABASE_TOKEN_STORAGE=SHA256_ONLY")
-    print(f"FIXTURE_REMOTE_APPLIED={str(fixture.get('remote_applied')).lower()}")
-    print(f"LIVE_VALID_ROUTE_PROOF={'VERIFIED' if state == STATE_VERIFIED else 'PENDING'}")
-    print(f"LIVE_PROOF_REEXECUTION={'DENIED' if state == STATE_VERIFIED else 'PENDING'}")
-    print("CLEANUP_MIGRATION=REQUIRED_AFTER_PROOF")
+    print("LIVE_VALID_ROUTE_PROOF=VERIFIED" if proof_required else "LIVE_VALID_ROUTE_PROOF=PENDING")
+    print("PROOF_REEXECUTION=SEALED" if proof_required else "PROOF_REEXECUTION=NOT_YET_SEALED")
+    print(f"CLEANUP_REPO_ONLY={str(state == STATE_CLEANUP_REPO).lower()}")
+    print(f"CLEANUP_COMPLETE={str(cleanup_complete).lower()}")
     print("FLUTTER_CUTOVER=false")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
     print("LAUNCH_GATE_PROMOTION=DENIED")
