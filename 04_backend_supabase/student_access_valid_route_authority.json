@@ -8,13 +8,14 @@
   ],
   "apply_compatibility_failure_class": "BGF-MIGRATION-APPLY-SYNTHETIC-LITERAL-SCREENING-191",
   "purpose": "Repository-first authority for a controlled synthetic valid-possession-token GET proof through the deployed Edge v3 student gateway, without mutating real student data or prematurely cutting over Flutter.",
-  "current_state": "VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY",
-  "baseline_main_sha": "031178c4b0ea526c7ade1667261cd629c8bb1aa8",
+  "current_state": "VALID_ROUTE_SYNTHETIC_FIXTURE_REMOTE_LIVE_PROOF_PENDING",
+  "baseline_main_sha": "0036ec710017311428f38e533266dfa69c0eb21d",
   "fixture_migration": {
     "repository_file": "04_backend_supabase/migrations/20260820180000_stage29_valid_student_route_fixture.sql",
     "migration_name": "stage29_valid_student_route_fixture",
-    "remote_applied": false,
-    "migration_ledger_state": "repo_only",
+    "remote_applied": true,
+    "remote_version": "20260820192415",
+    "migration_ledger_state": "remote_reconciled",
     "requires_empty_customer_domain": true,
     "synthetic_auth_user": true,
     "synthetic_organization": true,
@@ -38,6 +39,25 @@
     "exercise_id": "2ec1260b-88f2-5a2c-ba81-3433d2c147d5",
     "link_id": "f31a3c36-4ee1-5d64-b30d-f00fc98aea9b"
   },
+  "fixture_apply_receipt": {
+    "observed_at_utc": "2026-08-20T19:26:31Z",
+    "auth_users": 1,
+    "profiles": 1,
+    "organizations": 1,
+    "organization_members": 1,
+    "organization_subscriptions": 1,
+    "subscription_authority_events": 1,
+    "students": 1,
+    "training_plans": 1,
+    "training_exercises": 1,
+    "student_access_links": 1,
+    "growth_events": 4,
+    "growth_attribution": 0,
+    "fixture_derived_rows_observed": 14,
+    "active_link_verified": true,
+    "trial_initialized_verified": true,
+    "owner_membership_verified": true
+  },
   "expected_live_contract": {
     "edge_runtime_version": 3,
     "method": "POST",
@@ -55,12 +75,12 @@
     "real_student_data_mutated": false
   },
   "runtime_verification": {
-    "fixture_deployed": false,
+    "fixture_deployed": true,
     "valid_token_edge_route_verified_live": false,
     "student_rpc_forwarding_with_valid_token_verified_live": false,
     "response_matches_synthetic_fixture": false,
     "cleanup_completed": false,
-    "synthetic_business_rows_remaining": null,
+    "synthetic_business_rows_remaining": 14,
     "edge_alert_delivery_verified": false,
     "rollback_verified": false
   },
@@ -78,6 +98,12 @@
     "valid_route_live_proof_required": true,
     "fixture_cleanup_required": true,
     "rollback_proof_required_before_direct_rpc_revocation": true
+  },
+  "next_stage": {
+    "name": "LIVE_VALID_STUDENT_ROUTE_PROOF",
+    "allowed_now": true,
+    "cleanup_required_immediately_after_proof": true,
+    "client_cutover_allowed_now": false
   },
   "launch_authority": {
     "can_promote_incident_response_gate": false,
