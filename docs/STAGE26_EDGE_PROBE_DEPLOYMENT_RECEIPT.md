@@ -24,23 +24,47 @@ Observed through the connected Supabase project authority for `mceukeondizkwlpfx
 
 `verify_jwt=false` is intentional for this possession-token boundary. Version 1 is an inert metadata probe: it does not accept student commands, does not call student RPCs and does not expose student data.
 
-## Live runtime check
+## First live runtime attempt — useful failed assertion
 
-State at this receipt revision: **PENDING**.
+GitHub Actions run `32336914881` reached the deployed Edge Function and proved all common safety checks before failing on one overly strict diagnostic assumption.
 
-The repository now contains `verify_student_access_edge_probe_live.py`, and CI will call the deployed public endpoint from a real external runner. It must prove, without printing or persisting the raw network origin, that:
+Observed safely from the runner:
 
-- HTTP response is 200;
-- mode remains `origin_probe_not_student_gateway_cutover`;
-- candidate source remains `cf-connecting-ip`;
-- candidate presence is true in the deployed runtime;
-- raw network origin is not returned;
-- request body is not read;
-- no student RPC forwarding is active;
-- launch authority remains false;
-- client-supplied `x-forwarded-for` and `x-real-ip` are observed only as **untrusted presence**.
+- HTTP/common probe contract passed;
+- `cf-connecting-ip` candidate availability passed;
+- no raw network origin was returned by the probe contract;
+- no student RPC forwarding was active;
+- launch authority remained false;
+- client-supplied TEST-NET `x-forwarded-for` reached the function as **untrusted presence**;
+- client-supplied TEST-NET `x-real-ip` was stripped or absent before the function.
 
-A successful result establishes only **runtime candidate availability**. It does **not** yet establish that a client cannot spoof `cf-connecting-ip`. A separate sentinel-based live test is required before that header can become trusted security authority.
+The failure was the verifier expecting `x-real-ip` to survive the intermediary. That expectation was incorrect and is now permanently classified as:
+
+`BGF-EDGE-HEADER-PRESENCE-ASSUMPTION-170`
+
+Permanent correction: client-supplied forwarded-header **presence is diagnostic only**. An edge intermediary may strip, normalize or preserve such a header. None of these outcomes can make it security authority, and correctness must not depend on the header surviving transit.
+
+No raw IP/header value was printed or persisted by the verifier or receipt.
+
+## Corrected live runtime check
+
+State at this receipt revision: **PENDING RERUN**.
+
+The corrected verifier still requires:
+
+- HTTP 200;
+- mode `origin_probe_not_student_gateway_cutover`;
+- candidate source `cf-connecting-ip`;
+- candidate availability true;
+- raw network origin not returned;
+- request body not read;
+- no student RPC forwarding;
+- launch authority false;
+- TEST-NET `x-forwarded-for` observed as untrusted diagnostic presence.
+
+For `x-real-ip`, it now requires a boolean observation but does not require preservation. This models real intermediary normalization instead of inventing a transport guarantee.
+
+A successful rerun establishes only **runtime candidate availability**. It does **not** yet establish that a client cannot spoof `cf-connecting-ip`. A separate sentinel-based live test is required before that header can become trusted security authority.
 
 ## Explicit non-promotions
 
