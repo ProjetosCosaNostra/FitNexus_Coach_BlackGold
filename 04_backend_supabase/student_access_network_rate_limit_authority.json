@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "failure_classes": [
+    "BGF-EDGE-INVALID-TOKEN-RATE-LIMIT-174",
+    "BGF-NETWORK-ORIGIN-RAW-PERSISTENCE-175",
+    "BGF-NETWORK-THROTTLE-CALLER-LIMIT-OVERRIDE-176",
+    "BGF-EDGE-SECRET-KEY-LEAK-177"
+  ],
+  "purpose": "Durable pre-token-validation network-origin throttle for the student Edge boundary, with privacy-minimized keyed pseudonymization and database-owned route thresholds.",
+  "current_state": "REPO_ONLY_DDL_NOT_APPLIED",
+  "migration": {
+    "repository_file": "04_backend_supabase/migrations/20260820063000_stage27_student_network_origin_rate_limit.sql",
+    "migration_name": "stage27_student_network_origin_rate_limit",
+    "remote_applied": false,
+    "migration_ledger_state": "repo_only_declared"
+  },
+  "trusted_origin_authority": {
+    "source": "cf-connecting-ip",
+    "source_state": "ORIGIN_SOURCE_SPOOF_RESISTANCE_VERIFIED",
+    "edge_function_version": 2,
+    "spoof_proof_workflow_run_id": 32338900002,
+    "spoof_proof_outcome": "BLOCKED_AT_EDGE_403",
+    "client_can_force_source": false
+  },
+  "route_thresholds_per_minute": {
+    "get_workout": 120,
+    "start_workout": 30,
+    "set_completion": 120,
+    "get_feedback_context": 90,
+    "submit_feedback": 30
+  },
+  "database_contract": {
+    "private_function": "private.student_access_network_rate_limit_v1(text,text)",
+    "public_bridge": "public.check_student_access_network_rate_limit_v1(text,text)",
+    "public_bridge_security_mode": "SECURITY_INVOKER",
+    "public_bridge_execute_role": "service_role",
+    "caller_can_supply_limit": false,
+    "raw_network_origin_persisted": false,
+    "origin_digest_persisted": true,
+    "origin_digest_algorithm": "HMAC-SHA256",
+    "pepper_generated_at_remote_migration_apply": true,
+    "pepper_length_bytes": 32,
+    "pepper_stored_in_repository": false,
+    "pepper_direct_service_role_access": false,
+    "bucket_retention_days": 2,
+    "rate_limit_error": "STUDENT_NETWORK_RATE_LIMITED",
+    "signal_type": "network_rate_limit_burst",
+    "signal_severity": "high"
+  },
+  "runtime_boundary": {
+    "edge_gateway_uses_network_rate_limit": false,
+    "invalid_token_network_origin_rate_limit_verified_live": false,
+    "flutter_uses_edge_gateway": false,
+    "direct_v2_rpc_path_active": true,
+    "direct_anon_v2_rpc_execute_revoked": false,
+    "alert_delivery_verified": false,
+    "rollback_verified": false
+  },
+  "promotion_preconditions": [
+    "repository migration and authority pass CI",
+    "migration is merged before remote application",
+    "remote migration applies successfully",
+    "service_role can execute only the public SECURITY INVOKER bridge",
+    "anon and authenticated cannot execute the bridge",
+    "raw network-origin columns are absent",
+    "controlled transactional rate-limit probe reaches STUDENT_NETWORK_RATE_LIMITED and rolls back",
+    "security and performance advisors show no new unresolved actionable finding",
+    "remote migration ledger is reconciled",
+    "Edge gateway integration is deployed only after database throttle authority is remotely reconciled"
+  ],
+  "launch_authority": {
+    "can_promote_incident_response_gate": false,
+    "can_promote_production_deployment_gate": false,
+    "can_enable_paid_ads": false,
+    "current_state_is_launch_readiness": false
+  }
+}
