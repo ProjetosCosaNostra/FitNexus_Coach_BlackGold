@@ -9,6 +9,7 @@ on:
       - '04_backend_supabase/security_definer_exposure_authority.json'
       - '04_backend_supabase/student_access_abuse_authority.json'
       - '04_backend_supabase/student_access_network_origin_boundary.json'
+      - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
       - '04_backend_supabase/migrations/**'
       - '04_backend_supabase/functions/**'
@@ -25,6 +26,7 @@ on:
       - '04_backend_supabase/security_definer_exposure_authority.json'
       - '04_backend_supabase/student_access_abuse_authority.json'
       - '04_backend_supabase/student_access_network_origin_boundary.json'
+      - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
       - '04_backend_supabase/migrations/**'
       - '04_backend_supabase/functions/**'
@@ -98,6 +100,9 @@ jobs:
 
       - name: Student network-origin cutover guard
         run: python ../../04_backend_supabase/tools/verify_student_access_network_origin_boundary.py
+
+      - name: CF origin spoof sentinel source guard
+        run: python ../../04_backend_supabase/tools/verify_cf_origin_spoof_sentinel_source.py
 
       - name: Tenant isolation adversarial guard
         run: python ../../04_backend_supabase/tools/verify_tenant_isolation_contract.py

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "failure_classes": [
+    "BGF-CF-ORIGIN-SPOOF-171",
+    "BGF-EDGE-SENTINEL-DATA-LEAK-172"
+  ],
+  "purpose": "Repo-first authority for proving whether a client can force the deployed Edge runtime cf-connecting-ip candidate to a known TEST-NET sentinel without ever returning the raw runtime origin.",
+  "state": "SPOOF_SENTINEL_SOURCE_READY_V1_RUNTIME",
+  "baseline_main_sha": "8d3d857a9c5ba658f29f5387c25a6b6dca65c956",
+  "current_runtime": {
+    "edge_function_name": "student-access-gateway",
+    "version": 1,
+    "deployment_id": "2f85d9e1-39b3-46d7-a6c2-902eed7b4233",
+    "bundle_sha256": "a67cfccbab1f89377afab63cf6100e6fff7baa2f9ff67ba3b58203198f079de9",
+    "status": "ACTIVE",
+    "origin_candidate": "cf-connecting-ip",
+    "origin_candidate_available": true,
+    "origin_candidate_trusted_for_security": false,
+    "spoof_resistance_verified": false
+  },
+  "next_source": {
+    "expected_edge_function_version_after_deploy": 2,
+    "sentinel": "203.0.113.77",
+    "sentinel_standard": "RFC5737_TEST_NET_3",
+    "response_field": "candidate_equals_known_client_spoof_sentinel",
+    "response_is_boolean_only": true,
+    "raw_runtime_origin_returned": false,
+    "raw_runtime_origin_logged": false,
+    "raw_runtime_origin_persisted": false,
+    "student_rpc_forwarding_enabled": false,
+    "launch_gate_authority": false
+  },
+  "promotion_rule": {
+    "deploy_only_after_source_ci_green_and_merge_to_main": true,
+    "trusted_only_if_deployed_v2_live_probe_returns_sentinel_equality_false": true,
+    "trusted_if_sentinel_equality_true": false,
+    "trusted_if_live_probe_missing_or_ambiguous": false,
+    "client_forwarded_headers_are_never_authority": true,
+    "no_student_cutover_in_this_stage": true
+  },
+  "live_spoof_receipt": null,
+  "launch_authority": {
+    "can_promote_incident_response_gate": false,
+    "can_promote_production_deployment_gate": false,
+    "can_enable_paid_ads": false
+  }
+}
