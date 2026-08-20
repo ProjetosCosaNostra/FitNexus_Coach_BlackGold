@@ -26,6 +26,8 @@ THRESHOLD_GAP_CLASS = "BGF-EDGE-LIVE-THRESHOLD-PROOF-GAP-185"
 CLEANUP_FAILURE_CLASS = "BGF-SYNTHETIC-SECURITY-PROOF-RESIDUE-186"
 FINAL_STATE = "DATABASE_AND_EDGE_THRESHOLD_VERIFIED_SYNTHETIC_CLEANUP_COMPLETE"
 NEXT_STAGE_REPO_ONLY = "stage29_valid_student_route_fixture"
+STAGE29_CLEANUP_REPO_ONLY = "stage29_valid_route_fixture_cleanup"
+STAGE29_CLEANUP_STATE = "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_REPO_ONLY"
 THRESHOLDS = {
     "get_workout": 120,
     "start_workout": 30,
@@ -58,6 +60,14 @@ def data(path: Path) -> dict:
     except json.JSONDecodeError as exc:
         fail(f"invalid JSON in {path.relative_to(ROOT)}: {exc}")
     raise AssertionError("unreachable")
+
+
+def require_valid_route_identity(valid_route: dict | None) -> dict:
+    if valid_route is None:
+        fail("Stage 29 divergence exists without valid-route authority")
+    if valid_route.get("schema_version") != 1 or valid_route.get("project_ref") != "mceukeondizkwlpfxzgf":
+        fail("Stage 29 valid-route authority identity drifted")
+    return valid_route
 
 
 def main() -> None:
@@ -189,18 +199,15 @@ def main() -> None:
     if not repo_only:
         declared_next_stage = "NONE"
     elif repo_only == {NEXT_STAGE_REPO_ONLY}:
-        if valid_route is None:
-            fail("Stage 29 repo_only divergence exists without valid-route authority")
-        if valid_route.get("schema_version") != 1 or valid_route.get("project_ref") != "mceukeondizkwlpfxzgf":
-            fail("Stage 29 valid-route authority identity drifted")
-        if valid_route.get("current_state") != "VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY":
-            fail("Stage 29 repo_only divergence is not backed by repository-only authority")
-        fixture = valid_route.get("fixture_migration", {})
+        vr = require_valid_route_identity(valid_route)
+        if vr.get("current_state") != "VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY":
+            fail("Stage 29 fixture repo_only divergence is not backed by repository-only authority")
+        fixture = vr.get("fixture_migration", {})
         if fixture.get("migration_name") != NEXT_STAGE_REPO_ONLY:
             fail("Stage 29 fixture migration name drifted")
         if fixture.get("remote_applied") is not False or fixture.get("migration_ledger_state") != "repo_only":
             fail("Stage 29 fixture authority self-promoted before remote apply")
-        verification_state = valid_route.get("runtime_verification", {})
+        verification_state = vr.get("runtime_verification", {})
         if verification_state.get("fixture_deployed") is not False:
             fail("Stage 29 fixture deployment self-attested")
         if verification_state.get("valid_token_edge_route_verified_live") is not False:
@@ -208,6 +215,32 @@ def main() -> None:
         if verification_state.get("cleanup_completed") is not False:
             fail("Stage 29 cleanup self-attested before fixture deployment")
         declared_next_stage = NEXT_STAGE_REPO_ONLY
+    elif repo_only == {STAGE29_CLEANUP_REPO_ONLY}:
+        vr = require_valid_route_identity(valid_route)
+        if vr.get("current_state") != STAGE29_CLEANUP_STATE:
+            fail("Stage 29 cleanup repo_only divergence is not backed by cleanup repository authority")
+        fixture = vr.get("fixture_migration", {})
+        if fixture.get("remote_applied") is not True or fixture.get("remote_version") != "20260820192415":
+            fail("Stage 29 cleanup authority lost applied fixture receipt")
+        cleanup_migration = vr.get("cleanup_migration", {})
+        if cleanup_migration.get("migration_name") != STAGE29_CLEANUP_REPO_ONLY:
+            fail("Stage 29 cleanup migration name drifted")
+        if cleanup_migration.get("remote_applied") is not False or cleanup_migration.get("migration_ledger_state") != "repo_only":
+            fail("Stage 29 cleanup self-promoted before remote apply")
+        verification_state = vr.get("runtime_verification", {})
+        for key in (
+            "fixture_deployed",
+            "valid_token_edge_route_verified_live",
+            "student_rpc_forwarding_with_valid_token_verified_live",
+            "response_matches_synthetic_fixture",
+        ):
+            if verification_state.get(key) is not True:
+                fail(f"Stage 29 cleanup missing prerequisite proof: {key}")
+        if verification_state.get("cleanup_completed") is not False:
+            fail("Stage 29 cleanup self-attested before remote apply")
+        if verification_state.get("synthetic_business_rows_remaining") != 14:
+            fail("Stage 29 cleanup expected residue authority drifted")
+        declared_next_stage = STAGE29_CLEANUP_REPO_ONLY
     else:
         fail(f"unexpected repo_only divergence set: {sorted(repo_only)}")
 
@@ -239,7 +272,7 @@ def main() -> None:
             fail(f"{gate_name} was promoted without dedicated evidence")
 
     if authority.get("proof_semantics", {}).get("valid_student_route_verified") is not False:
-        fail("valid student route proof self-attested")
+        fail("Stage 27/28 valid-route semantics advanced before final Stage 29 reconciliation")
     if any(value is not False for value in authority.get("launch_authority", {}).values()):
         fail("Stage 27/28 gained launch authority")
 
@@ -248,9 +281,9 @@ def main() -> None:
     print("REMOTE_STAGE27_VERSION=20260820065403")
     print("EDGE_RATE_LIMIT_PATH_LIVE=VERIFIED_PRE_TOKEN")
     print("EDGE_THRESHOLD_429_PROOF=VERIFIED")
-    print("SYNTHETIC_PROOF_RESIDUE=ZERO")
+    print("STAGE28_SYNTHETIC_PROOF_RESIDUE=ZERO")
     print(f"DECLARED_NEXT_STAGE_REPO_ONLY={declared_next_stage}")
-    print("VALID_STUDENT_ROUTE_PROOF=PENDING")
+    print("VALID_STUDENT_ROUTE_PROOF=OWNED_BY_STAGE29_UNTIL_FINAL_RECONCILIATION")
     print("DIRECT_V2_RPC_PATHS=5")
     print("LAUNCH_GATE_PROMOTION=DENIED")
 
