@@ -46,25 +46,27 @@ Permanent correction: client-supplied forwarded-header **presence is diagnostic 
 
 No raw IP/header value was printed or persisted by the verifier or receipt.
 
-## Corrected live runtime check
+## Successful corrected live runtime check
 
-State at this receipt revision: **PENDING RERUN**.
+GitHub Actions run `32337114801` completed successfully, including every existing guard, the Stage 26 guard, Deno typecheck, the live Edge probe, Flutter analysis, 31 tests and the release web build.
 
-The corrected verifier still requires:
+The live step reported only privacy-safe state:
 
-- HTTP 200;
-- mode `origin_probe_not_student_gateway_cutover`;
-- candidate source `cf-connecting-ip`;
-- candidate availability true;
-- raw network origin not returned;
-- request body not read;
-- no student RPC forwarding;
-- launch authority false;
-- TEST-NET `x-forwarded-for` observed as untrusted diagnostic presence.
+- `EDGE_HTTP_STATUS=200`
+- `NETWORK_ORIGIN_CANDIDATE=cf-connecting-ip`
+- `NETWORK_ORIGIN_CANDIDATE_AVAILABLE=true`
+- `X_FORWARDED_FOR_CLIENT_HEADER_PRESERVED=true`
+- `X_REAL_IP_CLIENT_HEADER_PRESERVED=false`
+- `CLIENT_FORWARDED_HEADERS=UNTRUSTED_REGARDLESS_OF_NORMALIZATION`
+- `RAW_NETWORK_ORIGIN_RETURNED=false`
+- `STUDENT_RPC_FORWARDING=false`
+- `LAUNCH_GATE_AUTHORITY=false`
 
-For `x-real-ip`, it now requires a boolean observation but does not require preservation. This models real intermediary normalization instead of inventing a transport guarantee.
+This establishes that the deployed Supabase Edge runtime exposes a plausible `cf-connecting-ip` candidate to this function. The authority therefore advances to:
 
-A successful rerun establishes only **runtime candidate availability**. It does **not** yet establish that a client cannot spoof `cf-connecting-ip`. A separate sentinel-based live test is required before that header can become trusted security authority.
+`ORIGIN_PROBE_RUNTIME_CANDIDATE_OBSERVED`
+
+It does **not** make `cf-connecting-ip` trusted security authority yet. A client-spoof sentinel test remains mandatory, and the authority explicitly records `runtime_origin_candidate_trusted_for_security=false` and `cf_connecting_ip_spoof_resistance_verified=false`.
 
 ## Explicit non-promotions
 
