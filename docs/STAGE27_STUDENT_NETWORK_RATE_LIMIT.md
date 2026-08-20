@@ -15,7 +15,7 @@ Stage 26 established the prerequisite source authority: in the authoritative Sup
 - `BGF-POSTGRES-VIEW-COLUMN-ORDER-178` — `CREATE OR REPLACE VIEW` must preserve every existing output-column name and ordinal position; new columns are append-only unless a deliberate drop/recreate migration is separately reviewed.
 - `BGF-NETWORK-RATE-LIMIT-REMOTE-VERIFICATION-179` — remote write-path proof must be executed by a controlled versioned migration when the connected SQL inspection role is read-only; inability of the inspection connector to assume `service_role` must never be treated as proof or silently bypassed.
 
-## Durable migration — applied
+## Durable migration — applied and reconciled
 
 Repository source:
 
@@ -25,10 +25,9 @@ Remote authority:
 
 - project: `mceukeondizkwlpfxzgf`;
 - migration: `stage27_student_network_origin_rate_limit`;
-- remote version: `20260820065403`;
-- exact repaired source was merged through PR #38 before application.
+- remote version: `20260820065403`.
 
-The durable Stage 27 migration is now applied. Live schema inspection confirmed one 32-byte pepper row, zero initial rate buckets, no persistent raw-origin column, the expected SECURITY DEFINER private limiter, the SECURITY INVOKER public bridge, and the repaired posture view with the new network counter appended as column 10.
+Live schema inspection confirmed one 32-byte pepper row, no persistent raw-origin column, the expected SECURITY DEFINER private limiter, the SECURITY INVOKER public bridge, and the repaired posture view with the new network counter appended as column 10.
 
 ## Durable privacy boundary
 
@@ -84,48 +83,50 @@ The first remote Stage 27 application attempt was rejected transactionally becau
 
 The repair preserves the nine existing Stage 24 columns in their live ordinal order and appends `network_rate_limit_burst_signals_60m` as the tenth column. This rule is machine-enforced by `04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py` and the dedicated `Postgres View Replace Compatibility` CI workflow.
 
-## Remote verification interlock
+## Remote write-path verification — PASS
 
-The connected SQL inspection endpoint currently executes as `supabase_read_only_user`. It cannot `SET ROLE service_role` and cannot invoke the service-role-only bridge, so it cannot safely perform the required 121-call write probe.
-
-That limitation is not bypassed. The controlled proof is versioned as:
+The connected SQL inspection endpoint executes as `supabase_read_only_user`, so the required write-path proof was promoted through the versioned migration:
 
 `04_backend_supabase/migrations/20260820065900_stage27_network_rate_limit_verification_interlock.sql`
 
-The verification migration:
+Remote authority:
 
-1. uses only RFC 5737 TEST-NET origin `203.0.113.55`;
-2. derives the same HMAC identity as production logic;
-3. requires no pre-existing synthetic bucket or network signal for that identity;
-4. calls the private limiter 121 times for `get_workout`;
-5. requires calls 1–120 to pass with exact request counts;
-6. requires call 121 to return `STUDENT_NETWORK_RATE_LIMITED`, request count 121 and limit 120;
-7. deletes the synthetic bucket and signal before commit;
-8. rechecks zero synthetic residue;
-9. aborts the migration transaction on any mismatch.
+- migration: `stage27_network_rate_limit_verification_interlock`;
+- remote version: `20260820070524`;
+- apply result: PASS.
 
-Until that verification migration passes remotely and the final ledger is reconciled, authority remains `DATABASE_APPLIED_VERIFICATION_INTERLOCK_REPO_ONLY`.
+The migration transaction used only RFC 5737 TEST-NET origin `203.0.113.55`, derived the production HMAC identity, and asserted the full limiter contract. Calls 1–120 had to pass with exact monotonically increasing request counts; call 121 had to return `STUDENT_NETWORK_RATE_LIMITED` with request count 121 and threshold 120. Any mismatch would raise `P0001` and abort the entire migration.
 
-## Advisors after durable DDL
+Before commit, the verification migration deleted the synthetic bucket and `network_rate_limit_burst` signal and rechecked both as zero. Post-apply inspection independently confirmed total Stage 27 rate-bucket rows = 0 and total network-rate-limit signals = 0. Therefore the proof left no synthetic database residue.
+
+Stage 27 authority is now `DATABASE_RATE_LIMIT_APPLIED_VERIFIED_EDGE_INTEGRATION_PENDING`.
+
+## Advisors after verification
 
 Security Advisor produced no new Stage 27 actionable finding. Existing warnings for the intentional public student v2 SECURITY DEFINER RPCs remain expected until full Edge cutover and are not authority to revoke those RPCs prematurely.
 
-Performance Advisor produced no new Stage 27 actionable finding. The new cleanup index `student_access_network_rate_buckets_last_seen_idx` is initially reported as unused INFO; immediate unused-index telemetry is not removal authority.
+Performance Advisor produced no new Stage 27 actionable finding. The Stage 27 cleanup index is no longer present in the current unused-index result after the controlled verification exercised the path. Unused-index telemetry in general remains informational and is never automatic removal authority.
 
-## Remaining promotion sequence
+## Migration Ledger final state
 
-1. Verification migration + updated authority/ledger pass CI.
-2. Merge verification interlock to `main`.
-3. Reconfirm remote ledger has durable Stage 27 but not verification interlock.
-4. Apply exact merged verification migration.
-5. Confirm its remote ledger version and zero synthetic bucket/signal residue.
-6. Re-run security and performance advisors.
-7. Final ledger reconciliation: both Stage 27 migrations remote, only the three historical Stage 17 remote-only exceptions remain.
-8. Only then begin actual Edge gateway rate-limit integration.
+Both Stage 27 repository migrations are now represented in the remote ledger:
+
+- `stage27_student_network_origin_rate_limit` — `20260820065403`;
+- `stage27_network_rate_limit_verification_interlock` — `20260820070524`.
+
+No Stage 27 `repo_only` divergence remains. The only declared remote/repository divergences are the three historical Stage 17 no-op ledger exceptions.
+
+## Next authorized stage
+
+The next authorized engineering stage is **Edge Gateway Rate-Limit Integration**.
+
+The network-origin limiter must execute before possession-token validation. This stage may now integrate the already-verified database limiter into `student-access-gateway`, but it must preserve the current direct v2 RPC path until the gateway behavior and later Flutter cutover are fully verified.
+
+Direct RPC grants must not be revoked merely because the database limiter is ready.
 
 ## Explicit non-promotions
 
-Database Stage 27 being applied does not yet mean:
+Stage 27 completion does not yet mean:
 
 - Edge gateway rate limiting is active;
 - invalid-token abuse protection has passed a live HTTP gateway test;
