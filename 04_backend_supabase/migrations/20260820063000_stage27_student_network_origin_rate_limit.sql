@@ -9,6 +9,7 @@
 --   BGF-NETWORK-ORIGIN-RAW-PERSISTENCE-175
 --   BGF-NETWORK-THROTTLE-CALLER-LIMIT-OVERRIDE-176
 --   BGF-EDGE-SECRET-KEY-LEAK-177
+--   BGF-POSTGRES-VIEW-COLUMN-ORDER-178
 
 create table if not exists private.student_access_network_origin_secret (
   singleton boolean primary key default true check (singleton),
@@ -227,6 +228,8 @@ revoke all on function public.check_student_access_network_rate_limit_v1(text,te
 grant execute on function public.check_student_access_network_rate_limit_v1(text,text)
   to service_role;
 
+-- CREATE OR REPLACE VIEW must preserve the name/order of every existing column. Stage 24
+-- columns stay in their exact original positions and the Stage 27 counter is appended.
 create or replace view private.student_access_security_posture_v1
 with (security_invoker = true)
 as
@@ -261,12 +264,6 @@ select
   (
     select count(*)::integer
       from private.student_access_security_signals s
-     where s.signal_type = 'network_rate_limit_burst'
-       and s.last_seen_at >= now() - interval '60 minutes'
-  ) as network_rate_limit_burst_signals_60m,
-  (
-    select count(*)::integer
-      from private.student_access_security_signals s
      where s.signal_type = 'command_replay_burst'
        and s.last_seen_at >= now() - interval '60 minutes'
   ) as command_replay_burst_signals_60m,
@@ -292,7 +289,13 @@ select
       from private.student_access_security_events e
      where e.outcome = 'replay'
        and e.occurred_at >= now() - interval '15 minutes'
-  ) as replay_events_15m;
+  ) as replay_events_15m,
+  (
+    select count(*)::integer
+      from private.student_access_security_signals s
+     where s.signal_type = 'network_rate_limit_burst'
+       and s.last_seen_at >= now() - interval '60 minutes'
+  ) as network_rate_limit_burst_signals_60m;
 
 revoke all on private.student_access_security_posture_v1 from public, anon, authenticated;
 grant select on private.student_access_security_posture_v1 to service_role;
