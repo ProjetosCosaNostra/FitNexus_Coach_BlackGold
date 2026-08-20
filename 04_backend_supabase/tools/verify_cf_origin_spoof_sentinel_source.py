@@ -17,6 +17,8 @@ FAILURE_CLASSES = (
     "BGF-CF-SPOOF-PROOF-OUTCOME-ASSUMPTION-173",
 )
 SENTINEL = "203.0.113.77"
+FINAL_GATEWAY_STATE = "EDGE_GATEWAY_V3_THRESHOLD_429_VERIFIED_SYNTHETIC_CLEANUP_COMPLETE_VALID_ROUTE_PROOF_PENDING"
+FINAL_NETWORK_STATE = "ORIGIN_SOURCE_SPOOF_RESISTANCE_AND_EDGE_THRESHOLD_VERIFIED"
 
 
 def fail(message: str) -> None:
@@ -110,6 +112,8 @@ def main() -> None:
         fail("historical v2 spoof receipt was lost")
 
     network_runtime = network.get("observed_runtime", {})
+    if network.get("current_state") != FINAL_NETWORK_STATE:
+        fail("network authority final Stage 28 state drifted")
     if network_runtime.get("edge_function_version") != 3:
         fail("network authority is not anchored to runtime v3")
     if network_runtime.get("runtime_origin_candidate_trusted_for_security") is not True:
@@ -117,13 +121,44 @@ def main() -> None:
     if network_runtime.get("spoof_resistance_receipt", {}).get("workflow_run_id") != 32349938290:
         fail("network authority spoof receipt differs")
 
-    if gateway.get("current_state") != "EDGE_GATEWAY_V3_DEPLOYED_PRETOKEN_LIMITER_PATH_VERIFIED_THRESHOLD_PROOF_PENDING":
+    if gateway.get("current_state") != FINAL_GATEWAY_STATE:
         fail("Stage 28 gateway authority state drifted")
     gv = gateway.get("runtime_verification", {})
-    if gv.get("live_proof_workflow_run_id") != 32349938290:
-        fail("gateway and spoof authorities disagree on live proof")
+    if gv.get("pre_token_live_proof_workflow_run_id") != 32349938290:
+        fail("gateway and spoof authorities disagree on pre-token live proof")
     if gv.get("spoof_proof_outcome") != "BLOCKED_AT_EDGE_403":
         fail("gateway authority lost spoof outcome")
+    if gv.get("invalid_token_network_origin_rate_limit_threshold_verified_live") is not True:
+        fail("gateway authority lost exact threshold proof")
+    if gv.get("threshold_live_proof_workflow_run_id") != 32351032979:
+        fail("gateway threshold proof workflow receipt drifted")
+    if gv.get("threshold_limit_per_minute") != 30 or gv.get("allowed_calls_observed") != 30:
+        fail("gateway exact threshold allowance drifted")
+    if gv.get("rate_limited_call_number") != 31:
+        fail("gateway rate-limited call number drifted")
+    if gv.get("rate_limit_http_status") != 429 or gv.get("rate_limit_error") != "STUDENT_NETWORK_RATE_LIMITED":
+        fail("gateway exact threshold terminal outcome drifted")
+    if gv.get("student_rpc_forwarding_with_valid_token_verified_live") is not False:
+        fail("valid-token route proof was self-attested")
+
+    cross = authority.get("threshold_proof_cross_receipt", {})
+    expected_cross = {
+        "workflow_run_id": 32351032979,
+        "operation": "start_workout",
+        "limit_per_minute": 30,
+        "allowed_calls_observed": 30,
+        "rate_limited_call_number": 31,
+        "http_status": 429,
+        "error": "STUDENT_NETWORK_RATE_LIMITED",
+        "real_student_token_used": False,
+        "real_student_data_mutated": False,
+        "raw_network_origin_returned": False,
+        "synthetic_cleanup_remote_version": "20260820173521",
+        "synthetic_residue_remaining": 0,
+    }
+    for key, expected_value in expected_cross.items():
+        if cross.get(key) != expected_value:
+            fail(f"threshold cross-receipt drift for {key}")
 
     required_edge = (
         f'const SPOOF_SENTINEL = "{SENTINEL}";',
@@ -163,8 +198,10 @@ def main() -> None:
     remaining = authority.get("remaining_boundaries", {})
     if remaining.get("network_origin_rate_limit_path_live_verified") is not True:
         fail("live limiter-path proof disappeared")
+    if remaining.get("invalid_token_network_origin_rate_limit_threshold_verified") is not True:
+        fail("live exact threshold proof disappeared")
     for key in (
-        "invalid_token_network_origin_rate_limit_threshold_verified",
+        "valid_student_route_verified",
         "flutter_student_gateway_cutover_complete",
         "direct_anon_v2_rpc_execute_revoked",
         "alert_delivery_verified",
@@ -181,7 +218,9 @@ def main() -> None:
     print("SPOOF_PROOF_OUTCOME=BLOCKED_AT_EDGE_403")
     print("CLIENT_CAN_FORCE_CF_CONNECTING_IP=false")
     print("EDGE_RATE_LIMIT_PATH_LIVE=VERIFIED")
-    print("EDGE_THRESHOLD_429_PROOF=PENDING")
+    print("EDGE_THRESHOLD_429_PROOF=VERIFIED")
+    print("SYNTHETIC_PROOF_RESIDUE=ZERO")
+    print("VALID_STUDENT_ROUTE_PROOF=PENDING")
     print("LAUNCH_GATE_PROMOTION=DENIED")
 
 
