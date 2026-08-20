@@ -6,6 +6,7 @@
     "BGF-SYNTHETIC-VALID-ROUTE-FIXTURE-RESIDUE-188",
     "BGF-VALID-ROUTE-RESPONSE-DATA-LEAK-189"
   ],
+  "apply_compatibility_failure_class": "BGF-MIGRATION-APPLY-SYNTHETIC-LITERAL-SCREENING-191",
   "purpose": "Repository-first authority for a controlled synthetic valid-possession-token GET proof through the deployed Edge v3 student gateway, without mutating real student data or prematurely cutting over Flutter.",
   "current_state": "VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY",
   "baseline_main_sha": "031178c4b0ea526c7ade1667261cd629c8bb1aa8",
@@ -22,6 +23,9 @@
     "synthetic_exercise": true,
     "synthetic_access_link": true,
     "raw_token_is_public_synthetic_test_material": true,
+    "synthetic_token_derivation": "SHA256_UTF8_PUBLIC_SEED",
+    "synthetic_token_seed": "fitnexus-stage29-valid-route-fixture-v1",
+    "repository_contains_bearer_literal": false,
     "database_stores_token_hash_only": true,
     "fixture_expiry_hours": 2,
     "cleanup_migration_required": true
