@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "7064755c8ec803b639cb6493228efeb5e64ece80",
-  "observed_at_utc": "2026-08-20T08:55:00Z",
+  "baseline_main_sha": "8769f0ebb48d0480603f5af8d9b6627a582bdc4f",
+  "observed_at_utc": "2026-08-20T17:35:21Z",
   "source": "Supabase.list_migrations",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -36,13 +36,6 @@
       "reason": "Historical no-op ledger row created during advisor guard misuse; preserved as remote history evidence and intentionally has no repository SQL file.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-MIGRATION-TOOL-MISROUTE-097"
-    },
-    {
-      "direction": "repo_only",
-      "name": "stage28_threshold_proof_synthetic_cleanup",
-      "reason": "Fail-closed cleanup migration for the two controlled Stage 28 threshold-proof pseudonymous bucket/signal pairs. Awaiting CI and merge before remote application.",
-      "owner": "BlackGold Forge",
-      "related_failure_class": "BGF-SYNTHETIC-SECURITY-PROOF-RESIDUE-186"
     }
   ],
   "remote_migrations": [
@@ -91,6 +84,7 @@
     {"version": "20260819150440", "name": "stage22_tenant_isolation_fk_index_hardening"},
     {"version": "20260819223148", "name": "stage24_student_access_abuse_observability"},
     {"version": "20260820065403", "name": "stage27_student_network_origin_rate_limit"},
-    {"version": "20260820070524", "name": "stage27_network_rate_limit_verification_interlock"}
+    {"version": "20260820070524", "name": "stage27_network_rate_limit_verification_interlock"},
+    {"version": "20260820173521", "name": "stage28_threshold_proof_synthetic_cleanup"}
   ]
 }
