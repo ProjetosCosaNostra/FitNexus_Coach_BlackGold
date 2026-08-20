@@ -10,6 +10,7 @@ on:
       - '04_backend_supabase/student_access_abuse_authority.json'
       - '04_backend_supabase/student_access_network_origin_boundary.json'
       - '04_backend_supabase/student_access_network_rate_limit_authority.json'
+      - '04_backend_supabase/student_access_edge_gateway_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
       - '04_backend_supabase/migrations/**'
@@ -28,6 +29,7 @@ on:
       - '04_backend_supabase/student_access_abuse_authority.json'
       - '04_backend_supabase/student_access_network_origin_boundary.json'
       - '04_backend_supabase/student_access_network_rate_limit_authority.json'
+      - '04_backend_supabase/student_access_edge_gateway_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
       - '04_backend_supabase/migrations/**'
@@ -105,6 +107,9 @@ jobs:
 
       - name: Student network-origin rate-limit guard
         run: python ../../04_backend_supabase/tools/verify_student_access_network_rate_limit.py
+
+      - name: Student Edge gateway candidate guard
+        run: python ../../04_backend_supabase/tools/verify_student_access_edge_gateway_candidate.py
 
       - name: CF origin spoof sentinel source guard
         run: python ../../04_backend_supabase/tools/verify_cf_origin_spoof_sentinel_source.py
