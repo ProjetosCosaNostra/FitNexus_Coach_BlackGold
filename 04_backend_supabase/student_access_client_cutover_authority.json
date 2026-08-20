@@ -9,8 +9,8 @@
     "BGF-CLIENT-CUTOVER-SELF-ATTESTATION-199"
   ],
   "purpose": "Repository-first preparation authority for moving all five anonymous student possession-token routes from direct public RPC calls to the verified Edge v3 gateway without creating a fail-open bypass or revoking the direct rollback path before rollback is proven.",
-  "current_state": "CLIENT_EDGE_CUTOVER_PREPARATION_DIRECT_PATH_ACTIVE",
-  "baseline_main_sha": "983d28ad64b7d1d931a3cb7266e92167e7d8d026",
+  "current_state": "CLIENT_SINGLE_TRANSPORT_SOURCE_INTEGRATED_DIRECT_MODE",
+  "baseline_main_sha": "a484b759e9aca0bb3761d6e58919e682b4795e5b",
   "prerequisites": {
     "stage29_authority": "04_backend_supabase/student_access_valid_route_authority.json",
     "stage29_required_state": "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_COMPLETE",
@@ -28,6 +28,10 @@
     "client_direct_rpc_fallback_removed": false,
     "student_workout_repository": "03_app_flutter/fitnexus_app/lib/features/student/student_workout_repository.dart",
     "student_feedback_repository": "03_app_flutter/fitnexus_app/lib/features/student/student_feedback_repository.dart",
+    "single_transport_runtime": "03_app_flutter/fitnexus_app/lib/features/student/student_access_transport.dart",
+    "direct_route_map_location": "03_app_flutter/fitnexus_app/lib/features/student/student_access_transport_contract.dart",
+    "repositories_call_supabase_rpc_directly": false,
+    "repositories_call_single_transport": true,
     "direct_routes": {
       "get_workout": "get_student_workout_v2",
       "start_workout": "start_student_workout_v2",
@@ -38,6 +42,7 @@
   },
   "transport_contract": {
     "repository_file": "03_app_flutter/fitnexus_app/lib/features/student/student_access_transport_contract.dart",
+    "runtime_file": "03_app_flutter/fitnexus_app/lib/features/student/student_access_transport.dart",
     "active_mode": "directRpc",
     "edge_function_name": "student-access-gateway",
     "edge_gateway_selected": false,
@@ -47,7 +52,9 @@
     "client_cutover_verified": false,
     "exact_route_count": 5,
     "read_only_actions": ["get_workout", "get_feedback_context"],
-    "command_actions": ["start_workout", "set_completion", "submit_feedback"]
+    "command_actions": ["start_workout", "set_completion", "submit_feedback"],
+    "edge_candidate_path_compiled_behind_inactive_mode": true,
+    "behavioral_transport_change": false
   },
   "cutover_invariants": {
     "all_five_routes_move_as_one_security_boundary": true,
@@ -62,8 +69,8 @@
     "launch_gate_promotion_forbidden": true
   },
   "required_before_edge_selection": {
-    "edge_transport_implementation_compiles": false,
-    "all_five_repository_calls_routed_through_single_transport": false,
+    "edge_transport_implementation_compiles": true,
+    "all_five_repository_calls_routed_through_single_transport": true,
     "edge_error_contract_mapped_to_existing_student_errors": false,
     "read_only_edge_runtime_smoke_after_client_source_change": false,
     "command_edge_runtime_smoke_with_synthetic_fixture": false,
@@ -79,7 +86,7 @@
     "security_advisor_rechecked": false
   },
   "next_stage": {
-    "name": "STAGE30_SINGLE_TRANSPORT_SOURCE_INTEGRATION",
+    "name": "STAGE30_EDGE_ERROR_CONTRACT_AND_ROLLBACK_HARNESS",
     "allowed_now": true,
     "may_select_edge_gateway_now": false,
     "may_revoke_direct_rpc_execute_now": false
