@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "031178c4b0ea526c7ade1667261cd629c8bb1aa8",
-  "observed_at_utc": "2026-08-20T17:55:05Z",
+  "baseline_main_sha": "0036ec710017311428f38e533266dfa69c0eb21d",
+  "observed_at_utc": "2026-08-20T19:26:31Z",
   "source": "Supabase.list_migrations",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -36,13 +36,6 @@
       "reason": "Historical no-op ledger row created during advisor guard misuse; preserved as remote history evidence and intentionally has no repository SQL file.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-MIGRATION-TOOL-MISROUTE-097"
-    },
-    {
-      "direction": "repo_only",
-      "name": "stage29_valid_student_route_fixture",
-      "reason": "Controlled synthetic valid-token Edge GET fixture reviewed repository-first; remote apply is permitted only after CI and merge, and a dedicated cleanup migration is mandatory after the live proof.",
-      "owner": "BlackGold Forge",
-      "related_failure_class": "BGF-SYNTHETIC-VALID-ROUTE-FIXTURE-RESIDUE-188"
     }
   ],
   "remote_migrations": [
@@ -92,6 +85,7 @@
     {"version": "20260819223148", "name": "stage24_student_access_abuse_observability"},
     {"version": "20260820065403", "name": "stage27_student_network_origin_rate_limit"},
     {"version": "20260820070524", "name": "stage27_network_rate_limit_verification_interlock"},
-    {"version": "20260820173521", "name": "stage28_threshold_proof_synthetic_cleanup"}
+    {"version": "20260820173521", "name": "stage28_threshold_proof_synthetic_cleanup"},
+    {"version": "20260820192415", "name": "stage29_valid_student_route_fixture"}
   ]
 }

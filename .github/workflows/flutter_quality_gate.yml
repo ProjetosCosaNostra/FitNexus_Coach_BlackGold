@@ -136,6 +136,9 @@ jobs:
       - name: Live CF origin spoof sentinel
         run: python ../../04_backend_supabase/tools/verify_cf_origin_spoof_sentinel_live.py
 
+      - name: Live valid student route proof
+        run: python ../../04_backend_supabase/tools/verify_student_access_valid_route_live.py
+
       - name: Set up Flutter stable
         uses: subosito/flutter-action@v2
         with:
