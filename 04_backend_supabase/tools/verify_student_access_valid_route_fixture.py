@@ -1,0 +1,222 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+BACKEND = ROOT / "04_backend_supabase"
+APP = ROOT / "03_app_flutter" / "fitnexus_app" / "lib"
+AUTHORITY = BACKEND / "student_access_valid_route_authority.json"
+GATEWAY_AUTHORITY = BACKEND / "student_access_edge_gateway_authority.json"
+LEDGER = BACKEND / "migration_ledger_authority.json"
+MIGRATION = BACKEND / "migrations" / "20260820180000_stage29_valid_student_route_fixture.sql"
+
+FAILURE_CLASSES = (
+    "BGF-VALID-STUDENT-ROUTE-UNPROVEN-187",
+    "BGF-SYNTHETIC-VALID-ROUTE-FIXTURE-RESIDUE-188",
+    "BGF-VALID-ROUTE-RESPONSE-DATA-LEAK-189",
+)
+FIXTURE_TOKEN = "ff0fcd17201ed2f2cbf06ed3471bb63d235ed29ef164463dcf21f4c5da4308e0"
+FIXTURE_IDS = {
+    "user_id": "2615749d-ffca-5319-84e0-b775578ceaf6",
+    "organization_id": "13678787-eeae-5f6a-8828-190723a22594",
+    "student_id": "659eafee-0508-5dfb-9fcb-d285d9e846db",
+    "plan_id": "fd5762db-0a0c-54dc-81c9-2aeade199ee5",
+    "exercise_id": "2ec1260b-88f2-5a2c-ba81-3433d2c147d5",
+    "link_id": "f31a3c36-4ee1-5d64-b30d-f00fc98aea9b",
+}
+DIRECT_V2_RPCS = (
+    "get_student_workout_v2",
+    "start_student_workout_v2",
+    "set_student_exercise_completion_v2",
+    "get_student_feedback_context_v2",
+    "submit_student_workout_feedback_v2",
+)
+
+
+def fail(message: str) -> None:
+    raise SystemExit("STUDENT_ACCESS_VALID_ROUTE_FIXTURE_GUARD=FAIL\n" + message)
+
+
+def read_text(path: Path) -> str:
+    if not path.is_file():
+        fail(f"missing source: {path.relative_to(ROOT)}")
+    return path.read_text(encoding="utf-8")
+
+
+def read_json(path: Path) -> dict:
+    try:
+        return json.loads(read_text(path))
+    except json.JSONDecodeError as exc:
+        fail(f"invalid JSON in {path.relative_to(ROOT)}: {exc}")
+    raise AssertionError("unreachable")
+
+
+def main() -> None:
+    authority = read_json(AUTHORITY)
+    gateway = read_json(GATEWAY_AUTHORITY)
+    ledger = read_json(LEDGER)
+    migration = read_text(MIGRATION)
+    lower = migration.lower()
+
+    if authority.get("schema_version") != 1 or authority.get("project_ref") != "mceukeondizkwlpfxzgf":
+        fail("Stage 29 authority identity drifted")
+    if authority.get("failure_classes") != list(FAILURE_CLASSES):
+        fail("Stage 29 failure classes drifted")
+    if authority.get("current_state") != "VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY":
+        fail(f"{FAILURE_CLASSES[0]} repository fixture state self-promoted")
+    if authority.get("baseline_main_sha") != "031178c4b0ea526c7ade1667261cd629c8bb1aa8":
+        fail("Stage 29 baseline main SHA drifted")
+
+    fixture = authority.get("fixture_migration", {})
+    required_fixture = {
+        "repository_file": "04_backend_supabase/migrations/20260820180000_stage29_valid_student_route_fixture.sql",
+        "migration_name": "stage29_valid_student_route_fixture",
+        "remote_applied": False,
+        "migration_ledger_state": "repo_only",
+        "requires_empty_customer_domain": True,
+        "synthetic_auth_user": True,
+        "synthetic_organization": True,
+        "synthetic_student": True,
+        "synthetic_training_plan": True,
+        "synthetic_exercise": True,
+        "synthetic_access_link": True,
+        "raw_token_is_public_synthetic_test_material": True,
+        "database_stores_token_hash_only": True,
+        "fixture_expiry_hours": 2,
+        "cleanup_migration_required": True,
+    }
+    for key, expected in required_fixture.items():
+        if fixture.get(key) != expected:
+            fail(f"fixture authority drift for {key}")
+
+    if authority.get("fixture_identifiers") != FIXTURE_IDS:
+        fail("synthetic fixture identifiers drifted")
+    if FIXTURE_TOKEN in json.dumps(authority, sort_keys=True):
+        fail(f"{FAILURE_CLASSES[2]} raw synthetic bearer token must not be duplicated into authority JSON")
+
+    expected_live = authority.get("expected_live_contract", {})
+    for key, expected in {
+        "edge_runtime_version": 3,
+        "method": "POST",
+        "action": "get_workout",
+        "expected_http_status": 200,
+        "expected_student_name": "Stage29 Synthetic Student",
+        "expected_plan_name": "Stage29 Synthetic Plan",
+        "expected_exercise_name": "Stage29 Synthetic Exercise",
+        "expected_exercise_count": 1,
+        "expected_history_count": 0,
+        "expected_session": None,
+        "raw_token_returned": False,
+        "raw_network_origin_returned": False,
+        "real_student_data_used": False,
+        "real_student_data_mutated": False,
+    }.items():
+        if expected_live.get(key) != expected:
+            fail(f"expected live contract drift for {key}")
+
+    runtime = authority.get("runtime_verification", {})
+    for key in (
+        "fixture_deployed",
+        "valid_token_edge_route_verified_live",
+        "student_rpc_forwarding_with_valid_token_verified_live",
+        "response_matches_synthetic_fixture",
+        "cleanup_completed",
+        "edge_alert_delivery_verified",
+        "rollback_verified",
+    ):
+        if runtime.get(key) is not False:
+            fail(f"Stage 29 runtime proof self-attested: {key}")
+    if runtime.get("synthetic_business_rows_remaining") is not None:
+        fail("synthetic residue count was self-attested before fixture deployment")
+
+    if gateway.get("current_state") != "EDGE_GATEWAY_V3_THRESHOLD_429_VERIFIED_SYNTHETIC_CLEANUP_COMPLETE_VALID_ROUTE_PROOF_PENDING":
+        fail("Stage 28 prerequisite state drifted")
+    gv = gateway.get("runtime_verification", {})
+    if gv.get("candidate_deployed") is not True:
+        fail("Edge v3 deployment prerequisite missing")
+    if gv.get("invalid_token_network_origin_rate_limit_threshold_verified_live") is not True:
+        fail("Stage 28 exact threshold prerequisite missing")
+    if gv.get("student_rpc_forwarding_with_valid_token_verified_live") is not False:
+        fail("valid-route proof was already self-attested")
+
+    repo_only = {
+        row.get("name")
+        for row in ledger.get("declared_divergences", [])
+        if row.get("direction") == "repo_only"
+    }
+    if repo_only != {"stage29_valid_student_route_fixture"}:
+        fail(f"unexpected repo_only migration set: {sorted(repo_only)}")
+    remote_names = {row.get("name") for row in ledger.get("remote_migrations", [])}
+    if "stage29_valid_student_route_fixture" in remote_names:
+        fail("Stage 29 fixture is already remote while authority says repo_only")
+
+    required_source = (
+        "BGF-VALID-STUDENT-ROUTE-UNPROVEN-187",
+        "BGF-SYNTHETIC-VALID-ROUTE-FIXTURE-RESIDUE-188",
+        "BGF-VALID-ROUTE-RESPONSE-DATA-LEAK-189",
+        "STAGE29_VALID_ROUTE_FIXTURE_REQUIRES_EMPTY_CUSTOMER_DOMAIN",
+        "STAGE29_SYNTHETIC_TRIAL_INITIALIZATION_FAILED",
+        "STAGE29_SYNTHETIC_TOKEN_RESOLUTION_FAILED",
+        "STAGE29_SYNTHETIC_FIXTURE_POSTCONDITION_FAILED",
+        "insert into auth.users",
+        "insert into public.organizations",
+        "insert into public.students",
+        "insert into public.training_plans",
+        "insert into public.training_exercises",
+        "insert into public.student_access_links",
+        "extensions.digest(v_token, 'sha256')",
+        "from private.resolve_student_access(v_token)",
+        "now() + interval '2 hours'",
+        FIXTURE_TOKEN,
+        *FIXTURE_IDS.values(),
+    )
+    missing = [fragment for fragment in required_source if fragment not in migration]
+    if missing:
+        fail(f"synthetic fixture migration incomplete: {missing}")
+
+    if "email," in lower or "encrypted_password" in lower:
+        fail("synthetic auth fixture must not create a routable email/password credential")
+    if "requires_empty_customer_domain" in lower:
+        fail("authority prose leaked into migration unexpectedly")
+    if migration.count(FIXTURE_TOKEN) != 1:
+        fail("synthetic raw token must appear exactly once in the fixture migration")
+    for identifier in FIXTURE_IDS.values():
+        if migration.count(identifier) != 1:
+            fail(f"synthetic identifier should be declared once: {identifier}")
+
+    client = authority.get("client_boundary", {})
+    if client.get("flutter_uses_edge_gateway") is not False:
+        fail("Flutter cutover self-attested")
+    if client.get("direct_v2_rpc_path_active") is not True:
+        fail("direct RPC fallback removed before valid route proof")
+    if client.get("direct_anon_v2_rpc_execute_revoked") is not False:
+        fail("direct RPC grants revoked before valid route proof")
+
+    direct_calls = {rpc: 0 for rpc in DIRECT_V2_RPCS}
+    for path in APP.rglob("*.dart"):
+        source = path.read_text(encoding="utf-8")
+        for rpc in direct_calls:
+            if f"'{rpc}'" in source:
+                direct_calls[rpc] += 1
+    missing_direct = [rpc for rpc, count in direct_calls.items() if count == 0]
+    if missing_direct:
+        fail(f"partial Flutter cutover detected: {missing_direct}")
+
+    if any(value is not False for value in authority.get("launch_authority", {}).values()):
+        fail("Stage 29 fixture gained launch authority")
+
+    print("STUDENT_ACCESS_VALID_ROUTE_FIXTURE_GUARD=PASS")
+    print("CURRENT_STATE=VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY")
+    print("CUSTOMER_DOMAIN_PRECONDITION=EMPTY_ONLY")
+    print("FIXTURE_KIND=SYNTHETIC_ONLY")
+    print("DATABASE_TOKEN_STORAGE=SHA256_ONLY")
+    print("LIVE_VALID_ROUTE_PROOF=PENDING")
+    print("CLEANUP_MIGRATION=REQUIRED_AFTER_PROOF")
+    print("FLUTTER_CUTOVER=false")
+    print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
+    print("LAUNCH_GATE_PROMOTION=DENIED")
+
+
+if __name__ == "__main__":
+    main()
