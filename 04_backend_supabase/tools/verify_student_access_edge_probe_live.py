@@ -17,7 +17,7 @@ def fail(message: str) -> None:
 def fetch(extra_headers: dict[str, str] | None = None) -> dict:
     headers = {
         "apikey": PUBLISHABLE_KEY,
-        "user-agent": "FitNexus-Stage26-Origin-Probe/1.0",
+        "user-agent": "FitNexus-Stage26-Origin-Probe/1.1",
         "accept": "application/json",
     }
     if extra_headers:
@@ -65,8 +65,6 @@ def require_common(value: dict, label: str) -> None:
     if mismatches:
         fail(f"{label} safe contract mismatch: {sorted(mismatches)}")
 
-    # Fail closed if the probe unexpectedly starts returning fields that could contain
-    # the raw network origin or request/bearer material.
     forbidden_keys = {
         "ip",
         "client_ip",
@@ -82,6 +80,13 @@ def require_common(value: dict, label: str) -> None:
         fail(f"{label} response contains forbidden raw-data keys: {present}")
 
 
+def require_boolean(value: dict, key: str, label: str) -> bool:
+    observed = value.get(key)
+    if not isinstance(observed, bool):
+        fail(f"{label} field {key} must be boolean")
+    return observed
+
+
 def main() -> None:
     baseline = fetch()
     require_common(baseline, "baseline")
@@ -94,16 +99,32 @@ def main() -> None:
     )
     require_common(forwarded, "forwarded-header probe")
 
-    if forwarded.get("x_forwarded_for_present_but_untrusted") is not True:
-        fail("x-forwarded-for probe was not observed as untrusted presence")
-    if forwarded.get("x_real_ip_present_but_untrusted") is not True:
-        fail("x-real-ip probe was not observed as untrusted presence")
+    xff_present = require_boolean(
+        forwarded,
+        "x_forwarded_for_present_but_untrusted",
+        "forwarded-header probe",
+    )
+    xreal_present = require_boolean(
+        forwarded,
+        "x_real_ip_present_but_untrusted",
+        "forwarded-header probe",
+    )
+
+    # GitHub Actions run 32336914881 proved an important intermediary-normalization
+    # property: x-forwarded-for reached the function, while a client-supplied x-real-ip
+    # was stripped/absent. Presence of either header is diagnostic only; neither can ever
+    # become network-origin authority. Do not fail merely because an intermediary strips
+    # or normalizes a client-supplied untrusted header.
+    if not xff_present:
+        fail("x-forwarded-for TEST-NET probe was unexpectedly absent")
 
     print("STUDENT_ACCESS_EDGE_PROBE_LIVE=PASS")
     print("EDGE_HTTP_STATUS=200")
     print("NETWORK_ORIGIN_CANDIDATE=cf-connecting-ip")
     print("NETWORK_ORIGIN_CANDIDATE_AVAILABLE=true")
-    print("CLIENT_FORWARDED_HEADERS=OBSERVED_BUT_UNTRUSTED")
+    print("X_FORWARDED_FOR_CLIENT_HEADER_PRESERVED=true")
+    print(f"X_REAL_IP_CLIENT_HEADER_PRESERVED={str(xreal_present).lower()}")
+    print("CLIENT_FORWARDED_HEADERS=UNTRUSTED_REGARDLESS_OF_NORMALIZATION")
     print("RAW_NETWORK_ORIGIN_RETURNED=false")
     print("STUDENT_RPC_FORWARDING=false")
     print("LAUNCH_GATE_AUTHORITY=false")
