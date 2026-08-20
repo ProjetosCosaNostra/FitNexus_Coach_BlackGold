@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "d530e694e82e13247c126fa68522f8e03767b1fe",
-  "observed_at_utc": "2026-08-20T06:26:00Z",
+  "baseline_main_sha": "15cc7be5d42b2d4394ee8f0980a43d03cba1a24d",
+  "observed_at_utc": "2026-08-20T07:01:34Z",
   "source": "Supabase.list_migrations",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -39,10 +39,10 @@
     },
     {
       "direction": "repo_only",
-      "name": "stage27_student_network_origin_rate_limit",
-      "reason": "Stage 27 reviewed repository migration awaiting controlled remote promotion after CI and merge.",
+      "name": "stage27_network_rate_limit_verification_interlock",
+      "reason": "Stage 27 controlled write-path verification migration awaiting CI, merge and remote application after the durable limiter was applied successfully.",
       "owner": "BlackGold Forge",
-      "related_failure_class": "BGF-EDGE-INVALID-TOKEN-RATE-LIMIT-174"
+      "related_failure_class": "BGF-NETWORK-RATE-LIMIT-REMOTE-VERIFICATION-179"
     }
   ],
   "remote_migrations": [
@@ -89,6 +89,7 @@
     {"version": "20260819135808", "name": "stage21_student_access_issuance_authority_hardening"},
     {"version": "20260819145811", "name": "stage22_tenant_isolation_relational_interlock"},
     {"version": "20260819150440", "name": "stage22_tenant_isolation_fk_index_hardening"},
-    {"version": "20260819223148", "name": "stage24_student_access_abuse_observability"}
+    {"version": "20260819223148", "name": "stage24_student_access_abuse_observability"},
+    {"version": "20260820065403", "name": "stage27_student_network_origin_rate_limit"}
   ]
 }
