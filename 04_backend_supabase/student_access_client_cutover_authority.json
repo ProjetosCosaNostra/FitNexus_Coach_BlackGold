@@ -8,6 +8,7 @@
     "BGF-DIRECT-RPC-REVOCATION-BEFORE-ROLLBACK-198",
     "BGF-CLIENT-CUTOVER-SELF-ATTESTATION-199"
   ],
+  "guard_callsite_model_failure_class": "BGF-GUARD-RPC-CALLSITE-COLOCATION-200",
   "purpose": "Repository-first preparation authority for moving all five anonymous student possession-token routes from direct public RPC calls to the verified Edge v3 gateway without creating a fail-open bypass or revoking the direct rollback path before rollback is proven.",
   "current_state": "CLIENT_SINGLE_TRANSPORT_SOURCE_INTEGRATED_DIRECT_MODE",
   "baseline_main_sha": "a484b759e9aca0bb3761d6e58919e682b4795e5b",
