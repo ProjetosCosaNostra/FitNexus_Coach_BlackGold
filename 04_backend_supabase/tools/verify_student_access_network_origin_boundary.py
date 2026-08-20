@@ -38,11 +38,6 @@ DIRECT_V2_RPCS = (
     "submit_student_workout_feedback_v2",
 )
 
-DEPLOYMENT_ID = "2f85d9e1-39b3-46d7-a6c2-902eed7b4233"
-DEPLOYMENT_BUNDLE_SHA256 = "6d67c45bdd23694bcfbe24503c84d1d0e7c540a43d7c54e104a376a7c2a18c5a"
-SOURCE_MAIN_SHA = "0215cb417e0fafe659649d60a4d889b947d489cb"
-SPOOF_SUCCESS_RUN_ID = 32338900002
-
 
 def fail(message: str) -> None:
     raise SystemExit("STUDENT_ACCESS_NETWORK_ORIGIN_BOUNDARY_GUARD=FAIL\n" + message)
@@ -65,34 +60,33 @@ def read_json(path: Path) -> dict:
 def main() -> None:
     authority = read_json(AUTHORITY)
     spoof = read_json(SPOOF_AUTHORITY)
-    gateway_authority = read_json(GATEWAY_AUTHORITY)
+    gateway = read_json(GATEWAY_AUTHORITY)
     edge = read_text(EDGE)
-    edge_lower = edge.lower()
+    lower = edge.lower()
     stage21 = read_text(STAGE21).lower()
     live = read_text(LIVE_PROBE)
     spoof_live = read_text(SPOOF_LIVE_PROBE)
 
     if authority.get("schema_version") != 4:
-        fail("Stage 26 authority schema_version must remain 4 until runtime promotion")
+        fail("network-origin authority schema_version drifted")
     if authority.get("project_ref") != "mceukeondizkwlpfxzgf":
         fail("wrong Supabase project")
     if authority.get("failure_classes") != list(FAILURE_CLASSES):
         fail("failure-class authority drifted")
     if authority.get("current_state") != "ORIGIN_SOURCE_SPOOF_RESISTANCE_VERIFIED":
-        fail("deployed runtime authority self-promoted")
-    if authority.get("baseline_main_sha") != SOURCE_MAIN_SHA:
-        fail("Stage 26 baseline authority drifted")
+        fail("origin trust state drifted")
 
     runtime = authority.get("observed_runtime", {})
     expected_runtime = {
         "edge_function_name": "student-access-gateway",
         "edge_function_deployed": True,
         "observed_edge_function_count": 1,
-        "edge_function_version": 2,
+        "edge_function_version": 3,
         "edge_function_status": "ACTIVE",
         "verify_jwt": False,
-        "deployment_id": DEPLOYMENT_ID,
-        "deployment_bundle_sha256": DEPLOYMENT_BUNDLE_SHA256,
+        "deployment_id": "2f85d9e1-39b3-46d7-a6c2-902eed7b4233",
+        "deployment_bundle_sha256": "b57892b3f399b76f8127c9a39d3d8c021ffe639aa7bf92c7fa9a459d35721b82",
+        "runtime_mode": "stage28_gateway_candidate_repository_source",
         "runtime_origin_candidate_verified": True,
         "runtime_origin_candidate": "cf-connecting-ip",
         "runtime_origin_candidate_trusted_for_security": True,
@@ -102,42 +96,56 @@ def main() -> None:
             fail(f"{FAILURE_CLASSES[4]} observed runtime drift for {key}")
 
     receipt = runtime.get("spoof_resistance_receipt", {})
-    if receipt.get("workflow_run_id") != SPOOF_SUCCESS_RUN_ID:
-        fail("spoof proof receipt drifted")
-    if receipt.get("spoof_proof_outcome") != "BLOCKED_AT_EDGE_403":
-        fail("spoof proof outcome drifted")
+    if receipt.get("workflow_run_id") != 32349938290:
+        fail("runtime v3 spoof receipt drifted")
+    if receipt.get("spoof_attempt_http_status") != 403 or receipt.get("spoof_proof_outcome") != "BLOCKED_AT_EDGE_403":
+        fail("runtime v3 spoof proof outcome drifted")
     if receipt.get("client_can_force_cf_connecting_ip") is not False:
         fail(f"{FAILURE_CLASSES[8]} client can force trusted origin")
 
+    live_receipt = runtime.get("stage28_gateway_live_receipt", {})
+    if live_receipt.get("workflow_run_id") != 32349938290:
+        fail("Stage 28 live gateway receipt drifted")
+    if live_receipt.get("network_origin_rate_limit_path_verified_live") is not True:
+        fail(f"{FAILURE_CLASSES[0]} live pre-token limiter path proof missing")
+    if live_receipt.get("threshold_exceeded_http_429_verified_live") is not False:
+        fail("threshold-exceeded proof was self-attested")
+    if live_receipt.get("real_student_token_used") is not False or live_receipt.get("real_student_data_mutated") is not False:
+        fail("live proof unexpectedly used real student material")
+
     if spoof.get("state") != "SPOOF_RESISTANCE_VERIFIED_EDGE_BLOCK_403":
         fail("spoof authority is no longer verified")
-    if spoof.get("current_runtime", {}).get("version") != 2:
-        fail("observed spoof runtime version drifted before deployment promotion")
+    spoof_runtime = spoof.get("current_runtime", {})
+    if spoof_runtime.get("version") != 3 or spoof_runtime.get("bundle_sha256") != expected_runtime["deployment_bundle_sha256"]:
+        fail("spoof authority is not anchored to runtime v3")
+    if spoof.get("live_spoof_receipt", {}).get("workflow_run_id") != 32349938290:
+        fail("spoof authority live receipt differs from network authority")
 
-    # Stage 28 may implement a repository candidate while the authoritative deployed runtime
-    # remains v2. Source capability is therefore checked separately from deployed evidence.
-    if gateway_authority.get("current_state") != "REPOSITORY_GATEWAY_RATE_LIMIT_IMPLEMENTED_NOT_DEPLOYED":
-        fail("Stage 28 repository candidate authority is missing or self-promoted")
-    if gateway_authority.get("observed_deployed_runtime", {}).get("version") != 2:
-        fail("Stage 28 candidate lost the observed v2 runtime anchor")
-    if gateway_authority.get("runtime_verification", {}).get("candidate_deployed") is not False:
-        fail(f"{FAILURE_CLASSES[6]} repository source was confused with runtime deployment")
+    if gateway.get("current_state") != "EDGE_GATEWAY_V3_DEPLOYED_PRETOKEN_LIMITER_PATH_VERIFIED_THRESHOLD_PROOF_PENDING":
+        fail("Stage 28 gateway authority state drifted")
+    gv = gateway.get("runtime_verification", {})
+    if gv.get("candidate_deployed") is not True or gv.get("network_origin_rate_limit_path_verified_live") is not True:
+        fail("gateway live deployment evidence missing")
+    if gv.get("invalid_token_network_origin_rate_limit_threshold_verified_live") is not False:
+        fail("gateway threshold proof self-attested")
 
     current = authority.get("current_client_boundary", {})
     if current.get("direct_v2_rpc_calls") != list(DIRECT_V2_RPCS):
         fail(f"{FAILURE_CLASSES[2]} direct-RPC inventory drifted")
     if current.get("anonymous_v2_rpc_execute_required_by_current_client") is not True:
         fail(f"{FAILURE_CLASSES[2]} direct RPC authority revoked before Flutter cutover")
+    if current.get("network_origin_rate_limit_path_verified_live") is not True:
+        fail("current client boundary lost live limiter-path proof")
     if current.get("network_origin_rate_limit_for_invalid_token") is not False:
-        fail(f"{FAILURE_CLASSES[0]} live invalid-token throttle was self-attested")
+        fail("threshold enforcement was promoted before 429 proof")
     if current.get("edge_alert_delivery_verified") is not False:
         fail(f"{FAILURE_CLASSES[3]} alert delivery was self-attested")
 
     direct_calls = {rpc: 0 for rpc in DIRECT_V2_RPCS}
     for path in APP.rglob("*.dart"):
-        text = path.read_text(encoding="utf-8")
+        source = path.read_text(encoding="utf-8")
         for rpc in direct_calls:
-            if f"'{rpc}'" in text:
+            if f"'{rpc}'" in source:
                 direct_calls[rpc] += 1
     missing = [rpc for rpc, count in direct_calls.items() if count == 0]
     if missing:
@@ -150,39 +158,42 @@ def main() -> None:
         "grant execute on function public.get_student_feedback_context_v2(text) to anon, authenticated;",
         "grant execute on function public.submit_student_workout_feedback_v2(text,uuid,integer,integer,integer,text,text,text) to anon, authenticated;",
     )
-    absent_grants = [grant for grant in grants if grant not in stage21]
-    if absent_grants:
+    absent = [grant for grant in grants if grant not in stage21]
+    if absent:
         fail(f"{FAILURE_CLASSES[2]} privilege cutover occurred before Flutter cutover")
 
     required_source = (
         'const SPOOF_SENTINEL = "203.0.113.77";',
+        'const RATE_LIMIT_RPC = "check_student_access_network_rate_limit_v1";',
         'req.headers.get("cf-connecting-ip")',
         "candidate_equals_known_client_spoof_sentinel:",
-        "cloudflareOrigin?.trim() === SPOOF_SENTINEL",
         "raw_network_origin_returned: false",
+        "network_origin_rate_limit_enabled: true",
+        "student_rpc_forwarding_enabled: true",
         "launch_gate_authority: false",
     )
     missing_source = [fragment for fragment in required_source if fragment not in edge]
     if missing_source:
         fail(f"trusted-origin source invariants missing: {missing_source}")
-    if any(fragment in edge_lower for fragment in ("console.log", "console.error", "console.warn", "console.info")):
+    if any(fragment in lower for fragment in ("console.log", "console.error", "console.warn", "console.info")):
         fail(f"{FAILURE_CLASSES[9]} Edge source can log sensitive request material")
 
-    if "EXPECTED_MODE = \"origin_probe_not_student_gateway_cutover\"" not in live:
-        fail("live Stage 26 probe no longer anchors the deployed v2 runtime")
+    if 'EXPECTED_MODE = "stage28_gateway_candidate_repository_source"' not in live:
+        fail("live origin probe is not anchored to runtime v3")
     if "UNTRUSTED_REGARDLESS_OF_NORMALIZATION" not in live:
         fail("client-forwarded-header distrust invariant disappeared")
-    if 'SENTINEL = "203.0.113.77"' not in spoof_live or "BLOCKED_AT_EDGE_403" not in spoof_live:
-        fail("live spoof proof source drifted")
+    if 'SENTINEL = "203.0.113.77"' not in spoof_live or "RUNTIME_VERSION_EXPECTED=3" not in spoof_live:
+        fail("live spoof verifier is not anchored to runtime v3")
 
     if any(value is not False for value in authority.get("launch_authority", {}).values()):
         fail("network-origin authority gained launch authority")
 
     print("STUDENT_ACCESS_NETWORK_ORIGIN_BOUNDARY_GUARD=PASS")
-    print("OBSERVED_RUNTIME_VERSION=2")
+    print("OBSERVED_RUNTIME_VERSION=3")
     print("NETWORK_ORIGIN_SECURITY_TRUST=VERIFIED")
     print("SPOOF_PROOF_OUTCOME=BLOCKED_AT_EDGE_403")
-    print("REPOSITORY_GATEWAY_CANDIDATE=IMPLEMENTED_NOT_DEPLOYED")
+    print("LIVE_PRETOKEN_LIMITER_PATH=VERIFIED")
+    print("LIVE_THRESHOLD_429_PROOF=PENDING")
     print("DIRECT_V2_RPC_PATHS=5")
     print("FLUTTER_GATEWAY_CUTOVER=NOT_STARTED")
     print("LAUNCH_GATE_PROMOTION=DENIED")
