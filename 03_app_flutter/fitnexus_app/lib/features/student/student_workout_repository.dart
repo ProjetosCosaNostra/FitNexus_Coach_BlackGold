@@ -1,6 +1,5 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'student_access_command_id.dart';
+import 'student_access_transport.dart';
 
 class StudentWorkoutExercise {
   const StudentWorkoutExercise({
@@ -160,12 +159,12 @@ class StudentWorkoutRepository {
 
   static final StudentWorkoutRepository instance = StudentWorkoutRepository._();
 
-  SupabaseClient get _client => Supabase.instance.client;
-
   Future<StudentWorkoutSnapshot> fetchSnapshot(String token) async {
-    final dynamic response = await _client.rpc(
-      'get_student_workout_v2',
-      params: <String, dynamic>{'p_token': token.trim()},
+    final String normalizedToken = token.trim();
+    final dynamic response = await StudentAccessTransport.instance.invoke(
+      action: 'get_workout',
+      directParams: <String, dynamic>{'p_token': normalizedToken},
+      edgePayload: <String, dynamic>{'token': normalizedToken},
     );
     final Map<String, dynamic> result = _map(response);
     _throwStudentAccessError(result);
@@ -173,11 +172,17 @@ class StudentWorkoutRepository {
   }
 
   Future<String> startWorkout(String token) async {
-    final dynamic response = await _client.rpc(
-      'start_student_workout_v2',
-      params: <String, dynamic>{
-        'p_token': token.trim(),
-        'p_command_id': newStudentAccessCommandId(),
+    final String normalizedToken = token.trim();
+    final String commandId = newStudentAccessCommandId();
+    final dynamic response = await StudentAccessTransport.instance.invoke(
+      action: 'start_workout',
+      directParams: <String, dynamic>{
+        'p_token': normalizedToken,
+        'p_command_id': commandId,
+      },
+      edgePayload: <String, dynamic>{
+        'token': normalizedToken,
+        'command_id': commandId,
       },
     );
     final Map<String, dynamic> result = _map(response);
@@ -195,14 +200,23 @@ class StudentWorkoutRepository {
     required String exerciseId,
     required bool completed,
   }) async {
-    final dynamic response = await _client.rpc(
-      'set_student_exercise_completion_v2',
-      params: <String, dynamic>{
-        'p_token': token.trim(),
+    final String normalizedToken = token.trim();
+    final String commandId = newStudentAccessCommandId();
+    final dynamic response = await StudentAccessTransport.instance.invoke(
+      action: 'set_completion',
+      directParams: <String, dynamic>{
+        'p_token': normalizedToken,
         'p_session_id': sessionId,
         'p_exercise_id': exerciseId,
         'p_completed': completed,
-        'p_command_id': newStudentAccessCommandId(),
+        'p_command_id': commandId,
+      },
+      edgePayload: <String, dynamic>{
+        'token': normalizedToken,
+        'session_id': sessionId,
+        'exercise_id': exerciseId,
+        'completed': completed,
+        'command_id': commandId,
       },
     );
     _throwStudentAccessError(_map(response));
