@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -17,7 +19,9 @@ FAILURE_CLASSES = (
     "BGF-VALID-ROUTE-RESPONSE-DATA-LEAK-189",
 )
 GUARD_CONTRADICTION_CLASS = "BGF-GUARD-REQUIRED-FORBIDDEN-CONTRADICTION-190"
-FIXTURE_TOKEN = "ff0fcd17201ed2f2cbf06ed3471bb63d235ed29ef164463dcf21f4c5da4308e0"
+APPLY_COMPATIBILITY_CLASS = "BGF-MIGRATION-APPLY-SYNTHETIC-LITERAL-SCREENING-191"
+TOKEN_SEED = "fitnexus-stage29-valid-route-fixture-v1"
+FIXTURE_TOKEN = hashlib.sha256(TOKEN_SEED.encode("utf-8")).hexdigest()
 FIXTURE_IDS = {
     "user_id": "2615749d-ffca-5319-84e0-b775578ceaf6",
     "organization_id": "13678787-eeae-5f6a-8828-190723a22594",
@@ -64,6 +68,8 @@ def main() -> None:
         fail("Stage 29 authority identity drifted")
     if authority.get("failure_classes") != list(FAILURE_CLASSES):
         fail("Stage 29 failure classes drifted")
+    if authority.get("apply_compatibility_failure_class") != APPLY_COMPATIBILITY_CLASS:
+        fail("Stage 29 apply-compatibility failure class drifted")
     if authority.get("current_state") != "VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY":
         fail(f"{FAILURE_CLASSES[0]} repository fixture state self-promoted")
     if authority.get("baseline_main_sha") != "031178c4b0ea526c7ade1667261cd629c8bb1aa8":
@@ -83,6 +89,9 @@ def main() -> None:
         "synthetic_exercise": True,
         "synthetic_access_link": True,
         "raw_token_is_public_synthetic_test_material": True,
+        "synthetic_token_derivation": "SHA256_UTF8_PUBLIC_SEED",
+        "synthetic_token_seed": TOKEN_SEED,
+        "repository_contains_bearer_literal": False,
         "database_stores_token_hash_only": True,
         "fixture_expiry_hours": 2,
         "cleanup_migration_required": True,
@@ -93,8 +102,9 @@ def main() -> None:
 
     if authority.get("fixture_identifiers") != FIXTURE_IDS:
         fail("synthetic fixture identifiers drifted")
-    if FIXTURE_TOKEN in json.dumps(authority, sort_keys=True):
-        fail(f"{FAILURE_CLASSES[2]} raw synthetic bearer token must not be duplicated into authority JSON")
+    authority_text = json.dumps(authority, sort_keys=True)
+    if FIXTURE_TOKEN in authority_text:
+        fail(f"{FAILURE_CLASSES[2]} derived synthetic bearer token must not be duplicated into authority JSON")
 
     expected_live = authority.get("expected_live_contract", {})
     for key, expected in {
@@ -156,6 +166,7 @@ def main() -> None:
         "BGF-VALID-STUDENT-ROUTE-UNPROVEN-187",
         "BGF-SYNTHETIC-VALID-ROUTE-FIXTURE-RESIDUE-188",
         "BGF-VALID-ROUTE-RESPONSE-DATA-LEAK-189",
+        APPLY_COMPATIBILITY_CLASS,
         "STAGE29_VALID_ROUTE_FIXTURE_REQUIRES_EMPTY_CUSTOMER_DOMAIN",
         "STAGE29_SYNTHETIC_TRIAL_INITIALIZATION_FAILED",
         "STAGE29_SYNTHETIC_TOKEN_RESOLUTION_FAILED",
@@ -166,10 +177,10 @@ def main() -> None:
         "insert into public.training_plans",
         "insert into public.training_exercises",
         "insert into public.student_access_links",
+        "extensions.digest(convert_to('fitnexus-stage29-valid-route-fixture-v1', 'UTF8'), 'sha256')",
         "extensions.digest(v_token, 'sha256')",
         "from private.resolve_student_access(v_token)",
         "now() + interval '2 hours'",
-        FIXTURE_TOKEN,
         *FIXTURE_IDS.values(),
     )
     missing = [fragment for fragment in required_source if fragment not in migration]
@@ -177,9 +188,8 @@ def main() -> None:
         fail(f"synthetic fixture migration incomplete: {missing}")
 
     # Permanent prevention for BGF-GUARD-REQUIRED-FORBIDDEN-CONTRADICTION-190:
-    # forbidden fragments are authority JSON field spellings that have no valid reason to
-    # appear in executable SQL. Do not forbid semantic substrings that are also required
-    # inside fail-closed SQL error identifiers (the previous guard did exactly that).
+    # forbidden fragments are exact authority JSON key spellings, not semantic substrings
+    # that can legitimately occur inside fail-closed SQL error identifiers.
     forbidden_authority_prose = (
         '"requires_empty_customer_domain"',
         '"raw_token_is_public_synthetic_test_material"',
@@ -200,8 +210,18 @@ def main() -> None:
 
     if "email," in lower or "encrypted_password" in lower:
         fail("synthetic auth fixture must not create a routable email/password credential")
-    if migration.count(FIXTURE_TOKEN) != 1:
-        fail("synthetic raw token must appear exactly once in the fixture migration")
+
+    # BGF-MIGRATION-APPLY-SYNTHETIC-LITERAL-SCREENING-191:
+    # the token is reproducible from a public non-secret seed for the live synthetic proof,
+    # but repository SQL must not contain a bearer-looking 64-hex literal. This prevents
+    # tool/secret scanners from confusing controlled synthetic material with credentials.
+    if FIXTURE_TOKEN in migration:
+        fail(f"{APPLY_COMPATIBILITY_CLASS} derived bearer was materialized as a repository literal")
+    if re.search(r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])", lower):
+        fail(f"{APPLY_COMPATIBILITY_CLASS} bearer-looking 64-hex literal found in fixture migration")
+    if migration.count(TOKEN_SEED) != 1:
+        fail("synthetic public token seed must appear exactly once in the fixture migration")
+
     for identifier in FIXTURE_IDS.values():
         if migration.count(identifier) != 1:
             fail(f"synthetic identifier should be declared once: {identifier}")
@@ -229,9 +249,12 @@ def main() -> None:
 
     print("STUDENT_ACCESS_VALID_ROUTE_FIXTURE_GUARD=PASS")
     print(f"GUARD_CONTRADICTION_PREVENTION={GUARD_CONTRADICTION_CLASS}")
+    print(f"APPLY_COMPATIBILITY_PREVENTION={APPLY_COMPATIBILITY_CLASS}")
     print("CURRENT_STATE=VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY")
     print("CUSTOMER_DOMAIN_PRECONDITION=EMPTY_ONLY")
     print("FIXTURE_KIND=SYNTHETIC_ONLY")
+    print("SYNTHETIC_TOKEN_SOURCE=PUBLIC_SEED_DERIVED")
+    print("REPOSITORY_BEARER_LITERAL=false")
     print("DATABASE_TOKEN_STORAGE=SHA256_ONLY")
     print("LIVE_VALID_ROUTE_PROOF=PENDING")
     print("CLEANUP_MIGRATION=REQUIRED_AFTER_PROOF")
