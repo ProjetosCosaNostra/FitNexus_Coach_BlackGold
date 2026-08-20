@@ -110,6 +110,9 @@ jobs:
       - name: Edge function typecheck
         run: deno check ../../04_backend_supabase/functions/student-access-gateway/index.ts
 
+      - name: Live Edge origin probe
+        run: python ../../04_backend_supabase/tools/verify_student_access_edge_probe_live.py
+
       - name: Set up Flutter stable
         uses: subosito/flutter-action@v2
         with:

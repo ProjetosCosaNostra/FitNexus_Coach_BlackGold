@@ -13,6 +13,7 @@ STAGE21 = MIGRATIONS / "20260819103700_stage21_student_access_security_boundary.
 ABUSE_AUTHORITY = BACKEND / "student_access_abuse_authority.json"
 EXTERNAL_GATES = BACKEND / "external_gate_evidence_placeholders.json"
 GATEWAY_ENTRYPOINT = BACKEND / "functions" / "student-access-gateway" / "index.ts"
+LIVE_PROBE = BACKEND / "tools" / "verify_student_access_edge_probe_live.py"
 
 FAILURE_CLASSES = (
     "BGF-NETWORK-ORIGIN-ABUSE-BYPASS-163",
@@ -22,6 +23,7 @@ FAILURE_CLASSES = (
     "BGF-EDGE-RUNTIME-ORIGIN-ASSUMPTION-167",
     "BGF-EDGE-PROBE-DATA-LEAK-168",
     "BGF-EDGE-PROBE-PREMATURE-CUTOVER-169",
+    "BGF-EDGE-HEADER-PRESENCE-ASSUMPTION-170",
 )
 
 DIRECT_V2_RPCS = (
@@ -31,6 +33,12 @@ DIRECT_V2_RPCS = (
     "get_student_feedback_context_v2",
     "submit_student_workout_feedback_v2",
 )
+
+DEPLOYMENT_ID = "2f85d9e1-39b3-46d7-a6c2-902eed7b4233"
+DEPLOYMENT_BUNDLE_SHA256 = "a67cfccbab1f89377afab63cf6100e6fff7baa2f9ff67ba3b58203198f079de9"
+FAILED_LIVE_RUN_ID = 32336914881
+PENDING_STATE = "ORIGIN_PROBE_DEPLOYED_LIVE_CHECK_PENDING"
+OBSERVED_STATE = "ORIGIN_PROBE_RUNTIME_CANDIDATE_OBSERVED"
 
 
 def fail(message: str) -> None:
@@ -64,35 +72,90 @@ def main() -> None:
     external = read_json(EXTERNAL_GATES)
     gateway = read_text(GATEWAY_ENTRYPOINT)
     gateway_lower = gateway.lower()
+    live_probe = read_text(LIVE_PROBE)
+    live_probe_lower = live_probe.lower()
 
-    if authority.get("schema_version") != 2:
-        fail("Stage 26 authority schema_version must remain 2")
+    if authority.get("schema_version") != 3:
+        fail("Stage 26 runtime authority schema_version must remain 3")
     if authority.get("project_ref") != "mceukeondizkwlpfxzgf":
         fail("wrong Supabase project authority")
     if authority.get("failure_classes") != list(FAILURE_CLASSES):
         fail("failure-class authority drifted")
 
     state = authority.get("current_state")
-    if state != "ORIGIN_PROBE_REPOSITORY_READY_NOT_DEPLOYED":
-        fail(
-            f"{FAILURE_CLASSES[6]} Stage 26 probe state changed without runtime evidence: {state!r}"
-        )
+    if state not in (PENDING_STATE, OBSERVED_STATE):
+        fail(f"{FAILURE_CLASSES[6]} unsupported Stage 26 runtime state: {state!r}")
 
     runtime = authority.get("observed_runtime", {})
-    if runtime.get("edge_function_name") != "student-access-gateway":
-        fail(f"{FAILURE_CLASSES[2]} gateway name drifted")
-    if runtime.get("edge_function_deployed") is not False:
-        fail(f"{FAILURE_CLASSES[6]} repository-only probe may not self-attest deployment")
-    if runtime.get("observed_edge_function_count") != 0:
-        fail(f"{FAILURE_CLASSES[6]} runtime count was changed before a new live observation")
-    if runtime.get("source") != "Supabase.list_edge_functions":
-        fail(f"{FAILURE_CLASSES[6]} runtime evidence source drifted")
-    if runtime.get("runtime_origin_candidate_verified") is not False:
-        fail(f"{FAILURE_CLASSES[4]} network-origin candidate was self-attested")
-    if runtime.get("runtime_origin_candidate") is not None:
-        fail(f"{FAILURE_CLASSES[4]} network-origin authority assigned before probe")
-    if runtime.get("probe_repository_entrypoint_present") is not True:
-        fail(f"{FAILURE_CLASSES[6]} probe repository state is incomplete")
+    exact_runtime = {
+        "edge_function_name": "student-access-gateway",
+        "edge_function_deployed": True,
+        "observed_edge_function_count": 1,
+        "edge_function_version": 1,
+        "edge_function_status": "ACTIVE",
+        "verify_jwt": False,
+        "deployment_id": DEPLOYMENT_ID,
+        "deployment_bundle_sha256": DEPLOYMENT_BUNDLE_SHA256,
+        "probe_repository_entrypoint_present": True,
+    }
+    for key, expected in exact_runtime.items():
+        if runtime.get(key) != expected:
+            fail(f"{FAILURE_CLASSES[6]} runtime deployment drift for {key}: {runtime.get(key)!r}")
+
+    source = str(runtime.get("source", ""))
+    if "Supabase.deploy_edge_function" not in source or "Supabase.list_edge_functions" not in source:
+        fail(f"{FAILURE_CLASSES[6]} runtime deployment evidence source is incomplete")
+
+    failure_receipt = runtime.get("live_probe_failure_receipt")
+    if not isinstance(failure_receipt, dict):
+        fail(f"{FAILURE_CLASSES[7]} normalization failure receipt is missing")
+    if failure_receipt.get("workflow_run_id") != FAILED_LIVE_RUN_ID:
+        fail(f"{FAILURE_CLASSES[7]} normalization failure run id drifted")
+    if failure_receipt.get("failure_class") != FAILURE_CLASSES[7]:
+        fail(f"{FAILURE_CLASSES[7]} normalization failure class drifted")
+    safe_finding = str(failure_receipt.get("safe_finding", "")).lower()
+    if "x-forwarded-for" not in safe_finding or "x-real-ip" not in safe_finding:
+        fail(f"{FAILURE_CLASSES[7]} normalization finding lost its evidence boundary")
+    corrective = str(failure_receipt.get("corrective_policy", "")).lower()
+    if "diagnostic only" not in corrective or "security authority" not in corrective:
+        fail(f"{FAILURE_CLASSES[7]} normalization corrective policy weakened")
+
+    receipt = runtime.get("live_probe_receipt")
+    if state == PENDING_STATE:
+        if runtime.get("runtime_origin_candidate_verified") is not False:
+            fail(f"{FAILURE_CLASSES[4]} pending state self-attested candidate verification")
+        if runtime.get("runtime_origin_candidate") is not None:
+            fail(f"{FAILURE_CLASSES[4]} pending state assigned candidate authority")
+        if receipt is not None:
+            fail(f"{FAILURE_CLASSES[4]} pending state contains a fabricated live receipt")
+    else:
+        if runtime.get("runtime_origin_candidate_verified") is not True:
+            fail(f"{FAILURE_CLASSES[4]} observed state lacks candidate verification")
+        if runtime.get("runtime_origin_candidate") != "cf-connecting-ip":
+            fail(f"{FAILURE_CLASSES[4]} observed candidate authority drifted")
+        if runtime.get("runtime_origin_candidate_trusted_for_security") is not False:
+            fail(f"{FAILURE_CLASSES[4]} candidate was trusted before spoof-resistance proof")
+        if not isinstance(receipt, dict):
+            fail(f"{FAILURE_CLASSES[4]} observed state requires a structured live receipt")
+        required_receipt = {
+            "check_name": "Live Edge origin probe",
+            "baseline_candidate_available": True,
+            "forwarded_header_probe": True,
+            "x_forwarded_for_client_header_preserved": True,
+            "raw_network_origin_observed": False,
+            "raw_network_origin_persisted": False,
+            "student_rpc_forwarding_observed": False,
+            "launch_gate_authority_observed": False,
+            "cf_connecting_ip_spoof_resistance_verified": False,
+        }
+        for key, expected in required_receipt.items():
+            if receipt.get(key) != expected:
+                fail(f"{FAILURE_CLASSES[4]} live receipt drift for {key}: {receipt.get(key)!r}")
+        if not isinstance(receipt.get("x_real_ip_client_header_preserved"), bool):
+            fail(f"{FAILURE_CLASSES[7]} x-real-ip normalization receipt must be boolean")
+        run_id = receipt.get("workflow_run_id")
+        if not isinstance(run_id, int) or run_id <= FAILED_LIVE_RUN_ID:
+            fail(f"{FAILURE_CLASSES[4]} live receipt lacks a later successful workflow_run_id")
 
     probe = authority.get("probe_contract", {})
     expected_probe = {
@@ -125,6 +188,7 @@ def main() -> None:
         "single_student_gateway",
         "network_origin_must_come_from_trusted_runtime_metadata",
         "client_supplied_forwarded_headers_must_not_be_trusted",
+        "client_forwarded_header_presence_must_not_be_required",
         "invalid_token_attempts_rate_limited_by_network_origin_and_route",
         "valid_token_database_rate_limits_remain_active",
         "raw_possession_token_logging_forbidden",
@@ -148,13 +212,10 @@ def main() -> None:
         if launch.get(key) is not False:
             fail(f"{FAILURE_CLASSES[3]} {key} must remain false")
 
-    # Stage 24 must continue to state the remaining network-origin boundary.
     blind_spot = abuse.get("known_external_boundary", {}).get("blind_spot", "").lower()
     if "invalid-token" not in blind_spot or "client ip" not in blind_spot:
         fail(f"{FAILURE_CLASSES[0]} Stage 24 network-origin blind spot disappeared")
 
-    # A probe is not a client cutover. All five Flutter callsites and their temporary anon
-    # grants must remain intact until the full gateway has passed runtime verification.
     direct_calls: dict[str, list[str]] = {rpc: [] for rpc in DIRECT_V2_RPCS}
     for path in APP.rglob("*.dart"):
         text = path.read_text(encoding="utf-8")
@@ -164,9 +225,7 @@ def main() -> None:
 
     missing_calls = [rpc for rpc, paths in direct_calls.items() if not paths]
     if missing_calls:
-        fail(
-            f"{FAILURE_CLASSES[2]} partial client cutover during probe stage: {missing_calls}"
-        )
+        fail(f"{FAILURE_CLASSES[2]} partial client cutover during probe stage: {missing_calls}")
 
     expected_grants = (
         "grant execute on function public.get_student_workout_v2(text) to anon, authenticated;",
@@ -179,8 +238,6 @@ def main() -> None:
     if missing_grants:
         fail(f"{FAILURE_CLASSES[2]} partial privilege cutover during probe stage: {missing_grants}")
 
-    # Probe source is intentionally inert with respect to student data. It may inspect only
-    # header presence and must not consume a body, service-role secret or student RPC.
     require(
         gateway,
         (
@@ -215,12 +272,39 @@ def main() -> None:
     if leaked:
         fail(f"{FAILURE_CLASSES[5]} probe contains forbidden data/runtime behavior: {leaked}")
 
-    # The only authoritative-source candidate in this version is cf-connecting-ip. Other
-    # forwarded headers may be reported as booleans for spoof testing but never trusted.
     if gateway_lower.count('req.headers.get("cf-connecting-ip")') != 1:
         fail(f"{FAILURE_CLASSES[4]} candidate origin extraction is ambiguous")
     if "network_origin_source_candidate: \"cf-connecting-ip\"" not in gateway_lower:
         fail(f"{FAILURE_CLASSES[4]} probe response does not identify the candidate source")
+
+    require(
+        live_probe,
+        (
+            "https://mceukeondizkwlpfxzgf.supabase.co/functions/v1/student-access-gateway",
+            'EXPECTED_CANDIDATE = "cf-connecting-ip"',
+            '"network_origin_candidate_available": True',
+            '"raw_network_origin_returned": False',
+            '"student_rpc_forwarding_enabled": False',
+            '"launch_gate_authority": False',
+            '"x-forwarded-for": "203.0.113.10"',
+            '"x-real-ip": "203.0.113.11"',
+            "UNTRUSTED_REGARDLESS_OF_NORMALIZATION",
+        ),
+        FAILURE_CLASSES[4],
+    )
+    if "x-real-ip probe was not observed as untrusted presence" in live_probe_lower:
+        fail(f"{FAILURE_CLASSES[7]} obsolete client-header presence assumption returned")
+    forbidden_live_probe = (
+        "print(raw",
+        "print(value",
+        "print(response",
+        "print(headers",
+        "authorization\":",
+        "supabase_service_role_key",
+    )
+    unsafe_live = [fragment for fragment in forbidden_live_probe if fragment in live_probe_lower]
+    if unsafe_live:
+        fail(f"{FAILURE_CLASSES[5]} live probe could disclose raw request/response data: {unsafe_live}")
 
     gates = external.get("gates", {})
     for gate_name in ("incident_response", "production_deployment"):
@@ -235,14 +319,19 @@ def main() -> None:
         fail(f"{FAILURE_CLASSES[2]} cutover preconditions are incomplete")
 
     print("STUDENT_ACCESS_NETWORK_ORIGIN_BOUNDARY_GUARD=PASS")
-    print("CURRENT_EDGE_STATE=ORIGIN_PROBE_REPOSITORY_READY_NOT_DEPLOYED")
-    print("OBSERVED_EDGE_FUNCTION_COUNT=0")
+    print(f"CURRENT_EDGE_STATE={state}")
+    print("OBSERVED_EDGE_FUNCTION_COUNT=1")
+    print("EDGE_FUNCTION_VERSION=1")
     print("DIRECT_V2_RPC_PATHS=5")
     print("PROBE_CANDIDATE=cf-connecting-ip")
     print("PROBE_RAW_IP_RETURN=DENIED")
     print("PROBE_STUDENT_RPC_FORWARDING=DENIED")
+    print("FORWARDED_HEADER_PRESENCE=DIAGNOSTIC_ONLY")
+    print(
+        "TRUSTED_NETWORK_ORIGIN_EXTRACTION="
+        + ("CANDIDATE_OBSERVED_NOT_SPOOF_VERIFIED" if state == OBSERVED_STATE else "LIVE_CHECK_PENDING")
+    )
     print("INVALID_TOKEN_NETWORK_ORIGIN_RATE_LIMIT=NOT_VERIFIED")
-    print("TRUSTED_NETWORK_ORIGIN_EXTRACTION=NOT_VERIFIED")
     print("PARTIAL_CUTOVER=DENIED")
     print("INCIDENT_RESPONSE_GATE_PROMOTION=DENIED")
     print("PRODUCTION_DEPLOYMENT_GATE_PROMOTION=DENIED")
