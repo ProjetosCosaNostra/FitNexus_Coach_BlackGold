@@ -187,8 +187,11 @@ function buildRpcParams(action: StudentAction, payload: JsonObject): JsonObject 
   const painLocation = payload.pain_location;
   const note = payload.note;
   if (
-    !Number.isInteger(perceivedExertion)
+    typeof perceivedExertion !== "number"
+    || !Number.isInteger(perceivedExertion)
+    || typeof painScore !== "number"
     || !Number.isInteger(painScore)
+    || typeof energyScore !== "number"
     || !Number.isInteger(energyScore)
     || !(painLocation === null || typeof painLocation === "string")
     || !(note === null || typeof note === "string")
