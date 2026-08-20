@@ -16,6 +16,7 @@ FAILURE_CLASSES = (
     "BGF-SYNTHETIC-VALID-ROUTE-FIXTURE-RESIDUE-188",
     "BGF-VALID-ROUTE-RESPONSE-DATA-LEAK-189",
 )
+GUARD_CONTRADICTION_CLASS = "BGF-GUARD-REQUIRED-FORBIDDEN-CONTRADICTION-190"
 FIXTURE_TOKEN = "ff0fcd17201ed2f2cbf06ed3471bb63d235ed29ef164463dcf21f4c5da4308e0"
 FIXTURE_IDS = {
     "user_id": "2615749d-ffca-5319-84e0-b775578ceaf6",
@@ -175,10 +176,30 @@ def main() -> None:
     if missing:
         fail(f"synthetic fixture migration incomplete: {missing}")
 
+    # Permanent prevention for BGF-GUARD-REQUIRED-FORBIDDEN-CONTRADICTION-190:
+    # forbidden fragments are authority JSON field spellings that have no valid reason to
+    # appear in executable SQL. Do not forbid semantic substrings that are also required
+    # inside fail-closed SQL error identifiers (the previous guard did exactly that).
+    forbidden_authority_prose = (
+        '"requires_empty_customer_domain"',
+        '"raw_token_is_public_synthetic_test_material"',
+        '"database_stores_token_hash_only"',
+        '"cleanup_migration_required"',
+        '"valid_token_edge_route_verified_live"',
+    )
+    contradictory = [
+        forbidden
+        for forbidden in forbidden_authority_prose
+        if any(forbidden.lower() in required.lower() or required.lower() in forbidden.lower() for required in required_source)
+    ]
+    if contradictory:
+        fail(f"{GUARD_CONTRADICTION_CLASS} guard required/forbidden predicate overlap: {contradictory}")
+    leaked = [fragment for fragment in forbidden_authority_prose if fragment in migration]
+    if leaked:
+        fail(f"authority JSON prose leaked into migration unexpectedly: {leaked}")
+
     if "email," in lower or "encrypted_password" in lower:
         fail("synthetic auth fixture must not create a routable email/password credential")
-    if "requires_empty_customer_domain" in lower:
-        fail("authority prose leaked into migration unexpectedly")
     if migration.count(FIXTURE_TOKEN) != 1:
         fail("synthetic raw token must appear exactly once in the fixture migration")
     for identifier in FIXTURE_IDS.values():
@@ -207,6 +228,7 @@ def main() -> None:
         fail("Stage 29 fixture gained launch authority")
 
     print("STUDENT_ACCESS_VALID_ROUTE_FIXTURE_GUARD=PASS")
+    print(f"GUARD_CONTRADICTION_PREVENTION={GUARD_CONTRADICTION_CLASS}")
     print("CURRENT_STATE=VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY")
     print("CUSTOMER_DOMAIN_PRECONDITION=EMPTY_ONLY")
     print("FIXTURE_KIND=SYNTHETIC_ONLY")
