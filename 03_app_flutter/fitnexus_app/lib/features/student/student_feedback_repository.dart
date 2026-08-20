@@ -1,6 +1,5 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'student_access_command_id.dart';
+import 'student_access_transport.dart';
 
 class StudentFeedbackContext {
   const StudentFeedbackContext({
@@ -72,12 +71,12 @@ class StudentFeedbackRepository {
 
   static final StudentFeedbackRepository instance = StudentFeedbackRepository._();
 
-  SupabaseClient get _client => Supabase.instance.client;
-
   Future<StudentFeedbackContext> fetchContext(String token) async {
-    final dynamic response = await _client.rpc(
-      'get_student_feedback_context_v2',
-      params: <String, dynamic>{'p_token': token.trim()},
+    final String normalizedToken = token.trim();
+    final dynamic response = await StudentAccessTransport.instance.invoke(
+      action: 'get_feedback_context',
+      directParams: <String, dynamic>{'p_token': normalizedToken},
+      edgePayload: <String, dynamic>{'token': normalizedToken},
     );
     final Map<String, dynamic> result = _map(response);
     _throwStudentAccessError(result);
@@ -93,17 +92,31 @@ class StudentFeedbackRepository {
     String? painLocation,
     String? note,
   }) async {
-    final dynamic response = await _client.rpc(
-      'submit_student_workout_feedback_v2',
-      params: <String, dynamic>{
-        'p_token': token.trim(),
+    final String normalizedToken = token.trim();
+    final String commandId = newStudentAccessCommandId();
+    final String? normalizedPainLocation = _nullable(painLocation);
+    final String? normalizedNote = _nullable(note);
+    final dynamic response = await StudentAccessTransport.instance.invoke(
+      action: 'submit_feedback',
+      directParams: <String, dynamic>{
+        'p_token': normalizedToken,
         'p_session_id': sessionId,
         'p_perceived_exertion': perceivedExertion,
         'p_pain_score': painScore,
         'p_energy_score': energyScore,
-        'p_pain_location': _nullable(painLocation),
-        'p_note': _nullable(note),
-        'p_command_id': newStudentAccessCommandId(),
+        'p_pain_location': normalizedPainLocation,
+        'p_note': normalizedNote,
+        'p_command_id': commandId,
+      },
+      edgePayload: <String, dynamic>{
+        'token': normalizedToken,
+        'session_id': sessionId,
+        'perceived_exertion': perceivedExertion,
+        'pain_score': painScore,
+        'energy_score': energyScore,
+        'pain_location': normalizedPainLocation,
+        'note': normalizedNote,
+        'command_id': commandId,
       },
     );
     final Map<String, dynamic> result = _map(response);
