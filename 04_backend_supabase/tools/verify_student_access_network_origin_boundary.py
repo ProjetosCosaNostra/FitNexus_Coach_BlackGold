@@ -67,14 +67,14 @@ def main() -> None:
     live = read_text(LIVE_PROBE)
     spoof_live = read_text(SPOOF_LIVE_PROBE)
 
-    if authority.get("schema_version") != 4:
-        fail("network-origin authority schema_version drifted")
+    if authority.get("schema_version") != 5:
+        fail("network-origin authority schema_version must be 5")
     if authority.get("project_ref") != "mceukeondizkwlpfxzgf":
         fail("wrong Supabase project")
     if authority.get("failure_classes") != list(FAILURE_CLASSES):
         fail("failure-class authority drifted")
-    if authority.get("current_state") != "ORIGIN_SOURCE_SPOOF_RESISTANCE_VERIFIED":
-        fail("origin trust state drifted")
+    if authority.get("current_state") != "ORIGIN_SOURCE_SPOOF_RESISTANCE_AND_EDGE_THRESHOLD_VERIFIED":
+        fail("network-origin final Stage 28 state drifted")
 
     runtime = authority.get("observed_runtime", {})
     expected_runtime = {
@@ -95,39 +95,55 @@ def main() -> None:
         if runtime.get(key) != expected:
             fail(f"{FAILURE_CLASSES[4]} observed runtime drift for {key}")
 
-    receipt = runtime.get("spoof_resistance_receipt", {})
-    if receipt.get("workflow_run_id") != 32349938290:
+    spoof_receipt = runtime.get("spoof_resistance_receipt", {})
+    if spoof_receipt.get("workflow_run_id") != 32349938290:
         fail("runtime v3 spoof receipt drifted")
-    if receipt.get("spoof_attempt_http_status") != 403 or receipt.get("spoof_proof_outcome") != "BLOCKED_AT_EDGE_403":
-        fail("runtime v3 spoof proof outcome drifted")
-    if receipt.get("client_can_force_cf_connecting_ip") is not False:
+    if spoof_receipt.get("spoof_attempt_http_status") != 403 or spoof_receipt.get("spoof_proof_outcome") != "BLOCKED_AT_EDGE_403":
+        fail("runtime v3 spoof outcome drifted")
+    if spoof_receipt.get("client_can_force_cf_connecting_ip") is not False:
         fail(f"{FAILURE_CLASSES[8]} client can force trusted origin")
 
     live_receipt = runtime.get("stage28_gateway_live_receipt", {})
-    if live_receipt.get("workflow_run_id") != 32349938290:
-        fail("Stage 28 live gateway receipt drifted")
+    if live_receipt.get("pre_token_workflow_run_id") != 32349938290:
+        fail("pre-token live proof receipt drifted")
     if live_receipt.get("network_origin_rate_limit_path_verified_live") is not True:
-        fail(f"{FAILURE_CLASSES[0]} live pre-token limiter path proof missing")
-    if live_receipt.get("threshold_exceeded_http_429_verified_live") is not False:
-        fail("threshold-exceeded proof was self-attested")
+        fail(f"{FAILURE_CLASSES[0]} pre-token limiter path proof missing")
+    if live_receipt.get("threshold_workflow_run_id") != 32351032979:
+        fail("threshold workflow receipt drifted")
+    if live_receipt.get("threshold_exceeded_http_429_verified_live") is not True:
+        fail("live threshold HTTP 429 proof missing")
+    if live_receipt.get("threshold_operation") != "start_workout" or live_receipt.get("threshold_limit_per_minute") != 30:
+        fail("threshold route/limit drifted")
+    if live_receipt.get("allowed_calls_observed") != 30 or live_receipt.get("rate_limited_call_number") != 31:
+        fail("threshold exact call counts drifted")
+    if live_receipt.get("rate_limit_http_status") != 429 or live_receipt.get("rate_limit_error") != "STUDENT_NETWORK_RATE_LIMITED":
+        fail("threshold terminal outcome drifted")
     if live_receipt.get("real_student_token_used") is not False or live_receipt.get("real_student_data_mutated") is not False:
-        fail("live proof unexpectedly used real student material")
+        fail("threshold proof unexpectedly used real student material")
+
+    cleanup = runtime.get("synthetic_cleanup_receipt", {})
+    if cleanup.get("remote_version") != "20260820173521":
+        fail("Stage 28 cleanup remote version drifted")
+    if cleanup.get("proof_buckets_remaining") != 0 or cleanup.get("proof_signals_remaining") != 0:
+        fail("Stage 28 proof residue remains")
+    if cleanup.get("anonymous_network_rate_limit_signals_remaining") != 0:
+        fail("anonymous network-rate-limit signal residue remains")
 
     if spoof.get("state") != "SPOOF_RESISTANCE_VERIFIED_EDGE_BLOCK_403":
         fail("spoof authority is no longer verified")
     spoof_runtime = spoof.get("current_runtime", {})
     if spoof_runtime.get("version") != 3 or spoof_runtime.get("bundle_sha256") != expected_runtime["deployment_bundle_sha256"]:
         fail("spoof authority is not anchored to runtime v3")
-    if spoof.get("live_spoof_receipt", {}).get("workflow_run_id") != 32349938290:
-        fail("spoof authority live receipt differs from network authority")
 
-    if gateway.get("current_state") != "EDGE_GATEWAY_V3_DEPLOYED_PRETOKEN_LIMITER_PATH_VERIFIED_THRESHOLD_PROOF_PENDING":
+    if gateway.get("current_state") != "EDGE_GATEWAY_V3_THRESHOLD_429_VERIFIED_SYNTHETIC_CLEANUP_COMPLETE_VALID_ROUTE_PROOF_PENDING":
         fail("Stage 28 gateway authority state drifted")
     gv = gateway.get("runtime_verification", {})
     if gv.get("candidate_deployed") is not True or gv.get("network_origin_rate_limit_path_verified_live") is not True:
         fail("gateway live deployment evidence missing")
-    if gv.get("invalid_token_network_origin_rate_limit_threshold_verified_live") is not False:
-        fail("gateway threshold proof self-attested")
+    if gv.get("invalid_token_network_origin_rate_limit_threshold_verified_live") is not True:
+        fail("gateway threshold proof missing")
+    if gv.get("student_rpc_forwarding_with_valid_token_verified_live") is not False:
+        fail("valid-token forwarding was self-attested")
 
     current = authority.get("current_client_boundary", {})
     if current.get("direct_v2_rpc_calls") != list(DIRECT_V2_RPCS):
@@ -135,9 +151,11 @@ def main() -> None:
     if current.get("anonymous_v2_rpc_execute_required_by_current_client") is not True:
         fail(f"{FAILURE_CLASSES[2]} direct RPC authority revoked before Flutter cutover")
     if current.get("network_origin_rate_limit_path_verified_live") is not True:
-        fail("current client boundary lost live limiter-path proof")
-    if current.get("network_origin_rate_limit_for_invalid_token") is not False:
-        fail("threshold enforcement was promoted before 429 proof")
+        fail("current client boundary lost live limiter path proof")
+    if current.get("network_origin_rate_limit_for_invalid_token") is not True:
+        fail("verified invalid-token threshold enforcement disappeared")
+    if current.get("valid_student_route_verified_live") is not False:
+        fail("valid student route proof self-attested")
     if current.get("edge_alert_delivery_verified") is not False:
         fail(f"{FAILURE_CLASSES[3]} alert delivery was self-attested")
 
@@ -193,7 +211,9 @@ def main() -> None:
     print("NETWORK_ORIGIN_SECURITY_TRUST=VERIFIED")
     print("SPOOF_PROOF_OUTCOME=BLOCKED_AT_EDGE_403")
     print("LIVE_PRETOKEN_LIMITER_PATH=VERIFIED")
-    print("LIVE_THRESHOLD_429_PROOF=PENDING")
+    print("LIVE_THRESHOLD_429_PROOF=VERIFIED")
+    print("SYNTHETIC_PROOF_RESIDUE=ZERO")
+    print("VALID_STUDENT_ROUTE_PROOF=PENDING")
     print("DIRECT_V2_RPC_PATHS=5")
     print("FLUTTER_GATEWAY_CUTOVER=NOT_STARTED")
     print("LAUNCH_GATE_PROMOTION=DENIED")

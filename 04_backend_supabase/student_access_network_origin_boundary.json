@@ -1,5 +1,5 @@
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "project_ref": "mceukeondizkwlpfxzgf",
   "failure_classes": [
     "BGF-NETWORK-ORIGIN-ABUSE-BYPASS-163",
@@ -14,9 +14,9 @@
     "BGF-EDGE-SENTINEL-DATA-LEAK-172",
     "BGF-CF-SPOOF-PROOF-OUTCOME-ASSUMPTION-173"
   ],
-  "purpose": "Fail-closed cutover authority for the network-origin abuse boundary that PostgreSQL cannot own for invalid possession-token attempts.",
-  "current_state": "ORIGIN_SOURCE_SPOOF_RESISTANCE_VERIFIED",
-  "baseline_main_sha": "0215cb417e0fafe659649d60a4d889b947d489cb",
+  "purpose": "Fail-closed authority for trusted network-origin abuse controls on anonymous student Edge traffic, separated from valid-token route proof, Flutter cutover and launch authority.",
+  "current_state": "ORIGIN_SOURCE_SPOOF_RESISTANCE_AND_EDGE_THRESHOLD_VERIFIED",
+  "baseline_main_sha": "8769f0ebb48d0480603f5af8d9b6627a582bdc4f",
   "observed_runtime": {
     "edge_function_name": "student-access-gateway",
     "edge_function_deployed": true,
@@ -26,77 +26,47 @@
     "verify_jwt": false,
     "deployment_id": "2f85d9e1-39b3-46d7-a6c2-902eed7b4233",
     "deployment_bundle_sha256": "b57892b3f399b76f8127c9a39d3d8c021ffe639aa7bf92c7fa9a459d35721b82",
-    "observed_at_utc": "2026-08-20T08:40:02Z",
-    "source": "Supabase.deploy_edge_function + Supabase.list_edge_functions + GitHub Actions run 32349938290",
+    "source": "Supabase.deploy_edge_function + Supabase.list_edge_functions + GitHub Actions live proofs",
     "runtime_mode": "stage28_gateway_candidate_repository_source",
     "runtime_origin_candidate_verified": true,
     "runtime_origin_candidate": "cf-connecting-ip",
     "runtime_origin_candidate_trusted_for_security": true,
-    "live_probe_observed_at_utc": "2026-08-20T05:50:14Z",
-    "live_probe_receipt": {
-      "workflow_run_id": 32337114801,
-      "check_name": "Live Edge origin probe",
-      "baseline_candidate_available": true,
-      "forwarded_header_probe": true,
-      "x_forwarded_for_client_header_preserved": true,
-      "x_real_ip_client_header_preserved": false,
-      "raw_network_origin_observed": false,
-      "raw_network_origin_persisted": false,
-      "student_rpc_forwarding_observed": false,
-      "launch_gate_authority_observed": false,
-      "cf_connecting_ip_spoof_resistance_verified": false
-    },
-    "live_probe_failure_receipt": {
-      "workflow_run_id": 32336914881,
-      "failure_class": "BGF-EDGE-HEADER-PRESENCE-ASSUMPTION-170",
-      "safe_finding": "cf-connecting-ip candidate checks passed; x-forwarded-for TEST-NET header was preserved as untrusted presence; x-real-ip TEST-NET header was stripped or absent; no raw network-origin value was printed or persisted",
-      "corrective_policy": "Client-supplied forwarded-header presence is diagnostic only. Intermediaries may strip or normalize it, and no such header may become security authority merely because it is present."
-    },
     "spoof_resistance_receipt": {
       "workflow_run_id": 32349938290,
-      "check_name": "Stage 28 Edge Gateway Live Proof",
-      "observed_at_utc": "2026-08-20T08:40:02Z",
-      "sentinel_standard": "RFC5737_TEST_NET_3",
       "spoof_attempt_http_status": 403,
       "spoof_proof_outcome": "BLOCKED_AT_EDGE_403",
       "client_can_force_cf_connecting_ip": false,
       "raw_network_origin_observed": false,
-      "raw_network_origin_persisted": false,
-      "student_rpc_forwarding_enabled_observed": true,
-      "network_origin_rate_limit_enabled_observed": true,
-      "launch_gate_authority_observed": false
-    },
-    "prior_v2_spoof_resistance_receipt": {
-      "workflow_run_id": 32338900002,
-      "observed_at_utc": "2026-08-20T06:16:38Z",
-      "spoof_attempt_http_status": 403,
-      "spoof_proof_outcome": "BLOCKED_AT_EDGE_403",
-      "client_can_force_cf_connecting_ip": false
-    },
-    "spoof_verifier_failure_receipt": {
-      "workflow_run_id": 32338828582,
-      "failure_class": "BGF-CF-SPOOF-PROOF-OUTCOME-ASSUMPTION-173",
-      "safe_finding": "The deliberate cf-connecting-ip sentinel request was rejected with HTTP 403 before the function executed; the verifier was corrected to recognize edge rejection as a stronger safe proof outcome."
+      "raw_network_origin_persisted": false
     },
     "stage28_gateway_live_receipt": {
-      "workflow_run_id": 32349938290,
-      "health_http_status": 200,
-      "pre_token_limiter_proof_http_status": 400,
-      "pre_token_limiter_proof_error": "STUDENT_GATEWAY_PAYLOAD_INVALID",
+      "pre_token_workflow_run_id": 32349938290,
       "network_origin_rate_limit_path_verified_live": true,
-      "threshold_exceeded_http_429_verified_live": false,
+      "threshold_workflow_run_id": 32351032979,
+      "threshold_exceeded_http_429_verified_live": true,
+      "threshold_operation": "start_workout",
+      "threshold_limit_per_minute": 30,
+      "allowed_calls_observed": 30,
+      "rate_limited_call_number": 31,
+      "rate_limit_http_status": 429,
+      "rate_limit_error": "STUDENT_NETWORK_RATE_LIMITED",
       "real_student_token_used": false,
       "real_student_data_mutated": false,
       "raw_network_origin_returned": false
     },
-    "probe_repository_entrypoint_present": true
+    "synthetic_cleanup_receipt": {
+      "migration_name": "stage28_threshold_proof_synthetic_cleanup",
+      "remote_version": "20260820173521",
+      "proof_buckets_remaining": 0,
+      "proof_signals_remaining": 0,
+      "anonymous_network_rate_limit_signals_remaining": 0
+    }
   },
   "probe_contract": {
     "historical_runtime_version": 2,
     "mode": "origin_probe_not_student_gateway_cutover",
     "allowed_method": "GET",
     "candidate_header": "cf-connecting-ip",
-    "candidate_header_basis": "The Supabase/Cloudflare runtime exposes cf-connecting-ip during normal requests, and controlled external sentinel tests on runtime v2 and v3 proved that a client-supplied cf-connecting-ip attempt is rejected at the edge with HTTP 403 before the function executes.",
     "returns_raw_ip": false,
     "logs_raw_ip": false,
     "reads_request_body": false,
@@ -128,14 +98,14 @@
     ],
     "anonymous_v2_rpc_execute_required_by_current_client": true,
     "network_origin_rate_limit_path_verified_live": true,
-    "network_origin_rate_limit_for_invalid_token": false,
+    "network_origin_rate_limit_for_invalid_token": true,
+    "valid_student_route_verified_live": false,
     "edge_alert_delivery_verified": false
   },
   "target_cutover_invariants": {
     "single_student_gateway": true,
     "network_origin_must_come_from_trusted_runtime_metadata": true,
     "client_supplied_forwarded_headers_must_not_be_trusted": true,
-    "client_forwarded_header_presence_must_not_be_required": true,
     "invalid_token_attempts_rate_limited_by_network_origin_and_route": true,
     "valid_token_database_rate_limits_remain_active": true,
     "raw_possession_token_logging_forbidden": true,
@@ -147,18 +117,14 @@
   },
   "promotion_preconditions": [
     "trusted network-origin source verified in live runtime",
-    "full gateway repository implementation passes CI",
-    "durable invalid-token network-origin throttle is applied repo-first and remotely reconciled",
     "gateway deployed to the authoritative Supabase project",
-    "runtime health test succeeds without exposing a raw token",
-    "invalid-token network-origin throttle threshold is verified with a controlled runtime test",
-    "valid student route forwarding is verified in the Edge runtime",
-    "Flutter student traffic is cut over to the gateway",
-    "direct anon execute on student v2 RPCs is revoked only after gateway cutover verification",
-    "no direct-RPC fallback remains in the client",
-    "alert delivery is tested against a controlled signal",
-    "rollback path is tested",
-    "remote migration ledger is reconciled for any privilege-changing DDL"
+    "invalid-token network-origin threshold verified with controlled HTTP 429 runtime proof",
+    "synthetic threshold-proof residue cleaned and migration ledger reconciled",
+    "valid student route forwarding verified in Edge runtime",
+    "Flutter student traffic cut over to gateway",
+    "direct anon execute revoked only after gateway cutover verification",
+    "alert delivery tested against controlled signal",
+    "rollback path tested"
   ],
   "launch_authority": {
     "can_promote_incident_response_gate": false,

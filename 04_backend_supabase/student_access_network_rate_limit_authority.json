@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "project_ref": "mceukeondizkwlpfxzgf",
   "failure_classes": [
     "BGF-EDGE-INVALID-TOKEN-RATE-LIMIT-174",
@@ -9,8 +9,9 @@
   ],
   "verification_failure_class": "BGF-NETWORK-RATE-LIMIT-REMOTE-VERIFICATION-179",
   "runtime_threshold_proof_failure_class": "BGF-EDGE-LIVE-THRESHOLD-PROOF-GAP-185",
-  "purpose": "Durable pre-token-validation network-origin throttle for the student Edge boundary, with privacy-minimized keyed pseudonymization and database-owned route thresholds.",
-  "current_state": "DATABASE_RATE_LIMIT_APPLIED_VERIFIED_EDGE_PATH_LIVE_THRESHOLD_PROOF_PENDING",
+  "synthetic_cleanup_failure_class": "BGF-SYNTHETIC-SECURITY-PROOF-RESIDUE-186",
+  "purpose": "Durable pre-token network-origin throttle for the student Edge boundary, with database-owned thresholds, live exact HTTP 429 proof, privacy-minimized pseudonymization and reconciled synthetic proof cleanup.",
+  "current_state": "DATABASE_AND_EDGE_THRESHOLD_VERIFIED_SYNTHETIC_CLEANUP_COMPLETE",
   "migration": {
     "repository_file": "04_backend_supabase/migrations/20260820063000_stage27_student_network_origin_rate_limit.sql",
     "migration_name": "stage27_student_network_origin_rate_limit",
@@ -33,7 +34,6 @@
     "synthetic_signal_cleanup_required": true
   },
   "verification_receipt": {
-    "observed_at_utc": "2026-08-20T07:05:37Z",
     "remote_apply_result": "PASS",
     "assertions_executed_transactionally": true,
     "allowed_calls": 120,
@@ -43,8 +43,7 @@
     "limit_per_minute": 120,
     "bucket_rows_after_commit": 0,
     "network_rate_limit_signals_after_commit": 0,
-    "synthetic_residue": false,
-    "proof_semantics": "Successful migration application proves every in-transaction assertion completed; any mismatch raises P0001 and aborts the migration."
+    "synthetic_residue": false
   },
   "trusted_origin_authority": {
     "source": "cf-connecting-ip",
@@ -93,72 +92,53 @@
     ],
     "posture_view_stage27_appended_column": "network_rate_limit_burst_signals_60m"
   },
-  "remote_schema_receipt": {
-    "observed_at_utc": "2026-08-20T06:56:36Z",
-    "remote_migration_version": "20260820065403",
-    "secret_rows": 1,
-    "pepper_length_bytes": 32,
-    "bucket_rows_before_verification": 0,
-    "network_rate_limit_signals_before_verification": 0,
-    "raw_network_origin_columns_present": false,
-    "posture_view_columns": [
-      "evaluated_at",
-      "posture",
-      "signals_60m",
-      "rate_limit_burst_signals_60m",
-      "command_replay_burst_signals_60m",
-      "token_rotation_burst_signals_60m",
-      "security_events_15m",
-      "rate_limited_events_15m",
-      "replay_events_15m",
-      "network_rate_limit_burst_signals_60m"
-    ],
-    "service_role_can_select_secret": false,
-    "service_role_can_select_buckets": false,
-    "service_role_can_execute_public_bridge": true,
-    "anon_can_execute_public_bridge": false,
-    "authenticated_can_execute_public_bridge": false,
-    "service_role_can_execute_private_function": true,
-    "anon_can_execute_private_function": false,
-    "authenticated_can_execute_private_function": false,
-    "private_function_security_definer": true,
-    "public_bridge_security_definer": false,
-    "execute_sql_connector_role": "supabase_read_only_user",
-    "direct_transactional_write_probe_available_through_execute_sql": false
-  },
-  "advisor_receipt": {
-    "observed_after_verification_utc": "2026-08-20T07:05:37Z",
-    "security_new_stage27_actionable_findings": 0,
-    "security_existing_intentional_student_security_definer_warnings_preserved": true,
-    "performance_new_stage27_actionable_findings": 0,
-    "stage27_unused_index_info": [],
-    "unused_index_info_is_not_removal_authority": true
-  },
   "runtime_boundary": {
     "edge_gateway_uses_network_rate_limit": true,
     "network_origin_rate_limit_path_verified_live": true,
-    "invalid_token_network_origin_rate_limit_threshold_verified_live": false,
-    "live_path_proof_workflow_run_id": 32349938290,
-    "live_path_proof_http_status": 400,
-    "live_path_proof_terminal_error": "STUDENT_GATEWAY_PAYLOAD_INVALID",
+    "invalid_token_network_origin_rate_limit_threshold_verified_live": true,
+    "pre_token_path_workflow_run_id": 32349938290,
+    "threshold_proof_workflow_run_id": 32351032979,
+    "threshold_operation": "start_workout",
+    "threshold_limit_per_minute": 30,
+    "allowed_calls_observed": 30,
+    "rate_limited_call_number": 31,
+    "rate_limit_http_status": 429,
+    "rate_limit_error": "STUDENT_NETWORK_RATE_LIMITED",
     "flutter_uses_edge_gateway": false,
     "direct_v2_rpc_path_active": true,
     "direct_anon_v2_rpc_execute_revoked": false,
     "edge_alert_delivery_verified": false,
     "rollback_verified": false
   },
+  "synthetic_cleanup_receipt": {
+    "migration_name": "stage28_threshold_proof_synthetic_cleanup",
+    "remote_version": "20260820173521",
+    "remote_applied": true,
+    "expected_buckets_removed": 2,
+    "expected_signals_removed": 2,
+    "proof_buckets_remaining": 0,
+    "proof_signals_remaining": 0,
+    "anonymous_network_rate_limit_signals_remaining": 0,
+    "migration_ledger_state": "remote_reconciled"
+  },
+  "advisor_receipt": {
+    "security_new_stage28_actionable_findings": 0,
+    "security_existing_intentional_student_security_definer_warnings_preserved": true,
+    "performance_new_stage28_actionable_findings": 0,
+    "unused_index_info_is_not_removal_authority": true
+  },
   "proof_semantics": {
     "database_threshold_verified": true,
     "edge_pre_token_limiter_path_verified": true,
-    "edge_threshold_exceeded_http_429_verified": false,
-    "threshold_gap_policy": "Do not treat a successful pre-token limiter invocation as proof that the live Edge path returns HTTP 429 at the configured threshold. A controlled threshold-exceeded runtime proof remains mandatory before Flutter cutover."
+    "edge_threshold_exceeded_http_429_verified": true,
+    "synthetic_residue_cleanup_verified": true,
+    "valid_student_route_verified": false
   },
   "next_stage": {
-    "name": "EDGE_GATEWAY_THRESHOLD_AND_ROUTE_RUNTIME_PROOF",
+    "name": "VALID_STUDENT_ROUTE_RUNTIME_PROOF",
     "allowed_now": true,
     "must_preserve_direct_rpc_fallback_until_full_client_cutover": true,
     "may_revoke_direct_rpc_execute_now": false,
-    "must_verify_http_429_threshold_outcome": true,
     "must_verify_valid_student_route_before_client_cutover": true
   },
   "launch_authority": {

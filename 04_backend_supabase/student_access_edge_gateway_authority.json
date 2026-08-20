@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "project_ref": "mceukeondizkwlpfxzgf",
   "failure_classes": [
     "BGF-EDGE-RATE-LIMIT-ORDER-BYPASS-180",
@@ -7,11 +7,12 @@
     "BGF-EDGE-RAW-TOKEN-LOGGING-182",
     "BGF-EDGE-ACTION-RPC-MAPPING-DRIFT-183",
     "BGF-EDGE-CANDIDATE-DEPLOYMENT-SELF-ATTESTATION-184",
-    "BGF-EDGE-LIVE-THRESHOLD-PROOF-GAP-185"
+    "BGF-EDGE-LIVE-THRESHOLD-PROOF-GAP-185",
+    "BGF-SYNTHETIC-SECURITY-PROOF-RESIDUE-186"
   ],
-  "purpose": "Runtime authority for the student Edge gateway. The verified Stage 27 network-origin limiter must execute before any possession-token validation or student v2 RPC, while deployment proof, threshold-exceeded proof, Flutter cutover and privilege revocation remain separate gates.",
-  "current_state": "EDGE_GATEWAY_V3_DEPLOYED_PRETOKEN_LIMITER_PATH_VERIFIED_THRESHOLD_PROOF_PENDING",
-  "baseline_main_sha": "dfb0c3a81031ae3a13605be9c9fe969940f9878a",
+  "purpose": "Runtime authority for the student Edge gateway. Deployment, pre-token network-origin limiting, exact HTTP 429 threshold proof, synthetic cleanup, valid student routing, Flutter cutover and privilege revocation are independent promotion gates.",
+  "current_state": "EDGE_GATEWAY_V3_THRESHOLD_429_VERIFIED_SYNTHETIC_CLEANUP_COMPLETE_VALID_ROUTE_PROOF_PENDING",
+  "baseline_main_sha": "8769f0ebb48d0480603f5af8d9b6627a582bdc4f",
   "repository_source": "04_backend_supabase/functions/student-access-gateway/index.ts",
   "observed_deployed_runtime": {
     "version": 3,
@@ -56,10 +57,7 @@
   },
   "stage27_dependency": {
     "authority": "04_backend_supabase/student_access_network_rate_limit_authority.json",
-    "accepted_states": [
-      "DATABASE_RATE_LIMIT_APPLIED_VERIFIED_EDGE_INTEGRATION_PENDING",
-      "DATABASE_RATE_LIMIT_APPLIED_VERIFIED_EDGE_PATH_LIVE_THRESHOLD_PROOF_PENDING"
-    ],
+    "accepted_states": ["DATABASE_AND_EDGE_THRESHOLD_VERIFIED_SYNTHETIC_CLEANUP_COMPLETE"],
     "durable_migration_remote_version": "20260820065403",
     "verification_migration_remote_version": "20260820070524"
   },
@@ -73,34 +71,59 @@
     "candidate_deployed": true,
     "health_probe_verified": true,
     "network_origin_rate_limit_path_verified_live": true,
-    "invalid_token_network_origin_rate_limit_threshold_verified_live": false,
+    "invalid_token_network_origin_rate_limit_threshold_verified_live": true,
     "student_rpc_forwarding_enabled_observed": true,
     "student_rpc_forwarding_with_valid_token_verified_live": false,
     "edge_alert_delivery_verified": false,
     "rollback_verified": false,
-    "live_proof_workflow_run_id": 32349938290,
-    "live_proof_result": "PASS",
-    "live_proof_observed_at_utc": "2026-08-20T08:40:02Z",
-    "health_http_status": 200,
-    "pre_token_limiter_proof_http_status": 400,
-    "pre_token_limiter_proof_error": "STUDENT_GATEWAY_PAYLOAD_INVALID",
-    "spoof_attempt_http_status": 403,
-    "spoof_proof_outcome": "BLOCKED_AT_EDGE_403",
+    "pre_token_live_proof_workflow_run_id": 32349938290,
+    "pre_token_live_proof_result": "PASS",
+    "threshold_live_proof_workflow_run_id": 32351032979,
+    "threshold_live_proof_result": "PASS",
+    "threshold_operation": "start_workout",
+    "threshold_limit_per_minute": 30,
+    "allowed_calls_observed": 30,
+    "rate_limited_call_number": 31,
+    "rate_limit_http_status": 429,
+    "rate_limit_error": "STUDENT_NETWORK_RATE_LIMITED",
     "real_student_token_used": false,
     "real_student_data_mutated": false,
-    "raw_network_origin_returned": false
+    "raw_network_origin_returned": false,
+    "spoof_attempt_http_status": 403,
+    "spoof_proof_outcome": "BLOCKED_AT_EDGE_403"
+  },
+  "synthetic_cleanup_receipt": {
+    "failure_class": "BGF-SYNTHETIC-SECURITY-PROOF-RESIDUE-186",
+    "migration_name": "stage28_threshold_proof_synthetic_cleanup",
+    "remote_version": "20260820173521",
+    "remote_applied": true,
+    "expected_buckets_removed": 2,
+    "expected_signals_removed": 2,
+    "proof_buckets_remaining": 0,
+    "proof_signals_remaining": 0,
+    "anonymous_network_rate_limit_signals_remaining": 0,
+    "raw_network_origin_stored_in_repository": false,
+    "migration_ledger_state": "remote_reconciled"
+  },
+  "advisor_receipt": {
+    "security_new_stage28_actionable_findings": 0,
+    "security_existing_intentional_student_security_definer_warnings_preserved": true,
+    "performance_new_stage28_actionable_findings": 0,
+    "unused_index_info_is_not_removal_authority": true
   },
   "proof_semantics": {
-    "pre_token_path_proof": "A live POST with action=start_workout and no possession token returned STUDENT_GATEWAY_PAYLOAD_INVALID. In the merged v3 source this response is reachable only after the service-role-only network-origin limiter call succeeds, proving the limiter is on the live pre-token path.",
-    "threshold_proof_not_claimed": "The live proof did not intentionally exceed the database threshold. Therefore a real HTTP 429/STUDENT_NETWORK_RATE_LIMITED runtime outcome remains a separate pending proof and must not be inferred from the successful pre-token path proof."
+    "pre_token_path_verified": true,
+    "threshold_http_429_verified": true,
+    "threshold_proof_exactness": "start_workout permits 30 calls per minute and the controlled 31st call returned HTTP 429 STUDENT_NETWORK_RATE_LIMITED.",
+    "synthetic_residue_cleanup_verified": true,
+    "valid_student_route_not_inferred": "The threshold proof intentionally used no real possession token. A separate valid-token student route proof remains mandatory before Flutter cutover."
   },
   "promotion_rule": {
-    "may_deploy_after_ci_and_merge": true,
     "deployment_completed": true,
+    "runtime_threshold_exceeded_proof_completed": true,
+    "synthetic_cleanup_completed": true,
     "may_cutover_flutter_now": false,
     "may_revoke_direct_rpc_execute_now": false,
-    "deployment_does_not_equal_client_cutover": true,
-    "runtime_threshold_exceeded_proof_required_before_client_cutover": true,
     "valid_student_route_proof_required_before_client_cutover": true,
     "rollback_proof_required_before_direct_rpc_revocation": true
   },
