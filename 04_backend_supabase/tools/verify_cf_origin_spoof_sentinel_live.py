@@ -15,10 +15,14 @@ def fail(message: str) -> None:
     raise SystemExit("CF_ORIGIN_SPOOF_SENTINEL_LIVE=FAIL\n" + message)
 
 
-def fetch(extra_headers: dict[str, str] | None = None) -> dict:
+def fetch(
+    extra_headers: dict[str, str] | None = None,
+    *,
+    allow_edge_block: bool = False,
+) -> tuple[int, dict | None]:
     headers = {
         "apikey": PUBLISHABLE_KEY,
-        "user-agent": "FitNexus-Stage26-CF-Origin-Spoof-Sentinel/1.0",
+        "user-agent": "FitNexus-Stage26-CF-Origin-Spoof-Sentinel/1.1",
         "accept": "application/json",
     }
     if extra_headers:
@@ -30,6 +34,12 @@ def fetch(extra_headers: dict[str, str] | None = None) -> dict:
             status = response.status
             raw = response.read(16384)
     except urllib.error.HTTPError as exc:
+        # Run 32338828582 proved that the platform may reject a client-supplied
+        # cf-connecting-ip before the function executes. A 403 on the deliberate spoof
+        # request is a stronger safe outcome than allowing the request through with a
+        # rewritten value. Never inspect or print the rejection body.
+        if allow_edge_block and exc.code == 403:
+            return 403, None
         fail(f"unexpected HTTP status: {exc.code}")
     except urllib.error.URLError as exc:
         fail(f"edge endpoint unreachable: {type(exc.reason).__name__}")
@@ -44,7 +54,7 @@ def fetch(extra_headers: dict[str, str] | None = None) -> dict:
 
     if not isinstance(value, dict):
         fail("response JSON must be an object")
-    return value
+    return status, value
 
 
 def require_safe_contract(value: dict, label: str) -> bool:
@@ -85,25 +95,40 @@ def require_safe_contract(value: dict, label: str) -> bool:
 
 
 def main() -> None:
-    baseline = fetch()
+    baseline_status, baseline = fetch()
+    if baseline_status != 200 or baseline is None:
+        fail("baseline request did not reach the safe probe")
     baseline_equal = require_safe_contract(baseline, "baseline")
     if baseline_equal:
         fail("baseline unexpectedly equals the TEST-NET spoof sentinel")
 
-    spoof_attempt = fetch({"cf-connecting-ip": SENTINEL})
-    spoof_equal = require_safe_contract(spoof_attempt, "cf-connecting-ip spoof attempt")
+    spoof_status, spoof_attempt = fetch(
+        {"cf-connecting-ip": SENTINEL},
+        allow_edge_block=True,
+    )
 
-    if spoof_equal:
-        fail(
-            "BGF-CF-ORIGIN-SPOOF-171 client-supplied cf-connecting-ip reached the runtime candidate unchanged"
+    if spoof_status == 403:
+        outcome = "BLOCKED_AT_EDGE_403"
+    elif spoof_status == 200 and spoof_attempt is not None:
+        spoof_equal = require_safe_contract(
+            spoof_attempt,
+            "cf-connecting-ip spoof attempt",
         )
+        if spoof_equal:
+            fail(
+                "BGF-CF-ORIGIN-SPOOF-171 client-supplied cf-connecting-ip reached the runtime candidate unchanged"
+            )
+        outcome = "RUNTIME_CANDIDATE_OVERRIDES_CLIENT_SENTINEL"
+    else:
+        fail(f"ambiguous spoof-proof outcome: HTTP {spoof_status}")
 
     print("CF_ORIGIN_SPOOF_SENTINEL_LIVE=PASS")
-    print("EDGE_HTTP_STATUS=200")
+    print("BASELINE_HTTP_STATUS=200")
     print("RUNTIME_VERSION_EXPECTED=2")
     print("NETWORK_ORIGIN_CANDIDATE=cf-connecting-ip")
     print("SENTINEL_STANDARD=RFC5737_TEST_NET_3")
-    print("CLIENT_SUPPLIED_CF_CONNECTING_IP_EQUALITY=false")
+    print(f"SPOOF_PROOF_OUTCOME={outcome}")
+    print("CLIENT_CAN_FORCE_CF_CONNECTING_IP=false")
     print("RAW_RUNTIME_ORIGIN_RETURNED=false")
     print("STUDENT_RPC_FORWARDING=false")
     print("LAUNCH_GATE_AUTHORITY=false")
