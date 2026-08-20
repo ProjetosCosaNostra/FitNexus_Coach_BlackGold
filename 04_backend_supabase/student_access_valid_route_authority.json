@@ -7,8 +7,9 @@
     "BGF-VALID-ROUTE-RESPONSE-DATA-LEAK-189"
   ],
   "apply_compatibility_failure_class": "BGF-MIGRATION-APPLY-SYNTHETIC-LITERAL-SCREENING-191",
+  "proof_reexecution_failure_class": "BGF-LIVE-PROOF-REEXECUTION-192",
   "purpose": "Repository-first authority for a controlled synthetic valid-possession-token GET proof through the deployed Edge v3 student gateway, without mutating real student data or prematurely cutting over Flutter.",
-  "current_state": "VALID_ROUTE_SYNTHETIC_FIXTURE_REMOTE_LIVE_PROOF_PENDING",
+  "current_state": "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_PENDING",
   "baseline_main_sha": "0036ec710017311428f38e533266dfa69c0eb21d",
   "fixture_migration": {
     "repository_file": "04_backend_supabase/migrations/20260820180000_stage29_valid_student_route_fixture.sql",
@@ -74,11 +75,35 @@
     "real_student_data_used": false,
     "real_student_data_mutated": false
   },
+  "live_proof_receipt": {
+    "workflow_run_id": 32409055932,
+    "check_name": "Live valid student route proof",
+    "result": "PASS",
+    "edge_runtime_version": 3,
+    "http_status": 200,
+    "action": "get_workout",
+    "valid_synthetic_possession_token_accepted": true,
+    "student_rpc_forwarding_with_valid_token_verified": true,
+    "response_matches_synthetic_fixture": true,
+    "raw_synthetic_token_returned": false,
+    "raw_network_origin_returned": false,
+    "real_student_data_used": false,
+    "real_student_data_mutated": false,
+    "workout_sessions_after_proof": 0,
+    "workout_logs_after_proof": 0,
+    "workout_feedback_after_proof": 0,
+    "link_rate_buckets_after_proof": 1,
+    "command_receipts_after_proof": 0,
+    "security_events_after_proof": 0,
+    "security_signals_after_proof": 0,
+    "network_get_workout_buckets_observed_in_proof_minute": 2,
+    "proof_reexecution_allowed": false
+  },
   "runtime_verification": {
     "fixture_deployed": true,
-    "valid_token_edge_route_verified_live": false,
-    "student_rpc_forwarding_with_valid_token_verified_live": false,
-    "response_matches_synthetic_fixture": false,
+    "valid_token_edge_route_verified_live": true,
+    "student_rpc_forwarding_with_valid_token_verified_live": true,
+    "response_matches_synthetic_fixture": true,
     "cleanup_completed": false,
     "synthetic_business_rows_remaining": 14,
     "edge_alert_delivery_verified": false,
@@ -97,10 +122,11 @@
     "may_revoke_direct_rpc_execute_now": false,
     "valid_route_live_proof_required": true,
     "fixture_cleanup_required": true,
-    "rollback_proof_required_before_direct_rpc_revocation": true
+    "rollback_proof_required_before_direct_rpc_revocation": true,
+    "live_proof_must_not_reexecute_after_seal": true
   },
   "next_stage": {
-    "name": "LIVE_VALID_STUDENT_ROUTE_PROOF",
+    "name": "SYNTHETIC_VALID_ROUTE_FIXTURE_CLEANUP",
     "allowed_now": true,
     "cleanup_required_immediately_after_proof": true,
     "client_cutover_allowed_now": false
