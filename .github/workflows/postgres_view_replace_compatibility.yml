@@ -1,0 +1,31 @@
+name: Postgres View Replace Compatibility
+
+on:
+  pull_request:
+    paths:
+      - '04_backend_supabase/migrations/**'
+      - '04_backend_supabase/student_access_network_rate_limit_authority.json'
+      - '04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py'
+      - '.github/workflows/postgres_view_replace_compatibility.yml'
+  push:
+    branches:
+      - main
+      - 'blackgold/**'
+    paths:
+      - '04_backend_supabase/migrations/**'
+      - '04_backend_supabase/student_access_network_rate_limit_authority.json'
+      - '04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py'
+      - '.github/workflows/postgres_view_replace_compatibility.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  view-replace-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: PostgreSQL CREATE OR REPLACE VIEW compatibility guard
+        run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py
