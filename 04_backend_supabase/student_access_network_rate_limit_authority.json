@@ -9,19 +9,20 @@
   ],
   "verification_failure_class": "BGF-NETWORK-RATE-LIMIT-REMOTE-VERIFICATION-179",
   "purpose": "Durable pre-token-validation network-origin throttle for the student Edge boundary, with privacy-minimized keyed pseudonymization and database-owned route thresholds.",
-  "current_state": "DATABASE_APPLIED_VERIFICATION_INTERLOCK_REPO_ONLY",
+  "current_state": "DATABASE_RATE_LIMIT_APPLIED_VERIFIED_EDGE_INTEGRATION_PENDING",
   "migration": {
     "repository_file": "04_backend_supabase/migrations/20260820063000_stage27_student_network_origin_rate_limit.sql",
     "migration_name": "stage27_student_network_origin_rate_limit",
     "remote_applied": true,
     "remote_version": "20260820065403",
-    "migration_ledger_state": "remote_reconciled_verification_repo_only"
+    "migration_ledger_state": "remote_reconciled"
   },
   "verification_migration": {
     "repository_file": "04_backend_supabase/migrations/20260820065900_stage27_network_rate_limit_verification_interlock.sql",
     "migration_name": "stage27_network_rate_limit_verification_interlock",
-    "remote_applied": false,
-    "migration_ledger_state": "repo_only_declared",
+    "remote_applied": true,
+    "remote_version": "20260820070524",
+    "migration_ledger_state": "remote_reconciled",
     "test_origin": "RFC5737_TEST_NET_ONLY",
     "test_operation": "get_workout",
     "test_calls": 121,
@@ -29,6 +30,20 @@
     "expected_rate_limited_calls": 1,
     "synthetic_bucket_cleanup_required": true,
     "synthetic_signal_cleanup_required": true
+  },
+  "verification_receipt": {
+    "observed_at_utc": "2026-08-20T07:05:37Z",
+    "remote_apply_result": "PASS",
+    "assertions_executed_transactionally": true,
+    "allowed_calls": 120,
+    "rate_limited_calls": 1,
+    "rate_limit_error": "STUDENT_NETWORK_RATE_LIMITED",
+    "terminal_request_count": 121,
+    "limit_per_minute": 120,
+    "bucket_rows_after_commit": 0,
+    "network_rate_limit_signals_after_commit": 0,
+    "synthetic_residue": false,
+    "proof_semantics": "Successful migration application proves every in-transaction assertion completed; any mismatch raises P0001 and aborts the migration."
   },
   "trusted_origin_authority": {
     "source": "cf-connecting-ip",
@@ -110,12 +125,11 @@
     "direct_transactional_write_probe_available_through_execute_sql": false
   },
   "advisor_receipt": {
+    "observed_after_verification_utc": "2026-08-20T07:05:37Z",
     "security_new_stage27_actionable_findings": 0,
     "security_existing_intentional_student_security_definer_warnings_preserved": true,
     "performance_new_stage27_actionable_findings": 0,
-    "stage27_unused_index_info": [
-      "student_access_network_rate_buckets_last_seen_idx"
-    ],
+    "stage27_unused_index_info": [],
     "unused_index_info_is_not_removal_authority": true
   },
   "runtime_boundary": {
@@ -127,18 +141,13 @@
     "edge_alert_delivery_verified": false,
     "rollback_verified": false
   },
-  "promotion_preconditions": [
-    "repository migration and authority pass CI",
-    "migration is merged before remote application",
-    "remote migration applies successfully",
-    "service_role can execute only the public SECURITY INVOKER bridge",
-    "anon and authenticated cannot execute the bridge",
-    "raw network-origin columns are absent",
-    "controlled transactional rate-limit probe reaches STUDENT_NETWORK_RATE_LIMITED and removes synthetic bucket/signal evidence before commit",
-    "security and performance advisors show no new unresolved actionable finding",
-    "remote migration ledger is reconciled",
-    "Edge gateway integration is deployed only after database throttle authority is remotely reconciled"
-  ],
+  "next_stage": {
+    "name": "EDGE_GATEWAY_RATE_LIMIT_INTEGRATION",
+    "allowed_now": true,
+    "must_run_before_token_validation": true,
+    "must_preserve_direct_rpc_fallback_until_full_client_cutover": true,
+    "may_revoke_direct_rpc_execute_now": false
+  },
   "launch_authority": {
     "can_promote_incident_response_gate": false,
     "can_promote_production_deployment_gate": false,
