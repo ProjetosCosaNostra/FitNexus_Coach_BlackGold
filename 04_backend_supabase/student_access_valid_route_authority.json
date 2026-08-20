@@ -9,6 +9,7 @@
   "apply_compatibility_failure_class": "BGF-MIGRATION-APPLY-SYNTHETIC-LITERAL-SCREENING-191",
   "proof_reexecution_failure_class": "BGF-LIVE-PROOF-REEXECUTION-192",
   "cleanup_scope_failure_class": "BGF-STAGE29-CLEANUP-SCOPE-DRIFT-193",
+  "sealed_proof_lifecycle_failure_class": "BGF-SEALED-PROOF-LIFECYCLE-STATE-194",
   "purpose": "Repository-first authority for a controlled synthetic valid-possession-token GET proof through the deployed Edge v3 student gateway, with mandatory fail-closed cleanup before any client cutover.",
   "current_state": "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_REPO_ONLY",
   "baseline_main_sha": "3f4c2fa25e52985d892db3a1beba64a51e68baa1",
@@ -161,7 +162,8 @@
     "valid_route_live_proof_required": true,
     "fixture_cleanup_required": true,
     "rollback_proof_required_before_direct_rpc_revocation": true,
-    "live_proof_must_not_reexecute_after_seal": true
+    "live_proof_must_not_reexecute_after_seal": true,
+    "sealed_proof_remains_sealed_across_cleanup_lifecycle_states": true
   },
   "next_stage": {
     "name": "APPLY_SYNTHETIC_VALID_ROUTE_FIXTURE_CLEANUP",
