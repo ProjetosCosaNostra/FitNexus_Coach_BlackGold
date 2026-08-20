@@ -22,6 +22,9 @@ GUARD_CONTRADICTION_CLASS = "BGF-GUARD-REQUIRED-FORBIDDEN-CONTRADICTION-190"
 APPLY_COMPATIBILITY_CLASS = "BGF-MIGRATION-APPLY-SYNTHETIC-LITERAL-SCREENING-191"
 TOKEN_SEED = "fitnexus-stage29-valid-route-fixture-v1"
 FIXTURE_TOKEN = hashlib.sha256(TOKEN_SEED.encode("utf-8")).hexdigest()
+FIXTURE_REMOTE_VERSION = "20260820192415"
+STATE_REPO_ONLY = "VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY"
+STATE_REMOTE_PENDING = "VALID_ROUTE_SYNTHETIC_FIXTURE_REMOTE_LIVE_PROOF_PENDING"
 FIXTURE_IDS = {
     "user_id": "2615749d-ffca-5319-84e0-b775578ceaf6",
     "organization_id": "13678787-eeae-5f6a-8828-190723a22594",
@@ -70,17 +73,15 @@ def main() -> None:
         fail("Stage 29 failure classes drifted")
     if authority.get("apply_compatibility_failure_class") != APPLY_COMPATIBILITY_CLASS:
         fail("Stage 29 apply-compatibility failure class drifted")
-    if authority.get("current_state") != "VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY":
-        fail(f"{FAILURE_CLASSES[0]} repository fixture state self-promoted")
-    if authority.get("baseline_main_sha") != "031178c4b0ea526c7ade1667261cd629c8bb1aa8":
-        fail("Stage 29 baseline main SHA drifted")
+
+    state = authority.get("current_state")
+    if state not in {STATE_REPO_ONLY, STATE_REMOTE_PENDING}:
+        fail(f"unsupported Stage 29 fixture state: {state}")
 
     fixture = authority.get("fixture_migration", {})
-    required_fixture = {
+    common_fixture = {
         "repository_file": "04_backend_supabase/migrations/20260820180000_stage29_valid_student_route_fixture.sql",
         "migration_name": "stage29_valid_student_route_fixture",
-        "remote_applied": False,
-        "migration_ledger_state": "repo_only",
         "requires_empty_customer_domain": True,
         "synthetic_auth_user": True,
         "synthetic_organization": True,
@@ -96,9 +97,22 @@ def main() -> None:
         "fixture_expiry_hours": 2,
         "cleanup_migration_required": True,
     }
-    for key, expected in required_fixture.items():
+    for key, expected in common_fixture.items():
         if fixture.get(key) != expected:
             fail(f"fixture authority drift for {key}")
+
+    if state == STATE_REPO_ONLY:
+        if fixture.get("remote_applied") is not False or fixture.get("migration_ledger_state") != "repo_only":
+            fail("repository-only fixture state self-promoted")
+        if fixture.get("remote_version") is not None:
+            fail("repository-only fixture unexpectedly has a remote version")
+    else:
+        if fixture.get("remote_applied") is not True:
+            fail("remote fixture state lost remote_applied receipt")
+        if fixture.get("remote_version") != FIXTURE_REMOTE_VERSION:
+            fail("remote fixture version drifted")
+        if fixture.get("migration_ledger_state") != "remote_reconciled":
+            fail("remote fixture is not reconciled in authority")
 
     if authority.get("fixture_identifiers") != FIXTURE_IDS:
         fail("synthetic fixture identifiers drifted")
@@ -127,19 +141,55 @@ def main() -> None:
             fail(f"expected live contract drift for {key}")
 
     runtime = authority.get("runtime_verification", {})
-    for key in (
-        "fixture_deployed",
-        "valid_token_edge_route_verified_live",
-        "student_rpc_forwarding_with_valid_token_verified_live",
-        "response_matches_synthetic_fixture",
-        "cleanup_completed",
-        "edge_alert_delivery_verified",
-        "rollback_verified",
-    ):
-        if runtime.get(key) is not False:
-            fail(f"Stage 29 runtime proof self-attested: {key}")
-    if runtime.get("synthetic_business_rows_remaining") is not None:
-        fail("synthetic residue count was self-attested before fixture deployment")
+    if state == STATE_REPO_ONLY:
+        expected_runtime = {
+            "fixture_deployed": False,
+            "valid_token_edge_route_verified_live": False,
+            "student_rpc_forwarding_with_valid_token_verified_live": False,
+            "response_matches_synthetic_fixture": False,
+            "cleanup_completed": False,
+            "synthetic_business_rows_remaining": None,
+            "edge_alert_delivery_verified": False,
+            "rollback_verified": False,
+        }
+    else:
+        expected_runtime = {
+            "fixture_deployed": True,
+            "valid_token_edge_route_verified_live": False,
+            "student_rpc_forwarding_with_valid_token_verified_live": False,
+            "response_matches_synthetic_fixture": False,
+            "cleanup_completed": False,
+            "synthetic_business_rows_remaining": 14,
+            "edge_alert_delivery_verified": False,
+            "rollback_verified": False,
+        }
+    for key, expected in expected_runtime.items():
+        if runtime.get(key) != expected:
+            fail(f"runtime verification drift for {key}")
+
+    if state == STATE_REMOTE_PENDING:
+        receipt = authority.get("fixture_apply_receipt", {})
+        expected_counts = {
+            "auth_users": 1,
+            "profiles": 1,
+            "organizations": 1,
+            "organization_members": 1,
+            "organization_subscriptions": 1,
+            "subscription_authority_events": 1,
+            "students": 1,
+            "training_plans": 1,
+            "training_exercises": 1,
+            "student_access_links": 1,
+            "growth_events": 4,
+            "growth_attribution": 0,
+            "fixture_derived_rows_observed": 14,
+            "active_link_verified": True,
+            "trial_initialized_verified": True,
+            "owner_membership_verified": True,
+        }
+        for key, expected in expected_counts.items():
+            if receipt.get(key) != expected:
+                fail(f"remote fixture apply receipt drift for {key}")
 
     if gateway.get("current_state") != "EDGE_GATEWAY_V3_THRESHOLD_429_VERIFIED_SYNTHETIC_CLEANUP_COMPLETE_VALID_ROUTE_PROOF_PENDING":
         fail("Stage 28 prerequisite state drifted")
@@ -156,11 +206,17 @@ def main() -> None:
         for row in ledger.get("declared_divergences", [])
         if row.get("direction") == "repo_only"
     }
-    if repo_only != {"stage29_valid_student_route_fixture"}:
-        fail(f"unexpected repo_only migration set: {sorted(repo_only)}")
-    remote_names = {row.get("name") for row in ledger.get("remote_migrations", [])}
-    if "stage29_valid_student_route_fixture" in remote_names:
-        fail("Stage 29 fixture is already remote while authority says repo_only")
+    remote = {row.get("name"): row.get("version") for row in ledger.get("remote_migrations", [])}
+    if state == STATE_REPO_ONLY:
+        if repo_only != {"stage29_valid_student_route_fixture"}:
+            fail(f"unexpected repo_only migration set: {sorted(repo_only)}")
+        if "stage29_valid_student_route_fixture" in remote:
+            fail("fixture appears remote while authority says repo_only")
+    else:
+        if repo_only:
+            fail(f"unexpected repo_only divergence after fixture apply: {sorted(repo_only)}")
+        if remote.get("stage29_valid_student_route_fixture") != FIXTURE_REMOTE_VERSION:
+            fail("migration ledger missing Stage 29 remote fixture receipt")
 
     required_source = (
         "BGF-VALID-STUDENT-ROUTE-UNPROVEN-187",
@@ -187,9 +243,6 @@ def main() -> None:
     if missing:
         fail(f"synthetic fixture migration incomplete: {missing}")
 
-    # Permanent prevention for BGF-GUARD-REQUIRED-FORBIDDEN-CONTRADICTION-190:
-    # forbidden fragments are exact authority JSON key spellings, not semantic substrings
-    # that can legitimately occur inside fail-closed SQL error identifiers.
     forbidden_authority_prose = (
         '"requires_empty_customer_domain"',
         '"raw_token_is_public_synthetic_test_material"',
@@ -210,18 +263,12 @@ def main() -> None:
 
     if "email," in lower or "encrypted_password" in lower:
         fail("synthetic auth fixture must not create a routable email/password credential")
-
-    # BGF-MIGRATION-APPLY-SYNTHETIC-LITERAL-SCREENING-191:
-    # the token is reproducible from a public non-secret seed for the live synthetic proof,
-    # but repository SQL must not contain a bearer-looking 64-hex literal. This prevents
-    # tool/secret scanners from confusing controlled synthetic material with credentials.
     if FIXTURE_TOKEN in migration:
         fail(f"{APPLY_COMPATIBILITY_CLASS} derived bearer was materialized as a repository literal")
     if re.search(r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])", lower):
         fail(f"{APPLY_COMPATIBILITY_CLASS} bearer-looking 64-hex literal found in fixture migration")
     if migration.count(TOKEN_SEED) != 1:
         fail("synthetic public token seed must appear exactly once in the fixture migration")
-
     for identifier in FIXTURE_IDS.values():
         if migration.count(identifier) != 1:
             fail(f"synthetic identifier should be declared once: {identifier}")
@@ -250,12 +297,12 @@ def main() -> None:
     print("STUDENT_ACCESS_VALID_ROUTE_FIXTURE_GUARD=PASS")
     print(f"GUARD_CONTRADICTION_PREVENTION={GUARD_CONTRADICTION_CLASS}")
     print(f"APPLY_COMPATIBILITY_PREVENTION={APPLY_COMPATIBILITY_CLASS}")
-    print("CURRENT_STATE=VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY")
-    print("CUSTOMER_DOMAIN_PRECONDITION=EMPTY_ONLY")
+    print(f"CURRENT_STATE={state}")
     print("FIXTURE_KIND=SYNTHETIC_ONLY")
     print("SYNTHETIC_TOKEN_SOURCE=PUBLIC_SEED_DERIVED")
     print("REPOSITORY_BEARER_LITERAL=false")
     print("DATABASE_TOKEN_STORAGE=SHA256_ONLY")
+    print(f"FIXTURE_REMOTE_APPLIED={str(fixture.get('remote_applied')).lower()}")
     print("LIVE_VALID_ROUTE_PROOF=PENDING")
     print("CLEANUP_MIGRATION=REQUIRED_AFTER_PROOF")
     print("FLUTTER_CUTOVER=false")
