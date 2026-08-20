@@ -1,0 +1,22 @@
+name: Stage 28 Edge Threshold Live Proof
+
+on:
+  push:
+    branches:
+      - blackgold/stage28-threshold-proof
+    paths:
+      - '.github/workflows/stage28_edge_threshold_live_proof.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  threshold-proof:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Prove exact network-origin threshold at Edge
+        run: python 04_backend_supabase/tools/verify_student_access_edge_threshold_live_stage28.py
