@@ -54,7 +54,7 @@
     "flutter_uses_edge_gateway": false,
     "direct_v2_rpc_path_active": true,
     "direct_anon_v2_rpc_execute_revoked": false,
-    "alert_delivery_verified": false,
+    "edge_alert_delivery_verified": false,
     "rollback_verified": false
   },
   "promotion_preconditions": [
