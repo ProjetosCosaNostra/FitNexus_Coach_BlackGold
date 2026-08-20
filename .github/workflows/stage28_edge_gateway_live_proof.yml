@@ -1,6 +1,9 @@
 name: Stage 28 Edge Gateway Live Proof
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/stage28_edge_gateway_live_proof.yml'
   push:
     branches:
       - blackgold/stage28-live-runtime-proof
