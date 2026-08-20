@@ -19,6 +19,9 @@ FAILURE_CLASSES = (
     "BGF-EDGE-ORIGIN-TRUST-164",
     "BGF-STUDENT-ACCESS-PARTIAL-EDGE-CUTOVER-165",
     "BGF-ALERT-DELIVERY-SELF-ATTESTATION-166",
+    "BGF-EDGE-RUNTIME-ORIGIN-ASSUMPTION-167",
+    "BGF-EDGE-PROBE-DATA-LEAK-168",
+    "BGF-EDGE-PROBE-PREMATURE-CUTOVER-169",
 )
 
 DIRECT_V2_RPCS = (
@@ -48,34 +51,64 @@ def read_json(path: Path) -> dict:
     raise AssertionError("unreachable")
 
 
+def require(text: str, fragments: tuple[str, ...], failure_class: str) -> None:
+    missing = [fragment for fragment in fragments if fragment.lower() not in text.lower()]
+    if missing:
+        fail(f"{failure_class} missing invariants: {missing}")
+
+
 def main() -> None:
     authority = read_json(AUTHORITY)
     stage21 = read_text(STAGE21).lower()
     abuse = read_json(ABUSE_AUTHORITY)
     external = read_json(EXTERNAL_GATES)
+    gateway = read_text(GATEWAY_ENTRYPOINT)
+    gateway_lower = gateway.lower()
 
-    if authority.get("schema_version") != 1:
-        fail("authority schema_version must remain 1")
+    if authority.get("schema_version") != 2:
+        fail("Stage 26 authority schema_version must remain 2")
     if authority.get("project_ref") != "mceukeondizkwlpfxzgf":
         fail("wrong Supabase project authority")
     if authority.get("failure_classes") != list(FAILURE_CLASSES):
         fail("failure-class authority drifted")
 
     state = authority.get("current_state")
-    if state != "NOT_ENFORCED_DIRECT_RPC_PATH_ACTIVE":
+    if state != "ORIGIN_PROBE_REPOSITORY_READY_NOT_DEPLOYED":
         fail(
-            f"{FAILURE_CLASSES[2]} current state changed without a new cutover guard revision: {state!r}"
+            f"{FAILURE_CLASSES[6]} Stage 26 probe state changed without runtime evidence: {state!r}"
         )
 
     runtime = authority.get("observed_runtime", {})
     if runtime.get("edge_function_name") != "student-access-gateway":
         fail(f"{FAILURE_CLASSES[2]} gateway name drifted")
     if runtime.get("edge_function_deployed") is not False:
-        fail(f"{FAILURE_CLASSES[2]} static authority may not self-attest a deployed gateway")
+        fail(f"{FAILURE_CLASSES[6]} repository-only probe may not self-attest deployment")
     if runtime.get("observed_edge_function_count") != 0:
-        fail(f"{FAILURE_CLASSES[2]} observed runtime snapshot no longer matches this contract version")
+        fail(f"{FAILURE_CLASSES[6]} runtime count was changed before a new live observation")
     if runtime.get("source") != "Supabase.list_edge_functions":
-        fail(f"{FAILURE_CLASSES[2]} runtime evidence source drifted")
+        fail(f"{FAILURE_CLASSES[6]} runtime evidence source drifted")
+    if runtime.get("runtime_origin_candidate_verified") is not False:
+        fail(f"{FAILURE_CLASSES[4]} network-origin candidate was self-attested")
+    if runtime.get("runtime_origin_candidate") is not None:
+        fail(f"{FAILURE_CLASSES[4]} network-origin authority assigned before probe")
+    if runtime.get("probe_repository_entrypoint_present") is not True:
+        fail(f"{FAILURE_CLASSES[6]} probe repository state is incomplete")
+
+    probe = authority.get("probe_contract", {})
+    expected_probe = {
+        "mode": "origin_probe_not_student_gateway_cutover",
+        "allowed_method": "GET",
+        "candidate_header": "cf-connecting-ip",
+        "returns_raw_ip": False,
+        "logs_raw_ip": False,
+        "reads_request_body": False,
+        "forwards_student_rpc": False,
+        "accepts_client_forwarded_header_as_authority": False,
+        "launch_gate_authority": False,
+    }
+    for key, expected in expected_probe.items():
+        if probe.get(key) != expected:
+            fail(f"{FAILURE_CLASSES[4]} probe contract drift for {key}: {probe.get(key)!r}")
 
     current = authority.get("current_client_boundary", {})
     if current.get("direct_v2_rpc_calls") != list(DIRECT_V2_RPCS):
@@ -115,13 +148,13 @@ def main() -> None:
         if launch.get(key) is not False:
             fail(f"{FAILURE_CLASSES[3]} {key} must remain false")
 
-    # The Stage 24 database authority must keep the network-origin blind spot explicit.
+    # Stage 24 must continue to state the remaining network-origin boundary.
     blind_spot = abuse.get("known_external_boundary", {}).get("blind_spot", "").lower()
     if "invalid-token" not in blind_spot or "client ip" not in blind_spot:
         fail(f"{FAILURE_CLASSES[0]} Stage 24 network-origin blind spot disappeared")
 
-    # Current architecture is intentionally classified NOT ENFORCED because Flutter still
-    # reaches the anonymous v2 RPCs directly. Count exact callsites so partial cutovers fail.
+    # A probe is not a client cutover. All five Flutter callsites and their temporary anon
+    # grants must remain intact until the full gateway has passed runtime verification.
     direct_calls: dict[str, list[str]] = {rpc: [] for rpc in DIRECT_V2_RPCS}
     for path in APP.rglob("*.dart"):
         text = path.read_text(encoding="utf-8")
@@ -132,11 +165,9 @@ def main() -> None:
     missing_calls = [rpc for rpc, paths in direct_calls.items() if not paths]
     if missing_calls:
         fail(
-            f"{FAILURE_CLASSES[2]} partial client cutover detected; update the authority and complete the gateway cutover atomically: {missing_calls}"
+            f"{FAILURE_CLASSES[2]} partial client cutover during probe stage: {missing_calls}"
         )
 
-    # The current direct path necessarily retains anon execution. A future verified cutover
-    # must replace this guard version and revoke these grants in repo-first DDL.
     expected_grants = (
         "grant execute on function public.get_student_workout_v2(text) to anon, authenticated;",
         "grant execute on function public.start_student_workout_v2(text,text) to anon, authenticated;",
@@ -146,12 +177,50 @@ def main() -> None:
     )
     missing_grants = [grant for grant in expected_grants if grant not in stage21]
     if missing_grants:
-        fail(f"{FAILURE_CLASSES[2]} partial privilege cutover detected: {missing_grants}")
+        fail(f"{FAILURE_CLASSES[2]} partial privilege cutover during probe stage: {missing_grants}")
 
-    if GATEWAY_ENTRYPOINT.exists():
-        fail(
-            f"{FAILURE_CLASSES[2]} gateway implementation appeared while authority still says no deployed/cutover gateway; advance the contract state deliberately"
-        )
+    # Probe source is intentionally inert with respect to student data. It may inspect only
+    # header presence and must not consume a body, service-role secret or student RPC.
+    require(
+        gateway,
+        (
+            'mode: "origin_probe_not_student_gateway_cutover"',
+            'req.headers.get("cf-connecting-ip")',
+            'req.headers.get("cf-ray")',
+            'x_forwarded_for_present_but_untrusted',
+            'x_real_ip_present_but_untrusted',
+            'raw_network_origin_returned: false',
+            'request_body_read: false',
+            'student_rpc_forwarding_enabled: false',
+            'launch_gate_authority: false',
+            'error: "STUDENT_GATEWAY_NOT_CUTOVER"',
+        ),
+        FAILURE_CLASSES[4],
+    )
+
+    forbidden_probe_fragments = (
+        "console.log",
+        "console.error",
+        "req.json(",
+        "req.text(",
+        "supabase_service_role_key",
+        "/rest/v1/rpc/",
+        "get_student_workout_v2",
+        "start_student_workout_v2",
+        "set_student_exercise_completion_v2",
+        "get_student_feedback_context_v2",
+        "submit_student_workout_feedback_v2",
+    )
+    leaked = [fragment for fragment in forbidden_probe_fragments if fragment in gateway_lower]
+    if leaked:
+        fail(f"{FAILURE_CLASSES[5]} probe contains forbidden data/runtime behavior: {leaked}")
+
+    # The only authoritative-source candidate in this version is cf-connecting-ip. Other
+    # forwarded headers may be reported as booleans for spoof testing but never trusted.
+    if gateway_lower.count('req.headers.get("cf-connecting-ip")') != 1:
+        fail(f"{FAILURE_CLASSES[4]} candidate origin extraction is ambiguous")
+    if "network_origin_source_candidate: \"cf-connecting-ip\"" not in gateway_lower:
+        fail(f"{FAILURE_CLASSES[4]} probe response does not identify the candidate source")
 
     gates = external.get("gates", {})
     for gate_name in ("incident_response", "production_deployment"):
@@ -162,16 +231,18 @@ def main() -> None:
             fail(f"{FAILURE_CLASSES[3]} {gate_name} contains fabricated evidence")
 
     preconditions = authority.get("promotion_preconditions")
-    if not isinstance(preconditions, list) or len(preconditions) < 10:
+    if not isinstance(preconditions, list) or len(preconditions) < 14:
         fail(f"{FAILURE_CLASSES[2]} cutover preconditions are incomplete")
 
     print("STUDENT_ACCESS_NETWORK_ORIGIN_BOUNDARY_GUARD=PASS")
-    print("CURRENT_EDGE_ENFORCEMENT=NOT_ENFORCED_DIRECT_RPC_PATH_ACTIVE")
+    print("CURRENT_EDGE_STATE=ORIGIN_PROBE_REPOSITORY_READY_NOT_DEPLOYED")
     print("OBSERVED_EDGE_FUNCTION_COUNT=0")
     print("DIRECT_V2_RPC_PATHS=5")
+    print("PROBE_CANDIDATE=cf-connecting-ip")
+    print("PROBE_RAW_IP_RETURN=DENIED")
+    print("PROBE_STUDENT_RPC_FORWARDING=DENIED")
     print("INVALID_TOKEN_NETWORK_ORIGIN_RATE_LIMIT=NOT_VERIFIED")
     print("TRUSTED_NETWORK_ORIGIN_EXTRACTION=NOT_VERIFIED")
-    print("EDGE_ALERT_DELIVERY=NOT_VERIFIED")
     print("PARTIAL_CUTOVER=DENIED")
     print("INCIDENT_RESPONSE_GATE_PROMOTION=DENIED")
     print("PRODUCTION_DEPLOYMENT_GATE_PROMOTION=DENIED")

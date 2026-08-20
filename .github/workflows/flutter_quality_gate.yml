@@ -102,6 +102,14 @@ jobs:
       - name: Tenant isolation adversarial guard
         run: python ../../04_backend_supabase/tools/verify_tenant_isolation_contract.py
 
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Edge function typecheck
+        run: deno check ../../04_backend_supabase/functions/student-access-gateway/index.ts
+
       - name: Set up Flutter stable
         uses: subosito/flutter-action@v2
         with:
