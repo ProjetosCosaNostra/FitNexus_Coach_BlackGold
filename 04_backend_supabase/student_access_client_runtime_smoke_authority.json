@@ -5,9 +5,10 @@
   "proof_reexecution_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-PROOF-REEXECUTION-204",
   "response_data_leak_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-RESPONSE-DATA-LEAK-205",
   "command_flow_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-COMMAND-FLOW-206",
+  "cleanup_scope_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-CLEANUP-SCOPE-207",
   "purpose": "Lifecycle authority for a controlled synthetic five-route Edge v3 runtime smoke before any Flutter transport selection.",
-  "current_state": "EDGE_RUNTIME_SMOKE_LIVE_VERIFIED_CLEANUP_PENDING",
-  "baseline_main_sha": "ff29a59626f7a4ab5e198cfef2c27b5cd1dfde1b",
+  "current_state": "EDGE_RUNTIME_SMOKE_LIVE_VERIFIED_CLEANUP_REPO_ONLY",
+  "baseline_main_sha": "aba1937b426c1bb681e4e39065fbfb840653c41e",
   "client_cutover_authority": {
     "file": "04_backend_supabase/student_access_client_cutover_authority.json",
     "required_state": "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE",
@@ -128,6 +129,33 @@
       "raw_origin_hash_read": false
     }
   },
+  "cleanup_migration": {
+    "repository_file": "04_backend_supabase/migrations/20260821081005_stage30_edge_runtime_smoke_cleanup.sql",
+    "migration_name": "stage30_edge_runtime_smoke_cleanup",
+    "migration_ledger_state": "repo_only",
+    "remote_applied": false,
+    "remote_version": null,
+    "requires_synthetic_only_customer_domain": true,
+    "expected_auth_users_before_cleanup": 1,
+    "expected_organizations_before_cleanup": 1,
+    "expected_students_before_cleanup": 1,
+    "expected_training_plans_before_cleanup": 1,
+    "expected_training_exercises_before_cleanup": 1,
+    "expected_access_links_before_cleanup": 1,
+    "expected_workout_sessions_before_cleanup": 1,
+    "expected_workout_logs_before_cleanup": 1,
+    "expected_workout_feedback_before_cleanup": 1,
+    "expected_growth_events_for_fixture_org": 5,
+    "expected_link_rate_bucket_rows": 5,
+    "expected_command_receipt_rows": 3,
+    "expected_allowed_security_events": 3,
+    "expected_network_proof_bucket_rows": 5,
+    "network_proof_windows_utc": ["2026-08-21T08:02:00Z", "2026-08-21T08:03:00Z"],
+    "raw_network_origin_embedded_in_repository": false,
+    "network_origin_digest_embedded_in_repository": false,
+    "organization_deleted_before_auth_user": true,
+    "transactional_postcondition_required": true
+  },
   "promotion_rules": {
     "may_apply_fixture_after_ci_and_merge": true,
     "may_execute_live_smoke_before_fixture_remote_apply": false,
@@ -139,9 +167,9 @@
     "launch_gate_authority": false
   },
   "next_stage": {
-    "name": "PREPARE_STAGE30_RUNTIME_SMOKE_CLEANUP",
+    "name": "APPLY_STAGE30_RUNTIME_SMOKE_CLEANUP",
     "allowed_now": true,
-    "requires_repo_first_cleanup_migration": true,
-    "requires_ci_and_merge_before_cleanup_apply": true
+    "requires_ci_and_merge_first": true,
+    "requires_exact_merged_sql": true
   }
 }
