@@ -127,6 +127,9 @@ jobs:
       - name: Stage 31 client Edge runtime preparation guard
         run: python ../../04_backend_supabase/tools/verify_stage31_fixture_remote_reconciliation.py stage31
 
+      - name: Stage 31 client Edge live proof candidate guard
+        run: python ../../04_backend_supabase/tools/verify_student_access_stage31_live_proof_candidate.py
+
       - name: Student client Edge runtime smoke lifecycle guard
         run: python ../../04_backend_supabase/tools/verify_stage31_fixture_remote_reconciliation.py smoke
 
