@@ -13,6 +13,9 @@ const String _expectedStudentName = 'Stage31 Synthetic Student';
 const String _expectedPlanName = 'Stage31 Synthetic Plan';
 const String _expectedExerciseName = 'Stage31 Synthetic Exercise';
 
+final bool _liveProofEnabled =
+    Platform.environment['STAGE31_LIVE_PROOF_ENABLED'] == '1';
+
 const Set<String> _forbiddenResponseKeys = <String>{
   'token',
   'token_hash',
@@ -71,8 +74,10 @@ String _requiredEnv(String name) {
 
 String _requiredUuid(Object? value, String label) {
   final raw = value?.toString() ?? '';
-  final parsed = Uri.tryParse('urn:uuid:$raw');
-  if (raw.length != 36 || parsed == null) {
+  final valid = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$',
+  ).hasMatch(raw);
+  if (!valid) {
     throw StateError('Stage31 proof did not receive a valid $label UUID.');
   }
   return raw;
@@ -203,5 +208,9 @@ void main() {
         StudentAccessTransportMode.directRpc);
     expect(StudentAccessTransportContract.edgeGatewaySelected, isFalse);
     expect(StudentAccessTransportContract.directRpcExecuteRevoked, isFalse);
-  }, timeout: const Timeout(Duration(minutes: 3)));
+  },
+      timeout: const Timeout(Duration(minutes: 3)),
+      skip: _liveProofEnabled
+          ? false
+          : 'Stage31 live proof executes only in the sealed one-shot workflow.');
 }
