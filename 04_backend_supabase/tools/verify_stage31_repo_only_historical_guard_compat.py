@@ -113,6 +113,12 @@ def run(mode: str) -> None:
             module.LEDGER = temp_ledger
             module.main()
         else:
+            if mode == "smoke":
+                nested = importlib.import_module("verify_student_access_client_runtime_smoke")
+            else:
+                nested = importlib.import_module("verify_student_access_runtime_rollback_candidate")
+            nested.LEDGER = temp_ledger
+
             module = importlib.import_module("verify_stage30_rollback_reconciliation_compat")
             module.LEDGER = temp_ledger
             module.run(mode)
