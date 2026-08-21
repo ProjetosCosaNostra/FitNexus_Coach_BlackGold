@@ -158,6 +158,9 @@ jobs:
       - name: Stage 32 pre-network failure recovery R1 guard
         run: python ../../04_backend_supabase/tools/verify_stage32_pre_network_failure_recovery_r1.py
 
+      - name: Stage 32 post-cutover live proof R1 candidate guard
+        run: python ../../04_backend_supabase/tools/verify_student_access_stage32_live_proof_r1_candidate.py
+
       - name: Student client Edge runtime smoke lifecycle guard
         run: python ../../04_backend_supabase/tools/verify_stage32_post_cutover_repo_only_historical_compat.py smoke
 
