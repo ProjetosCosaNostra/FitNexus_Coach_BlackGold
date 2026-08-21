@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE32_POST_CUTOVER_LIVE_PROOF_FAILURE_R0",
+  "baseline_main_sha": "c43a2662de1f92b08dad4ed1b22c51357a0ff269",
+  "status": "PRE_NETWORK_BOOTSTRAP_FAILURE_RECORDED_FIXTURE_EXPIRED_REPAIR_R1_REQUIRED",
+  "failure_classes": [
+    {
+      "id": "BGF-STAGE32-FLUTTER-TEST-SHARED-PREFERENCES-PLUGIN-235",
+      "rule": "Any Flutter live-proof harness that initializes supabase_flutter under flutter_test must initialize a test-safe SharedPreferences backend before Supabase.initialize, or use an explicitly injected test-safe local-storage implementation. A MissingPluginException before the first transport call earns zero runtime-proof credit and consumes the sealed one-shot attempt."
+    },
+    {
+      "id": "BGF-STAGE32-SYNTHETIC-FIXTURE-TTL-EXPIRED-BEFORE-RETRY-236",
+      "rule": "Time-bounded synthetic fixtures must pass a fresh expiry gate immediately before event delivery. An expired fixture must be rearmed or replaced by an exact repository-first synthetic-only operation before a new proof seal is allowed."
+    }
+  ],
+  "consumed_attempt": {
+    "workflow_file": ".github/workflows/stage32_post_cutover_edge_runtime_live_proof.yml",
+    "workflow_run_id": 32508349425,
+    "workflow_job_id": 96853509377,
+    "run_attempt": 1,
+    "proof_pr": 71,
+    "proof_head_sha": "370cfe65d3df5188c3f840d84b5a8748f1357cf2",
+    "trigger_pr": 73,
+    "trigger_head_sha": "84a51d97f3b7a7c53965567e21760d5d59c85f5a",
+    "result": "FAIL_PRE_NETWORK_BOOTSTRAP",
+    "candidate_guard_passed": true,
+    "flutter_setup_passed": true,
+    "dependencies_resolved": true,
+    "synthetic_token_derived_and_masked": true,
+    "failing_step": "Execute sealed production-singleton five-route proof once",
+    "exception_type": "MissingPluginException",
+    "exception_message_class": "shared_preferences getAll channel implementation unavailable under flutter_test",
+    "failure_site": "Supabase.initialize -> SharedPreferencesGotrueAsyncStorage._initialize",
+    "network_transport_reached": false,
+    "production_singleton_invoke_reached": false,
+    "routes_attempted": 0,
+    "routes_verified": 0,
+    "proof_credit": false,
+    "same_workflow_rerun_allowed": false,
+    "same_proof_head_reuse_allowed": false
+  },
+  "post_failure_database_receipt": {
+    "source": "Supabase.execute_sql",
+    "observed_at_utc": "2026-08-21T21:23:17.569721Z",
+    "auth_users": 1,
+    "profiles": 1,
+    "organizations": 1,
+    "organization_members": 1,
+    "organization_subscriptions": 1,
+    "students": 1,
+    "training_plans": 1,
+    "training_exercises": 1,
+    "access_links": 1,
+    "workout_sessions": 0,
+    "workout_logs": 0,
+    "workout_feedback": 0,
+    "expected_user": 1,
+    "expected_org": 1,
+    "expected_student": 1,
+    "expected_plan": 1,
+    "expected_exercise": 1,
+    "expected_active_link": 1,
+    "real_customer_rows_observed": false,
+    "synthetic_business_mutation_residue": false
+  },
+  "fixture_expiry_receipt": {
+    "source": "Supabase.execute_sql",
+    "observed_at_utc": "2026-08-21T21:21:56.247477Z",
+    "link_id": "378baa18-c8fc-5765-b01f-6fd3dd898f64",
+    "link_is_active": true,
+    "link_expires_at_utc": "2026-08-21T19:13:34.175674Z",
+    "link_not_expired": false,
+    "fixture_usable_for_new_live_proof": false
+  },
+  "direct_rpc_grant_receipt": {
+    "source": "Supabase.execute_sql",
+    "observed_at_utc": "2026-08-21T21:23:42.651192Z",
+    "rpc_count": 5,
+    "all_five_anon_execute_intact": true,
+    "all_five_authenticated_execute_intact": true,
+    "grants_changed_by_failed_attempt": false
+  },
+  "production_boundary": {
+    "active_transport": "edgeGateway",
+    "production_singleton": "StudentAccessTransport.instance",
+    "automatic_edge_to_direct_fallback": false,
+    "direct_rpc_execute_revoked": false,
+    "post_cutover_live_proof_verified": false,
+    "post_cutover_rollback_verified": false,
+    "launch_gate_promotion": false
+  },
+  "repair_r1": {
+    "shared_preferences_mock_required_before_supabase_initialize": true,
+    "required_test_fragment": "SharedPreferences.setMockInitialValues(<String, Object>{});",
+    "fixture_rearm_operation_file": "04_backend_supabase/operations/stage32_rearm_expired_fixture_r1.sql",
+    "fixture_rearm_hours": 6,
+    "requires_exact_synthetic_fixture_identity": true,
+    "requires_zero_runtime_mutation_residue": true,
+    "requires_expired_link_before_rearm": true,
+    "requires_fresh_direct_rpc_grant_check_before_rearm": true,
+    "requires_new_proof_head": true,
+    "requires_new_workflow_seal": true,
+    "requires_new_trigger_head": true,
+    "old_proof_pr_must_remain_closed_unmerged": true,
+    "old_trigger_pr_must_remain_closed_unmerged": true
+  },
+  "next_stage": {
+    "name": "MERGE_STAGE32_PRE_NETWORK_FAILURE_RECOVERY_R1_PREPARATION",
+    "may_rearm_fixture_before_ci_and_merge": false,
+    "may_deliver_new_live_proof_event_before_rearm_receipt": false,
+    "may_rerun_consumed_workflow": false,
+    "may_reuse_consumed_proof_head": false,
+    "may_revoke_direct_rpc_execute_now": false,
+    "may_promote_launch_gates": false
+  }
+}
