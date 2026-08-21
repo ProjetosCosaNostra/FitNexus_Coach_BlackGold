@@ -14,9 +14,11 @@ ROLLBACK = BACKEND / "student_access_runtime_rollback_authority.json"
 SMOKE = BACKEND / "student_access_client_runtime_smoke_authority.json"
 LEDGER = BACKEND / "migration_ledger_authority.json"
 CONTRACT = APP / "lib" / "features" / "student" / "student_access_transport_contract.dart"
+WORKFLOW = ROOT / ".github" / "workflows" / "stage30_runtime_rollback_proof.yml"
 
 RECONCILIATION_CLASS = "BGF-ROLLBACK-PROOF-CUTOVER-RECONCILIATION-213"
 HISTORICAL_ADVANCE_CLASS = "BGF-HISTORICAL-GUARD-DOWNSTREAM-AUTHORITY-ADVANCE-214"
+RETRIGGER_CLASS = "BGF-ROLLBACK-PROOF-WORKFLOW-CROSS-PR-RETRIGGER-215"
 CURRENT_CUTOVER_STATE = "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE"
 HISTORICAL_CUTOVER_STATE = "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE"
 CURRENT_ROLLBACK_STATE = "RUNTIME_ROLLBACK_PROOF_RECONCILED_DIRECT_MODE"
@@ -26,6 +28,10 @@ HISTORICAL_CUTOVER_BASELINE = "5f088a361f2ee78a88fc0435250a83d571eda34c"
 PROOF_BASELINE = "f1b97f3b56124f2fd2d3edcff7060afd82f08c1e"
 SEALED_RUN = 32464990624
 SEALED_JOB = 96719614075
+BLOCKED_RETRIGGER_RUN = 32473348632
+BLOCKED_RETRIGGER_JOB = 96744561273
+SEALED_PR = 57
+SEALED_HEAD = "blackgold/stage30-runtime-rollback-proof"
 
 TARGETS = {
     "cutover": "verify_student_access_client_cutover_preparation",
@@ -60,6 +66,11 @@ def validate_actual_authority() -> tuple[dict, dict]:
     smoke = load(SMOKE)
     ledger = load(LEDGER)
 
+    reconciliation_classes = [
+        RECONCILIATION_CLASS,
+        HISTORICAL_ADVANCE_CLASS,
+        RETRIGGER_CLASS,
+    ]
     require(
         cutover,
         {
@@ -67,10 +78,7 @@ def validate_actual_authority() -> tuple[dict, dict]:
             "project_ref": "mceukeondizkwlpfxzgf",
             "current_state": CURRENT_CUTOVER_STATE,
             "baseline_main_sha": CURRENT_BASELINE,
-            "rollback_reconciliation_failure_classes": [
-                RECONCILIATION_CLASS,
-                HISTORICAL_ADVANCE_CLASS,
-            ],
+            "rollback_reconciliation_failure_classes": reconciliation_classes,
         },
         "current cutover authority",
     )
@@ -145,6 +153,24 @@ def validate_actual_authority() -> tuple[dict, dict]:
         "cutover rollback receipt",
     )
 
+    sentinel = cutover.get("rollback_reexecution_sentinel", {})
+    require(
+        sentinel,
+        {
+            "failure_class": RETRIGGER_CLASS,
+            "observed_cross_pr_workflow_run_id": BLOCKED_RETRIGGER_RUN,
+            "observed_cross_pr_job_id": BLOCKED_RETRIGGER_JOB,
+            "observed_pr_number": 58,
+            "candidate_guard_failed_before_flutter_setup": True,
+            "focused_proof_step_executed": False,
+            "second_proof_execution_occurred": False,
+            "workflow_sealed_to_pr_number": SEALED_PR,
+            "workflow_sealed_to_head_ref": SEALED_HEAD,
+            "future_cross_pr_execution_allowed": False,
+        },
+        "cutover rollback reexecution sentinel",
+    )
+
     before_edge = cutover.get("required_before_edge_selection", {})
     if before_edge.get("explicit_rollback_proof") is not True:
         fail("rollback proof was not reconciled into Edge-selection prerequisites")
@@ -175,6 +201,7 @@ def validate_actual_authority() -> tuple[dict, dict]:
         {
             "failure_class": RECONCILIATION_CLASS,
             "historical_guard_advance_failure_class": HISTORICAL_ADVANCE_CLASS,
+            "workflow_retrigger_failure_class": RETRIGGER_CLASS,
             "rollback_proof_reconciled": True,
             "production_transport_changed": False,
             "edge_gateway_selected": False,
@@ -210,10 +237,7 @@ def validate_actual_authority() -> tuple[dict, dict]:
             "current_state": CURRENT_ROLLBACK_STATE,
             "baseline_main_sha": CURRENT_BASELINE,
             "proof_baseline_main_sha": PROOF_BASELINE,
-            "reconciliation_failure_classes": [
-                RECONCILIATION_CLASS,
-                HISTORICAL_ADVANCE_CLASS,
-            ],
+            "reconciliation_failure_classes": reconciliation_classes,
         },
         "rollback authority reconciliation",
     )
@@ -240,6 +264,26 @@ def validate_actual_authority() -> tuple[dict, dict]:
             "proof_reexecution_allowed": False,
         },
         "rollback proof",
+    )
+
+    rollback_sentinel = rollback.get("reexecution_sentinel", {})
+    require(
+        rollback_sentinel,
+        {
+            "failure_class": RETRIGGER_CLASS,
+            "observed_cross_pr_workflow_run_id": BLOCKED_RETRIGGER_RUN,
+            "observed_cross_pr_job_id": BLOCKED_RETRIGGER_JOB,
+            "observed_pr_number": 58,
+            "candidate_guard_failed_before_flutter_setup": True,
+            "focused_proof_step_executed": False,
+            "proof_boundary_receipt_executed": False,
+            "second_proof_execution_occurred": False,
+            "permanent_job_condition_installed": True,
+            "allowed_pr_number": SEALED_PR,
+            "allowed_head_ref": SEALED_HEAD,
+            "future_cross_pr_execution_allowed": False,
+        },
+        "rollback reexecution sentinel",
     )
 
     rollback_reconciliation = rollback.get("cutover_reconciliation", {})
@@ -284,8 +328,9 @@ def validate_actual_authority() -> tuple[dict, dict]:
 
     try:
         contract = CONTRACT.read_text(encoding="utf-8")
+        workflow = WORKFLOW.read_text(encoding="utf-8")
     except OSError as exc:
-        fail(f"transport contract unavailable: {type(exc).__name__}")
+        fail(f"rollback reconciliation source unavailable: {type(exc).__name__}")
     for fragment in (
         "StudentAccessTransportMode.directRpc;",
         "static const bool edgeGatewaySelected = false;",
@@ -298,6 +343,18 @@ def validate_actual_authority() -> tuple[dict, dict]:
     ):
         if fragment not in contract:
             fail(f"production source changed during reconciliation: {fragment}")
+
+    sealed_condition = (
+        "if: github.event.pull_request.number == 57 && "
+        "github.event.pull_request.head.ref == 'blackgold/stage30-runtime-rollback-proof'"
+    )
+    if workflow.count(sealed_condition) != 1:
+        fail(f"{RETRIGGER_CLASS} one-shot rollback workflow is not sealed to the original PR/head")
+    if "types: [opened]" not in workflow:
+        fail("rollback proof workflow trigger semantics drifted")
+    for forbidden in ("workflow_dispatch:", "schedule:", "types: [synchronize]", "types: [opened, synchronize]"):
+        if forbidden in workflow:
+            fail(f"{RETRIGGER_CLASS} rollback proof workflow became replayable: {forbidden}")
 
     return cutover, rollback
 
@@ -381,6 +438,7 @@ def run(mode: str) -> None:
     print(f"CURRENT_ROLLBACK_STATE={CURRENT_ROLLBACK_STATE}")
     print(f"FAILURE_CLASS={RECONCILIATION_CLASS}")
     print(f"HISTORICAL_ADVANCE_PREVENTION={HISTORICAL_ADVANCE_CLASS}")
+    print(f"CROSS_PR_RETRIGGER_PREVENTION={RETRIGGER_CLASS}")
     print("PRODUCTION_ACTIVE_TRANSPORT=directRpc")
     print("EDGE_SELECTION=false")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
