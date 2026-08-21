@@ -1,15 +1,20 @@
 {
   "schema_version": 1,
   "project_ref": "mceukeondizkwlpfxzgf",
-  "purpose": "Authority for the explicit student Edge-to-direct rollback resolver proof without changing production transport, using customer data or revoking direct RPC execute privileges.",
-  "current_state": "RUNTIME_ROLLBACK_PROOF_VERIFIED_DIRECT_MODE",
-  "baseline_main_sha": "f1b97f3b56124f2fd2d3edcff7060afd82f08c1e",
+  "purpose": "Lifecycle authority for the explicit student Edge-to-direct rollback resolver proof and its cutover reconciliation, without changing production transport, using customer data or revoking direct RPC execute privileges.",
+  "current_state": "RUNTIME_ROLLBACK_PROOF_RECONCILED_DIRECT_MODE",
+  "baseline_main_sha": "eb578b06fed57987b3dba94d7c9a7931974743c4",
+  "proof_baseline_main_sha": "f1b97f3b56124f2fd2d3edcff7060afd82f08c1e",
   "failure_classes": [
     "BGF-ROLLBACK-PROOF-PRODUCTION-MODE-MUTATION-208",
     "BGF-ROLLBACK-PROOF-UNAUTHORIZED-FAILOPEN-209",
     "BGF-ROLLBACK-PROOF-AUTOMATIC-FALLBACK-210",
     "BGF-ROLLBACK-PROOF-DIRECT-GRANT-REVOCATION-211",
     "BGF-ROLLBACK-PROOF-REEXECUTION-212"
+  ],
+  "reconciliation_failure_classes": [
+    "BGF-ROLLBACK-PROOF-CUTOVER-RECONCILIATION-213",
+    "BGF-HISTORICAL-GUARD-DOWNSTREAM-AUTHORITY-ADVANCE-214"
   ],
   "prerequisites": {
     "runtime_smoke_authority_file": "04_backend_supabase/student_access_client_runtime_smoke_authority.json",
@@ -18,7 +23,8 @@
     "runtime_smoke_cleanup_completed": true,
     "runtime_smoke_synthetic_residue_zero": true,
     "cutover_authority_file": "04_backend_supabase/student_access_client_cutover_authority.json",
-    "cutover_required_state": "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE",
+    "cutover_state_at_proof_execution": "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE",
+    "cutover_reconciled_state": "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE",
     "edge_runtime_version": 3
   },
   "proof_surface": {
@@ -80,11 +86,16 @@
     "proof_reexecution_allowed": false
   },
   "cutover_reconciliation": {
-    "cutover_authority_reconciled": false,
-    "required_next_state": "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE",
+    "cutover_authority_reconciled": true,
+    "reconciled_state": "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE",
+    "reconciled_against_main_sha": "eb578b06fed57987b3dba94d7c9a7931974743c4",
     "production_transport_change_allowed_in_reconciliation": false,
+    "production_transport_changed": false,
     "edge_selection_allowed_in_reconciliation": false,
-    "direct_rpc_execute_revocation_allowed_in_reconciliation": false
+    "edge_selected": false,
+    "direct_rpc_execute_revocation_allowed_in_reconciliation": false,
+    "direct_rpc_execute_revoked": false,
+    "launch_gate_promoted": false
   },
   "promotion_rules": {
     "may_change_production_active_mode_during_proof": false,
@@ -96,9 +107,10 @@
     "edge_selection_requires_separate_post_proof_stage": true
   },
   "next_stage": {
-    "name": "RECONCILE_STAGE30_ROLLBACK_PROOF_IN_CUTOVER_AUTHORITY",
+    "name": "STAGE31_CLIENT_EDGE_RUNTIME_PROOF_PREPARATION",
     "allowed_now": true,
     "requires_production_transport_change": false,
+    "requires_synthetic_customer_fixture": true,
     "may_select_edge_gateway_now": false,
     "may_revoke_direct_rpc_execute_now": false
   }
