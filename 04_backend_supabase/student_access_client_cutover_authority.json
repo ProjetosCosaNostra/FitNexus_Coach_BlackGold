@@ -19,8 +19,8 @@
     "BGF-ROLLBACK-PROOF-WORKFLOW-CROSS-PR-RETRIGGER-215"
   ],
   "purpose": "Lifecycle authority for moving all five anonymous student possession-token routes through one client transport toward the verified Edge v3 gateway, with bounded Edge error semantics, an explicit rollback resolver, fail-closed reconciliation and no fail-open fallback.",
-  "current_state": "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE",
-  "baseline_main_sha": "eb578b06fed57987b3dba94d7c9a7931974743c4",
+  "current_state": "CLIENT_EDGE_SELECTED_POST_CUTOVER_PROOF_PENDING",
+  "baseline_main_sha": "3cec9ebd5f01bf0b595b7c2f1600c571725e3d41",
   "prerequisites": {
     "stage29_authority": "04_backend_supabase/student_access_valid_route_authority.json",
     "stage29_required_state": "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_COMPLETE",
@@ -32,11 +32,17 @@
     "stage30_runtime_smoke_authority": "04_backend_supabase/student_access_client_runtime_smoke_authority.json",
     "stage30_runtime_smoke_required_state": "EDGE_RUNTIME_SMOKE_LIVE_VERIFIED_CLEANUP_COMPLETE",
     "stage30_runtime_rollback_authority": "04_backend_supabase/student_access_runtime_rollback_authority.json",
-    "stage30_runtime_rollback_required_state": "RUNTIME_ROLLBACK_PROOF_RECONCILED_DIRECT_MODE"
+    "stage30_runtime_rollback_required_state": "RUNTIME_ROLLBACK_PROOF_RECONCILED_DIRECT_MODE",
+    "stage31_authority": "04_backend_supabase/student_access_client_edge_runtime_proof_authority.json",
+    "stage31_required_state": "CLIENT_EDGE_RUNTIME_PROOF_LIVE_VERIFIED_CLEANUP_COMPLETE_DIRECT_MODE",
+    "stage31_flutter_edge_routes_verified": 5,
+    "stage31_cleanup_completed": true,
+    "stage32_selection_authority": "04_backend_supabase/student_access_production_edge_selection_authority.json",
+    "stage32_preparation_required_state": "PRODUCTION_EDGE_SELECTION_PREPARED_DIRECT_MODE"
   },
   "current_client_inventory": {
-    "transport_mode": "direct_rpc",
-    "flutter_uses_edge_gateway": false,
+    "transport_mode": "edge_gateway",
+    "flutter_uses_edge_gateway": true,
     "direct_v2_rpc_path_active": true,
     "direct_anon_v2_rpc_execute_revoked": false,
     "client_direct_rpc_fallback_removed": false,
@@ -57,10 +63,10 @@
   "transport_contract": {
     "repository_file": "03_app_flutter/fitnexus_app/lib/features/student/student_access_transport_contract.dart",
     "runtime_file": "03_app_flutter/fitnexus_app/lib/features/student/student_access_transport.dart",
-    "active_mode": "directRpc",
-    "resolved_mode": "directRpc",
+    "active_mode": "edgeGateway",
+    "resolved_mode": "edgeGateway",
     "edge_function_name": "student-access-gateway",
-    "edge_gateway_selected": false,
+    "edge_gateway_selected": true,
     "automatic_edge_to_direct_fallback": false,
     "explicit_rollback_requested": false,
     "explicit_rollback_authorized": false,
@@ -70,8 +76,9 @@
     "exact_route_count": 5,
     "read_only_actions": ["get_workout", "get_feedback_context"],
     "command_actions": ["start_workout", "set_completion", "submit_feedback"],
-    "edge_candidate_path_compiled_behind_inactive_mode": true,
-    "behavioral_transport_change": false
+    "edge_candidate_path_compiled_behind_inactive_mode": false,
+    "edge_path_active_in_repository_source": true,
+    "behavioral_transport_change": true
   },
   "edge_error_contract": {
     "normalizer_file": "03_app_flutter/fitnexus_app/lib/features/student/student_access_edge_error_contract.dart",
@@ -89,7 +96,7 @@
   },
   "rollback_harness": {
     "resolver": "resolveStudentAccessTransportMode",
-    "production_active_mode": "directRpc",
+    "production_active_mode": "edgeGateway",
     "explicit_rollback_requested": false,
     "explicit_rollback_authorized": false,
     "unauthorized_rollback_fails_closed": true,
@@ -97,6 +104,8 @@
     "authorized_edge_to_direct_transition_unit_tested": true,
     "runtime_rollback_verified": true,
     "runtime_rollback_proof_kind": "isolated_resolver_no_network",
+    "pre_cutover_runtime_rollback_verified": true,
+    "post_cutover_runtime_rollback_verified": false,
     "harness_ready": true
   },
   "rollback_proof_receipt": {
@@ -143,13 +152,14 @@
     "all_five_repository_calls_routed_through_single_transport": true,
     "edge_error_contract_mapped_to_existing_student_errors": true,
     "rollback_harness_ready": true,
-    "read_only_edge_runtime_smoke_after_client_source_change": false,
-    "command_edge_runtime_smoke_with_synthetic_fixture": false,
+    "stage31_flutter_edge_runtime_proof_before_selection": true,
+    "stage31_cleanup_complete_before_selection": true,
     "explicit_rollback_proof": true,
+    "edge_selection_source_materialized": true,
     "cutover_receipt_materialized": false
   },
   "required_before_direct_rpc_revocation": {
-    "flutter_edge_gateway_active": false,
+    "flutter_edge_gateway_active": true,
     "five_routes_verified_via_edge": false,
     "automatic_direct_fallback_absent": true,
     "post_cutover_rollback_path_verified": false,
@@ -167,13 +177,28 @@
     "launch_gate_promoted": false,
     "historical_guards_must_validate_current_authority_before_projection": true
   },
+  "stage32_selection": {
+    "selection_failure_class": "BGF-STAGE32-PRODUCTION-EDGE-SELECTION-PREMATURE-227",
+    "partial_cutover_failure_class": "BGF-STAGE32-PRODUCTION-EDGE-SELECTION-PARTIAL-228",
+    "direct_revocation_failure_class": "BGF-STAGE32-DIRECT-RPC-REVOCATION-PREMATURE-229",
+    "post_cutover_rollback_failure_class": "BGF-STAGE32-POST-CUTOVER-ROLLBACK-GAP-230",
+    "pre_selection_main_sha": "3cec9ebd5f01bf0b595b7c2f1600c571725e3d41",
+    "source_selected_edge_gateway": true,
+    "all_five_routes_share_single_transport": true,
+    "automatic_edge_to_direct_fallback": false,
+    "direct_rpc_grants_changed": false,
+    "post_cutover_live_proof_completed": false,
+    "post_cutover_rollback_proof_completed": false,
+    "launch_gate_promoted": false
+  },
   "next_stage": {
-    "name": "STAGE31_CLIENT_EDGE_RUNTIME_PROOF_PREPARATION",
+    "name": "EXECUTE_STAGE32_POST_CUTOVER_FIVE_ROUTE_LIVE_PROOF",
     "allowed_now": true,
+    "requires_selection_ci_and_merge_first": true,
     "requires_synthetic_customer_fixture": true,
-    "requires_production_transport_change": false,
     "requires_direct_rpc_grants_to_remain": true,
-    "may_select_edge_gateway_now": false,
+    "requires_all_five_routes_edge_transport": true,
+    "requires_no_automatic_edge_to_direct_fallback": true,
     "may_revoke_direct_rpc_execute_now": false
   },
   "launch_authority": {

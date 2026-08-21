@@ -8,13 +8,18 @@ BACKEND = ROOT / "04_backend_supabase"
 SEAL = BACKEND / "stage31_live_proof_workflow_seal_authority.json"
 STAGE31 = BACKEND / "student_access_client_edge_runtime_proof_authority.json"
 CUTOVER = BACKEND / "student_access_client_cutover_authority.json"
+STAGE32 = BACKEND / "student_access_production_edge_selection_authority.json"
 WORKFLOW = ROOT / ".github" / "workflows" / "stage31_client_edge_runtime_live_proof.yml"
 
 PREVENTION_CLASS = "BGF-STAGE31-LIVE-PROOF-WORKFLOW-SEAL-223"
 DELIVERY_FAILURE_CLASS = "BGF-STAGE31-READY-FOR-REVIEW-EVENT-NONDELIVERY-224"
+DOWNSTREAM_ADVANCE_CLASS = "BGF-HISTORICAL-GUARD-DOWNSTREAM-AUTHORITY-ADVANCE-214"
 POST_PROOF_REPO_STATE = "CLIENT_EDGE_RUNTIME_PROOF_LIVE_VERIFIED_CLEANUP_REPO_ONLY_DIRECT_MODE"
 POST_PROOF_CLEAN_STATE = "CLIENT_EDGE_RUNTIME_PROOF_LIVE_VERIFIED_CLEANUP_COMPLETE_DIRECT_MODE"
 POST_PROOF_STATES = {POST_PROOF_REPO_STATE, POST_PROOF_CLEAN_STATE}
+CUTOVER_DIRECT_STATE = "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE"
+CUTOVER_EDGE_STATE = "CLIENT_EDGE_SELECTED_POST_CUTOVER_PROOF_PENDING"
+STAGE32_EDGE_STATE = "PRODUCTION_EDGE_SELECTION_CANDIDATE_EDGE_MODE_POST_CUTOVER_PROOF_PENDING"
 PROOF_PR = 61
 PROOF_BRANCH = "blackgold/stage31-client-edge-live-proof"
 PROOF_HEAD = "b8be62be0ba36c61b9557bed03e72dc05b0a43f0"
@@ -52,10 +57,69 @@ def require(mapping: dict, expected: dict, label: str) -> None:
             fail(f"{label} drift: {key}")
 
 
+def verify_current_cutover(cutover: dict, stage32: dict) -> str:
+    state = cutover.get("current_state")
+    contract = cutover.get("transport_contract", {})
+    if state == CUTOVER_DIRECT_STATE:
+        require(
+            contract,
+            {
+                "active_mode": "directRpc",
+                "resolved_mode": "directRpc",
+                "edge_gateway_selected": False,
+                "automatic_edge_to_direct_fallback": False,
+                "direct_rpc_execute_revoked": False,
+                "client_cutover_verified": False,
+            },
+            "current direct client boundary",
+        )
+        return "directRpc"
+    if state == CUTOVER_EDGE_STATE:
+        if stage32.get("current_state") != STAGE32_EDGE_STATE:
+            fail(f"{DOWNSTREAM_ADVANCE_CLASS} Edge cutover advanced without Stage 32 authority")
+        require(
+            contract,
+            {
+                "active_mode": "edgeGateway",
+                "resolved_mode": "edgeGateway",
+                "edge_gateway_selected": True,
+                "automatic_edge_to_direct_fallback": False,
+                "explicit_rollback_requested": False,
+                "explicit_rollback_authorized": False,
+                "direct_rpc_execute_revoked": False,
+                "rollback_verified": False,
+                "client_cutover_verified": False,
+                "exact_route_count": 5,
+                "edge_path_active_in_repository_source": True,
+                "behavioral_transport_change": True,
+            },
+            "current Edge-selected client boundary",
+        )
+        require(
+            stage32.get("selection_candidate", {}),
+            {
+                "active_transport": "edgeGateway",
+                "route_count": 5,
+                "all_five_routes_move_atomically": True,
+                "automatic_edge_to_direct_fallback": False,
+                "direct_rpc_execute_revoked": False,
+                "client_cutover_verified": False,
+                "post_cutover_live_proof_completed": False,
+                "post_cutover_rollback_proof_completed": False,
+                "production_runtime_claimed_verified": False,
+            },
+            "Stage 32 downstream selection",
+        )
+        return "edgeGateway"
+    fail(f"unsupported downstream cutover state while validating Stage 31 seal: {state}")
+    raise AssertionError("unreachable")
+
+
 def main() -> None:
     seal = data(SEAL)
     stage31 = data(STAGE31)
     cutover = data(CUTOVER)
+    stage32 = data(STAGE32)
     workflow = text(WORKFLOW)
 
     require(
@@ -137,7 +201,7 @@ def main() -> None:
             "launch_gate_promotion_allowed": False,
             "cleanup_required_after_proof": True,
         },
-        "sealed proof boundary",
+        "historical sealed proof boundary",
     )
     require(
         seal.get("execution_receipt", {}),
@@ -160,7 +224,7 @@ def main() -> None:
             "proof_reexecution_allowed": False,
             "cleanup_completed": False,
         },
-        "sealed execution receipt",
+        "historical sealed execution receipt",
     )
 
     state = stage31.get("current_state")
@@ -202,18 +266,7 @@ def main() -> None:
         )
     require(stage31.get("runtime_proof", {}), runtime_expected, "Stage 31 runtime receipt")
 
-    require(
-        cutover.get("transport_contract", {}),
-        {
-            "active_mode": "directRpc",
-            "resolved_mode": "directRpc",
-            "edge_gateway_selected": False,
-            "automatic_edge_to_direct_fallback": False,
-            "direct_rpc_execute_revoked": False,
-            "client_cutover_verified": False,
-        },
-        "production client boundary",
-    )
+    current_transport = verify_current_cutover(cutover, stage32)
 
     required = (
         "types: [ready_for_review, opened]",
@@ -264,8 +317,8 @@ def main() -> None:
     print("LIVE_PROOF_EXECUTED=true")
     print("ROUTES_VERIFIED=5")
     print("PROOF_REEXECUTION_ALLOWED=false")
-    print("PRODUCTION_ACTIVE_TRANSPORT=directRpc")
-    print("EDGE_SELECTION=false")
+    print("HISTORICAL_PROOF_TRANSPORT=directRpc")
+    print(f"CURRENT_DOWNSTREAM_TRANSPORT={current_transport}")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
     print("CLEANUP_COMPLETED=" + str(cleanup_complete).lower())
     print("LAUNCH_GATE_PROMOTION=DENIED")

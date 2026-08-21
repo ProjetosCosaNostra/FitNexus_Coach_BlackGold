@@ -3,15 +3,19 @@ import 'package:fitnexus_app/features/student/student_access_transport_contract.
 
 void main() {
   group('StudentAccessTransportContract', () {
-    test('Stage 30 keeps the direct transport active', () {
+    test('Stage 32 selects Edge while keeping rollback grants intact', () {
       expect(
         StudentAccessTransportContract.activeMode,
-        StudentAccessTransportMode.directRpc,
+        StudentAccessTransportMode.edgeGateway,
       );
-      expect(StudentAccessTransportContract.edgeGatewaySelected, isFalse);
+      expect(StudentAccessTransportContract.resolvedMode,
+          StudentAccessTransportMode.edgeGateway);
+      expect(StudentAccessTransportContract.edgeGatewaySelected, isTrue);
       expect(StudentAccessTransportContract.directRpcExecuteRevoked, isFalse);
       expect(StudentAccessTransportContract.clientCutoverVerified, isFalse);
       expect(StudentAccessTransportContract.rollbackVerified, isFalse);
+      expect(StudentAccessTransportContract.explicitRollbackRequested, isFalse);
+      expect(StudentAccessTransportContract.explicitRollbackAuthorized, isFalse);
     });
 
     test('never permits automatic Edge to direct fail-open fallback', () {
@@ -21,7 +25,7 @@ void main() {
       );
     });
 
-    test('owns exactly the five student routes', () {
+    test('owns exactly the five student routes and controlled rollback map', () {
       expect(StudentAccessTransportContract.actionToDirectRpc, <String, String>{
         'get_workout': 'get_student_workout_v2',
         'start_workout': 'start_student_workout_v2',

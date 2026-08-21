@@ -58,14 +58,16 @@ void main() {
       );
     });
 
-    test('production constants do not request or self-authorize rollback', () {
+    test('production Edge selection keeps rollback controls inert', () {
       expect(StudentAccessTransportContract.activeMode,
-          StudentAccessTransportMode.directRpc);
+          StudentAccessTransportMode.edgeGateway);
+      expect(StudentAccessTransportContract.edgeGatewaySelected, isTrue);
       expect(StudentAccessTransportContract.explicitRollbackRequested, isFalse);
       expect(StudentAccessTransportContract.explicitRollbackAuthorized, isFalse);
       expect(StudentAccessTransportContract.rollbackVerified, isFalse);
+      expect(StudentAccessTransportContract.directRpcExecuteRevoked, isFalse);
       expect(StudentAccessTransportContract.resolvedMode,
-          StudentAccessTransportMode.directRpc);
+          StudentAccessTransportMode.edgeGateway);
     });
   });
 }

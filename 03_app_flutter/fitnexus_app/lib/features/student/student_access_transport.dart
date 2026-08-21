@@ -6,13 +6,13 @@ import 'student_access_error_contract.dart';
 import 'student_access_transport_contract.dart';
 
 /// Single client-side transport boundary for every student possession-token
-/// action. Production remains on the authority-owned direct RPC mode until a
-/// separate cutover stage explicitly changes that contract.
+/// action. Stage 32 selects the authority-owned Edge gateway for all five
+/// production routes as one security boundary. The direct RPC branch remains
+/// present only for explicit controlled rollback while its grants are still
+/// intentionally intact; Edge failures never trigger it automatically.
 ///
-/// Stage 31 exposes a verification-only constructor so the already compiled
-/// Edge path can be exercised with an injected client and explicit mode while
-/// production repositories continue to use [instance]. Edge failures are
-/// normalized and never trigger a per-request direct-RPC fallback.
+/// Stage 31's verification-only constructor remains available for sealed test
+/// and integration evidence. Production repositories continue to use [instance].
 class StudentAccessTransport {
   StudentAccessTransport._({
     SupabaseClient? clientOverride,
