@@ -8,9 +8,17 @@
     "BGF-STAGE32-DIRECT-RPC-REVOCATION-PREMATURE-229",
     "BGF-STAGE32-POST-CUTOVER-ROLLBACK-GAP-230"
   ],
-  "purpose": "Fail-closed preparation authority for moving the production Flutter student possession-token transport from directRpc to the already live-proven Edge v3 gateway as one five-route security boundary, while preserving direct RPC grants until post-cutover live proof and rollback proof are complete.",
-  "current_state": "PRODUCTION_EDGE_SELECTION_PREPARED_DIRECT_MODE",
-  "baseline_main_sha": "f205977e1721265a11071b30c89dbb04409979e7",
+  "purpose": "Fail-closed lifecycle authority for moving the production Flutter student possession-token transport from directRpc to the already live-proven Edge v3 gateway as one five-route security boundary, while preserving direct RPC grants until post-cutover live proof and rollback proof are complete.",
+  "current_state": "PRODUCTION_EDGE_SELECTION_CANDIDATE_EDGE_MODE_POST_CUTOVER_PROOF_PENDING",
+  "baseline_main_sha": "3cec9ebd5f01bf0b595b7c2f1600c571725e3d41",
+  "preparation_receipt": {
+    "preparation_state": "PRODUCTION_EDGE_SELECTION_PREPARED_DIRECT_MODE",
+    "preparation_main_sha": "3cec9ebd5f01bf0b595b7c2f1600c571725e3d41",
+    "preparation_pr": 67,
+    "preparation_head_sha": "4dbf12a5d74896c8dcd185b0ff68d5a3bd85fa4d",
+    "preparation_ci_result": "PASS",
+    "production_behavior_changed": false
+  },
   "prerequisites": {
     "stage31_authority_file": "04_backend_supabase/student_access_client_edge_runtime_proof_authority.json",
     "stage31_required_state": "CLIENT_EDGE_RUNTIME_PROOF_LIVE_VERIFIED_CLEANUP_COMPLETE_DIRECT_MODE",
@@ -18,7 +26,8 @@
     "stage31_flutter_edge_routes_verified": 5,
     "stage31_proof_reexecution_allowed": false,
     "cutover_authority_file": "04_backend_supabase/student_access_client_cutover_authority.json",
-    "cutover_required_state": "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE",
+    "pre_selection_cutover_state": "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE",
+    "selection_cutover_state": "CLIENT_EDGE_SELECTED_POST_CUTOVER_PROOF_PENDING",
     "stage30_runtime_rollback_verified": true,
     "edge_runtime_version": 3,
     "direct_rpc_grants_required_intact": true
@@ -46,20 +55,27 @@
     },
     "direct_rpc_grants_intact": true
   },
-  "current_production_boundary": {
-    "active_transport": "directRpc",
-    "resolved_transport": "directRpc",
-    "flutter_uses_edge_gateway": false,
-    "edge_gateway_selected": false,
-    "automatic_edge_to_direct_fallback": false,
-    "direct_v2_rpc_path_active": true,
-    "direct_rpc_execute_revoked": false,
-    "production_behavior_changed_in_this_stage": false
-  },
-  "prepared_cutover_contract": {
-    "target_transport": "edgeGateway",
+  "selection_candidate": {
+    "source_base_main_sha": "3cec9ebd5f01bf0b595b7c2f1600c571725e3d41",
+    "active_transport": "edgeGateway",
+    "resolved_transport": "edgeGateway",
+    "flutter_uses_edge_gateway": true,
+    "edge_gateway_selected": true,
     "edge_function_name": "student-access-gateway",
     "route_count": 5,
+    "all_five_routes_move_atomically": true,
+    "partial_cutover_forbidden": true,
+    "automatic_edge_to_direct_fallback": false,
+    "explicit_rollback_requested": false,
+    "explicit_rollback_authorized": false,
+    "direct_v2_rpc_path_active_for_controlled_rollback": true,
+    "direct_rpc_execute_revoked": false,
+    "client_cutover_verified": false,
+    "post_cutover_live_proof_completed": false,
+    "post_cutover_rollback_proof_completed": false,
+    "production_runtime_claimed_verified": false
+  },
+  "cutover_contract": {
     "all_five_routes_move_atomically": true,
     "partial_cutover_forbidden": true,
     "automatic_edge_to_direct_fallback_forbidden": true,
@@ -69,41 +85,44 @@
     "post_cutover_rollback_proof_required": true,
     "post_cutover_observation_required_before_direct_rpc_revocation": true,
     "security_advisor_recheck_required_before_direct_rpc_revocation": true,
-    "source_change_in_this_preparation_stage": false,
-    "cutover_receipt_materialized": false
+    "source_selection_materialized": true,
+    "cutover_runtime_receipt_materialized": false
   },
   "source_receipt": {
     "transport_contract_file": "03_app_flutter/fitnexus_app/lib/features/student/student_access_transport_contract.dart",
     "transport_runtime_file": "03_app_flutter/fitnexus_app/lib/features/student/student_access_transport.dart",
     "workout_repository_file": "03_app_flutter/fitnexus_app/lib/features/student/student_workout_repository.dart",
     "feedback_repository_file": "03_app_flutter/fitnexus_app/lib/features/student/student_feedback_repository.dart",
-    "active_mode": "directRpc",
-    "edge_gateway_selected": false,
+    "active_mode": "edgeGateway",
+    "edge_gateway_selected": true,
     "direct_rpc_execute_revoked": false,
     "repositories_use_single_transport": true,
     "repository_transport_call_sites": 5,
-    "edge_path_compiled": true,
-    "edge_exception_direct_fallback_absent": true
+    "edge_path_active": true,
+    "edge_exception_direct_fallback_absent": true,
+    "direct_route_map_retained_for_controlled_rollback": true
   },
   "promotion_rules": {
-    "may_select_edge_gateway_during_preparation": false,
-    "may_change_production_behavior_during_preparation": false,
+    "may_merge_selection_before_ci_green": false,
     "may_revoke_direct_rpc_execute_before_post_cutover_proofs": false,
     "may_enable_automatic_edge_to_direct_fallback": false,
     "may_use_real_customer_data_for_cutover_proof": false,
     "may_reexecute_stage31_live_proof": false,
+    "may_self_attest_post_cutover_runtime_proof": false,
     "may_promote_launch_gates": false,
     "all_five_routes_cutover_only": true
   },
   "next_stage": {
-    "name": "SELECT_PRODUCTION_EDGE_TRANSPORT_ALL_FIVE_ROUTES_CANDIDATE",
+    "name": "EXECUTE_STAGE32_POST_CUTOVER_FIVE_ROUTE_LIVE_PROOF",
     "allowed_now": true,
-    "requires_preparation_ci_and_merge_first": true,
-    "requires_all_five_routes_atomic": true,
+    "requires_selection_ci_and_merge_first": true,
+    "requires_synthetic_customer_fixture": true,
+    "requires_all_five_routes_edge_transport": true,
     "requires_no_automatic_edge_to_direct_fallback": true,
     "requires_direct_rpc_grants_intact": true,
-    "requires_post_cutover_live_proof_after_selection": true,
-    "requires_post_cutover_rollback_proof_after_selection": true,
+    "requires_one_shot_proof": true,
+    "requires_cleanup_after_proof": true,
+    "requires_post_cutover_rollback_proof_after_live_proof": true,
     "may_revoke_direct_rpc_execute_now": false
   },
   "launch_authority": {
