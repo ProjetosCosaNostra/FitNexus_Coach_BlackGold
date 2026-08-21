@@ -11,9 +11,9 @@ BACKEND = ROOT / "04_backend_supabase"
 LEDGER = BACKEND / "migration_ledger_authority.json"
 
 FIXTURE_NAME = "stage32_post_cutover_rollback_fixture"
-FIXTURE_FAILURE = "BGF-STAGE32-POST-CUTOVER-ROLLBACK-FIXTURE-240"
-CURRENT_BASELINE = "40e01bfd9060edafd8f6b834ef5636534b834005"
-CURRENT_OBSERVED = "2026-08-21T23:47:57.870914Z"
+FIXTURE_VERSION = "20260821235550"
+CURRENT_BASELINE = "4e686d526779cce4236b6e1b4fba42c4ba6ef3c7"
+CURRENT_OBSERVED = "2026-08-21T23:56:22.809328Z"
 CLEANUP_BASELINE = "62809bbd4f27d0616110dae19024b163a4911521"
 CLEANUP_OBSERVED = "2026-08-21T22:27:43.951028Z"
 MODES = {
@@ -49,36 +49,30 @@ def projected_pre_rollback_fixture_ledger(current: dict) -> dict:
         for row in current.get("declared_divergences", [])
         if isinstance(row, dict) and row.get("direction") == "repo_only"
     ]
-    if len(repo_only) != 1:
-        fail("rollback fixture must be the unique repo_only divergence")
-    row = repo_only[0]
-    if row.get("name") != FIXTURE_NAME or row.get("related_failure_class") != FIXTURE_FAILURE:
-        fail("rollback fixture repo_only identity drifted")
+    if repo_only:
+        fail("rollback fixture remains repo_only after authoritative remote apply")
     if current.get("baseline_main_sha") != CURRENT_BASELINE:
-        fail("rollback fixture current ledger baseline drifted")
+        fail("rollback fixture remote ledger baseline drifted")
     if current.get("observed_at_utc") != CURRENT_OBSERVED:
-        fail("rollback fixture current ledger observation drifted")
+        fail("rollback fixture remote ledger observation drifted")
 
     remote = {
         item.get("name"): item.get("version")
-        for item in current.get("remote_migrations", []) if isinstance(item, dict)
+        for item in current.get("remote_migrations", [])
+        if isinstance(item, dict)
     }
     if remote.get("stage32_post_cutover_live_proof_r1_cleanup") != "20260821222724":
         fail("R1 cleanup remote receipt disappeared")
-    if FIXTURE_NAME in remote:
-        fail("rollback fixture self-attested as remote before apply")
+    if remote.get(FIXTURE_NAME) != FIXTURE_VERSION:
+        fail("rollback fixture remote receipt disappeared or changed")
 
     value = json.loads(json.dumps(current))
     value["baseline_main_sha"] = CLEANUP_BASELINE
     value["observed_at_utc"] = CLEANUP_OBSERVED
-    value["declared_divergences"] = [
+    value["remote_migrations"] = [
         item
-        for item in value.get("declared_divergences", [])
-        if not (
-            isinstance(item, dict)
-            and item.get("direction") == "repo_only"
-            and item.get("name") == FIXTURE_NAME
-        )
+        for item in value.get("remote_migrations", [])
+        if not (isinstance(item, dict) and item.get("name") == FIXTURE_NAME)
     ]
     return value
 
@@ -87,7 +81,6 @@ def run(mode: str) -> None:
     if mode not in MODES:
         fail(f"unsupported mode: {mode}")
 
-    # Current rollback-fixture authority must pass before any historical projection.
     current = importlib.import_module(
         "verify_stage32_post_cutover_rollback_proof_preparation"
     )
@@ -120,10 +113,11 @@ def run(mode: str) -> None:
 
     print("STAGE32_ROLLBACK_FIXTURE_HISTORICAL_COMPAT=PASS")
     print(f"MODE={mode}")
-    print("ACTUAL_CURRENT_STATE=POST_CUTOVER_ROLLBACK_FIXTURE_REPO_ONLY_PROOF_PREPARATION_EDGE_MODE")
+    print("ACTUAL_CURRENT_STATE=POST_CUTOVER_ROLLBACK_FIXTURE_REMOTE_LIVE_PROOF_PENDING_EDGE_MODE")
     print(f"ACTUAL_ROLLBACK_FIXTURE={FIXTURE_NAME}")
-    print("ACTUAL_ROLLBACK_FIXTURE_REMOTE_APPLIED=false")
-    print("PROJECTED_ROLLBACK_FIXTURE_REMOVED=true")
+    print(f"ACTUAL_ROLLBACK_FIXTURE_REMOTE_VERSION={FIXTURE_VERSION}")
+    print("ACTUAL_ROLLBACK_FIXTURE_REMOTE_APPLIED=true")
+    print("PROJECTED_ROLLBACK_FIXTURE_REMOTE_ROW_REMOVED=true")
     print(f"PROJECTED_LEDGER_BASELINE={CLEANUP_BASELINE}")
     print(f"PROJECTED_LEDGER_OBSERVED={CLEANUP_OBSERVED}")
     print("R1_EDGE_LIVE_PROOF_REEXECUTION_ALLOWED=false")
