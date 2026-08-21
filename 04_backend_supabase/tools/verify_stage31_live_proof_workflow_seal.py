@@ -12,11 +12,14 @@ WORKFLOW = ROOT / ".github" / "workflows" / "stage31_client_edge_runtime_live_pr
 
 PREVENTION_CLASS = "BGF-STAGE31-LIVE-PROOF-WORKFLOW-SEAL-223"
 DELIVERY_FAILURE_CLASS = "BGF-STAGE31-READY-FOR-REVIEW-EVENT-NONDELIVERY-224"
+POST_PROOF_STATE = "CLIENT_EDGE_RUNTIME_PROOF_LIVE_VERIFIED_CLEANUP_REPO_ONLY_DIRECT_MODE"
 PROOF_PR = 61
 PROOF_BRANCH = "blackgold/stage31-client-edge-live-proof"
 PROOF_HEAD = "b8be62be0ba36c61b9557bed03e72dc05b0a43f0"
 FALLBACK_BRANCH = "blackgold/stage31-live-proof-open-trigger-224"
 FALLBACK_HEAD = "8f1c1933c5822d4a20abc8bb9260007f1a109cc3"
+RUN_ID = 32480597745
+JOB_ID = 96765899124
 
 
 def fail(message: str) -> None:
@@ -63,7 +66,6 @@ def main() -> None:
         },
         "workflow seal authority",
     )
-
     require(
         seal.get("proof_pr", {}),
         {
@@ -78,7 +80,6 @@ def main() -> None:
         },
         "sealed proof PR",
     )
-
     require(
         seal.get("trigger_delivery", {}),
         {
@@ -87,9 +88,10 @@ def main() -> None:
             "fallback_event": "pull_request.opened",
             "fallback_branch": FALLBACK_BRANCH,
             "fallback_head_sha": FALLBACK_HEAD,
-            "fallback_head_is_immutable_for_execution": True,
-            "fallback_opened_event_is_single_lifecycle_transition": True,
-            "proof_checkout_still_uses_original_proof_head": True,
+            "fallback_trigger_pr": 64,
+            "fallback_trigger_pr_closed_unmerged_after_execution": True,
+            "fallback_head_consumed": True,
+            "proof_checkout_still_used_original_proof_head": True,
         },
         "trigger delivery authority",
     )
@@ -138,24 +140,58 @@ def main() -> None:
     require(
         seal.get("execution_receipt", {}),
         {
-            "workflow_run_id": None,
-            "job_id": None,
-            "result": None,
-            "executed": False,
+            "workflow_run_id": RUN_ID,
+            "job_id": JOB_ID,
+            "result": "SUCCESS",
+            "executed": True,
+            "run_attempt": 1,
+            "proof_test_result": "ALL_TESTS_PASSED",
+            "routes_verified": 5,
+            "proof_head_checked_out": PROOF_HEAD,
+            "raw_synthetic_token_printed": False,
+            "production_transport_change": False,
+            "edge_selection": False,
+            "automatic_edge_to_direct_fallback": False,
+            "direct_rpc_grants_changed": False,
+            "real_customer_data_used": False,
+            "launch_gate_promotion": False,
+            "proof_reexecution_allowed": False,
+            "cleanup_completed": False,
         },
-        "pre-execution seal receipt",
+        "sealed execution receipt",
     )
 
-    if stage31.get("current_state") != "CLIENT_EDGE_RUNTIME_PROOF_FIXTURE_REMOTE_LIVE_PROOF_PENDING_DIRECT_MODE":
-        fail("Stage 31 authority advanced before sealed live proof execution")
-    fixture = stage31.get("fixture", {})
-    if fixture.get("remote_applied") is not True or fixture.get("remote_version") != "20260821113205":
-        fail("Stage 31 remote fixture receipt disappeared before workflow seal")
+    if stage31.get("current_state") != POST_PROOF_STATE:
+        fail("Stage 31 authority is not at the verified cleanup frontier")
     runtime = stage31.get("runtime_proof", {})
-    if runtime.get("workflow_run_id") is not None or runtime.get("result") is not None:
-        fail("Stage 31 live proof already has a runtime receipt")
-    if runtime.get("all_five_routes_verified") is not False:
-        fail("Stage 31 live proof self-attested before workflow seal")
+    require(
+        runtime,
+        {
+            "workflow_run_id": RUN_ID,
+            "workflow_job_id": JOB_ID,
+            "result": "PASS",
+            "proof_pr": PROOF_PR,
+            "proof_head": PROOF_HEAD,
+            "trigger_pr": 64,
+            "trigger_head": FALLBACK_HEAD,
+            "trigger_pr_closed_unmerged_after_execution": True,
+            "flutter_transport_edge_path_verified": True,
+            "get_workout_verified": True,
+            "start_workout_verified": True,
+            "set_completion_verified": True,
+            "get_feedback_context_verified": True,
+            "submit_feedback_verified": True,
+            "all_five_routes_verified": True,
+            "synthetic_fixture_mutated_as_expected": True,
+            "raw_token_returned": False,
+            "raw_network_origin_returned": False,
+            "real_customer_data_used": False,
+            "real_customer_data_mutated": False,
+            "proof_reexecution_allowed": False,
+            "cleanup_completed": False,
+        },
+        "Stage 31 runtime receipt",
+    )
 
     require(
         cutover.get("transport_contract", {}),
@@ -197,7 +233,6 @@ def main() -> None:
     for fragment in required:
         if fragment not in workflow:
             fail(f"sealed workflow source drifted: {fragment}")
-
     for forbidden in (
         "workflow_dispatch:",
         "types: [synchronize]",
@@ -214,15 +249,16 @@ def main() -> None:
     print(f"DELIVERY_FAILURE_CLASS={DELIVERY_FAILURE_CLASS}")
     print(f"SEALED_PR={PROOF_PR}")
     print(f"SEALED_PROOF_HEAD={PROOF_HEAD}")
-    print(f"FALLBACK_BRANCH={FALLBACK_BRANCH}")
     print(f"FALLBACK_HEAD={FALLBACK_HEAD}")
-    print("READY_FOR_REVIEW_RUN_OBSERVED=false")
-    print("FALLBACK_TRIGGER=pull_request.opened")
-    print("RUN_ATTEMPT=1_ONLY")
+    print(f"WORKFLOW_RUN_ID={RUN_ID}")
+    print(f"WORKFLOW_JOB_ID={JOB_ID}")
+    print("LIVE_PROOF_EXECUTED=true")
+    print("ROUTES_VERIFIED=5")
+    print("PROOF_REEXECUTION_ALLOWED=false")
     print("PRODUCTION_ACTIVE_TRANSPORT=directRpc")
     print("EDGE_SELECTION=false")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
-    print("LIVE_PROOF_EXECUTED=false")
+    print("CLEANUP_COMPLETED=false")
     print("LAUNCH_GATE_PROMOTION=DENIED")
 
 
