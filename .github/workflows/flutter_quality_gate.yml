@@ -144,6 +144,9 @@ jobs:
       - name: Stage 32 post-cutover runtime proof preparation guard
         run: python ../../04_backend_supabase/tools/verify_student_access_stage32_post_cutover_runtime_preparation.py
 
+      - name: Stage 32 live proof candidate guard
+        run: python ../../04_backend_supabase/tools/verify_student_access_stage32_live_proof_candidate.py
+
       - name: Student client Edge runtime smoke lifecycle guard
         run: python ../../04_backend_supabase/tools/verify_stage32_post_cutover_repo_only_historical_compat.py smoke
 
