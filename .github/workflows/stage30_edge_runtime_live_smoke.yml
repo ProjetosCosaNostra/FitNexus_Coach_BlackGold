@@ -1,0 +1,32 @@
+name: Stage 30 Five-Route Edge Runtime Live Smoke
+
+on:
+  pull_request:
+    types: [opened]
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/student_access_client_runtime_smoke_authority.json'
+      - '04_backend_supabase/tools/verify_student_access_client_runtime_smoke.py'
+      - '04_backend_supabase/tools/verify_student_access_stage30_edge_runtime_live.py'
+      - '.github/workflows/stage30_edge_runtime_live_smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  five-route-live-smoke:
+    if: github.head_ref == 'blackgold/stage30-five-route-edge-runtime-live-smoke'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Stage 30 runtime smoke lifecycle guard
+        run: python 04_backend_supabase/tools/verify_student_access_client_runtime_smoke.py
+
+      - name: Execute five-route Edge runtime smoke once
+        run: python 04_backend_supabase/tools/verify_student_access_stage30_edge_runtime_live.py

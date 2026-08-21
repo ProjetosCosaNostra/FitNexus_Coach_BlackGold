@@ -5,9 +5,9 @@
   "proof_reexecution_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-PROOF-REEXECUTION-204",
   "response_data_leak_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-RESPONSE-DATA-LEAK-205",
   "command_flow_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-COMMAND-FLOW-206",
-  "purpose": "Repository-first lifecycle authority for a controlled synthetic five-route Edge v3 runtime smoke before any Flutter transport selection.",
-  "current_state": "EDGE_RUNTIME_SMOKE_FIXTURE_REPO_ONLY",
-  "baseline_main_sha": "59385ef6a7b4d8ad90703b1cbb52c0755f1f8948",
+  "purpose": "Lifecycle authority for a controlled synthetic five-route Edge v3 runtime smoke before any Flutter transport selection.",
+  "current_state": "EDGE_RUNTIME_SMOKE_LIVE_VERIFIED_CLEANUP_PENDING",
+  "baseline_main_sha": "ff29a59626f7a4ab5e198cfef2c27b5cd1dfde1b",
   "client_cutover_authority": {
     "file": "04_backend_supabase/student_access_client_cutover_authority.json",
     "required_state": "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE",
@@ -19,9 +19,9 @@
   "fixture": {
     "repository_file": "04_backend_supabase/migrations/20260821063000_stage30_edge_runtime_smoke_fixture.sql",
     "migration_name": "stage30_edge_runtime_smoke_fixture",
-    "migration_ledger_state": "repo_only",
-    "remote_applied": false,
-    "remote_version": null,
+    "migration_ledger_state": "remote_reconciled",
+    "remote_applied": true,
+    "remote_version": "20260821075532",
     "requires_empty_customer_domain": true,
     "synthetic_only": true,
     "token_seed": "fitnexus-stage30-edge-runtime-smoke-fixture-v1",
@@ -55,23 +55,78 @@
   },
   "runtime_proof": {
     "edge_runtime_version": 3,
-    "fixture_deployed": false,
-    "get_workout_verified": false,
-    "start_workout_verified": false,
-    "set_completion_verified": false,
-    "get_feedback_context_verified": false,
-    "submit_feedback_verified": false,
-    "all_five_routes_verified": false,
-    "completed_session_verified": false,
-    "feedback_submitted_verified": false,
+    "fixture_deployed": true,
+    "get_workout_verified": true,
+    "start_workout_verified": true,
+    "set_completion_verified": true,
+    "get_feedback_context_verified": true,
+    "submit_feedback_verified": true,
+    "all_five_routes_verified": true,
+    "completed_session_verified": true,
+    "feedback_submitted_verified": true,
     "raw_token_returned": false,
     "raw_network_origin_returned": false,
     "real_student_data_used": false,
     "real_student_data_mutated": false,
-    "proof_workflow_run_id": null,
-    "proof_result": null,
+    "proof_workflow_run_id": 32461357789,
+    "proof_result": "PASS",
     "proof_reexecution_allowed": false,
     "cleanup_completed": false
+  },
+  "live_proof_receipt": {
+    "workflow_run_id": 32461357789,
+    "result": "PASS",
+    "live_smoke_mode": "EXECUTED_ONCE",
+    "gateway_health": "PASS",
+    "routes_verified": 5,
+    "get_workout": "PASS",
+    "start_workout": "PASS",
+    "set_completion": "PASS",
+    "get_feedback_context": "PASS",
+    "submit_feedback": "PASS",
+    "completed_session_verified": true,
+    "feedback_submitted_verified": true,
+    "feedback_risk_signal": "low",
+    "raw_synthetic_token_returned": false,
+    "raw_network_origin_returned": false,
+    "real_student_data_used": false,
+    "real_student_data_mutated": false,
+    "proof_reexecution_allowed": false
+  },
+  "database_proof_receipt": {
+    "sessions_total": 1,
+    "session_completed": 1,
+    "exercise_logs_total": 1,
+    "exercise_log_completed": 1,
+    "feedback_total": 1,
+    "feedback_expected": 1,
+    "link_last_used": 1,
+    "student_status": "Treino concluído",
+    "student_adherence": 100,
+    "link_rate_bucket_request_counts": {
+      "get_workout": 1,
+      "start_workout": 1,
+      "set_completion": 1,
+      "get_feedback_context": 1,
+      "submit_feedback": 1
+    },
+    "command_receipts_total": 3,
+    "start_receipt_exact": 1,
+    "completion_receipt_exact": 1,
+    "feedback_receipt_exact": 1,
+    "allowed_security_events": {
+      "start_workout": 1,
+      "set_completion": 1,
+      "submit_feedback": 1
+    },
+    "network_rate_bucket_proof": {
+      "get_workout": 1,
+      "start_workout": 1,
+      "set_completion": 1,
+      "get_feedback_context": 1,
+      "submit_feedback": 1,
+      "raw_origin_hash_read": false
+    }
   },
   "promotion_rules": {
     "may_apply_fixture_after_ci_and_merge": true,
@@ -84,8 +139,9 @@
     "launch_gate_authority": false
   },
   "next_stage": {
-    "name": "APPLY_STAGE30_EDGE_RUNTIME_SMOKE_FIXTURE",
+    "name": "PREPARE_STAGE30_RUNTIME_SMOKE_CLEANUP",
     "allowed_now": true,
-    "requires_ci_and_merge_first": true
+    "requires_repo_first_cleanup_migration": true,
+    "requires_ci_and_merge_before_cleanup_apply": true
   }
 }
