@@ -11,9 +11,12 @@ CUTOVER = BACKEND / "student_access_client_cutover_authority.json"
 WORKFLOW = ROOT / ".github" / "workflows" / "stage31_client_edge_runtime_live_proof.yml"
 
 PREVENTION_CLASS = "BGF-STAGE31-LIVE-PROOF-WORKFLOW-SEAL-223"
+DELIVERY_FAILURE_CLASS = "BGF-STAGE31-READY-FOR-REVIEW-EVENT-NONDELIVERY-224"
 PROOF_PR = 61
 PROOF_BRANCH = "blackgold/stage31-client-edge-live-proof"
 PROOF_HEAD = "b8be62be0ba36c61b9557bed03e72dc05b0a43f0"
+FALLBACK_BRANCH = "blackgold/stage31-live-proof-open-trigger-224"
+FALLBACK_HEAD = "8f1c1933c5822d4a20abc8bb9260007f1a109cc3"
 
 
 def fail(message: str) -> None:
@@ -56,12 +59,13 @@ def main() -> None:
             "schema_version": 1,
             "project_ref": "mceukeondizkwlpfxzgf",
             "prevention_class": PREVENTION_CLASS,
+            "delivery_failure_class": DELIVERY_FAILURE_CLASS,
         },
         "workflow seal authority",
     )
-    proof_pr = seal.get("proof_pr", {})
+
     require(
-        proof_pr,
+        seal.get("proof_pr", {}),
         {
             "number": PROOF_PR,
             "head_branch": PROOF_BRANCH,
@@ -74,13 +78,33 @@ def main() -> None:
         },
         "sealed proof PR",
     )
+
+    require(
+        seal.get("trigger_delivery", {}),
+        {
+            "ready_for_review_transitions_attempted": 2,
+            "ready_for_review_actions_run_observed": False,
+            "fallback_event": "pull_request.opened",
+            "fallback_branch": FALLBACK_BRANCH,
+            "fallback_head_sha": FALLBACK_HEAD,
+            "fallback_head_is_immutable_for_execution": True,
+            "fallback_opened_event_is_single_lifecycle_transition": True,
+            "proof_checkout_still_uses_original_proof_head": True,
+        },
+        "trigger delivery authority",
+    )
+
     contract = seal.get("workflow_contract", {})
+    if contract.get("event") != "pull_request" or contract.get("event_types") != ["ready_for_review", "opened"]:
+        fail("workflow event contract drifted")
     for key in (
-        "job_requires_exact_pr_number",
-        "job_requires_exact_head_branch",
-        "job_requires_exact_head_sha",
+        "ready_path_requires_exact_pr_number",
+        "ready_path_requires_exact_head_branch",
+        "ready_path_requires_exact_head_sha",
+        "opened_fallback_requires_exact_head_branch",
+        "opened_fallback_requires_exact_head_sha",
         "job_requires_run_attempt_one",
-        "checkout_ref_is_exact_head_sha",
+        "checkout_ref_is_exact_proof_head_sha",
         "live_test_requires_explicit_enable_environment",
         "synthetic_token_derived_from_public_seed_at_runtime",
     ):
@@ -89,6 +113,7 @@ def main() -> None:
     for key in (
         "workflow_dispatch_allowed",
         "synchronize_allowed",
+        "reopened_allowed",
         "schedule_allowed",
         "synthetic_token_printed",
         "service_role_secret_used",
@@ -96,9 +121,8 @@ def main() -> None:
         if contract.get(key) is not False:
             fail(f"workflow seal prohibition drifted: {key}")
 
-    boundary = seal.get("proof_boundary", {})
     require(
-        boundary,
+        seal.get("proof_boundary", {}),
         {
             "fixture_remote_version": "20260821113205",
             "production_active_transport": "directRpc",
@@ -111,9 +135,8 @@ def main() -> None:
         },
         "sealed proof boundary",
     )
-    receipt = seal.get("execution_receipt", {})
     require(
-        receipt,
+        seal.get("execution_receipt", {}),
         {
             "workflow_run_id": None,
             "job_id": None,
@@ -134,9 +157,8 @@ def main() -> None:
     if runtime.get("all_five_routes_verified") is not False:
         fail("Stage 31 live proof self-attested before workflow seal")
 
-    transport = cutover.get("transport_contract", {})
     require(
-        transport,
+        cutover.get("transport_contract", {}),
         {
             "active_mode": "directRpc",
             "resolved_mode": "directRpc",
@@ -149,17 +171,23 @@ def main() -> None:
     )
 
     required = (
-        "types: [ready_for_review]",
+        "types: [ready_for_review, opened]",
+        "github.event.action == 'ready_for_review'",
         f"github.event.pull_request.number == {PROOF_PR}",
         f"github.event.pull_request.head.ref == '{PROOF_BRANCH}'",
         f"github.event.pull_request.head.sha == '{PROOF_HEAD}'",
-        "github.run_attempt == 1",
+        "github.event.action == 'opened'",
+        f"github.event.pull_request.head.ref == '{FALLBACK_BRANCH}'",
+        f"github.event.pull_request.head.sha == '{FALLBACK_HEAD}'",
+        ") &&\n      github.run_attempt == 1",
         f"ref: {PROOF_HEAD}",
         "verify_student_access_stage31_live_proof_candidate.py",
         "STAGE31_LIVE_PROOF_ENABLED=1",
         "fitnexus-stage31-client-edge-runtime-proof-v1",
         "STAGE31_SYNTHETIC_TOKEN=$TOKEN",
         "flutter test test/student_access_stage31_live_edge_proof_test.dart --reporter expanded",
+        f"OPEN_TRIGGER_FAILURE_CLASS={DELIVERY_FAILURE_CLASS}",
+        f"OPEN_TRIGGER_HEAD={FALLBACK_HEAD}",
         "PRODUCTION_TRANSPORT_CHANGE=false",
         "EDGE_SELECTION=false",
         "DIRECT_RPC_GRANTS_CHANGED=false",
@@ -169,10 +197,11 @@ def main() -> None:
     for fragment in required:
         if fragment not in workflow:
             fail(f"sealed workflow source drifted: {fragment}")
+
     for forbidden in (
         "workflow_dispatch:",
         "types: [synchronize]",
-        "types: [opened]",
+        "reopened",
         "schedule:",
         "SUPABASE_SERVICE_ROLE_KEY",
         "SUPABASE_SECRET_KEY",
@@ -182,10 +211,13 @@ def main() -> None:
 
     print("STAGE31_LIVE_PROOF_WORKFLOW_SEAL_GUARD=PASS")
     print(f"PREVENTION_CLASS={PREVENTION_CLASS}")
+    print(f"DELIVERY_FAILURE_CLASS={DELIVERY_FAILURE_CLASS}")
     print(f"SEALED_PR={PROOF_PR}")
-    print(f"SEALED_BRANCH={PROOF_BRANCH}")
-    print(f"SEALED_HEAD={PROOF_HEAD}")
-    print("TRIGGER=ready_for_review")
+    print(f"SEALED_PROOF_HEAD={PROOF_HEAD}")
+    print(f"FALLBACK_BRANCH={FALLBACK_BRANCH}")
+    print(f"FALLBACK_HEAD={FALLBACK_HEAD}")
+    print("READY_FOR_REVIEW_RUN_OBSERVED=false")
+    print("FALLBACK_TRIGGER=pull_request.opened")
     print("RUN_ATTEMPT=1_ONLY")
     print("PRODUCTION_ACTIVE_TRANSPORT=directRpc")
     print("EDGE_SELECTION=false")
