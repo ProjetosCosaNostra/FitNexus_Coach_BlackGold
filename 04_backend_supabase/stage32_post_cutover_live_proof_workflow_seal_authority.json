@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE32_POST_CUTOVER_LIVE_PROOF_WORKFLOW_SEAL",
+  "prevention_class": "BGF-STAGE32-POST-CUTOVER-PROOF-REEXECUTION-233",
+  "proof_authority_file": "04_backend_supabase/student_access_stage32_post_cutover_runtime_proof_authority.json",
+  "required_proof_authority_state": "POST_CUTOVER_EDGE_RUNTIME_PROOF_FIXTURE_REMOTE_LIVE_PROOF_PENDING_EDGE_MODE",
+  "proof_pr": {
+    "number": 71,
+    "head_branch": "blackgold/stage32-post-cutover-live-proof",
+    "head_sha": "370cfe65d3df5188c3f840d84b5a8748f1357cf2",
+    "base_branch": "main",
+    "draft_when_sealed": true,
+    "merge_allowed": false
+  },
+  "open_trigger": {
+    "branch": "blackgold/stage32-live-proof-open-trigger",
+    "head_sha": "84a51d97f3b7a7c53965567e21760d5d59c85f5a",
+    "purpose": "Fallback event delivery only if ready_for_review does not materialize the sealed run.",
+    "merge_allowed": false
+  },
+  "workflow_contract": {
+    "file": ".github/workflows/stage32_post_cutover_edge_runtime_live_proof.yml",
+    "event": "pull_request",
+    "event_types": ["ready_for_review", "opened"],
+    "ready_path_requires_exact_pr_number": true,
+    "ready_path_requires_exact_head_branch": true,
+    "ready_path_requires_exact_head_sha": true,
+    "opened_fallback_requires_exact_head_branch": true,
+    "opened_fallback_requires_exact_head_sha": true,
+    "job_requires_run_attempt_one": true,
+    "checkout_ref_is_exact_proof_head_sha": true,
+    "candidate_guard_runs_before_flutter_setup": true,
+    "live_test_requires_explicit_enable_environment": true,
+    "synthetic_token_derived_from_public_seed_at_runtime": true,
+    "production_singleton_required": true,
+    "verification_factory_forbidden": true,
+    "workflow_dispatch_allowed": false,
+    "synchronize_allowed": false,
+    "reopened_allowed": false,
+    "schedule_allowed": false,
+    "service_role_secret_used": false,
+    "synthetic_token_printed": false
+  },
+  "proof_boundary": {
+    "fixture_remote_version": "20260821171334",
+    "production_active_transport": "edgeGateway",
+    "production_singleton": "StudentAccessTransport.instance",
+    "edge_gateway_selected_in_production": true,
+    "automatic_edge_to_direct_fallback": false,
+    "direct_rpc_execute_revoked": false,
+    "post_cutover_rollback_verified": false,
+    "real_customer_data_allowed": false,
+    "launch_gate_promotion_allowed": false,
+    "cleanup_required_after_proof": true
+  },
+  "execution_receipt": {
+    "workflow_run_id": null,
+    "job_id": null,
+    "result": null,
+    "executed": false,
+    "run_attempt": null,
+    "routes_verified": 0,
+    "proof_head_checked_out": null,
+    "production_singleton_verified": false,
+    "production_edge_mode_verified": false,
+    "raw_synthetic_token_printed": false,
+    "production_transport_change": false,
+    "automatic_edge_to_direct_fallback": false,
+    "direct_rpc_grants_changed": false,
+    "direct_rpc_privilege_revocation": false,
+    "real_customer_data_used": false,
+    "launch_gate_promotion": false,
+    "proof_reexecution_allowed": false,
+    "cleanup_completed": false
+  },
+  "next_stage": {
+    "name": "DELIVER_STAGE32_POST_CUTOVER_LIVE_PROOF_EVENT_ONCE",
+    "allowed_now_after_ci_and_merge": true,
+    "preferred_event": "ready_for_review",
+    "fallback_event": "opened",
+    "may_change_proof_head_after_seal": false,
+    "may_execute_more_than_once": false,
+    "may_revoke_direct_rpc_execute_now": false
+  },
+  "launch_authority": {
+    "can_promote_incident_response_gate": false,
+    "can_promote_production_deployment_gate": false,
+    "can_enable_paid_ads": false,
+    "current_state_is_launch_readiness": false
+  }
+}
