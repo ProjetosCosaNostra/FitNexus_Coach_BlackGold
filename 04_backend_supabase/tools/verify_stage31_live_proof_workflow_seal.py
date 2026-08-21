@@ -12,7 +12,9 @@ WORKFLOW = ROOT / ".github" / "workflows" / "stage31_client_edge_runtime_live_pr
 
 PREVENTION_CLASS = "BGF-STAGE31-LIVE-PROOF-WORKFLOW-SEAL-223"
 DELIVERY_FAILURE_CLASS = "BGF-STAGE31-READY-FOR-REVIEW-EVENT-NONDELIVERY-224"
-POST_PROOF_STATE = "CLIENT_EDGE_RUNTIME_PROOF_LIVE_VERIFIED_CLEANUP_REPO_ONLY_DIRECT_MODE"
+POST_PROOF_REPO_STATE = "CLIENT_EDGE_RUNTIME_PROOF_LIVE_VERIFIED_CLEANUP_REPO_ONLY_DIRECT_MODE"
+POST_PROOF_CLEAN_STATE = "CLIENT_EDGE_RUNTIME_PROOF_LIVE_VERIFIED_CLEANUP_COMPLETE_DIRECT_MODE"
+POST_PROOF_STATES = {POST_PROOF_REPO_STATE, POST_PROOF_CLEAN_STATE}
 PROOF_PR = 61
 PROOF_BRANCH = "blackgold/stage31-client-edge-live-proof"
 PROOF_HEAD = "b8be62be0ba36c61b9557bed03e72dc05b0a43f0"
@@ -161,37 +163,44 @@ def main() -> None:
         "sealed execution receipt",
     )
 
-    if stage31.get("current_state") != POST_PROOF_STATE:
-        fail("Stage 31 authority is not at the verified cleanup frontier")
-    runtime = stage31.get("runtime_proof", {})
-    require(
-        runtime,
-        {
-            "workflow_run_id": RUN_ID,
-            "workflow_job_id": JOB_ID,
-            "result": "PASS",
-            "proof_pr": PROOF_PR,
-            "proof_head": PROOF_HEAD,
-            "trigger_pr": 64,
-            "trigger_head": FALLBACK_HEAD,
-            "trigger_pr_closed_unmerged_after_execution": True,
-            "flutter_transport_edge_path_verified": True,
-            "get_workout_verified": True,
-            "start_workout_verified": True,
-            "set_completion_verified": True,
-            "get_feedback_context_verified": True,
-            "submit_feedback_verified": True,
-            "all_five_routes_verified": True,
-            "synthetic_fixture_mutated_as_expected": True,
-            "raw_token_returned": False,
-            "raw_network_origin_returned": False,
-            "real_customer_data_used": False,
-            "real_customer_data_mutated": False,
-            "proof_reexecution_allowed": False,
-            "cleanup_completed": False,
-        },
-        "Stage 31 runtime receipt",
-    )
+    state = stage31.get("current_state")
+    if state not in POST_PROOF_STATES:
+        fail("Stage 31 authority is not at a verified post-proof state")
+    cleanup_complete = state == POST_PROOF_CLEAN_STATE
+
+    runtime_expected = {
+        "workflow_run_id": RUN_ID,
+        "workflow_job_id": JOB_ID,
+        "result": "PASS",
+        "proof_pr": PROOF_PR,
+        "proof_head": PROOF_HEAD,
+        "trigger_pr": 64,
+        "trigger_head": FALLBACK_HEAD,
+        "trigger_pr_closed_unmerged_after_execution": True,
+        "flutter_transport_edge_path_verified": True,
+        "get_workout_verified": True,
+        "start_workout_verified": True,
+        "set_completion_verified": True,
+        "get_feedback_context_verified": True,
+        "submit_feedback_verified": True,
+        "all_five_routes_verified": True,
+        "synthetic_fixture_mutated_as_expected": True,
+        "raw_token_returned": False,
+        "raw_network_origin_returned": False,
+        "real_customer_data_used": False,
+        "real_customer_data_mutated": False,
+        "proof_reexecution_allowed": False,
+        "cleanup_completed": cleanup_complete,
+    }
+    if cleanup_complete:
+        runtime_expected.update(
+            {
+                "synthetic_business_rows_remaining": 0,
+                "synthetic_security_rows_remaining": 0,
+                "synthetic_network_proof_rows_remaining": 0,
+            }
+        )
+    require(stage31.get("runtime_proof", {}), runtime_expected, "Stage 31 runtime receipt")
 
     require(
         cutover.get("transport_contract", {}),
@@ -258,7 +267,7 @@ def main() -> None:
     print("PRODUCTION_ACTIVE_TRANSPORT=directRpc")
     print("EDGE_SELECTION=false")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
-    print("CLEANUP_COMPLETED=false")
+    print("CLEANUP_COMPLETED=" + str(cleanup_complete).lower())
     print("LAUNCH_GATE_PROMOTION=DENIED")
 
 
