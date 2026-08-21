@@ -120,25 +120,25 @@ jobs:
         run: python ../../04_backend_supabase/tools/verify_student_access_network_origin_boundary.py
 
       - name: Student network-origin rate-limit guard
-        run: python ../../04_backend_supabase/tools/verify_stage31_fixture_remote_reconciliation.py rate_limit
+        run: python ../../04_backend_supabase/tools/verify_stage31_live_proof_cleanup_reconciliation.py rate_limit
 
       - name: Student Edge gateway candidate guard
         run: python ../../04_backend_supabase/tools/verify_student_access_edge_gateway_candidate.py
 
       - name: Student valid-route synthetic fixture guard
-        run: python ../../04_backend_supabase/tools/verify_stage31_fixture_remote_reconciliation.py valid_route
+        run: python ../../04_backend_supabase/tools/verify_stage31_live_proof_cleanup_reconciliation.py valid_route
 
-      - name: Stage 31 client Edge runtime preparation guard
-        run: python ../../04_backend_supabase/tools/verify_stage31_fixture_remote_reconciliation.py stage31
+      - name: Stage 31 live proof cleanup reconciliation guard
+        run: python ../../04_backend_supabase/tools/verify_stage31_live_proof_cleanup_reconciliation.py stage31
 
       - name: Stage 31 live proof workflow seal guard
         run: python ../../04_backend_supabase/tools/verify_stage31_live_proof_workflow_seal.py
 
       - name: Student client Edge runtime smoke lifecycle guard
-        run: python ../../04_backend_supabase/tools/verify_stage31_fixture_remote_reconciliation.py smoke
+        run: python ../../04_backend_supabase/tools/verify_stage31_live_proof_cleanup_reconciliation.py smoke
 
       - name: Student runtime rollback proof lifecycle guard
-        run: python ../../04_backend_supabase/tools/verify_stage31_fixture_remote_reconciliation.py rollback
+        run: python ../../04_backend_supabase/tools/verify_stage31_live_proof_cleanup_reconciliation.py rollback
 
       - name: CF origin spoof sentinel source guard
         run: python ../../04_backend_supabase/tools/verify_cf_origin_spoof_sentinel_source.py
