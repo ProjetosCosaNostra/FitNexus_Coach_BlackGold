@@ -8,8 +8,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 BACKEND = ROOT / "04_backend_supabase"
+APP = ROOT / "03_app_flutter" / "fitnexus_app"
 LEDGER = BACKEND / "migration_ledger_authority.json"
 STAGE31_AUTHORITY = BACKEND / "student_access_client_edge_runtime_proof_authority.json"
+CUTOVER = BACKEND / "student_access_client_cutover_authority.json"
+CONTRACT = APP / "lib" / "features" / "student" / "student_access_transport_contract.dart"
 STAGE31_GUARD = "verify_student_access_client_edge_runtime_preparation"
 
 FIXTURE_NAME = "stage31_client_edge_runtime_fixture"
@@ -35,6 +38,10 @@ def load(path: Path) -> dict:
 
 def validate_stage31_current_state() -> dict:
     guard = importlib.import_module(STAGE31_GUARD)
+    guard.AUTHORITY = STAGE31_AUTHORITY
+    guard.LEDGER = LEDGER
+    guard.CUTOVER = CUTOVER
+    guard.CONTRACT = CONTRACT
     guard.main()
 
     authority = load(STAGE31_AUTHORITY)
@@ -95,11 +102,6 @@ def run(mode: str) -> None:
         if mode == "rate_limit":
             module = importlib.import_module("verify_student_access_network_rate_limit")
             module.LEDGER = temp_ledger
-            # Stage 27 predates the Stage 31 verification-only client seam and
-            # expects the historical mode-resolution source shape. The current
-            # Stage 31 guard above validates the real transport first; this tiny
-            # non-authoritative projection exists only to keep the old source
-            # co-location assertion meaningful without weakening current checks.
             temp_transport = temp_root / "student_access_transport_historical_projection.dart"
             temp_transport.write_text(
                 "final historicalMode = StudentAccessTransportContract.resolvedMode;\n"
@@ -128,8 +130,7 @@ def run(mode: str) -> None:
     print(f"FAILURE_CLASS={FAILURE_CLASS}")
     print(f"PROJECTED_REPO_ONLY_REMOVED={FIXTURE_NAME}")
     print("ACTUAL_STAGE31_AUTHORITY_VALIDATED=true")
-    print("ACTUAL_PRODUCTION_TRANSPORT=directRpc")
-    print("EDGE_SELECTION=false")
+    print("HISTORICAL_STAGE31_TRANSPORT=directRpc")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
 
 
