@@ -112,13 +112,13 @@ jobs:
         run: python ../../04_backend_supabase/tools/verify_student_access_network_origin_boundary.py
 
       - name: Student network-origin rate-limit guard
-        run: python ../../04_backend_supabase/tools/verify_student_access_network_rate_limit.py
+        run: python ../../04_backend_supabase/tools/verify_stage30_cleanup_historical_guard_compat.py rate_limit
 
       - name: Student Edge gateway candidate guard
         run: python ../../04_backend_supabase/tools/verify_student_access_edge_gateway_candidate.py
 
       - name: Student valid-route synthetic fixture guard
-        run: python ../../04_backend_supabase/tools/verify_student_access_valid_route_fixture.py
+        run: python ../../04_backend_supabase/tools/verify_stage30_cleanup_historical_guard_compat.py valid_route
 
       - name: Student client Edge cutover preparation guard
         run: python ../../04_backend_supabase/tools/verify_student_access_client_cutover_preparation.py
