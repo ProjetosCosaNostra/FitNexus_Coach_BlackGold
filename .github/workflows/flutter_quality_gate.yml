@@ -20,6 +20,7 @@ on:
       - '04_backend_supabase/student_access_stage32_post_cutover_runtime_proof_authority.json'
       - '04_backend_supabase/stage31_live_proof_workflow_seal_authority.json'
       - '04_backend_supabase/stage32_post_cutover_live_proof_workflow_seal_authority.json'
+      - '04_backend_supabase/stage32_post_cutover_live_proof_r1_workflow_seal_authority.json'
       - '04_backend_supabase/stage32_post_cutover_live_proof_failure_r0_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
@@ -30,6 +31,7 @@ on:
       - '.github/workflows/flutter_quality_gate.yml'
       - '.github/workflows/stage31_client_edge_runtime_live_proof.yml'
       - '.github/workflows/stage32_post_cutover_edge_runtime_live_proof.yml'
+      - '.github/workflows/stage32_post_cutover_edge_runtime_live_proof_r1.yml'
   push:
     branches:
       - main
@@ -52,6 +54,7 @@ on:
       - '04_backend_supabase/student_access_stage32_post_cutover_runtime_proof_authority.json'
       - '04_backend_supabase/stage31_live_proof_workflow_seal_authority.json'
       - '04_backend_supabase/stage32_post_cutover_live_proof_workflow_seal_authority.json'
+      - '04_backend_supabase/stage32_post_cutover_live_proof_r1_workflow_seal_authority.json'
       - '04_backend_supabase/stage32_post_cutover_live_proof_failure_r0_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
@@ -62,6 +65,7 @@ on:
       - '.github/workflows/flutter_quality_gate.yml'
       - '.github/workflows/stage31_client_edge_runtime_live_proof.yml'
       - '.github/workflows/stage32_post_cutover_edge_runtime_live_proof.yml'
+      - '.github/workflows/stage32_post_cutover_edge_runtime_live_proof_r1.yml'
 
 permissions:
   contents: read
@@ -157,6 +161,9 @@ jobs:
 
       - name: Stage 32 pre-network failure recovery R1 guard
         run: python ../../04_backend_supabase/tools/verify_stage32_pre_network_failure_recovery_r1.py
+
+      - name: Stage 32 post-cutover live proof R1 workflow seal guard
+        run: python ../../04_backend_supabase/tools/verify_stage32_post_cutover_live_proof_r1_workflow_seal.py
 
       - name: Student client Edge runtime smoke lifecycle guard
         run: python ../../04_backend_supabase/tools/verify_stage32_post_cutover_repo_only_historical_compat.py smoke
