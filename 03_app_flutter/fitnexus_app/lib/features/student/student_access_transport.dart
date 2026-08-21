@@ -28,7 +28,16 @@ class StudentAccessTransport {
       throw StateError('Ação de aluno não autorizada pelo transporte: $action');
     }
 
-    switch (StudentAccessTransportContract.resolvedMode) {
+    final StudentAccessTransportMode configuredMode =
+        StudentAccessTransportContract.activeMode;
+    final StudentAccessTransportMode resolvedMode =
+        StudentAccessTransportContract.resolvedMode;
+    if (!StudentAccessTransportContract.explicitRollbackRequested &&
+        resolvedMode != configuredMode) {
+      throw StateError('Divergência inesperada no transporte estudantil.');
+    }
+
+    switch (resolvedMode) {
       case StudentAccessTransportMode.directRpc:
         return _client.rpc(directRpc, params: directParams);
       case StudentAccessTransportMode.edgeGateway:
