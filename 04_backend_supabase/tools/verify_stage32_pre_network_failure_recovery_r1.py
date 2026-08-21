@@ -8,18 +8,24 @@ BACKEND = ROOT / "04_backend_supabase"
 APP = ROOT / "03_app_flutter" / "fitnexus_app"
 
 AUTHORITY = BACKEND / "stage32_post_cutover_live_proof_failure_r0_authority.json"
-REARM = BACKEND / "operations" / "stage32_rearm_expired_fixture_r1.sql"
+LEDGER = BACKEND / "migration_ledger_authority.json"
+HISTORICAL_OPERATION = BACKEND / "operations" / "stage32_rearm_expired_fixture_r1.sql"
+REARM_MIGRATION = BACKEND / "migrations" / "20260821213000_stage32_rearm_expired_fixture_r1.sql"
 LIVE_TEST = APP / "test" / "student_access_stage32_post_cutover_live_edge_proof_test.dart"
 OLD_SEAL = BACKEND / "stage32_post_cutover_live_proof_workflow_seal_authority.json"
 OLD_WORKFLOW = ROOT / ".github" / "workflows" / "stage32_post_cutover_edge_runtime_live_proof.yml"
 
 FAIL_PLUGIN = "BGF-STAGE32-FLUTTER-TEST-SHARED-PREFERENCES-PLUGIN-235"
 FAIL_TTL = "BGF-STAGE32-SYNTHETIC-FIXTURE-TTL-EXPIRED-BEFORE-RETRY-236"
+FAIL_READONLY = "BGF-SUPABASE-EXECUTE-SQL-READONLY-DML-237"
+REARM_NAME = "stage32_rearm_expired_fixture_r1"
+REARM_FILE = "04_backend_supabase/migrations/20260821213000_stage32_rearm_expired_fixture_r1.sql"
 OLD_RUN = 32508349425
 OLD_JOB = 96853509377
 OLD_PROOF_HEAD = "370cfe65d3df5188c3f840d84b5a8748f1357cf2"
 OLD_TRIGGER_HEAD = "84a51d97f3b7a7c53965567e21760d5d59c85f5a"
 LINK_ID = "378baa18-c8fc-5765-b01f-6fd3dd898f64"
+R2_BASELINE = "2b3dbfa2543230f8ae17a9838c610b326d453d02"
 
 
 def fail(message: str) -> None:
@@ -52,7 +58,9 @@ def require(mapping: dict, expected: dict, label: str) -> None:
 
 def main() -> None:
     authority = load(AUTHORITY)
-    rearm = text(REARM)
+    ledger = load(LEDGER)
+    historical_operation = text(HISTORICAL_OPERATION)
+    migration = text(REARM_MIGRATION)
     live_test = text(LIVE_TEST)
     old_seal = load(OLD_SEAL)
     old_workflow = text(OLD_WORKFLOW)
@@ -64,16 +72,17 @@ def main() -> None:
             "project_ref": "mceukeondizkwlpfxzgf",
             "stage": "STAGE32_POST_CUTOVER_LIVE_PROOF_FAILURE_R0",
             "baseline_main_sha": "c43a2662de1f92b08dad4ed1b22c51357a0ff269",
-            "status": "PRE_NETWORK_BOOTSTRAP_FAILURE_RECORDED_FIXTURE_EXPIRED_REPAIR_R1_REQUIRED",
+            "r2_baseline_main_sha": R2_BASELINE,
+            "status": "PRE_NETWORK_FAILURE_RECORDED_REARM_MIGRATION_REPO_ONLY",
         },
         "failure authority",
     )
 
     classes = authority.get("failure_classes")
-    if not isinstance(classes, list) or len(classes) != 2:
+    if not isinstance(classes, list) or len(classes) != 3:
         fail("failure class set drifted")
     ids = [item.get("id") for item in classes if isinstance(item, dict)]
-    if ids != [FAIL_PLUGIN, FAIL_TTL]:
+    if ids != [FAIL_PLUGIN, FAIL_TTL, FAIL_READONLY]:
         fail("failure class identity/order drifted")
     if not all(isinstance(item.get("rule"), str) and item.get("rule") for item in classes):
         fail("failure class prevention rule missing")
@@ -153,6 +162,53 @@ def main() -> None:
     if expiry.get("link_expires_at_utc") != "2026-08-21T19:13:34.175674Z":
         fail("expired fixture timestamp drifted")
 
+    pre = authority.get("pre_rearm_receipt", {})
+    require(
+        pre,
+        {
+            "observed_at_utc": "2026-08-21T21:29:21.68853Z",
+            "auth_users": 1,
+            "profiles": 1,
+            "organizations": 1,
+            "organization_members": 1,
+            "organization_subscriptions": 1,
+            "students": 1,
+            "training_plans": 1,
+            "training_exercises": 1,
+            "access_links": 1,
+            "workout_sessions": 0,
+            "workout_logs": 0,
+            "workout_feedback": 0,
+            "fixture_command_receipts": 0,
+            "fixture_rate_buckets": 0,
+            "fixture_security_events": 0,
+            "fixture_security_signals": 0,
+            "link_expired": True,
+            "rpc_count": 5,
+            "all_five_anon_execute_intact": True,
+            "all_five_authenticated_execute_intact": True,
+        },
+        "fresh pre-rearm receipt",
+    )
+
+    dml = authority.get("execute_sql_dml_failure_receipt", {})
+    require(
+        dml,
+        {
+            "source": "Supabase.execute_sql",
+            "attempted_after_preflight_observed_at_utc": "2026-08-21T21:29:21.68853Z",
+            "operation_file": "04_backend_supabase/operations/stage32_rearm_expired_fixture_r1.sql",
+            "result": "FAIL_READ_ONLY_TRANSACTION",
+            "sqlstate": "25006",
+            "message_class": "cannot execute UPDATE in a read-only transaction",
+            "failed_statement_class": "UPDATE public.student_access_links expires_at",
+            "transaction_mutation_applied": False,
+            "retry_through_execute_sql_allowed": False,
+            "replacement_mechanism": "Supabase.apply_migration",
+        },
+        "read-only DML failure receipt",
+    )
+
     grants = authority.get("direct_rpc_grant_receipt", {})
     require(
         grants,
@@ -186,12 +242,21 @@ def main() -> None:
         {
             "shared_preferences_mock_required_before_supabase_initialize": True,
             "required_test_fragment": "SharedPreferences.setMockInitialValues(<String, Object>{});",
-            "fixture_rearm_operation_file": "04_backend_supabase/operations/stage32_rearm_expired_fixture_r1.sql",
+            "historical_operation_file": "04_backend_supabase/operations/stage32_rearm_expired_fixture_r1.sql",
+            "historical_operation_execution_allowed": False,
+            "fixture_rearm_migration_file": REARM_FILE,
+            "fixture_rearm_migration_name": REARM_NAME,
+            "migration_ledger_state": "repo_only",
+            "remote_applied": False,
+            "remote_version": None,
+            "authorized_remote_mutation_tool": "Supabase.apply_migration",
             "fixture_rearm_hours": 6,
             "requires_exact_synthetic_fixture_identity": True,
             "requires_zero_runtime_mutation_residue": True,
             "requires_expired_link_before_rearm": True,
             "requires_fresh_direct_rpc_grant_check_before_rearm": True,
+            "requires_fresh_migration_ledger_check_immediately_before_apply": True,
+            "requires_exact_merged_sql": True,
             "requires_new_proof_head": True,
             "requires_new_workflow_seal": True,
             "requires_new_trigger_head": True,
@@ -201,28 +266,53 @@ def main() -> None:
         "repair R1 contract",
     )
 
-    for fragment in (
-        FAIL_PLUGIN,
-        FAIL_TTL,
-        "STAGE32_R1_REARM_CUSTOMER_DOMAIN_NOT_EXACT_SYNTHETIC_FIXTURE",
-        "STAGE32_R1_REARM_FIXTURE_IDENTITY_OR_EXPIRY_MISMATCH",
-        "STAGE32_R1_REARM_RUNTIME_RESIDUE_DETECTED",
-        "STAGE32_R1_REARM_GROWTH_FIXTURE_DRIFT",
-        "STAGE32_R1_REARM_UPDATE_COUNT_MISMATCH",
-        "STAGE32_R1_REARM_POSTCONDITION_FAILED",
-        "set expires_at = now() + interval '6 hours'",
-        "expires_at <= now()",
-        "token_hash = extensions.digest(v_token, 'sha256')",
-        "fitnexus-stage32-post-cutover-edge-runtime-proof-v1",
-        LINK_ID,
+    repo_only = [
+        row
+        for row in ledger.get("declared_divergences", [])
+        if isinstance(row, dict) and row.get("direction") == "repo_only"
+    ]
+    if len(repo_only) != 1 or repo_only[0].get("name") != REARM_NAME:
+        fail("rearm migration must be the unique repo_only migration")
+    if repo_only[0].get("related_failure_class") != FAIL_READONLY:
+        fail("rearm ledger failure-class binding drifted")
+    remote = {
+        row.get("name"): row.get("version")
+        for row in ledger.get("remote_migrations", [])
+        if isinstance(row, dict)
+    }
+    if remote.get("stage32_post_cutover_edge_runtime_fixture") != "20260821171334":
+        fail("Stage32 original fixture remote receipt disappeared")
+    if REARM_NAME in remote:
+        fail("rearm migration self-attested as remote before apply")
+    if ledger.get("baseline_main_sha") != R2_BASELINE:
+        fail("rearm ledger baseline drifted")
+
+    for source, label in (
+        (historical_operation, "historical operation"),
+        (migration, "rearm migration"),
     ):
-        if fragment not in rearm:
-            fail(f"rearm operation drift: {fragment}")
-    lower_rearm = rearm.lower()
-    if "delete from" in lower_rearm or "insert into" in lower_rearm:
-        fail("rearm operation may only update the exact existing synthetic link")
-    if lower_rearm.count("update public.student_access_links") != 1:
-        fail("rearm operation must contain exactly one link update")
+        for fragment in (
+            "STAGE32_R1_REARM_CUSTOMER_DOMAIN_NOT_EXACT_SYNTHETIC_FIXTURE",
+            "STAGE32_R1_REARM_FIXTURE_IDENTITY_OR_EXPIRY_MISMATCH",
+            "STAGE32_R1_REARM_RUNTIME_RESIDUE_DETECTED",
+            "STAGE32_R1_REARM_GROWTH_FIXTURE_DRIFT",
+            "STAGE32_R1_REARM_UPDATE_COUNT_MISMATCH",
+            "STAGE32_R1_REARM_POSTCONDITION_FAILED",
+            "set expires_at = now() + interval '6 hours'",
+            "expires_at <= now()",
+            "token_hash = extensions.digest(v_token, 'sha256')",
+            "fitnexus-stage32-post-cutover-edge-runtime-proof-v1",
+            LINK_ID,
+        ):
+            if fragment not in source:
+                fail(f"{label} drift: {fragment}")
+        lower_source = source.lower()
+        if "delete from" in lower_source or "insert into" in lower_source:
+            fail(f"{label} may only update the exact existing synthetic link")
+        if lower_source.count("update public.student_access_links") != 1:
+            fail(f"{label} must contain exactly one link update")
+    if FAIL_READONLY not in migration:
+        fail("rearm migration does not record the execute_sql read-only failure class")
 
     mock_import = "import 'package:shared_preferences/shared_preferences.dart';"
     mock_call = "SharedPreferences.setMockInitialValues(<String, Object>{});"
@@ -253,8 +343,11 @@ def main() -> None:
     require(
         next_stage,
         {
-            "name": "MERGE_STAGE32_PRE_NETWORK_FAILURE_RECOVERY_R1_PREPARATION",
+            "name": "APPLY_STAGE32_REARM_EXPIRED_FIXTURE_R1_MIGRATION",
+            "allowed_only_after_ci_and_merge": True,
             "may_rearm_fixture_before_ci_and_merge": False,
+            "may_mutate_via_execute_sql": False,
+            "requires_apply_migration": True,
             "may_deliver_new_live_proof_event_before_rearm_receipt": False,
             "may_rerun_consumed_workflow": False,
             "may_reuse_consumed_proof_head": False,
@@ -267,11 +360,15 @@ def main() -> None:
     print("STAGE32_PRE_NETWORK_FAILURE_RECOVERY_R1_GUARD=PASS")
     print(f"FAILURE_CLASS_1={FAIL_PLUGIN}")
     print(f"FAILURE_CLASS_2={FAIL_TTL}")
+    print(f"FAILURE_CLASS_3={FAIL_READONLY}")
     print(f"CONSUMED_RUN={OLD_RUN}")
     print("ROUTES_ATTEMPTED=0")
     print("FIXTURE_EXPIRED=true")
     print("SHARED_PREFERENCES_MOCK_INSTALLED=true")
-    print("REARM_OPERATION=REPOSITORY_FIRST_NOT_EXECUTED")
+    print(f"REARM_MIGRATION={REARM_NAME}")
+    print("REARM_LEDGER=REPO_ONLY")
+    print("EXECUTE_SQL_DML_ALLOWED=false")
+    print("AUTHORIZED_REMOTE_MUTATION_TOOL=Supabase.apply_migration")
     print("DIRECT_RPC_GRANTS=INTACT")
     print("PRODUCTION_ACTIVE_TRANSPORT=edgeGateway")
     print("LAUNCH_GATE_PROMOTION=DENIED")
