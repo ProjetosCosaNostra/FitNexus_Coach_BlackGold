@@ -10,6 +10,7 @@ APP = ROOT / "03_app_flutter" / "fitnexus_app"
 AUTHORITY = BACKEND / "student_access_client_edge_runtime_proof_authority.json"
 LEDGER = BACKEND / "migration_ledger_authority.json"
 CUTOVER = BACKEND / "student_access_client_cutover_authority.json"
+INCIDENT = BACKEND / "stage31_live_proof_guard_incident_authority.json"
 CONTRACT = APP / "lib" / "features" / "student" / "student_access_transport_contract.dart"
 TRANSPORT = APP / "lib" / "features" / "student" / "student_access_transport.dart"
 TEST = APP / "test" / "student_access_stage31_live_edge_proof_test.dart"
@@ -17,6 +18,7 @@ TEST = APP / "test" / "student_access_stage31_live_edge_proof_test.dart"
 STATE = "CLIENT_EDGE_RUNTIME_PROOF_FIXTURE_REMOTE_LIVE_PROOF_PENDING_DIRECT_MODE"
 FIXTURE_NAME = "stage31_client_edge_runtime_fixture"
 FIXTURE_VERSION = "20260821113205"
+GUARD_SENTINEL_CLASS = "BGF-STAGE31-PROOF-GUARD-SENTINEL-SELF-MATCH-222"
 FAILURE_CLASSES = [
     "BGF-STAGE31-CLIENT-EDGE-RUNTIME-FIXTURE-216",
     "BGF-STAGE31-VERIFICATION-SEAM-PRODUCTION-LEAK-217",
@@ -30,6 +32,18 @@ ROUTES = [
     "get_feedback_context",
     "submit_feedback",
 ]
+SECURITY_SENTINELS = (
+    "token_hash",
+    "authorization",
+    "apikey",
+    "network_origin",
+    "raw_network_origin",
+    "origin_hash",
+    "service_role",
+    "cf-connecting-ip",
+    "x-forwarded-for",
+    "x-real-ip",
+)
 
 
 def fail(message: str) -> None:
@@ -62,9 +76,34 @@ def main() -> None:
     authority = data(AUTHORITY)
     ledger = data(LEDGER)
     cutover = data(CUTOVER)
+    incident = data(INCIDENT)
     contract = text(CONTRACT)
     transport = text(TRANSPORT)
     proof = text(TEST)
+
+    require(
+        incident,
+        {
+            "schema_version": 1,
+            "project_ref": "mceukeondizkwlpfxzgf",
+            "failure_class": GUARD_SENTINEL_CLASS,
+        },
+        "Stage 31 sentinel-guard incident authority",
+    )
+    if incident.get("incident", {}).get("workflow_run_id") != 32478699265:
+        fail("sentinel-guard incident workflow receipt drifted")
+    prevention = incident.get("permanent_prevention", {})
+    for key in (
+        "forbidden_response_sentinel_is_allowed_in_test_assertion_set",
+        "service_role_key_or_secret_configuration_remains_forbidden",
+        "direct_rpc_and_direct_functions_invoke_remain_forbidden_in_proof",
+        "raw_64_hex_bearer_literal_remains_forbidden",
+        "guard_must_validate_semantic_credential_patterns_not_the_sentinel_label_alone",
+    ):
+        if prevention.get(key) is not True:
+            fail(f"{GUARD_SENTINEL_CLASS} prevention invariant missing: {key}")
+    if incident.get("incident", {}).get("live_proof_executed") is not False:
+        fail("sentinel-guard incident incorrectly claims live proof execution")
 
     require(
         authority,
@@ -161,6 +200,7 @@ def main() -> None:
     required_test_fragments = (
         "StudentAccessTransport.forVerification(",
         "configuredMode: StudentAccessTransportMode.edgeGateway",
+        "STAGE31_LIVE_PROOF_ENABLED",
         "STAGE31_SYNTHETIC_TOKEN",
         "STAGE31_SUPABASE_URL",
         "STAGE31_SUPABASE_PUBLISHABLE_KEY",
@@ -171,28 +211,35 @@ def main() -> None:
         "31000000000000000000000000000001",
         "31000000000000000000000000000002",
         "31000000000000000000000000000003",
+        "Stage31 live proof executes only in the sealed one-shot workflow.",
     )
     for fragment in required_test_fragments:
         if fragment not in proof:
             fail(f"Stage 31 live proof source incomplete: {fragment}")
+    for sentinel in SECURITY_SENTINELS:
+        if f"'{sentinel}'" not in proof:
+            fail(f"{GUARD_SENTINEL_CLASS} response leak sentinel disappeared: {sentinel}")
     for action in ROUTES:
         if proof.count(f"action: '{action}'") != 1:
             fail(f"Stage 31 live proof must route {action} through transport exactly once")
     if proof.count("transport.invoke(") != 5:
         fail("Stage 31 live proof must enter the single transport exactly five times")
 
+    # Sentinel labels such as service_role and cf-connecting-ip are intentionally
+    # present in the response-leak assertion set. Reject privileged configuration
+    # and transport bypasses semantically rather than banning those labels raw.
     for forbidden in (
         ".rpc(",
         "functions.invoke(",
-        "service_role",
-        "SUPABASE_SERVICE_ROLE",
+        "SUPABASE_SERVICE_ROLE_KEY",
         "SUPABASE_SECRET_KEY",
-        "cf-connecting-ip",
-        "x-forwarded-for",
-        "x-real-ip",
+        "serviceRoleKey",
+        "service_role_key",
+        "Authorization': 'Bearer",
+        'Authorization": "Bearer',
     ):
         if forbidden in proof:
-            fail(f"Stage 31 live proof bypassed the client boundary or embedded forbidden material: {forbidden}")
+            fail(f"Stage 31 live proof bypassed the client boundary or embedded privileged material: {forbidden}")
     if re.search(r"(?<![0-9a-fA-F])[0-9a-fA-F]{64}(?![0-9a-fA-F])", proof):
         fail("Stage 31 live proof contains a bearer-looking 64-hex literal")
 
@@ -234,6 +281,7 @@ def main() -> None:
     print("STAGE31_CLIENT_EDGE_LIVE_PROOF_CANDIDATE_GUARD=PASS")
     print(f"CURRENT_STATE={STATE}")
     print(f"FIXTURE_REMOTE_VERSION={FIXTURE_VERSION}")
+    print(f"SENTINEL_GUARD_PREVENTION={GUARD_SENTINEL_CLASS}")
     print("FLUTTER_TRANSPORT_PROOF_SOURCE=READY")
     print("ROUTES_IN_PROOF=5")
     print("DIRECT_RPC_FROM_PROOF=DENIED")
