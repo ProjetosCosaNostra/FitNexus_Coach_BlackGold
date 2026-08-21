@@ -16,10 +16,10 @@ TRANSPORT = APP / "student_access_transport.dart"
 WORKOUT = APP / "student_workout_repository.dart"
 FEEDBACK = APP / "student_feedback_repository.dart"
 
-STATE = "PRODUCTION_EDGE_SELECTION_PREPARED_DIRECT_MODE"
-BASELINE = "f205977e1721265a11071b30c89dbb04409979e7"
+STATE = "PRODUCTION_EDGE_SELECTION_CANDIDATE_EDGE_MODE_POST_CUTOVER_PROOF_PENDING"
+BASELINE = "3cec9ebd5f01bf0b595b7c2f1600c571725e3d41"
 STAGE31_STATE = "CLIENT_EDGE_RUNTIME_PROOF_LIVE_VERIFIED_CLEANUP_COMPLETE_DIRECT_MODE"
-CUTOVER_STATE = "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE"
+CUTOVER_STATE = "CLIENT_EDGE_SELECTED_POST_CUTOVER_PROOF_PENDING"
 FAILURE_CLASSES = [
     "BGF-STAGE32-PRODUCTION-EDGE-SELECTION-PREMATURE-227",
     "BGF-STAGE32-PRODUCTION-EDGE-SELECTION-PARTIAL-228",
@@ -88,18 +88,29 @@ def main() -> None:
         },
         "Stage 32 authority",
     )
+    require(
+        authority.get("preparation_receipt", {}),
+        {
+            "preparation_state": "PRODUCTION_EDGE_SELECTION_PREPARED_DIRECT_MODE",
+            "preparation_main_sha": BASELINE,
+            "preparation_pr": 67,
+            "preparation_head_sha": "4dbf12a5d74896c8dcd185b0ff68d5a3bd85fa4d",
+            "preparation_ci_result": "PASS",
+            "production_behavior_changed": False,
+        },
+        "Stage 32 preparation receipt",
+    )
 
     prerequisites = authority.get("prerequisites", {})
     require(
         prerequisites,
         {
-            "stage31_authority_file": "04_backend_supabase/student_access_client_edge_runtime_proof_authority.json",
             "stage31_required_state": STAGE31_STATE,
             "stage31_cleanup_complete": True,
             "stage31_flutter_edge_routes_verified": 5,
             "stage31_proof_reexecution_allowed": False,
-            "cutover_authority_file": "04_backend_supabase/student_access_client_cutover_authority.json",
-            "cutover_required_state": CUTOVER_STATE,
+            "pre_selection_cutover_state": "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE",
+            "selection_cutover_state": CUTOVER_STATE,
             "stage30_runtime_rollback_verified": True,
             "edge_runtime_version": 3,
             "direct_rpc_grants_required_intact": True,
@@ -109,9 +120,8 @@ def main() -> None:
 
     if stage31.get("current_state") != STAGE31_STATE:
         fail("Stage 31 cleanup-complete authority disappeared")
-    runtime = stage31.get("runtime_proof", {})
     require(
-        runtime,
+        stage31.get("runtime_proof", {}),
         {
             "result": "PASS",
             "flutter_transport_edge_path_verified": True,
@@ -142,7 +152,7 @@ def main() -> None:
             "client_cutover_verified": False,
             "behavioral_transport_change": False,
         },
-        "Stage 31 production boundary",
+        "immutable Stage 31 production receipt",
     )
 
     require(
@@ -151,28 +161,44 @@ def main() -> None:
             "schema_version": 2,
             "project_ref": "mceukeondizkwlpfxzgf",
             "current_state": CUTOVER_STATE,
+            "baseline_main_sha": BASELINE,
         },
-        "cutover authority",
+        "current cutover authority",
+    )
+    require(
+        cutover.get("current_client_inventory", {}),
+        {
+            "transport_mode": "edge_gateway",
+            "flutter_uses_edge_gateway": True,
+            "direct_v2_rpc_path_active": True,
+            "direct_anon_v2_rpc_execute_revoked": False,
+            "repositories_call_supabase_rpc_directly": False,
+            "repositories_call_single_transport": True,
+        },
+        "Edge-selected client inventory",
     )
     require(
         cutover.get("transport_contract", {}),
         {
-            "active_mode": "directRpc",
-            "resolved_mode": "directRpc",
-            "edge_gateway_selected": False,
+            "active_mode": "edgeGateway",
+            "resolved_mode": "edgeGateway",
+            "edge_gateway_selected": True,
             "automatic_edge_to_direct_fallback": False,
             "explicit_rollback_requested": False,
             "explicit_rollback_authorized": False,
             "direct_rpc_execute_revoked": False,
+            "rollback_verified": False,
             "client_cutover_verified": False,
             "exact_route_count": 5,
+            "edge_path_active_in_repository_source": True,
+            "behavioral_transport_change": True,
         },
-        "cutover transport boundary",
+        "Edge-selected transport contract",
     )
     require(
         cutover.get("rollback_harness", {}),
         {
-            "production_active_mode": "directRpc",
+            "production_active_mode": "edgeGateway",
             "explicit_rollback_requested": False,
             "explicit_rollback_authorized": False,
             "unauthorized_rollback_fails_closed": True,
@@ -180,9 +206,25 @@ def main() -> None:
             "authorized_edge_to_direct_transition_unit_tested": True,
             "runtime_rollback_verified": True,
             "runtime_rollback_proof_kind": "isolated_resolver_no_network",
+            "pre_cutover_runtime_rollback_verified": True,
+            "post_cutover_runtime_rollback_verified": False,
             "harness_ready": True,
         },
-        "pre-cutover rollback harness",
+        "Edge-selected rollback harness",
+    )
+    require(
+        cutover.get("stage32_selection", {}),
+        {
+            "pre_selection_main_sha": BASELINE,
+            "source_selected_edge_gateway": True,
+            "all_five_routes_share_single_transport": True,
+            "automatic_edge_to_direct_fallback": False,
+            "direct_rpc_grants_changed": False,
+            "post_cutover_live_proof_completed": False,
+            "post_cutover_rollback_proof_completed": False,
+            "launch_gate_promoted": False,
+        },
+        "cutover Stage 32 selection receipt",
     )
 
     live = authority.get("live_preparation_receipt", {})
@@ -211,27 +253,32 @@ def main() -> None:
         fail(f"{FAILURE_CLASSES[2]} direct RPC execution grants are not sealed intact")
 
     require(
-        authority.get("current_production_boundary", {}),
+        authority.get("selection_candidate", {}),
         {
-            "active_transport": "directRpc",
-            "resolved_transport": "directRpc",
-            "flutter_uses_edge_gateway": False,
-            "edge_gateway_selected": False,
-            "automatic_edge_to_direct_fallback": False,
-            "direct_v2_rpc_path_active": True,
-            "direct_rpc_execute_revoked": False,
-            "production_behavior_changed_in_this_stage": False,
-        },
-        "Stage 32 current production boundary",
-    )
-
-    prepared = authority.get("prepared_cutover_contract", {})
-    require(
-        prepared,
-        {
-            "target_transport": "edgeGateway",
+            "source_base_main_sha": BASELINE,
+            "active_transport": "edgeGateway",
+            "resolved_transport": "edgeGateway",
+            "flutter_uses_edge_gateway": True,
+            "edge_gateway_selected": True,
             "edge_function_name": "student-access-gateway",
             "route_count": 5,
+            "all_five_routes_move_atomically": True,
+            "partial_cutover_forbidden": True,
+            "automatic_edge_to_direct_fallback": False,
+            "explicit_rollback_requested": False,
+            "explicit_rollback_authorized": False,
+            "direct_v2_rpc_path_active_for_controlled_rollback": True,
+            "direct_rpc_execute_revoked": False,
+            "client_cutover_verified": False,
+            "post_cutover_live_proof_completed": False,
+            "post_cutover_rollback_proof_completed": False,
+            "production_runtime_claimed_verified": False,
+        },
+        "selection candidate",
+    )
+    require(
+        authority.get("cutover_contract", {}),
+        {
             "all_five_routes_move_atomically": True,
             "partial_cutover_forbidden": True,
             "automatic_edge_to_direct_fallback_forbidden": True,
@@ -241,44 +288,44 @@ def main() -> None:
             "post_cutover_rollback_proof_required": True,
             "post_cutover_observation_required_before_direct_rpc_revocation": True,
             "security_advisor_recheck_required_before_direct_rpc_revocation": True,
-            "source_change_in_this_preparation_stage": False,
-            "cutover_receipt_materialized": False,
+            "source_selection_materialized": True,
+            "cutover_runtime_receipt_materialized": False,
         },
-        "prepared cutover contract",
+        "Stage 32 cutover contract",
     )
-
-    source_receipt = authority.get("source_receipt", {})
     require(
-        source_receipt,
+        authority.get("source_receipt", {}),
         {
-            "active_mode": "directRpc",
-            "edge_gateway_selected": False,
+            "active_mode": "edgeGateway",
+            "edge_gateway_selected": True,
             "direct_rpc_execute_revoked": False,
             "repositories_use_single_transport": True,
             "repository_transport_call_sites": 5,
-            "edge_path_compiled": True,
+            "edge_path_active": True,
             "edge_exception_direct_fallback_absent": True,
+            "direct_route_map_retained_for_controlled_rollback": True,
         },
         "source receipt",
     )
 
     for fragment in (
-        "StudentAccessTransportMode.directRpc;",
-        "static const bool edgeGatewaySelected = false;",
+        "StudentAccessTransportMode.edgeGateway;",
+        "static const bool edgeGatewaySelected = true;",
         "static const bool automaticEdgeToDirectFallback = false;",
         "static const bool explicitRollbackRequested = false;",
         "static const bool explicitRollbackAuthorized = false;",
         "static const bool directRpcExecuteRevoked = false;",
+        "static const bool rollbackVerified = false;",
         "static const bool clientCutoverVerified = false;",
     ):
         if fragment not in contract_source:
-            fail(f"{FAILURE_CLASSES[0]} preparation changed the production transport source: {fragment}")
+            fail(f"Stage 32 production transport source drifted: {fragment}")
     for action, rpc in ROUTES.items():
         if contract_source.count(f"'{action}': '{rpc}'") != 1:
             fail(f"{FAILURE_CLASSES[1]} route map drifted: {action}")
 
     if repository_source.count("StudentAccessTransport.instance.invoke(") != 5:
-        fail(f"{FAILURE_CLASSES[1]} all five repository call sites must stay on the single transport")
+        fail(f"{FAILURE_CLASSES[1]} all five repository call sites must use the single transport")
     if ".rpc(" in repository_source or ".functions.invoke(" in repository_source:
         fail(f"{FAILURE_CLASSES[1]} repository bypassed the single transport")
     for action in ROUTES:
@@ -303,16 +350,30 @@ def main() -> None:
         fail("Edge FunctionException handler disappeared")
     catch_body = catch_match.group("body")
     if "_client.rpc" in catch_body or "directRpc" in catch_body:
-        fail("BGF-STAGE32-PRODUCTION-EDGE-SELECTION-PREMATURE-227 Edge error path gained direct fallback")
+        fail(f"{FAILURE_CLASSES[0]} Edge error path gained automatic direct fallback")
+
+    before_revoke = cutover.get("required_before_direct_rpc_revocation", {})
+    require(
+        before_revoke,
+        {
+            "flutter_edge_gateway_active": True,
+            "five_routes_verified_via_edge": False,
+            "automatic_direct_fallback_absent": True,
+            "post_cutover_rollback_path_verified": False,
+            "post_cutover_observation_window_passed": False,
+            "security_advisor_rechecked": False,
+        },
+        "direct RPC revocation interlock",
+    )
 
     rules = authority.get("promotion_rules", {})
     for key in (
-        "may_select_edge_gateway_during_preparation",
-        "may_change_production_behavior_during_preparation",
+        "may_merge_selection_before_ci_green",
         "may_revoke_direct_rpc_execute_before_post_cutover_proofs",
         "may_enable_automatic_edge_to_direct_fallback",
         "may_use_real_customer_data_for_cutover_proof",
         "may_reexecute_stage31_live_proof",
+        "may_self_attest_post_cutover_runtime_proof",
         "may_promote_launch_gates",
     ):
         if rules.get(key) is not False:
@@ -323,34 +384,36 @@ def main() -> None:
     require(
         authority.get("next_stage", {}),
         {
-            "name": "SELECT_PRODUCTION_EDGE_TRANSPORT_ALL_FIVE_ROUTES_CANDIDATE",
+            "name": "EXECUTE_STAGE32_POST_CUTOVER_FIVE_ROUTE_LIVE_PROOF",
             "allowed_now": True,
-            "requires_preparation_ci_and_merge_first": True,
-            "requires_all_five_routes_atomic": True,
+            "requires_selection_ci_and_merge_first": True,
+            "requires_synthetic_customer_fixture": True,
+            "requires_all_five_routes_edge_transport": True,
             "requires_no_automatic_edge_to_direct_fallback": True,
             "requires_direct_rpc_grants_intact": True,
-            "requires_post_cutover_live_proof_after_selection": True,
-            "requires_post_cutover_rollback_proof_after_selection": True,
+            "requires_one_shot_proof": True,
+            "requires_cleanup_after_proof": True,
+            "requires_post_cutover_rollback_proof_after_live_proof": True,
             "may_revoke_direct_rpc_execute_now": False,
         },
         "Stage 32 next stage",
     )
     if any(value is not False for value in authority.get("launch_authority", {}).values()):
-        fail("Stage 32 preparation gained launch authority")
+        fail("Stage 32 selection candidate gained launch authority")
 
     print("STUDENT_ACCESS_PRODUCTION_EDGE_SELECTION_PREPARATION_GUARD=PASS")
     print(f"CURRENT_STATE={STATE}")
     print(f"BASELINE_MAIN_SHA={BASELINE}")
     print("STAGE31_EDGE_ROUTES_VERIFIED=5")
     print("STAGE31_CLEANUP=COMPLETE")
-    print("CUSTOMER_DOMAIN=EMPTY")
-    print("ACTIVE_TRANSPORT=directRpc")
-    print("TARGET_TRANSPORT=edgeGateway")
+    print("CUSTOMER_DOMAIN_PREPARATION_RECEIPT=EMPTY")
+    print("ACTIVE_TRANSPORT=edgeGateway")
     print("ATOMIC_ROUTE_COUNT=5")
     print("AUTOMATIC_EDGE_TO_DIRECT_FALLBACK=false")
     print("DIRECT_RPC_GRANTS=INTACT")
-    print("PRODUCTION_BEHAVIOR_CHANGE=false")
-    print("NEXT=SELECT_PRODUCTION_EDGE_TRANSPORT_ALL_FIVE_ROUTES_CANDIDATE_AFTER_CI_AND_MERGE")
+    print("POST_CUTOVER_LIVE_PROOF=false")
+    print("POST_CUTOVER_ROLLBACK_PROOF=false")
+    print("NEXT=EXECUTE_STAGE32_POST_CUTOVER_FIVE_ROUTE_LIVE_PROOF_AFTER_CI_AND_MERGE")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
     print("LAUNCH_GATE_PROMOTION=DENIED")
 
