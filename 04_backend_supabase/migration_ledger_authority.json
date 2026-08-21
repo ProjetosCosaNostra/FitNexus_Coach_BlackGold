@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "6be68c35e4e7f1ec4e69bc0c8a9a872b62abad48",
-  "observed_at_utc": "2026-08-21T22:18:35.737097Z",
+  "baseline_main_sha": "62809bbd4f27d0616110dae19024b163a4911521",
+  "observed_at_utc": "2026-08-21T22:27:43.951028Z",
   "source": "Supabase.list_migrations+Supabase.execute_sql",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -36,13 +36,6 @@
       "reason": "Historical no-op ledger row created during advisor guard misuse; preserved as remote history evidence and intentionally has no repository SQL file.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-MIGRATION-TOOL-MISROUTE-097"
-    },
-    {
-      "direction": "repo_only",
-      "name": "stage32_post_cutover_live_proof_r1_cleanup",
-      "reason": "Fail-closed cleanup of the exact synthetic fixture and exact runtime/security/network residue produced by sealed Stage32 R1 proof run 32532170382 after all five production Edge routes passed. Apply exactly once only after CI and merge.",
-      "owner": "BlackGold Forge",
-      "related_failure_class": "BGF-STAGE32-POST-CUTOVER-R1-CLEANUP-239"
     }
   ],
   "remote_migrations": [
@@ -100,6 +93,7 @@
     {"version":"20260821113205","name":"stage31_client_edge_runtime_fixture"},
     {"version":"20260821161224","name":"stage31_client_edge_runtime_cleanup"},
     {"version":"20260821171334","name":"stage32_post_cutover_edge_runtime_fixture"},
-    {"version":"20260821214005","name":"stage32_rearm_expired_fixture_r1"}
+    {"version":"20260821214005","name":"stage32_rearm_expired_fixture_r1"},
+    {"version":"20260821222724","name":"stage32_post_cutover_live_proof_r1_cleanup"}
   ]
 }
