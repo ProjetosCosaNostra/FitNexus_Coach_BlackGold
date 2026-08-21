@@ -2,8 +2,8 @@
   "schema_version": 1,
   "project_ref": "mceukeondizkwlpfxzgf",
   "purpose": "Repository-first lifecycle authority for proving the real Flutter student transport Edge path with a controlled synthetic fixture before any production Edge selection.",
-  "current_state": "CLIENT_EDGE_RUNTIME_PROOF_LIVE_VERIFIED_CLEANUP_REPO_ONLY_DIRECT_MODE",
-  "baseline_main_sha": "543d3d103d4656c0e4976829320d54f31c944eee",
+  "current_state": "CLIENT_EDGE_RUNTIME_PROOF_LIVE_VERIFIED_CLEANUP_COMPLETE_DIRECT_MODE",
+  "baseline_main_sha": "05b44ebda7976c679ec8198260def688d1e203f8",
   "preparation_baseline_main_sha": "40042c82a658dd991b6b025ec619fa064898fc52",
   "failure_classes": [
     "BGF-STAGE31-CLIENT-EDGE-RUNTIME-FIXTURE-216",
@@ -172,7 +172,10 @@
     "real_customer_data_used": false,
     "real_customer_data_mutated": false,
     "proof_reexecution_allowed": false,
-    "cleanup_completed": false
+    "cleanup_completed": true,
+    "synthetic_business_rows_remaining": 0,
+    "synthetic_security_rows_remaining": 0,
+    "synthetic_network_proof_rows_remaining": 0
   },
   "post_proof_database_receipt": {
     "source": "Supabase.execute_sql",
@@ -210,15 +213,46 @@
   "cleanup": {
     "repository_file": "04_backend_supabase/migrations/20260821121700_stage31_client_edge_runtime_cleanup.sql",
     "migration_name": "stage31_client_edge_runtime_cleanup",
-    "migration_ledger_state": "repo_only",
-    "remote_applied": false,
-    "remote_version": null,
+    "migration_ledger_state": "remote_reconciled",
+    "remote_applied": true,
+    "remote_version": "20260821161224",
     "failure_class": "BGF-STAGE31-CLIENT-EDGE-RUNTIME-CLEANUP-225",
     "requires_exact_proof_receipt": true,
     "requires_synthetic_only_customer_domain": true,
     "raw_network_origin_selector_forbidden": true,
     "origin_digest_selector_forbidden": true,
-    "cleanup_completed": false
+    "cleanup_completed": true
+  },
+  "cleanup_receipt": {
+    "source": "Supabase.execute_sql",
+    "observed_at_utc": "2026-08-21T16:14:54Z",
+    "migration_name": "stage31_client_edge_runtime_cleanup",
+    "remote_version": "20260821161224",
+    "remote_applied": true,
+    "result": "PASS",
+    "auth_users_remaining": 0,
+    "profiles_remaining": 0,
+    "organizations_remaining": 0,
+    "organization_members_remaining": 0,
+    "organization_subscriptions_remaining": 0,
+    "subscription_authority_events_remaining": 0,
+    "students_remaining": 0,
+    "training_plans_remaining": 0,
+    "training_exercises_remaining": 0,
+    "access_links_remaining": 0,
+    "workout_sessions_remaining": 0,
+    "workout_logs_remaining": 0,
+    "workout_feedback_remaining": 0,
+    "fixture_growth_events_remaining": 0,
+    "fixture_growth_attribution_remaining": 0,
+    "fixture_link_rate_buckets_remaining": 0,
+    "fixture_command_receipts_remaining": 0,
+    "fixture_security_events_remaining": 0,
+    "fixture_security_signals_remaining": 0,
+    "proof_network_buckets_remaining": 0,
+    "raw_network_origin_read": false,
+    "network_origin_digest_read": false,
+    "migration_ledger_state": "remote_reconciled"
   },
   "promotion_rules": {
     "may_apply_fixture_before_ci_and_merge": false,
@@ -235,12 +269,12 @@
     "post_cutover_rollback_proof_still_required_before_direct_rpc_revocation": true
   },
   "next_stage": {
-    "name": "APPLY_STAGE31_CLIENT_EDGE_RUNTIME_CLEANUP",
+    "name": "PREPARE_PRODUCTION_EDGE_TRANSPORT_SELECTION",
     "allowed_now": true,
-    "requires_ci_and_merge_first": true,
-    "requires_exact_merged_sql": true,
-    "requires_fresh_migration_ledger_check_immediately_before_apply": true,
-    "may_select_edge_gateway_now": false,
+    "requires_cleanup_complete": true,
+    "requires_all_five_routes_cutover": true,
+    "requires_no_automatic_edge_to_direct_fallback": true,
+    "requires_direct_rpc_grants_intact": true,
     "may_revoke_direct_rpc_execute_now": false
   },
   "launch_authority": {
