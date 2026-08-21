@@ -13,15 +13,17 @@ jobs:
   client-edge-live-proof:
     if: >-
       (
-        github.event.action == 'ready_for_review' &&
-        github.event.pull_request.number == 61 &&
-        github.event.pull_request.head.ref == 'blackgold/stage31-client-edge-live-proof' &&
-        github.event.pull_request.head.sha == 'b8be62be0ba36c61b9557bed03e72dc05b0a43f0'
-      ) ||
-      (
-        github.event.action == 'opened' &&
-        github.event.pull_request.head.ref == 'blackgold/stage31-live-proof-open-trigger-224' &&
-        github.event.pull_request.head.sha == '8f1c1933c5822d4a20abc8bb9260007f1a109cc3'
+        (
+          github.event.action == 'ready_for_review' &&
+          github.event.pull_request.number == 61 &&
+          github.event.pull_request.head.ref == 'blackgold/stage31-client-edge-live-proof' &&
+          github.event.pull_request.head.sha == 'b8be62be0ba36c61b9557bed03e72dc05b0a43f0'
+        ) ||
+        (
+          github.event.action == 'opened' &&
+          github.event.pull_request.head.ref == 'blackgold/stage31-live-proof-open-trigger-224' &&
+          github.event.pull_request.head.sha == '8f1c1933c5822d4a20abc8bb9260007f1a109cc3'
+        )
       ) &&
       github.run_attempt == 1
     runs-on: ubuntu-latest
