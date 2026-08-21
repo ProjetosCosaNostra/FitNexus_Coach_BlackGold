@@ -14,6 +14,8 @@ NETWORK_AUTHORITY = BACKEND / "student_access_network_origin_boundary.json"
 VALID_ROUTE_AUTHORITY = BACKEND / "student_access_valid_route_authority.json"
 LEDGER = BACKEND / "migration_ledger_authority.json"
 EXTERNAL_GATES = BACKEND / "external_gate_evidence_placeholders.json"
+TRANSPORT = APP / "features" / "student" / "student_access_transport.dart"
+TRANSPORT_CONTRACT = APP / "features" / "student" / "student_access_transport_contract.dart"
 
 FAILURE_CLASSES = [
     "BGF-EDGE-INVALID-TOKEN-RATE-LIMIT-174",
@@ -24,6 +26,7 @@ FAILURE_CLASSES = [
 VERIFY_FAILURE_CLASS = "BGF-NETWORK-RATE-LIMIT-REMOTE-VERIFICATION-179"
 THRESHOLD_GAP_CLASS = "BGF-EDGE-LIVE-THRESHOLD-PROOF-GAP-185"
 CLEANUP_FAILURE_CLASS = "BGF-SYNTHETIC-SECURITY-PROOF-RESIDUE-186"
+CALLSITE_MODEL_FAILURE_CLASS = "BGF-GUARD-RPC-CALLSITE-COLOCATION-200"
 FINAL_STATE = "DATABASE_AND_EDGE_THRESHOLD_VERIFIED_SYNTHETIC_CLEANUP_COMPLETE"
 NEXT_STAGE_REPO_ONLY = "stage29_valid_student_route_fixture"
 STAGE29_CLEANUP_REPO_ONLY = "stage29_valid_route_fixture_cleanup"
@@ -68,6 +71,47 @@ def require_valid_route_identity(valid_route: dict | None) -> dict:
     if valid_route.get("schema_version") != 1 or valid_route.get("project_ref") != "mceukeondizkwlpfxzgf":
         fail("Stage 29 valid-route authority identity drifted")
     return valid_route
+
+
+def verify_direct_client_boundary() -> str:
+    """Accept direct-v2 evidence by behavior, not literal/call-site co-location.
+
+    Before Stage 30 each repository carried both its RPC literal and `.rpc` call.
+    Stage 30 intentionally centralizes the five literals in the transport contract
+    and dispatches them through one generic `_client.rpc(directRpc, ...)` call.
+    Treating co-location as authority produced BGF-GUARD-RPC-CALLSITE-COLOCATION-200.
+    """
+    colocated = {rpc: False for rpc in DIRECT_V2_RPCS}
+    for path in APP.rglob("*.dart"):
+        source = path.read_text(encoding="utf-8")
+        for rpc in DIRECT_V2_RPCS:
+            if rpc in source and ".rpc" in source:
+                colocated[rpc] = True
+
+    if all(colocated.values()):
+        return "LEGACY_COLOCATED_DIRECT_V2"
+
+    if not TRANSPORT.is_file() or not TRANSPORT_CONTRACT.is_file():
+        missing = [rpc for rpc, present in colocated.items() if not present]
+        fail(f"partial Flutter cutover detected: {missing}")
+
+    transport = text(TRANSPORT)
+    contract = text(TRANSPORT_CONTRACT)
+    required_dispatch = "_client.rpc(directRpc, params: directParams)"
+    if required_dispatch not in transport:
+        fail(f"{CALLSITE_MODEL_FAILURE_CLASS} centralized direct-v2 dispatcher missing")
+    if "StudentAccessTransportContract.activeMode" not in transport:
+        fail(f"{CALLSITE_MODEL_FAILURE_CLASS} transport mode authority is bypassed")
+    if "StudentAccessTransportMode.directRpc" not in contract:
+        fail(f"{CALLSITE_MODEL_FAILURE_CLASS} directRpc mode disappeared before cutover")
+    if "automaticEdgeToDirectFallback = true" in contract:
+        fail("automatic Edge -> direct fail-open fallback appeared")
+
+    missing_mappings = [rpc for rpc in DIRECT_V2_RPCS if f"'{rpc}'" not in contract]
+    if missing_mappings:
+        fail(f"{CALLSITE_MODEL_FAILURE_CLASS} centralized direct-v2 map incomplete: {missing_mappings}")
+
+    return "CENTRALIZED_SINGLE_TRANSPORT_DIRECT_V2"
 
 
 def main() -> None:
@@ -255,15 +299,7 @@ def main() -> None:
     if runtime.get("direct_v2_rpc_path_active") is not True:
         fail("direct v2 RPC path removed before Flutter cutover")
 
-    direct = {rpc: False for rpc in DIRECT_V2_RPCS}
-    for path in APP.rglob("*.dart"):
-        source = path.read_text(encoding="utf-8")
-        for rpc in DIRECT_V2_RPCS:
-            if rpc in source and ".rpc" in source:
-                direct[rpc] = True
-    missing = [rpc for rpc, present in direct.items() if not present]
-    if missing:
-        fail(f"partial Flutter cutover detected: {missing}")
+    client_dispatch_model = verify_direct_client_boundary()
 
     gates = external.get("gates", {})
     for gate_name in ("incident_response", "production_deployment"):
@@ -285,6 +321,8 @@ def main() -> None:
     print(f"DECLARED_NEXT_STAGE_REPO_ONLY={declared_next_stage}")
     print("VALID_STUDENT_ROUTE_PROOF=OWNED_BY_STAGE29_UNTIL_FINAL_RECONCILIATION")
     print("DIRECT_V2_RPC_PATHS=5")
+    print(f"DIRECT_CLIENT_DISPATCH_MODEL={client_dispatch_model}")
+    print(f"CALLSITE_MODEL_PREVENTION={CALLSITE_MODEL_FAILURE_CLASS}")
     print("LAUNCH_GATE_PROMOTION=DENIED")
 
 
