@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "failure_class": "BGF-STAGE31-READY-FOR-REVIEW-EVENT-NONDELIVERY-224",
+  "purpose": "One-shot pull_request opened fallback trigger for the sealed Stage31 Flutter-to-Edge live proof after two ready_for_review transitions produced no GitHub Actions run.",
+  "proof_pr": 61,
+  "proof_head": "b8be62be0ba36c61b9557bed03e72dc05b0a43f0",
+  "trigger_branch": "blackgold/stage31-live-proof-open-trigger-224",
+  "expected_base": "main",
+  "production_transport_change": false,
+  "edge_selection": false,
+  "direct_rpc_grants_changed": false,
+  "real_customer_data_allowed": false,
+  "launch_gate_promotion_allowed": false
+}
