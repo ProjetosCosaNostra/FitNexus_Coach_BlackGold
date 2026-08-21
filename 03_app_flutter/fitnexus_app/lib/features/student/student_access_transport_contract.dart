@@ -19,15 +19,17 @@ StudentAccessTransportMode resolveStudentAccessTransportMode({
 }
 
 /// Repository-first client transport contract for the student possession-token
-/// surface. Stage 30 still keeps [activeMode] on [directRpc]. The rollback
-/// controls are explicit configuration, never an exception-driven fallback.
+/// surface. Stage 32 selects the already live-proven Edge gateway as the single
+/// production transport for all five routes. Direct RPC execution remains
+/// available only as the controlled rollback boundary until post-cutover proof,
+/// rollback proof, observation and security reconciliation are complete.
 abstract final class StudentAccessTransportContract {
   static const StudentAccessTransportMode activeMode =
-      StudentAccessTransportMode.directRpc;
+      StudentAccessTransportMode.edgeGateway;
 
   static const String edgeFunctionName = 'student-access-gateway';
 
-  static const bool edgeGatewaySelected = false;
+  static const bool edgeGatewaySelected = true;
   static const bool automaticEdgeToDirectFallback = false;
   static const bool explicitRollbackRequested = false;
   static const bool explicitRollbackAuthorized = false;
