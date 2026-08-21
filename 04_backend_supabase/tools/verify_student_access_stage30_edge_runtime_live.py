@@ -14,7 +14,10 @@ ENDPOINT = "https://mceukeondizkwlpfxzgf.supabase.co/functions/v1/student-access
 PUBLISHABLE_KEY = "sb_publishable_aggqgASWuWfgBJAlrRKoeg_Gg2qnjHQ"
 TOKEN_SEED = "fitnexus-stage30-edge-runtime-smoke-fixture-v1"
 PENDING_STATE = "EDGE_RUNTIME_SMOKE_FIXTURE_REMOTE_LIVE_PROOF_PENDING"
+PROVEN_STATE = "EDGE_RUNTIME_SMOKE_LIVE_VERIFIED_CLEANUP_PENDING"
+SEALED_STATES = {PROVEN_STATE}
 FIXTURE_VERSION = "20260821075532"
+SEALED_WORKFLOW_RUN = 32461357789
 FAILURE_CLASS = "BGF-STAGE30-RUNTIME-SMOKE-COMMAND-FLOW-206"
 DATA_LEAK_CLASS = "BGF-STAGE30-RUNTIME-SMOKE-RESPONSE-DATA-LEAK-205"
 REEXECUTION_CLASS = "BGF-STAGE30-RUNTIME-SMOKE-PROOF-REEXECUTION-204"
@@ -143,10 +146,60 @@ def require_uuid(value: object, label: str) -> str:
     return str(parsed)
 
 
+def sealed_skip(authority: dict[str, Any]) -> bool:
+    state = authority.get("current_state")
+    if state not in SEALED_STATES:
+        return False
+    if authority.get("proof_reexecution_failure_class") != REEXECUTION_CLASS:
+        fail("sealed smoke lost reexecution failure-class authority")
+    runtime = authority.get("runtime_proof", {})
+    receipt = authority.get("live_proof_receipt", {})
+    if runtime.get("proof_workflow_run_id") != SEALED_WORKFLOW_RUN or runtime.get("proof_result") != "PASS":
+        fail("sealed smoke runtime receipt drifted")
+    for key in (
+        "get_workout_verified",
+        "start_workout_verified",
+        "set_completion_verified",
+        "get_feedback_context_verified",
+        "submit_feedback_verified",
+        "all_five_routes_verified",
+        "completed_session_verified",
+        "feedback_submitted_verified",
+    ):
+        if runtime.get(key) is not True:
+            fail(f"sealed smoke proof missing: {key}")
+    if runtime.get("proof_reexecution_allowed") is not False:
+        fail(f"{REEXECUTION_CLASS} sealed smoke permits reexecution")
+    if receipt.get("workflow_run_id") != SEALED_WORKFLOW_RUN or receipt.get("result") != "PASS":
+        fail("sealed smoke proof receipt missing")
+    if receipt.get("routes_verified") != 5 or receipt.get("proof_reexecution_allowed") is not False:
+        fail("sealed smoke route/reexecution receipt drifted")
+
+    print("STAGE30_EDGE_RUNTIME_LIVE_SMOKE=PASS")
+    print("LIVE_SMOKE_MODE=SEALED_SKIP_REEXECUTION")
+    print(f"SEALED_WORKFLOW_RUN_ID={SEALED_WORKFLOW_RUN}")
+    print(f"REEXECUTION_PREVENTION={REEXECUTION_CLASS}")
+    print(f"SEALED_AUTHORITY_STATE={state}")
+    print("NETWORK_CALL_EXECUTED=false")
+    print("ROUTES_VERIFIED=5")
+    print("COMPLETED_SESSION_VERIFIED=true")
+    print("FEEDBACK_SUBMITTED_VERIFIED=true")
+    print("RAW_SYNTHETIC_TOKEN_RETURNED=false")
+    print("RAW_NETWORK_ORIGIN_RETURNED=false")
+    print("FLUTTER_ACTIVE_TRANSPORT=directRpc")
+    print("EDGE_SELECTION=false")
+    print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
+    print("FIXTURE_CLEANUP=REQUIRED")
+    print("LAUNCH_GATE_PROMOTION=DENIED")
+    return True
+
+
 def main() -> None:
     authority = load_authority()
     if authority.get("schema_version") != 1 or authority.get("project_ref") != "mceukeondizkwlpfxzgf":
         fail("smoke authority identity drifted")
+    if sealed_skip(authority):
+        return
     if authority.get("current_state") != PENDING_STATE:
         fail(f"{REEXECUTION_CLASS} unsupported smoke state: {authority.get('current_state')}")
 
@@ -182,7 +235,6 @@ def main() -> None:
 
     raw_token = hashlib.sha256(TOKEN_SEED.encode("utf-8")).hexdigest()
 
-    # Health first: prove the deployed gateway still exposes its safe v3 candidate contract.
     health_status, health, health_text = request_json(method="GET")
     assert_safe_response(health, health_text, raw_token, "health")
     if health_status != 200:
@@ -236,13 +288,12 @@ def main() -> None:
     )
     if completion.get("session_id") != session_id:
         fail(f"{FAILURE_CLASS} set_completion session mismatch")
-    expected_completion = {
+    for key, expected in {
         "status": "completed",
         "completed_exercises": 1,
         "total_exercises": 1,
         "adherence": 100,
-    }
-    for key, expected in expected_completion.items():
+    }.items():
         if completion.get(key) != expected:
             fail(f"{FAILURE_CLASS} set_completion mismatch: {key}")
 
