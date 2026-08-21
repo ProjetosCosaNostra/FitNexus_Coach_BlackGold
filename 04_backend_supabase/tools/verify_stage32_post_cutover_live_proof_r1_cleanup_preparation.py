@@ -11,22 +11,24 @@ CLEANUP = BACKEND / "migrations" / "20260821222000_stage32_post_cutover_live_pro
 R1_SEAL = BACKEND / "stage32_post_cutover_live_proof_r1_workflow_seal_authority.json"
 R1_WORKFLOW = ROOT / ".github" / "workflows" / "stage32_post_cutover_edge_runtime_live_proof_r1.yml"
 
-STATE = "POST_CUTOVER_EDGE_RUNTIME_PROOF_R1_VERIFIED_CLEANUP_REPO_ONLY"
+STATE = "POST_CUTOVER_EDGE_RUNTIME_PROOF_R1_VERIFIED_CLEANUP_COMPLETE_ROLLBACK_PROOF_PENDING_EDGE_MODE"
 CLEANUP_NAME = "stage32_post_cutover_live_proof_r1_cleanup"
+CLEANUP_VERSION = "20260821222724"
 CLEANUP_FAILURE = "BGF-STAGE32-POST-CUTOVER-R1-CLEANUP-239"
 EVENT_FAILURE = "BGF-GITHUB-R1-READY-EVENT-NONMATERIALIZATION-238"
 PROOF_RUN = 32532170382
 PROOF_JOB = 96926178484
 PROOF_HEAD = "344433bf502b519563fe328ab71e59249766e3dd"
 TRIGGER_HEAD = "65e35282aa0e004134807553545e0859512cdef6"
-BASELINE = "6be68c35e4e7f1ec4e69bc0c8a9a872b62abad48"
-LEDGER_OBSERVED = "2026-08-21T22:18:35.737097Z"
+BASELINE = "62809bbd4f27d0616110dae19024b163a4911521"
+LEDGER_OBSERVED = "2026-08-21T22:27:43.951028Z"
 PROOF_WINDOW = "2026-08-21 22:15:00+00"
+CLEANUP_FILE_SHA = "6e18eb6d497b75b710b0bca5784c755ca6312980"
 
 
 def fail(message: str, failure_class: str = CLEANUP_FAILURE) -> None:
     raise SystemExit(
-        "STAGE32_POST_CUTOVER_LIVE_PROOF_R1_CLEANUP_PREPARATION_GUARD=FAIL\n"
+        "STAGE32_POST_CUTOVER_LIVE_PROOF_R1_CLEANUP_RECONCILIATION_GUARD=FAIL\n"
         f"FAILURE_CLASS={failure_class}\nDETAIL={message}"
     )
 
@@ -58,7 +60,7 @@ def require(mapping: dict, expected: dict, label: str) -> None:
 def main() -> None:
     authority = load(AUTHORITY)
     ledger = load(LEDGER)
-    cleanup = text(CLEANUP)
+    cleanup_sql = text(CLEANUP)
     seal = load(R1_SEAL)
     workflow = text(R1_WORKFLOW)
 
@@ -81,9 +83,8 @@ def main() -> None:
     if {EVENT_FAILURE, CLEANUP_FAILURE} - failure_ids:
         fail("R1 cleanup/event-delivery prevention classes disappeared")
 
-    proof = authority.get("sealed_proof", {})
     require(
-        proof,
+        authority.get("sealed_proof", {}),
         {
             "workflow_run_id": PROOF_RUN,
             "workflow_job_id": PROOF_JOB,
@@ -121,15 +122,12 @@ def main() -> None:
         "sealed R1 proof receipt",
     )
 
-    delivery = authority.get("event_delivery_receipt", {})
     require(
-        delivery,
+        authority.get("event_delivery_receipt", {}),
         {
             "preferred_event": "ready_for_review",
             "preferred_event_delivered_on_pr": 77,
             "new_r1_workflow_materialized_on_preferred_event": False,
-            "historical_r0_workflow_materialized_and_skipped": True,
-            "stage31_workflow_materialized_and_skipped": True,
             "fallback_event": "opened",
             "fallback_pr": 79,
             "fallback_head_sha": TRIGGER_HEAD,
@@ -140,122 +138,53 @@ def main() -> None:
         "R1 event delivery receipt",
     )
 
-    pre = authority.get("pre_event_live_gate", {})
+    pre_cleanup = authority.get("pre_cleanup_receipt", {})
     require(
-        pre,
+        pre_cleanup,
         {
-            "observed_at_utc": "2026-08-21T22:14:46.513334Z",
-            "workout_sessions": 0,
-            "workout_logs": 0,
-            "workout_feedback": 0,
-            "expected_active_link": 1,
-            "ttl_over_60_minutes": True,
-            "fixture_command_receipts": 0,
-            "fixture_rate_buckets": 0,
-            "fixture_security_events": 0,
-            "fixture_security_signals": 0,
-            "rpc_count": 5,
-            "all_five_anon_execute_intact": True,
-            "all_five_authenticated_execute_intact": True,
-        },
-        "pre-event live gate",
-    )
-    if not isinstance(pre.get("ttl_minutes_remaining"), (int, float)) or pre["ttl_minutes_remaining"] <= 60:
-        fail("pre-event TTL interlock was not satisfied")
-
-    post = authority.get("post_proof_database_receipt", {})
-    require(
-        post,
-        {
-            "observed_at_utc": "2026-08-21T22:17:41.499084Z",
+            "source": "Supabase.execute_sql",
+            "observed_at_utc": "2026-08-21T22:26:45.993106Z",
+            "source_main_sha": BASELINE,
+            "auth_users": 1,
+            "profiles": 1,
+            "organizations": 1,
+            "organization_members": 1,
+            "organization_subscriptions": 1,
+            "subscription_authority_events": 1,
+            "students": 1,
+            "training_plans": 1,
+            "training_exercises": 1,
+            "access_links": 1,
             "workout_sessions": 1,
             "workout_logs": 1,
             "workout_feedback": 1,
-            "student_status": "Treino concluído",
-            "student_adherence": 100,
-            "student_last_workout": "Stage32 Synthetic Plan",
-            "session_id": "29721756-f091-4b33-9106-82a253e9f9c8",
-            "session_status": "completed",
-            "exercise_log_id": "07df75e0-36f2-4ce3-b090-4d72261e0717",
-            "exercise_completed": True,
-            "feedback_id": "58972689-2208-4ee0-ab34-8ebe75c0f6cb",
-            "feedback_perceived_exertion": 5,
-            "feedback_pain_score": 0,
-            "feedback_energy_score": 4,
-            "feedback_pain_location": None,
-            "feedback_note": None,
+            "expected_student": 1,
+            "expected_session": 1,
+            "expected_log": 1,
+            "expected_feedback": 1,
             "command_receipts": 3,
-            "fixture_rate_buckets": 5,
-            "fixture_security_events": 3,
-            "fixture_security_signals": 0,
+            "link_rate_buckets": 5,
+            "security_events": 3,
+            "security_signals": 0,
             "growth_events": 5,
             "growth_attribution": 0,
+            "proof_network_buckets": 5,
             "rpc_count": 5,
             "all_five_anon_execute_intact": True,
             "all_five_authenticated_execute_intact": True,
         },
-        "post-proof database receipt",
+        "pre-cleanup receipt",
     )
-    if post.get("command_ids") != [
-        "32000000000000000000000000000001",
-        "32000000000000000000000000000002",
-        "32000000000000000000000000000003",
-    ]:
-        fail("R1 command receipt identity/order drifted")
 
-    window = authority.get("proof_window_receipt", {})
+    cleanup = authority.get("cleanup", {})
     require(
-        window,
-        {
-            "observed_at_utc": LEDGER_OBSERVED,
-            "proof_window_started_at_utc": "2026-08-21T22:15:00Z",
-            "global_network_bucket_count": 5,
-            "each_request_count": 1,
-            "network_origin_or_hash_recorded_in_repository": False,
-            "subscription_authority_event": "trial_initialized",
-            "unexpected_domain_mutation_counts_all_zero": True,
-        },
-        "proof-window receipt",
-    )
-    if set(window.get("operations", [])) != {
-        "get_workout", "start_workout", "set_completion", "get_feedback_context", "submit_feedback"
-    }:
-        fail("proof-window operation set drifted")
-    if set(window.get("growth_event_names", [])) != {
-        "trial_started", "student_created", "training_created_or_duplicated", "training_delivered", "workout_logged"
-    }:
-        fail("growth proof receipt drifted")
-
-    repo_only = [
-        row for row in ledger.get("declared_divergences", [])
-        if isinstance(row, dict) and row.get("direction") == "repo_only"
-    ]
-    if len(repo_only) != 1:
-        fail("cleanup migration must be the unique repo_only divergence")
-    if repo_only[0].get("name") != CLEANUP_NAME or repo_only[0].get("related_failure_class") != CLEANUP_FAILURE:
-        fail("cleanup repo_only divergence identity drifted")
-    remote = {
-        row.get("name"): row.get("version")
-        for row in ledger.get("remote_migrations", []) if isinstance(row, dict)
-    }
-    if remote.get("stage32_post_cutover_edge_runtime_fixture") != "20260821171334":
-        fail("Stage32 fixture remote receipt disappeared")
-    if remote.get("stage32_rearm_expired_fixture_r1") != "20260821214005":
-        fail("Stage32 rearm remote receipt disappeared")
-    if CLEANUP_NAME in remote:
-        fail("cleanup self-attested as remotely applied before merge/apply")
-    if ledger.get("baseline_main_sha") != BASELINE or ledger.get("observed_at_utc") != LEDGER_OBSERVED:
-        fail("cleanup ledger baseline/observation drifted")
-
-    cleanup_authority = authority.get("cleanup", {})
-    require(
-        cleanup_authority,
+        cleanup,
         {
             "migration_file": "04_backend_supabase/migrations/20260821222000_stage32_post_cutover_live_proof_r1_cleanup.sql",
             "migration_name": CLEANUP_NAME,
-            "migration_ledger_state": "repo_only",
-            "remote_applied": False,
-            "remote_version": None,
+            "migration_ledger_state": "remote_reconciled",
+            "remote_applied": True,
+            "remote_version": CLEANUP_VERSION,
             "failure_class": CLEANUP_FAILURE,
             "requires_exact_proof_receipt": True,
             "requires_exact_single_synthetic_customer_domain": True,
@@ -268,10 +197,75 @@ def main() -> None:
             "deletes_raw_network_origin_or_hash": False,
             "security_events_deleted_before_link_cascade": True,
             "cleanup_must_be_applied_via": "Supabase.apply_migration",
-            "cleanup_completed": False,
+            "cleanup_completed": True,
         },
         "cleanup authority",
     )
+
+    remote_receipt = authority.get("cleanup_remote_receipt", {})
+    require(
+        remote_receipt,
+        {
+            "source": "Supabase.apply_migration",
+            "source_main_sha": BASELINE,
+            "source_file": "04_backend_supabase/migrations/20260821222000_stage32_post_cutover_live_proof_r1_cleanup.sql",
+            "source_file_sha": CLEANUP_FILE_SHA,
+            "migration_name": CLEANUP_NAME,
+            "remote_version": CLEANUP_VERSION,
+            "pre_apply_observed_at_utc": "2026-08-21T22:26:45.993106Z",
+            "apply_result": "SUCCESS",
+            "post_apply_observed_at_utc": LEDGER_OBSERVED,
+            "auth_users": 0,
+            "profiles": 0,
+            "organizations": 0,
+            "organization_members": 0,
+            "organization_subscriptions": 0,
+            "subscription_authority_events": 0,
+            "students": 0,
+            "training_plans": 0,
+            "training_exercises": 0,
+            "access_links": 0,
+            "workout_sessions": 0,
+            "workout_logs": 0,
+            "workout_feedback": 0,
+            "fixture_growth_events": 0,
+            "fixture_growth_attribution": 0,
+            "fixture_command_receipts": 0,
+            "fixture_link_rate_buckets": 0,
+            "fixture_security_events": 0,
+            "fixture_security_signals": 0,
+            "proof_network_buckets_remaining": 0,
+            "global_network_buckets_total": 13,
+            "rpc_count": 5,
+            "all_five_anon_execute_intact": True,
+            "all_five_authenticated_execute_intact": True,
+            "direct_rpc_grants_changed": False,
+            "real_customer_data_used": False,
+            "cleanup_exact_synthetic_residue_zero": True,
+        },
+        "cleanup remote receipt",
+    )
+
+    repo_only = [
+        row for row in ledger.get("declared_divergences", [])
+        if isinstance(row, dict) and row.get("direction") == "repo_only"
+    ]
+    if repo_only:
+        fail("cleanup remains repo_only after authoritative remote apply")
+    remote = {
+        row.get("name"): row.get("version")
+        for row in ledger.get("remote_migrations", []) if isinstance(row, dict)
+    }
+    expected_remote = {
+        "stage32_post_cutover_edge_runtime_fixture": "20260821171334",
+        "stage32_rearm_expired_fixture_r1": "20260821214005",
+        CLEANUP_NAME: CLEANUP_VERSION,
+    }
+    for name, version in expected_remote.items():
+        if remote.get(name) != version:
+            fail(f"remote migration receipt drift: {name}")
+    if ledger.get("baseline_main_sha") != BASELINE or ledger.get("observed_at_utc") != LEDGER_OBSERVED:
+        fail("cleanup remote ledger baseline/observation drifted")
 
     for fragment in (
         CLEANUP_FAILURE,
@@ -296,9 +290,9 @@ def main() -> None:
         "32000000000000000000000000000002",
         "32000000000000000000000000000003",
     ):
-        if fragment not in cleanup:
+        if fragment not in cleanup_sql:
             fail(f"cleanup SQL drift: {fragment}")
-    lower = cleanup.lower()
+    lower = cleanup_sql.lower()
     if "origin_hash" in lower:
         fail("cleanup SQL embedded a network-origin hash selector")
     if lower.count("delete from private.student_access_network_rate_buckets") != 1:
@@ -308,8 +302,6 @@ def main() -> None:
     if security_pos < 0 or org_pos < 0 or security_pos > org_pos:
         fail("security events are not deleted before organization/link cascade")
 
-    # Cross-check the immutable pre-execution seal. The execution receipt lives only
-    # in the newer cleanup authority; the old seal remains a historical snapshot.
     require(
         seal.get("proof_pr", {}),
         {"number": 77, "head_sha": PROOF_HEAD, "merge_allowed": False, "candidate_ci_conclusion": "success"},
@@ -324,27 +316,28 @@ def main() -> None:
         if fragment not in workflow:
             fail(f"sealed R1 workflow drift: {fragment}")
 
-    boundary = authority.get("production_boundary", {})
     require(
-        boundary,
+        authority.get("production_boundary", {}),
         {
             "active_transport": "edgeGateway",
             "production_singleton": "StudentAccessTransport.instance",
             "automatic_edge_to_direct_fallback": False,
             "direct_rpc_execute_revoked": False,
             "post_cutover_live_proof_verified": True,
+            "post_cutover_cleanup_verified": True,
             "post_cutover_rollback_verified": False,
             "launch_gate_promotion": False,
         },
         "production boundary",
     )
+
     rules = authority.get("promotion_rules", {})
     for key in (
         "may_reexecute_r0_proof",
         "may_reexecute_r1_proof",
-        "may_apply_cleanup_before_ci_and_merge",
+        "may_reapply_cleanup",
         "may_use_execute_sql_for_cleanup_dml",
-        "may_revoke_direct_rpc_execute_before_cleanup_and_post_cutover_rollback_proof",
+        "may_revoke_direct_rpc_execute_before_post_cutover_rollback_proof",
         "may_promote_launch_gates",
     ):
         if rules.get(key) is not False:
@@ -352,17 +345,36 @@ def main() -> None:
     if rules.get("post_cutover_rollback_proof_required_after_cleanup") is not True:
         fail("post-cutover rollback interlock disappeared")
 
-    print("STAGE32_POST_CUTOVER_LIVE_PROOF_R1_CLEANUP_PREPARATION_GUARD=PASS")
+    require(
+        authority.get("next_stage", {}),
+        {
+            "name": "PREPARE_REAL_POST_CUTOVER_ROLLBACK_PROOF",
+            "allowed_now": True,
+            "requires_cleanup_remote_reconciled": True,
+            "requires_zero_stage32_synthetic_residue": True,
+            "requires_new_isolated_rollback_fixture": True,
+            "requires_new_exact_rollback_proof_head": True,
+            "requires_new_one_shot_rollback_workflow_seal": True,
+            "requires_fresh_direct_rpc_grant_check_before_rollback_fixture_apply": True,
+            "requires_production_edge_gateway_before_rollback_proof": True,
+            "may_execute_stage32_live_proof_again": False,
+            "may_reapply_cleanup": False,
+            "may_revoke_direct_rpc_execute_now": False,
+            "may_promote_launch_gates": False,
+        },
+        "next-stage authority",
+    )
+
+    print("STAGE32_POST_CUTOVER_LIVE_PROOF_R1_CLEANUP_RECONCILIATION_GUARD=PASS")
     print(f"CURRENT_STATE={STATE}")
     print(f"PROOF_RUN={PROOF_RUN}")
     print(f"PROOF_JOB={PROOF_JOB}")
     print("ALL_FIVE_ROUTES_VERIFIED=true")
-    print("PRODUCTION_SINGLETON_VERIFIED=true")
-    print("PRODUCTION_ACTIVE_TRANSPORT=edgeGateway")
     print("PROOF_REEXECUTION_ALLOWED=false")
-    print(f"CLEANUP_MIGRATION={CLEANUP_NAME}")
-    print("CLEANUP_LEDGER=REPO_ONLY")
-    print("CLEANUP_REMOTE_APPLIED=false")
+    print(f"CLEANUP_REMOTE_VERSION={CLEANUP_VERSION}")
+    print("CLEANUP_COMPLETED=true")
+    print("STAGE32_SYNTHETIC_RESIDUE=0")
+    print("PRODUCTION_ACTIVE_TRANSPORT=edgeGateway")
     print("DIRECT_RPC_GRANTS=INTACT")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
     print("POST_CUTOVER_ROLLBACK_PROOF_REQUIRED=true")
