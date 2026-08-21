@@ -150,10 +150,10 @@ jobs:
         run: python ../../04_backend_supabase/tools/verify_student_access_production_edge_selection_preparation.py
 
       - name: Stage 32 post-cutover runtime proof preparation guard
-        run: python ../../04_backend_supabase/tools/verify_student_access_stage32_post_cutover_runtime_preparation.py
+        run: python ../../04_backend_supabase/tools/verify_stage32_rearm_repo_only_current_compat.py
 
       - name: Stage 32 post-cutover live proof workflow seal guard
-        run: python ../../04_backend_supabase/tools/verify_stage32_post_cutover_live_proof_workflow_seal.py
+        run: python ../../04_backend_supabase/tools/verify_stage32_rearm_repo_only_workflow_seal_compat.py
 
       - name: Stage 32 pre-network failure recovery R1 guard
         run: python ../../04_backend_supabase/tools/verify_stage32_pre_network_failure_recovery_r1.py
