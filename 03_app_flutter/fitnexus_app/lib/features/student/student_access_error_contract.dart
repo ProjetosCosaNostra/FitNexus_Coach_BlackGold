@@ -9,8 +9,14 @@ void throwStudentAccessError(
 }) {
   final String code = value['error']?.toString() ?? '';
   if (code.isEmpty) return;
+  throw studentAccessStateError(code, context: context);
+}
 
-  throw StateError(studentAccessErrorMessage(code, context: context));
+StateError studentAccessStateError(
+  String code, {
+  required StudentAccessErrorContext context,
+}) {
+  return StateError(studentAccessErrorMessage(code, context: context));
 }
 
 String studentAccessErrorMessage(
