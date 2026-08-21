@@ -3,19 +3,33 @@ import 'package:fitnexus_app/features/student/student_access_transport_contract.
 
 void main() {
   group('Stage 30 runtime rollback proof', () {
-    test('production transport remains direct and rollback controls stay inert', () {
+    test('production transport remains direct and rollback controls stay inert - historical Stage 30 resolver receipt', () {
       expect(
-        StudentAccessTransportContract.activeMode,
+        resolveStudentAccessTransportMode(
+          configuredMode: StudentAccessTransportMode.directRpc,
+          explicitRollbackRequested: false,
+          explicitRollbackAuthorized: false,
+        ),
         StudentAccessTransportMode.directRpc,
       );
-      expect(
-        StudentAccessTransportContract.resolvedMode,
-        StudentAccessTransportMode.directRpc,
-      );
-      expect(StudentAccessTransportContract.edgeGatewaySelected, isFalse);
       expect(StudentAccessTransportContract.automaticEdgeToDirectFallback, isFalse);
       expect(StudentAccessTransportContract.explicitRollbackRequested, isFalse);
       expect(StudentAccessTransportContract.explicitRollbackAuthorized, isFalse);
+      expect(StudentAccessTransportContract.directRpcExecuteRevoked, isFalse);
+      expect(StudentAccessTransportContract.rollbackVerified, isFalse);
+      expect(StudentAccessTransportContract.clientCutoverVerified, isFalse);
+    });
+
+    test('Stage 32 current production selection is Edge and rollback-inert', () {
+      expect(
+        StudentAccessTransportContract.activeMode,
+        StudentAccessTransportMode.edgeGateway,
+      );
+      expect(
+        StudentAccessTransportContract.resolvedMode,
+        StudentAccessTransportMode.edgeGateway,
+      );
+      expect(StudentAccessTransportContract.edgeGatewaySelected, isTrue);
       expect(StudentAccessTransportContract.directRpcExecuteRevoked, isFalse);
       expect(StudentAccessTransportContract.rollbackVerified, isFalse);
       expect(StudentAccessTransportContract.clientCutoverVerified, isFalse);
