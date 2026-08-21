@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "prevention_class": "BGF-STAGE31-LIVE-PROOF-WORKFLOW-SEAL-223",
+  "purpose": "Immutable pre-execution seal binding the Stage31 Flutter-to-Edge live proof to one known draft PR, exact head SHA, exact head branch and first ready_for_review run only.",
+  "proof_pr": {
+    "number": 61,
+    "head_branch": "blackgold/stage31-client-edge-live-proof",
+    "head_sha": "b8be62be0ba36c61b9557bed03e72dc05b0a43f0",
+    "base_branch": "main",
+    "draft_when_sealed": true,
+    "candidate_quality_gate_run_id": 32478844026,
+    "candidate_quality_gate_job_id": 96760703404,
+    "candidate_quality_gate_result": "SUCCESS"
+  },
+  "workflow_contract": {
+    "file": ".github/workflows/stage31_client_edge_runtime_live_proof.yml",
+    "event": "pull_request",
+    "event_type": "ready_for_review",
+    "workflow_dispatch_allowed": false,
+    "synchronize_allowed": false,
+    "schedule_allowed": false,
+    "job_requires_exact_pr_number": true,
+    "job_requires_exact_head_branch": true,
+    "job_requires_exact_head_sha": true,
+    "job_requires_run_attempt_one": true,
+    "checkout_ref_is_exact_head_sha": true,
+    "live_test_requires_explicit_enable_environment": true,
+    "synthetic_token_derived_from_public_seed_at_runtime": true,
+    "synthetic_token_printed": false,
+    "service_role_secret_used": false
+  },
+  "proof_boundary": {
+    "fixture_remote_version": "20260821113205",
+    "production_active_transport": "directRpc",
+    "edge_gateway_selected_in_production": false,
+    "automatic_edge_to_direct_fallback": false,
+    "direct_rpc_execute_revoked": false,
+    "real_customer_data_allowed": false,
+    "launch_gate_promotion_allowed": false,
+    "cleanup_required_after_proof": true
+  },
+  "execution_receipt": {
+    "workflow_run_id": null,
+    "job_id": null,
+    "result": null,
+    "executed": false
+  }
+}
