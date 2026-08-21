@@ -1,13 +1,14 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'student_access_edge_error_contract.dart';
 import 'student_access_transport_contract.dart';
 
 /// Single client-side transport boundary for every student possession-token
 /// action. Stage 30 keeps the active mode on direct RPC while compiling the
 /// Edge path behind the same interface.
 ///
-/// There is intentionally no try/catch that falls back from Edge to a direct
-/// RPC. Once Edge becomes active, any Edge failure must remain fail-closed.
+/// Edge failures are normalized into a bounded student-error contract. They
+/// never trigger a per-request direct-RPC fallback.
 class StudentAccessTransport {
   StudentAccessTransport._();
 
@@ -26,7 +27,7 @@ class StudentAccessTransport {
       throw StateError('Ação de aluno não autorizada pelo transporte: $action');
     }
 
-    switch (StudentAccessTransportContract.activeMode) {
+    switch (StudentAccessTransportContract.resolvedMode) {
       case StudentAccessTransportMode.directRpc:
         return _client.rpc(directRpc, params: directParams);
       case StudentAccessTransportMode.edgeGateway:
@@ -38,13 +39,20 @@ class StudentAccessTransport {
     required String action,
     required Map<String, dynamic> payload,
   }) async {
-    final response = await _client.functions.invoke(
-      StudentAccessTransportContract.edgeFunctionName,
-      body: <String, dynamic>{
-        'action': action,
-        ...payload,
-      },
-    );
-    return response.data;
+    try {
+      final response = await _client.functions.invoke(
+        StudentAccessTransportContract.edgeFunctionName,
+        body: <String, dynamic>{
+          'action': action,
+          ...payload,
+        },
+      );
+      return response.data;
+    } on FunctionException catch (error) {
+      return normalizeStudentEdgeFunctionException(
+        status: error.status,
+        details: error.details,
+      );
+    }
   }
 }
