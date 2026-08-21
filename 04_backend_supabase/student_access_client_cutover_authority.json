@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "project_ref": "mceukeondizkwlpfxzgf",
   "failure_classes": [
     "BGF-CLIENT-EDGE-CUTOVER-PREMATURE-195",
@@ -8,10 +8,14 @@
     "BGF-DIRECT-RPC-REVOCATION-BEFORE-ROLLBACK-198",
     "BGF-CLIENT-CUTOVER-SELF-ATTESTATION-199"
   ],
-  "guard_callsite_model_failure_class": "BGF-GUARD-RPC-CALLSITE-COLOCATION-200",
-  "purpose": "Repository-first preparation authority for moving all five anonymous student possession-token routes from direct public RPC calls to the verified Edge v3 gateway without creating a fail-open bypass or revoking the direct rollback path before rollback is proven.",
-  "current_state": "CLIENT_SINGLE_TRANSPORT_SOURCE_INTEGRATED_DIRECT_MODE",
-  "baseline_main_sha": "a484b759e9aca0bb3761d6e58919e682b4795e5b",
+  "guard_failure_classes": [
+    "BGF-GUARD-RPC-CALLSITE-COLOCATION-200",
+    "BGF-GUARD-COMMENT-SEMANTIC-FALSE-POSITIVE-201"
+  ],
+  "edge_error_detail_failure_class": "BGF-EDGE-CLIENT-ERROR-DETAIL-LEAK-202",
+  "purpose": "Repository-first authority for moving all five anonymous student possession-token routes through one client transport toward the verified Edge v3 gateway, with bounded Edge error semantics, explicit rollback control and no fail-open fallback.",
+  "current_state": "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE",
+  "baseline_main_sha": "5f088a361f2ee78a88fc0435250a83d571eda34c",
   "prerequisites": {
     "stage29_authority": "04_backend_supabase/student_access_valid_route_authority.json",
     "stage29_required_state": "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_COMPLETE",
@@ -45,9 +49,12 @@
     "repository_file": "03_app_flutter/fitnexus_app/lib/features/student/student_access_transport_contract.dart",
     "runtime_file": "03_app_flutter/fitnexus_app/lib/features/student/student_access_transport.dart",
     "active_mode": "directRpc",
+    "resolved_mode": "directRpc",
     "edge_function_name": "student-access-gateway",
     "edge_gateway_selected": false,
     "automatic_edge_to_direct_fallback": false,
+    "explicit_rollback_requested": false,
+    "explicit_rollback_authorized": false,
     "direct_rpc_execute_revoked": false,
     "rollback_verified": false,
     "client_cutover_verified": false,
@@ -56,6 +63,31 @@
     "command_actions": ["start_workout", "set_completion", "submit_feedback"],
     "edge_candidate_path_compiled_behind_inactive_mode": true,
     "behavioral_transport_change": false
+  },
+  "edge_error_contract": {
+    "normalizer_file": "03_app_flutter/fitnexus_app/lib/features/student/student_access_edge_error_contract.dart",
+    "message_contract_file": "03_app_flutter/fitnexus_app/lib/features/student/student_access_error_contract.dart",
+    "function_exception_caught": true,
+    "trusted_gateway_error_allowlist": true,
+    "arbitrary_exception_details_returned": false,
+    "raw_token_details_returned": false,
+    "raw_network_origin_details_returned": false,
+    "retry_after_min_seconds": 1,
+    "retry_after_max_seconds": 60,
+    "unknown_non_2xx_collapses_to_generic_code": true,
+    "network_rate_limit_maps_to_existing_user_semantics": true,
+    "automatic_direct_rpc_fallback_on_exception": false
+  },
+  "rollback_harness": {
+    "resolver": "resolveStudentAccessTransportMode",
+    "production_active_mode": "directRpc",
+    "explicit_rollback_requested": false,
+    "explicit_rollback_authorized": false,
+    "unauthorized_rollback_fails_closed": true,
+    "rollback_from_non_edge_mode_rejected": true,
+    "authorized_edge_to_direct_transition_unit_tested": true,
+    "runtime_rollback_verified": false,
+    "harness_ready": true
   },
   "cutover_invariants": {
     "all_five_routes_move_as_one_security_boundary": true,
@@ -67,12 +99,14 @@
     "direct_execute_revocation_requires_post_cutover_runtime_proof": true,
     "raw_possession_token_logging_forbidden": true,
     "raw_network_origin_logging_forbidden": true,
+    "arbitrary_edge_exception_detail_echo_forbidden": true,
     "launch_gate_promotion_forbidden": true
   },
   "required_before_edge_selection": {
     "edge_transport_implementation_compiles": true,
     "all_five_repository_calls_routed_through_single_transport": true,
-    "edge_error_contract_mapped_to_existing_student_errors": false,
+    "edge_error_contract_mapped_to_existing_student_errors": true,
+    "rollback_harness_ready": true,
     "read_only_edge_runtime_smoke_after_client_source_change": false,
     "command_edge_runtime_smoke_with_synthetic_fixture": false,
     "explicit_rollback_proof": false,
@@ -87,8 +121,10 @@
     "security_advisor_rechecked": false
   },
   "next_stage": {
-    "name": "STAGE30_EDGE_ERROR_CONTRACT_AND_ROLLBACK_HARNESS",
+    "name": "STAGE30_CONTROLLED_EDGE_RUNTIME_SMOKE_FIXTURE",
     "allowed_now": true,
+    "requires_synthetic_customer_fixture": true,
+    "requires_migration_ledger_protocol": true,
     "may_select_edge_gateway_now": false,
     "may_revoke_direct_rpc_execute_now": false
   },
