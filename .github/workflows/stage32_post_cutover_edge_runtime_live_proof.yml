@@ -1,0 +1,85 @@
+name: Stage 32 Post-Cutover Edge Runtime Live Proof
+
+on:
+  pull_request:
+    types: [ready_for_review, opened]
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  post-cutover-edge-live-proof:
+    if: >-
+      (
+        (
+          github.event.action == 'ready_for_review' &&
+          github.event.pull_request.number == 71 &&
+          github.event.pull_request.head.ref == 'blackgold/stage32-post-cutover-live-proof' &&
+          github.event.pull_request.head.sha == '370cfe65d3df5188c3f840d84b5a8748f1357cf2'
+        ) ||
+        (
+          github.event.action == 'opened' &&
+          github.event.pull_request.head.ref == 'blackgold/stage32-live-proof-open-trigger' &&
+          github.event.pull_request.head.sha == '84a51d97f3b7a7c53965567e21760d5d59c85f5a'
+        )
+      ) &&
+      github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout exact sealed Stage 32 proof head
+        uses: actions/checkout@v6
+        with:
+          ref: 370cfe65d3df5188c3f840d84b5a8748f1357cf2
+
+      - name: Stage 32 live proof candidate guard
+        run: python 04_backend_supabase/tools/verify_student_access_stage32_live_proof_candidate.py
+
+      - name: Set up Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter pub get
+
+      - name: Derive masked Stage 32 synthetic proof token
+        shell: bash
+        run: |
+          TOKEN="$(python - <<'PY'
+          import hashlib
+          print(hashlib.sha256(b'fitnexus-stage32-post-cutover-edge-runtime-proof-v1').hexdigest())
+          PY
+          )"
+          echo "::add-mask::$TOKEN"
+          echo "STAGE32_SYNTHETIC_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+          echo "STAGE32_POST_CUTOVER_LIVE_PROOF_ENABLED=1" >> "$GITHUB_ENV"
+          echo "STAGE32_SUPABASE_URL=https://mceukeondizkwlpfxzgf.supabase.co" >> "$GITHUB_ENV"
+          echo "STAGE32_SUPABASE_PUBLISHABLE_KEY=sb_publishable_aggqgASWuWfgBJAlrRKoeg_Gg2qnjHQ" >> "$GITHUB_ENV"
+
+      - name: Execute sealed production-singleton five-route proof once
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter test test/student_access_stage32_post_cutover_live_edge_proof_test.dart --reporter expanded
+
+      - name: Stage 32 proof boundary receipt
+        run: |
+          echo 'STAGE32_POST_CUTOVER_EDGE_LIVE_PROOF=COMPLETED'
+          echo 'SEALED_PROOF_PR=71'
+          echo 'SEALED_PROOF_HEAD=370cfe65d3df5188c3f840d84b5a8748f1357cf2'
+          echo 'OPEN_TRIGGER_HEAD=84a51d97f3b7a7c53965567e21760d5d59c85f5a'
+          echo 'PRODUCTION_SINGLETON=StudentAccessTransport.instance'
+          echo 'PRODUCTION_ACTIVE_TRANSPORT=edgeGateway'
+          echo 'ROUTES_EXPECTED=5'
+          echo 'AUTOMATIC_EDGE_TO_DIRECT_FALLBACK=false'
+          echo 'DIRECT_RPC_GRANTS_CHANGED=false'
+          echo 'DIRECT_RPC_PRIVILEGE_REVOCATION=false'
+          echo 'REAL_CUSTOMER_DATA_USED=false'
+          echo 'RAW_SYNTHETIC_TOKEN_PRINTED=false'
+          echo 'PROOF_REEXECUTION_ALLOWED=false'
+          echo 'CLEANUP_REQUIRED=true'
+          echo 'LAUNCH_GATE_PROMOTION=DENIED'
