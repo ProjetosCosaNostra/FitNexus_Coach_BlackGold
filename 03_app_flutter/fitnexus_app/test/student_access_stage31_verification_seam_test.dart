@@ -5,20 +5,21 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
   group('Stage 31 client Edge verification seam', () {
-    test('production transport constants remain direct and rollback-inert', () {
+    test('current production transport is Edge and rollback-inert', () {
       expect(
         StudentAccessTransportContract.activeMode,
-        StudentAccessTransportMode.directRpc,
+        StudentAccessTransportMode.edgeGateway,
       );
-      expect(StudentAccessTransportContract.edgeGatewaySelected, isFalse);
+      expect(StudentAccessTransportContract.edgeGatewaySelected, isTrue);
       expect(StudentAccessTransportContract.automaticEdgeToDirectFallback, isFalse);
       expect(StudentAccessTransportContract.explicitRollbackRequested, isFalse);
       expect(StudentAccessTransportContract.explicitRollbackAuthorized, isFalse);
       expect(StudentAccessTransportContract.directRpcExecuteRevoked, isFalse);
       expect(StudentAccessTransportContract.clientCutoverVerified, isFalse);
+      expect(StudentAccessTransportContract.rollbackVerified, isFalse);
     });
 
-    test('verification factory accepts an explicit Edge mode without network I/O',
+    test('verification factory still accepts an explicit Edge mode without network I/O',
         () async {
       final client = SupabaseClient(
         'https://stage31-verification.invalid',
