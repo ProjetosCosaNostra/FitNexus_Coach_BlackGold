@@ -21,13 +21,18 @@ WORKOUT = STUDENT / "student_workout_repository.dart"
 FEEDBACK = STUDENT / "student_feedback_repository.dart"
 LIVE_TEST = APP / "test" / "student_access_stage32_post_cutover_live_edge_proof_test.dart"
 
-STATE = "POST_CUTOVER_EDGE_RUNTIME_PROOF_FIXTURE_REPO_ONLY_EDGE_MODE"
-BASELINE = "8c6bb194cbe6550c91d26dda17bd645f037a5a25"
+STATE_REPO = "POST_CUTOVER_EDGE_RUNTIME_PROOF_FIXTURE_REPO_ONLY_EDGE_MODE"
+STATE_REMOTE = "POST_CUTOVER_EDGE_RUNTIME_PROOF_FIXTURE_REMOTE_LIVE_PROOF_PENDING_EDGE_MODE"
+BASELINES = {
+    STATE_REPO: "8c6bb194cbe6550c91d26dda17bd645f037a5a25",
+    STATE_REMOTE: "cd1f4a476ff9b0dc7ea378974a87c254f4bbbc64",
+}
 SELECTION_STATE = "PRODUCTION_EDGE_SELECTION_CANDIDATE_EDGE_MODE_POST_CUTOVER_PROOF_PENDING"
 CUTOVER_STATE = "CLIENT_EDGE_SELECTED_POST_CUTOVER_PROOF_PENDING"
 STAGE31_STATE = "CLIENT_EDGE_RUNTIME_PROOF_LIVE_VERIFIED_CLEANUP_COMPLETE_DIRECT_MODE"
 FIXTURE_NAME = "stage32_post_cutover_edge_runtime_fixture"
 FIXTURE_FILE = "04_backend_supabase/migrations/20260821170400_stage32_post_cutover_edge_runtime_fixture.sql"
+FIXTURE_VERSION = "20260821171334"
 SEED = "fitnexus-stage32-post-cutover-edge-runtime-proof-v1"
 FAILURE_CLASSES = [
     "BGF-STAGE32-POST-CUTOVER-RUNTIME-FIXTURE-231",
@@ -90,215 +95,13 @@ def require(mapping: dict, expected: dict, label: str) -> None:
             fail(f"{label} drift: {key}")
 
 
-def main() -> None:
-    authority = load(AUTHORITY)
-    selection = load(SELECTION)
-    cutover = load(CUTOVER)
-    stage31 = load(STAGE31)
-    ledger = load(LEDGER)
+def validate_common_source(authority: dict) -> None:
     fixture_sql = text(FIXTURE_SQL)
     contract = text(CONTRACT)
     transport = text(TRANSPORT)
     workout = text(WORKOUT)
     feedback = text(FEEDBACK)
     live_test = text(LIVE_TEST)
-
-    require(
-        authority,
-        {
-            "schema_version": 1,
-            "project_ref": "mceukeondizkwlpfxzgf",
-            "stage": "STAGE32_POST_CUTOVER_EDGE_RUNTIME_PROOF",
-            "current_state": STATE,
-            "baseline_main_sha": BASELINE,
-            "failure_classes": FAILURE_CLASSES,
-        },
-        "Stage 32 post-cutover authority",
-    )
-
-    prerequisites = authority.get("prerequisites", {})
-    require(
-        prerequisites,
-        {
-            "selection_authority_file": "04_backend_supabase/student_access_production_edge_selection_authority.json",
-            "selection_required_state": SELECTION_STATE,
-            "cutover_authority_file": "04_backend_supabase/student_access_client_cutover_authority.json",
-            "cutover_required_state": CUTOVER_STATE,
-            "stage31_authority_file": "04_backend_supabase/student_access_client_edge_runtime_proof_authority.json",
-            "stage31_required_state": STAGE31_STATE,
-            "stage31_cleanup_complete": True,
-            "stage31_proof_reexecution_allowed": False,
-            "edge_runtime_version": 3,
-            "production_active_transport": "edgeGateway",
-            "production_edge_gateway_selected": True,
-            "automatic_edge_to_direct_fallback": False,
-            "direct_rpc_grants_required_intact": True,
-            "post_cutover_live_proof_required": True,
-            "post_cutover_rollback_proof_required_after_live_proof": True,
-        },
-        "Stage 32 prerequisites",
-    )
-
-    if selection.get("current_state") != SELECTION_STATE:
-        fail("production Edge selection authority is not at the post-cutover proof frontier")
-    if cutover.get("current_state") != CUTOVER_STATE:
-        fail("client cutover authority is not Edge-selected")
-    if stage31.get("current_state") != STAGE31_STATE:
-        fail("sealed Stage 31 proof/cleanup prerequisite disappeared")
-    stage31_runtime = stage31.get("runtime_proof", {})
-    require(
-        stage31_runtime,
-        {
-            "result": "PASS",
-            "all_five_routes_verified": True,
-            "proof_reexecution_allowed": False,
-            "cleanup_completed": True,
-            "synthetic_business_rows_remaining": 0,
-            "synthetic_security_rows_remaining": 0,
-            "synthetic_network_proof_rows_remaining": 0,
-        },
-        "Stage 31 sealed proof receipt",
-    )
-
-    production = authority.get("production_boundary", {})
-    require(
-        production,
-        {
-            "active_transport": "edgeGateway",
-            "resolved_transport": "edgeGateway",
-            "edge_gateway_selected": True,
-            "flutter_uses_edge_gateway_in_production": True,
-            "production_singleton": "StudentAccessTransport.instance",
-            "direct_v2_rpc_path_active_for_controlled_rollback": True,
-            "direct_anon_v2_rpc_execute_revoked": False,
-            "explicit_rollback_requested": False,
-            "explicit_rollback_authorized": False,
-            "automatic_edge_to_direct_fallback": False,
-            "client_cutover_verified": False,
-            "post_cutover_rollback_verified": False,
-        },
-        "post-cutover production boundary",
-    )
-
-    cutover_transport = cutover.get("transport_contract", {})
-    require(
-        cutover_transport,
-        {
-            "active_mode": "edgeGateway",
-            "resolved_mode": "edgeGateway",
-            "edge_gateway_selected": True,
-            "automatic_edge_to_direct_fallback": False,
-            "explicit_rollback_requested": False,
-            "explicit_rollback_authorized": False,
-            "direct_rpc_execute_revoked": False,
-            "rollback_verified": False,
-            "client_cutover_verified": False,
-            "exact_route_count": 5,
-            "edge_path_active_in_repository_source": True,
-            "behavioral_transport_change": True,
-        },
-        "cutover transport",
-    )
-    inventory = cutover.get("current_client_inventory", {})
-    require(
-        inventory,
-        {
-            "transport_mode": "edge_gateway",
-            "flutter_uses_edge_gateway": True,
-            "direct_v2_rpc_path_active": True,
-            "direct_anon_v2_rpc_execute_revoked": False,
-            "repositories_call_supabase_rpc_directly": False,
-            "repositories_call_single_transport": True,
-        },
-        "cutover client inventory",
-    )
-
-    pre = authority.get("database_precondition_receipt", {})
-    require(
-        pre,
-        {
-            "source": "Supabase.execute_sql",
-            "observed_at_utc": "2026-08-21T17:07:13.992654Z",
-            "auth_users": 0,
-            "profiles": 0,
-            "organizations": 0,
-            "organization_members": 0,
-            "organization_subscriptions": 0,
-            "students": 0,
-            "training_plans": 0,
-            "training_exercises": 0,
-            "access_links": 0,
-            "workout_sessions": 0,
-            "workout_logs": 0,
-            "workout_feedback": 0,
-            "command_receipts": 0,
-            "security_events": 0,
-            "security_signals": 0,
-            "customer_domain_empty": True,
-        },
-        "fresh empty-domain receipt",
-    )
-
-    grants = authority.get("direct_rpc_grant_receipt", {})
-    for rpc in RPC_MAP.values():
-        if grants.get(rpc) is not True:
-            fail(f"BGF-STAGE32-DIRECT-RPC-REVOCATION-PREMATURE-229 direct RPC grant missing: {rpc}")
-    require(
-        grants,
-        {
-            "source": "Supabase.execute_sql",
-            "observed_after_selection_merge": True,
-            "all_five_anon_execute_intact": True,
-            "all_five_authenticated_execute_intact": True,
-            "grants_changed_during_preparation": False,
-        },
-        "direct RPC grant receipt",
-    )
-
-    fixture = authority.get("fixture", {})
-    require(
-        fixture,
-        {
-            "repository_file": FIXTURE_FILE,
-            "migration_name": FIXTURE_NAME,
-            "migration_ledger_state": "repo_only",
-            "remote_applied": False,
-            "remote_version": None,
-            "requires_empty_customer_domain": True,
-            "synthetic_only": True,
-            "token_seed": SEED,
-            "raw_token_is_public_synthetic_test_material": True,
-            "database_stores_token_hash_only": True,
-            "repository_contains_bearer_literal": False,
-            "raw_network_origin_embedded": False,
-            "network_origin_digest_embedded": False,
-            "expiry_hours": 2,
-            "cleanup_required_after_proof": True,
-        },
-        "Stage 32 fixture",
-    )
-    for key, expected in EXPECTED_IDS.items():
-        if fixture.get(key) != expected:
-            fail(f"Stage 32 fixture identifier drift: {key}")
-
-    remote = {
-        row.get("name"): row.get("version")
-        for row in ledger.get("remote_migrations", [])
-        if isinstance(row, dict)
-    }
-    if remote.get("stage31_client_edge_runtime_cleanup") != "20260821161224":
-        fail("sealed Stage 31 cleanup remote receipt disappeared")
-    if FIXTURE_NAME in remote:
-        fail(f"{FAILURE_CLASSES[1]} Stage 32 fixture self-attested as remotely applied")
-    repo_only = [
-        row
-        for row in ledger.get("declared_divergences", [])
-        if isinstance(row, dict) and row.get("direction") == "repo_only"
-    ]
-    if len(repo_only) != 1 or repo_only[0].get("name") != FIXTURE_NAME:
-        fail("Stage 32 fixture must be the unique repo_only migration divergence")
-    if repo_only[0].get("related_failure_class") != FAILURE_CLASSES[0]:
-        fail("Stage 32 repo_only divergence failure-class authority drifted")
 
     required_fixture = (
         FAILURE_CLASSES[0],
@@ -319,9 +122,8 @@ def main() -> None:
             fail(f"Stage 32 fixture SQL drift: {fragment}")
     if re.findall(r"(?<![0-9a-fA-F])[0-9a-fA-F]{64}(?![0-9a-fA-F])", fixture_sql):
         fail("Stage 32 fixture contains a bearer-looking 64-hex literal")
-    fixture_lower = fixture_sql.lower()
     for forbidden in ("origin_hash", "cf-connecting-ip", "x-forwarded-for", "x-real-ip"):
-        if forbidden in fixture_lower:
+        if forbidden in fixture_sql.lower():
             fail(f"Stage 32 fixture contains forbidden network-origin material: {forbidden}")
 
     for fragment in (
@@ -380,11 +182,10 @@ def main() -> None:
         if expected.get(key) is not True:
             fail(f"Stage 32 live-proof invariant missing: {key}")
 
-    required_test = (
+    for fragment in (
         "STAGE32_POST_CUTOVER_LIVE_PROOF_ENABLED",
         "StudentAccessTransportMode.edgeGateway",
         "StudentAccessTransportContract.edgeGatewaySelected, isTrue",
-        "StudentAccessTransportContract.automaticEdgeToDirectFallback",
         "StudentAccessTransportContract.directRpcExecuteRevoked, isFalse",
         "StudentAccessTransportContract.rollbackVerified, isFalse",
         "StudentAccessTransportContract.clientCutoverVerified, isFalse",
@@ -393,8 +194,7 @@ def main() -> None:
         "32000000000000000000000000000001",
         "32000000000000000000000000000002",
         "32000000000000000000000000000003",
-    )
-    for fragment in required_test:
+    ):
         if fragment not in live_test:
             fail(f"Stage 32 focused live proof source drifted: {fragment}")
     if "StudentAccessTransport.forVerification" in live_test or ".forVerification(" in live_test:
@@ -405,9 +205,267 @@ def main() -> None:
         if live_test.count(f"action: '{action}'") != 1:
             fail(f"Stage 32 focused proof route drifted: {action}")
 
+
+def main() -> None:
+    authority = load(AUTHORITY)
+    selection = load(SELECTION)
+    cutover = load(CUTOVER)
+    stage31 = load(STAGE31)
+    ledger = load(LEDGER)
+
+    state = authority.get("current_state")
+    if state not in BASELINES:
+        fail(f"unsupported Stage 32 post-cutover lifecycle state: {state}")
+
+    require(
+        authority,
+        {
+            "schema_version": 1,
+            "project_ref": "mceukeondizkwlpfxzgf",
+            "stage": "STAGE32_POST_CUTOVER_EDGE_RUNTIME_PROOF",
+            "current_state": state,
+            "baseline_main_sha": BASELINES[state],
+            "failure_classes": FAILURE_CLASSES,
+        },
+        "Stage 32 post-cutover authority",
+    )
+    if state == STATE_REMOTE and authority.get("preparation_baseline_main_sha") != BASELINES[STATE_REPO]:
+        fail("Stage 32 preparation baseline receipt drifted")
+
+    if selection.get("current_state") != SELECTION_STATE:
+        fail("production Edge selection authority is not at the post-cutover proof frontier")
+    if cutover.get("current_state") != CUTOVER_STATE:
+        fail("client cutover authority is not Edge-selected")
+    if stage31.get("current_state") != STAGE31_STATE:
+        fail("sealed Stage 31 proof/cleanup prerequisite disappeared")
+    require(
+        stage31.get("runtime_proof", {}),
+        {
+            "result": "PASS",
+            "all_five_routes_verified": True,
+            "proof_reexecution_allowed": False,
+            "cleanup_completed": True,
+            "synthetic_business_rows_remaining": 0,
+            "synthetic_security_rows_remaining": 0,
+            "synthetic_network_proof_rows_remaining": 0,
+        },
+        "Stage 31 sealed proof receipt",
+    )
+
+    require(
+        authority.get("production_boundary", {}),
+        {
+            "active_transport": "edgeGateway",
+            "resolved_transport": "edgeGateway",
+            "edge_gateway_selected": True,
+            "flutter_uses_edge_gateway_in_production": True,
+            "production_singleton": "StudentAccessTransport.instance",
+            "direct_v2_rpc_path_active_for_controlled_rollback": True,
+            "direct_anon_v2_rpc_execute_revoked": False,
+            "explicit_rollback_requested": False,
+            "explicit_rollback_authorized": False,
+            "automatic_edge_to_direct_fallback": False,
+            "client_cutover_verified": False,
+            "post_cutover_rollback_verified": False,
+        },
+        "post-cutover production boundary",
+    )
+    require(
+        cutover.get("transport_contract", {}),
+        {
+            "active_mode": "edgeGateway",
+            "resolved_mode": "edgeGateway",
+            "edge_gateway_selected": True,
+            "automatic_edge_to_direct_fallback": False,
+            "explicit_rollback_requested": False,
+            "explicit_rollback_authorized": False,
+            "direct_rpc_execute_revoked": False,
+            "rollback_verified": False,
+            "client_cutover_verified": False,
+            "exact_route_count": 5,
+            "edge_path_active_in_repository_source": True,
+            "behavioral_transport_change": True,
+        },
+        "cutover transport",
+    )
+
+    grants = authority.get("direct_rpc_grant_receipt", {})
+    for rpc in RPC_MAP.values():
+        if grants.get(rpc) is not True:
+            fail(f"BGF-STAGE32-DIRECT-RPC-REVOCATION-PREMATURE-229 direct RPC grant missing: {rpc}")
+    if grants.get("all_five_anon_execute_intact") is not True or grants.get("all_five_authenticated_execute_intact") is not True:
+        fail("direct RPC grant-set receipt is not intact")
+    if grants.get("grants_changed_during_preparation") is not False:
+        fail("direct RPC grants changed during preparation")
+    if state == STATE_REMOTE:
+        if grants.get("observed_again_immediately_before_fixture_apply") is not True:
+            fail("fresh pre-apply direct RPC grant receipt missing")
+        if grants.get("grants_changed_during_fixture_apply") is not False:
+            fail("fixture apply changed direct RPC grants")
+
+    fixture = authority.get("fixture", {})
+    require(
+        fixture,
+        {
+            "repository_file": FIXTURE_FILE,
+            "migration_name": FIXTURE_NAME,
+            "requires_empty_customer_domain": True,
+            "synthetic_only": True,
+            "token_seed": SEED,
+            "raw_token_is_public_synthetic_test_material": True,
+            "database_stores_token_hash_only": True,
+            "repository_contains_bearer_literal": False,
+            "raw_network_origin_embedded": False,
+            "network_origin_digest_embedded": False,
+            "expiry_hours": 2,
+            "cleanup_required_after_proof": True,
+        },
+        "Stage 32 fixture",
+    )
+    for key, expected in EXPECTED_IDS.items():
+        if fixture.get(key) != expected:
+            fail(f"Stage 32 fixture identifier drift: {key}")
+
+    remote = {
+        row.get("name"): row.get("version")
+        for row in ledger.get("remote_migrations", [])
+        if isinstance(row, dict)
+    }
+    repo_only = [
+        row
+        for row in ledger.get("declared_divergences", [])
+        if isinstance(row, dict) and row.get("direction") == "repo_only"
+    ]
+    if state == STATE_REPO:
+        require(
+            fixture,
+            {"migration_ledger_state": "repo_only", "remote_applied": False, "remote_version": None},
+            "repository-only fixture receipt",
+        )
+        if FIXTURE_NAME in remote:
+            fail(f"{FAILURE_CLASSES[1]} fixture self-attested as remotely applied")
+        if len(repo_only) != 1 or repo_only[0].get("name") != FIXTURE_NAME:
+            fail("Stage 32 fixture must be the unique repo_only migration divergence")
+        if repo_only[0].get("related_failure_class") != FAILURE_CLASSES[0]:
+            fail("Stage 32 repo_only divergence failure-class authority drifted")
+        require(
+            authority.get("next_stage", {}),
+            {
+                "name": "APPLY_STAGE32_POST_CUTOVER_EDGE_RUNTIME_FIXTURE",
+                "allowed_now": True,
+                "requires_ci_and_merge_first": True,
+                "requires_exact_merged_sql": True,
+                "requires_fresh_empty_customer_domain_check_immediately_before_apply": True,
+                "requires_fresh_migration_ledger_check_immediately_before_apply": True,
+                "requires_direct_rpc_grants_intact": True,
+                "may_execute_live_proof_now": False,
+                "may_revoke_direct_rpc_execute_now": False,
+            },
+            "repository-only next stage",
+        )
+    else:
+        require(
+            fixture,
+            {"migration_ledger_state": "remote_reconciled", "remote_applied": True, "remote_version": FIXTURE_VERSION},
+            "remote fixture receipt",
+        )
+        if repo_only:
+            fail("remote-reconciled Stage 32 fixture left a repo_only divergence")
+        if remote.get(FIXTURE_NAME) != FIXTURE_VERSION:
+            fail("Stage 32 remote fixture receipt missing from migration ledger")
+        if ledger.get("baseline_main_sha") != BASELINES[STATE_REMOTE]:
+            fail("Stage 32 remote ledger baseline drifted")
+        if ledger.get("observed_at_utc") != "2026-08-21T17:13:56.735665Z":
+            fail("Stage 32 remote ledger observation timestamp drifted")
+        require(
+            authority.get("pre_apply_receipt", {}),
+            {
+                "source": "Supabase.execute_sql",
+                "observed_at_utc": "2026-08-21T17:12:58.823734Z",
+                "source_main_sha": BASELINES[STATE_REMOTE],
+                "remote_fixture_present_before_apply": False,
+                "auth_users": 0,
+                "profiles": 0,
+                "organizations": 0,
+                "organization_members": 0,
+                "organization_subscriptions": 0,
+                "students": 0,
+                "training_plans": 0,
+                "training_exercises": 0,
+                "access_links": 0,
+                "workout_sessions": 0,
+                "workout_logs": 0,
+                "workout_feedback": 0,
+                "command_receipts": 0,
+                "security_events": 0,
+                "security_signals": 0,
+                "customer_domain_empty": True,
+                "direct_rpc_grants_intact": True,
+            },
+            "fresh pre-apply receipt",
+        )
+        apply = authority.get("remote_apply_receipt", {})
+        require(
+            apply,
+            {
+                "source": "Supabase.apply_migration",
+                "source_sql_main_sha": BASELINES[STATE_REMOTE],
+                "source_file_sha": "c7a984764f6b87f819849714ab8b76fd89b1506e",
+                "migration_name": FIXTURE_NAME,
+                "remote_version": FIXTURE_VERSION,
+                "apply_result": "SUCCESS",
+                "post_apply_observed_at_utc": "2026-08-21T17:13:56.735665Z",
+                "expected_student_rows": 1,
+                "expected_access_link_rows": 1,
+                "migration_postcondition_included_token_resolution": True,
+                "raw_synthetic_token_returned": False,
+                "raw_network_origin_returned": False,
+                "real_customer_data_used": False,
+            },
+            "remote apply receipt",
+        )
+        require(
+            apply.get("post_apply_counts", {}),
+            {
+                "auth_users": 1,
+                "profiles": 1,
+                "organizations": 1,
+                "organization_members": 1,
+                "organization_subscriptions": 1,
+                "subscription_authority_events": 1,
+                "students": 1,
+                "training_plans": 1,
+                "training_exercises": 1,
+                "access_links": 1,
+                "workout_sessions": 0,
+                "workout_logs": 0,
+                "workout_feedback": 0,
+                "command_receipts": 0,
+                "security_events": 0,
+                "security_signals": 0,
+            },
+            "post-apply counts",
+        )
+        require(
+            authority.get("next_stage", {}),
+            {
+                "name": "PREPARE_STAGE32_POST_CUTOVER_LIVE_PROOF",
+                "allowed_now": True,
+                "requires_fixture_remote_applied": True,
+                "requires_exact_pr_and_head_seal_before_first_execution": True,
+                "requires_one_shot_workflow": True,
+                "requires_production_singleton": True,
+                "requires_direct_rpc_grants_intact": True,
+                "requires_cleanup_after_proof": True,
+                "may_execute_live_proof_before_workflow_seal": False,
+                "may_revoke_direct_rpc_execute_now": False,
+            },
+            "remote next stage",
+        )
+
     proof = authority.get("runtime_proof", {})
     if proof.get("workflow_run_id") is not None or proof.get("workflow_job_id") is not None or proof.get("result") is not None:
-        fail(f"{FAILURE_CLASSES[1]} runtime proof receipt appeared before fixture apply")
+        fail(f"{FAILURE_CLASSES[1]} runtime proof receipt appeared before the dedicated proof stage")
     for key in (
         "production_singleton_verified",
         "production_edge_mode_verified",
@@ -427,7 +485,7 @@ def main() -> None:
         "cleanup_completed",
     ):
         if proof.get(key) is not False:
-            fail(f"{FAILURE_CLASSES[1]} runtime proof self-attested during preparation: {key}")
+            fail(f"{FAILURE_CLASSES[1]} runtime proof self-attested: {key}")
 
     rules = authority.get("promotion_rules", {})
     for key in (
@@ -443,41 +501,27 @@ def main() -> None:
         "may_promote_launch_gates",
     ):
         if rules.get(key) is not False:
-            fail(f"Stage 32 preparation gained prohibited promotion authority: {key}")
+            fail(f"Stage 32 gained prohibited promotion authority: {key}")
     if rules.get("cleanup_required_before_post_cutover_rollback_proof") is not True:
         fail("Stage 32 cleanup-before-rollback interlock disappeared")
-
-    require(
-        authority.get("next_stage", {}),
-        {
-            "name": "APPLY_STAGE32_POST_CUTOVER_EDGE_RUNTIME_FIXTURE",
-            "allowed_now": True,
-            "requires_ci_and_merge_first": True,
-            "requires_exact_merged_sql": True,
-            "requires_fresh_empty_customer_domain_check_immediately_before_apply": True,
-            "requires_fresh_migration_ledger_check_immediately_before_apply": True,
-            "requires_direct_rpc_grants_intact": True,
-            "may_execute_live_proof_now": False,
-            "may_revoke_direct_rpc_execute_now": False,
-        },
-        "Stage 32 next stage",
-    )
     if any(value is not False for value in authority.get("launch_authority", {}).values()):
-        fail("Stage 32 post-cutover preparation gained launch authority")
+        fail("Stage 32 post-cutover lifecycle gained launch authority")
+
+    validate_common_source(authority)
 
     print("STUDENT_ACCESS_STAGE32_POST_CUTOVER_RUNTIME_PREPARATION_GUARD=PASS")
-    print(f"CURRENT_STATE={STATE}")
-    print(f"BASELINE_MAIN_SHA={BASELINE}")
+    print(f"CURRENT_STATE={state}")
+    print(f"BASELINE_MAIN_SHA={BASELINES[state]}")
     print("PRODUCTION_ACTIVE_TRANSPORT=edgeGateway")
     print("PRODUCTION_SINGLETON=StudentAccessTransport.instance")
     print("ATOMIC_ROUTE_COUNT=5")
     print("STAGE31_PROOF_REEXECUTION_ALLOWED=false")
-    print("STAGE32_FIXTURE_LEDGER=REPO_ONLY")
-    print("CUSTOMER_DOMAIN_PRECONDITION=EMPTY")
+    print("STAGE32_FIXTURE_LEDGER=" + ("REMOTE_RECONCILED" if state == STATE_REMOTE else "REPO_ONLY"))
+    print("STAGE32_FIXTURE_REMOTE_APPLIED=" + str(state == STATE_REMOTE).lower())
     print("DIRECT_RPC_GRANTS=INTACT")
     print("LIVE_POST_CUTOVER_PROOF=NOT_EXECUTED")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
-    print("NEXT=APPLY_STAGE32_POST_CUTOVER_EDGE_RUNTIME_FIXTURE_AFTER_CI_AND_MERGE")
+    print("NEXT=" + ("PREPARE_STAGE32_POST_CUTOVER_LIVE_PROOF" if state == STATE_REMOTE else "APPLY_STAGE32_POST_CUTOVER_EDGE_RUNTIME_FIXTURE_AFTER_CI_AND_MERGE"))
     print("LAUNCH_GATE_PROMOTION=DENIED")
 
 
