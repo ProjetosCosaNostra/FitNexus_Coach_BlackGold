@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -24,6 +25,7 @@ FAILURE_CLASSES = [
     "BGF-DIRECT-RPC-REVOCATION-BEFORE-ROLLBACK-198",
     "BGF-CLIENT-CUTOVER-SELF-ATTESTATION-199",
 ]
+COMMENT_FALSE_POSITIVE_FAILURE_CLASS = "BGF-GUARD-COMMENT-SEMANTIC-FALSE-POSITIVE-201"
 ROUTES = {
     "get_workout": "get_student_workout_v2",
     "start_workout": "start_student_workout_v2",
@@ -51,6 +53,17 @@ def data(path: Path) -> dict:
     raise AssertionError("unreachable")
 
 
+def code_without_comments(source: str) -> str:
+    """Remove Dart comments before semantic-token checks.
+
+    BGF-GUARD-COMMENT-SEMANTIC-FALSE-POSITIVE-201 was created after a guard
+    interpreted the documentation phrase `no try/catch` as executable catch
+    syntax. Security decisions must be based on code tokens, not comments.
+    """
+    without_blocks = re.sub(r"/\*.*?\*/", "", source, flags=re.DOTALL)
+    return re.sub(r"//[^\n]*", "", without_blocks)
+
+
 def main() -> None:
     authority = data(AUTHORITY)
     valid_route = data(VALID_ROUTE)
@@ -59,6 +72,7 @@ def main() -> None:
     network = data(NETWORK_AUTHORITY)
     contract_source = text(CONTRACT)
     transport_source = text(TRANSPORT)
+    transport_code = code_without_comments(transport_source)
     workout = text(WORKOUT)
     feedback = text(FEEDBACK)
 
@@ -170,9 +184,9 @@ def main() -> None:
         "_client.functions.invoke(",
         "StudentAccessTransportContract.edgeFunctionName",
     ):
-        if fragment not in transport_source:
+        if fragment not in transport_code:
             fail(f"single transport runtime incomplete: {fragment}")
-    if "catch" in transport_source.lower() and "_client.rpc" in transport_source:
+    if re.search(r"\bcatch\s*\(", transport_code) and "_client.rpc" in transport_code:
         fail(f"{FAILURE_CLASSES[2]} transport contains potential Edge -> direct exception fallback")
     if "automaticEdgeToDirectFallback = true" in contract_source:
         fail(f"{FAILURE_CLASSES[2]} automatic Edge -> direct fail-open fallback enabled")
@@ -244,6 +258,7 @@ def main() -> None:
     print("ACTIVE_TRANSPORT=directRpc")
     print("EDGE_CANDIDATE_COMPILED_BEHIND_INACTIVE_MODE=true")
     print("AUTOMATIC_EDGE_TO_DIRECT_FALLBACK=false")
+    print(f"COMMENT_FALSE_POSITIVE_PREVENTION={COMMENT_FALSE_POSITIVE_FAILURE_CLASS}")
     print("ROLLBACK_VERIFIED=false")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
     print("NEXT=STAGE30_EDGE_ERROR_CONTRACT_AND_ROLLBACK_HARNESS")
