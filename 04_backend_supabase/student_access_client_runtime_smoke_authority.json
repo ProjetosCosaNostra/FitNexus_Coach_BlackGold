@@ -5,9 +5,9 @@
   "proof_reexecution_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-PROOF-REEXECUTION-204",
   "response_data_leak_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-RESPONSE-DATA-LEAK-205",
   "command_flow_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-COMMAND-FLOW-206",
-  "purpose": "Repository-first lifecycle authority for a controlled synthetic five-route Edge v3 runtime smoke before any Flutter transport selection.",
-  "current_state": "EDGE_RUNTIME_SMOKE_FIXTURE_REPO_ONLY",
-  "baseline_main_sha": "59385ef6a7b4d8ad90703b1cbb52c0755f1f8948",
+  "purpose": "Lifecycle authority for a controlled synthetic five-route Edge v3 runtime smoke before any Flutter transport selection.",
+  "current_state": "EDGE_RUNTIME_SMOKE_FIXTURE_REMOTE_LIVE_PROOF_PENDING",
+  "baseline_main_sha": "ff29a59626f7a4ab5e198cfef2c27b5cd1dfde1b",
   "client_cutover_authority": {
     "file": "04_backend_supabase/student_access_client_cutover_authority.json",
     "required_state": "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE",
@@ -19,9 +19,9 @@
   "fixture": {
     "repository_file": "04_backend_supabase/migrations/20260821063000_stage30_edge_runtime_smoke_fixture.sql",
     "migration_name": "stage30_edge_runtime_smoke_fixture",
-    "migration_ledger_state": "repo_only",
-    "remote_applied": false,
-    "remote_version": null,
+    "migration_ledger_state": "remote_reconciled",
+    "remote_applied": true,
+    "remote_version": "20260821075532",
     "requires_empty_customer_domain": true,
     "synthetic_only": true,
     "token_seed": "fitnexus-stage30-edge-runtime-smoke-fixture-v1",
@@ -55,7 +55,7 @@
   },
   "runtime_proof": {
     "edge_runtime_version": 3,
-    "fixture_deployed": false,
+    "fixture_deployed": true,
     "get_workout_verified": false,
     "start_workout_verified": false,
     "set_completion_verified": false,
@@ -84,8 +84,9 @@
     "launch_gate_authority": false
   },
   "next_stage": {
-    "name": "APPLY_STAGE30_EDGE_RUNTIME_SMOKE_FIXTURE",
+    "name": "EXECUTE_STAGE30_FIVE_ROUTE_EDGE_RUNTIME_SMOKE",
     "allowed_now": true,
-    "requires_ci_and_merge_first": true
+    "requires_ci_and_merge_first": false,
+    "requires_one_shot_proof_workflow": true
   }
 }
