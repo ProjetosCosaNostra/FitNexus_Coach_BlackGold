@@ -11,9 +11,9 @@ BACKEND = ROOT / "04_backend_supabase"
 LEDGER = BACKEND / "migration_ledger_authority.json"
 
 CLEANUP_NAME = "stage32_post_cutover_live_proof_r1_cleanup"
-CLEANUP_FAILURE = "BGF-STAGE32-POST-CUTOVER-R1-CLEANUP-239"
-CURRENT_BASELINE = "6be68c35e4e7f1ec4e69bc0c8a9a872b62abad48"
-CURRENT_OBSERVED = "2026-08-21T22:18:35.737097Z"
+CLEANUP_VERSION = "20260821222724"
+CURRENT_BASELINE = "62809bbd4f27d0616110dae19024b163a4911521"
+CURRENT_OBSERVED = "2026-08-21T22:27:43.951028Z"
 REARM_REMOTE_BASELINE = "71a4e8de96f903d142e63ab9fb98ff6d24035e6d"
 REARM_REMOTE_OBSERVED = "2026-08-21T21:40:30.546568Z"
 MODES = {
@@ -48,15 +48,12 @@ def projected_pre_cleanup_ledger(current: dict) -> dict:
         for row in current.get("declared_divergences", [])
         if isinstance(row, dict) and row.get("direction") == "repo_only"
     ]
-    if len(repo_only) != 1:
-        fail("R1 cleanup must be the unique repo_only divergence")
-    row = repo_only[0]
-    if row.get("name") != CLEANUP_NAME or row.get("related_failure_class") != CLEANUP_FAILURE:
-        fail("R1 cleanup repo_only identity drifted")
+    if repo_only:
+        fail("R1 cleanup remains repo_only after authoritative remote reconciliation")
     if current.get("baseline_main_sha") != CURRENT_BASELINE:
-        fail("R1 cleanup ledger baseline drifted")
+        fail("R1 cleanup remote ledger baseline drifted")
     if current.get("observed_at_utc") != CURRENT_OBSERVED:
-        fail("R1 cleanup ledger observation drifted")
+        fail("R1 cleanup remote ledger observation drifted")
 
     remote = {
         item.get("name"): item.get("version")
@@ -67,20 +64,16 @@ def projected_pre_cleanup_ledger(current: dict) -> dict:
         fail("Stage32 fixture remote receipt disappeared")
     if remote.get("stage32_rearm_expired_fixture_r1") != "20260821214005":
         fail("Stage32 rearm remote receipt disappeared")
-    if CLEANUP_NAME in remote:
-        fail("R1 cleanup self-attested as remotely applied")
+    if remote.get(CLEANUP_NAME) != CLEANUP_VERSION:
+        fail("R1 cleanup remote receipt disappeared or changed")
 
     value = json.loads(json.dumps(current))
     value["baseline_main_sha"] = REARM_REMOTE_BASELINE
     value["observed_at_utc"] = REARM_REMOTE_OBSERVED
-    value["declared_divergences"] = [
+    value["remote_migrations"] = [
         item
-        for item in value.get("declared_divergences", [])
-        if not (
-            isinstance(item, dict)
-            and item.get("direction") == "repo_only"
-            and item.get("name") == CLEANUP_NAME
-        )
+        for item in value.get("remote_migrations", [])
+        if not (isinstance(item, dict) and item.get("name") == CLEANUP_NAME)
     ]
     return value
 
@@ -89,8 +82,9 @@ def run(mode: str) -> None:
     if mode not in MODES:
         fail(f"unsupported mode: {mode}")
 
-    # Validate the actual current frontier first. Historical projections below are
-    # non-authoritative compatibility views only; they cannot promote current state.
+    # First validate the real current remote-reconciled cleanup frontier. Only then
+    # project the cleanup row away so sealed historical guards can validate their own
+    # historical snapshots without becoming alternate current authorities.
     cleanup_guard = importlib.import_module(
         "verify_stage32_post_cutover_live_proof_r1_cleanup_preparation"
     )
@@ -138,11 +132,13 @@ def run(mode: str) -> None:
 
     print("STAGE32_R1_CLEANUP_HISTORICAL_COMPAT=PASS")
     print(f"MODE={mode}")
-    print(f"ACTUAL_CURRENT_STATE=POST_CUTOVER_EDGE_RUNTIME_PROOF_R1_VERIFIED_CLEANUP_REPO_ONLY")
+    print("ACTUAL_CURRENT_STATE=POST_CUTOVER_EDGE_RUNTIME_PROOF_R1_VERIFIED_CLEANUP_COMPLETE_ROLLBACK_PROOF_PENDING_EDGE_MODE")
     print(f"ACTUAL_CLEANUP_MIGRATION={CLEANUP_NAME}")
+    print(f"ACTUAL_CLEANUP_REMOTE_VERSION={CLEANUP_VERSION}")
     print("ACTUAL_R1_LIVE_PROOF_VERIFIED=true")
     print("ACTUAL_R1_PROOF_REEXECUTION_ALLOWED=false")
-    print("PROJECTED_CLEANUP_REMOVED=true")
+    print("ACTUAL_STAGE32_SYNTHETIC_RESIDUE=0")
+    print("PROJECTED_CLEANUP_REMOTE_ROW_REMOVED=true")
     print(f"PROJECTED_LEDGER_BASELINE={REARM_REMOTE_BASELINE}")
     print(f"PROJECTED_LEDGER_OBSERVED={REARM_REMOTE_OBSERVED}")
     print("PRODUCTION_ACTIVE_TRANSPORT=edgeGateway")
