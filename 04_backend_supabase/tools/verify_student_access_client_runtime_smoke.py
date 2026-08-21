@@ -10,6 +10,7 @@ AUTHORITY = BACKEND / "student_access_client_runtime_smoke_authority.json"
 CUTOVER = BACKEND / "student_access_client_cutover_authority.json"
 LEDGER = BACKEND / "migration_ledger_authority.json"
 MIGRATION = BACKEND / "migrations" / "20260821063000_stage30_edge_runtime_smoke_fixture.sql"
+LIVE = BACKEND / "tools" / "verify_student_access_stage30_edge_runtime_live.py"
 
 FAILURE_CLASS = "BGF-STAGE30-RUNTIME-SMOKE-FIXTURE-RESIDUE-203"
 REEXECUTION_CLASS = "BGF-STAGE30-RUNTIME-SMOKE-PROOF-REEXECUTION-204"
@@ -17,13 +18,16 @@ DATA_LEAK_CLASS = "BGF-STAGE30-RUNTIME-SMOKE-RESPONSE-DATA-LEAK-205"
 COMMAND_FLOW_CLASS = "BGF-STAGE30-RUNTIME-SMOKE-COMMAND-FLOW-206"
 MIGRATION_NAME = "stage30_edge_runtime_smoke_fixture"
 REMOTE_VERSION = "20260821075532"
+SEALED_RUN = 32461357789
 SEED = "fitnexus-stage30-edge-runtime-smoke-fixture-v1"
 STATE_REPO = "EDGE_RUNTIME_SMOKE_FIXTURE_REPO_ONLY"
 STATE_REMOTE = "EDGE_RUNTIME_SMOKE_FIXTURE_REMOTE_LIVE_PROOF_PENDING"
-ALLOWED_STATES = {STATE_REPO, STATE_REMOTE}
+STATE_PROVEN = "EDGE_RUNTIME_SMOKE_LIVE_VERIFIED_CLEANUP_PENDING"
+ALLOWED_STATES = {STATE_REPO, STATE_REMOTE, STATE_PROVEN}
 BASELINES = {
     STATE_REPO: "59385ef6a7b4d8ad90703b1cbb52c0755f1f8948",
     STATE_REMOTE: "ff29a59626f7a4ab5e198cfef2c27b5cd1dfde1b",
+    STATE_PROVEN: "ff29a59626f7a4ab5e198cfef2c27b5cd1dfde1b",
 }
 EXPECTED_IDS = {
     "user_id": "33e39af7-f470-510e-8a9c-fc70b16ba26e",
@@ -67,6 +71,7 @@ def main() -> None:
     cutover = load(CUTOVER)
     ledger = load(LEDGER)
     migration = read(MIGRATION)
+    live = read(LIVE) if LIVE.is_file() else ""
     lower = migration.lower()
 
     if authority.get("schema_version") != 1:
@@ -119,6 +124,7 @@ def main() -> None:
         if fixture.get(key) != expected:
             fail(f"fixture identifier drift for {key}")
 
+    remote_fixture = state in {STATE_REMOTE, STATE_PROVEN}
     if state == STATE_REPO:
         if fixture.get("migration_ledger_state") != "repo_only":
             fail("repository-only fixture ledger state drifted")
@@ -132,8 +138,7 @@ def main() -> None:
 
     if authority.get("expected_route_sequence") != ROUTES:
         fail("five-route smoke sequence drifted")
-    expected_inputs = authority.get("expected_command_inputs", {})
-    if expected_inputs != {
+    if authority.get("expected_command_inputs", {}) != {
         "set_completion_completed": True,
         "feedback_perceived_exertion": 5,
         "feedback_pain_score": 0,
@@ -147,8 +152,10 @@ def main() -> None:
     runtime = authority.get("runtime_proof", {})
     if runtime.get("edge_runtime_version") != 3:
         fail("runtime smoke not anchored to Edge v3")
-    if runtime.get("fixture_deployed") is not (state == STATE_REMOTE):
+    if runtime.get("fixture_deployed") is not remote_fixture:
         fail("fixture deployment authority drifted")
+
+    proof_complete = state == STATE_PROVEN
     for key in (
         "get_workout_verified",
         "start_workout_verified",
@@ -158,17 +165,81 @@ def main() -> None:
         "all_five_routes_verified",
         "completed_session_verified",
         "feedback_submitted_verified",
-        "cleanup_completed",
     ):
-        if runtime.get(key) is not False:
-            fail(f"runtime proof self-attested before live smoke: {key}")
-    if runtime.get("proof_workflow_run_id") is not None or runtime.get("proof_result") is not None:
-        fail("runtime proof receipt appeared before execution")
-    if runtime.get("proof_reexecution_allowed") is not False:
-        fail("live smoke proof must become sealed after success")
+        if runtime.get(key) is not proof_complete:
+            fail(f"runtime proof lifecycle drift: {key}")
+    if runtime.get("cleanup_completed") is not False:
+        fail("cleanup self-attested before cleanup migration")
     for key in ("raw_token_returned", "raw_network_origin_returned", "real_student_data_used", "real_student_data_mutated"):
         if runtime.get(key) is not False:
             fail(f"privacy/synthetic proof invariant drift: {key}")
+    if runtime.get("proof_reexecution_allowed") is not False:
+        fail("live smoke proof must remain sealed after success")
+
+    if proof_complete:
+        if runtime.get("proof_workflow_run_id") != SEALED_RUN or runtime.get("proof_result") != "PASS":
+            fail("sealed smoke runtime receipt drifted")
+        receipt = authority.get("live_proof_receipt", {})
+        expected_receipt = {
+            "workflow_run_id": SEALED_RUN,
+            "result": "PASS",
+            "live_smoke_mode": "EXECUTED_ONCE",
+            "gateway_health": "PASS",
+            "routes_verified": 5,
+            "get_workout": "PASS",
+            "start_workout": "PASS",
+            "set_completion": "PASS",
+            "get_feedback_context": "PASS",
+            "submit_feedback": "PASS",
+            "completed_session_verified": True,
+            "feedback_submitted_verified": True,
+            "feedback_risk_signal": "low",
+            "raw_synthetic_token_returned": False,
+            "raw_network_origin_returned": False,
+            "real_student_data_used": False,
+            "real_student_data_mutated": False,
+            "proof_reexecution_allowed": False,
+        }
+        for key, expected in expected_receipt.items():
+            if receipt.get(key) != expected:
+                fail(f"sealed live smoke receipt drift: {key}")
+        db = authority.get("database_proof_receipt", {})
+        for key, expected in {
+            "sessions_total": 1,
+            "session_completed": 1,
+            "exercise_logs_total": 1,
+            "exercise_log_completed": 1,
+            "feedback_total": 1,
+            "feedback_expected": 1,
+            "link_last_used": 1,
+            "student_status": "Treino concluído",
+            "student_adherence": 100,
+            "command_receipts_total": 3,
+            "start_receipt_exact": 1,
+            "completion_receipt_exact": 1,
+            "feedback_receipt_exact": 1,
+        }.items():
+            if db.get(key) != expected:
+                fail(f"database proof receipt drift: {key}")
+        expected_rate = {route: 1 for route in ROUTES}
+        if db.get("link_rate_bucket_request_counts") != expected_rate:
+            fail("link rate-bucket proof drifted")
+        if db.get("network_rate_bucket_proof", {}).get("raw_origin_hash_read") is not False:
+            fail(f"{DATA_LEAK_CLASS} network proof read origin hash")
+        if db.get("network_rate_bucket_proof", {}) | {"raw_origin_hash_read": False} != expected_rate | {"raw_origin_hash_read": False}:
+            fail("network rate-bucket proof drifted")
+        if db.get("allowed_security_events") != {
+            "start_workout": 1,
+            "set_completion": 1,
+            "submit_feedback": 1,
+        }:
+            fail("security-event proof drifted")
+        for fragment in (REEXECUTION_CLASS, "SEALED_SKIP_REEXECUTION", f"SEALED_WORKFLOW_RUN = {SEALED_RUN}", "NETWORK_CALL_EXECUTED=false"):
+            if fragment not in live:
+                fail(f"{REEXECUTION_CLASS} sealed live verifier drift: {fragment}")
+    else:
+        if runtime.get("proof_workflow_run_id") is not None or runtime.get("proof_result") is not None:
+            fail("runtime proof receipt appeared before proof completion")
 
     repo_only = {
         row.get("name")
@@ -183,9 +254,9 @@ def main() -> None:
             fail("fixture migration self-attested as remotely applied")
     else:
         if repo_only:
-            fail(f"remote-pending smoke has unexpected repo_only divergences: {sorted(repo_only)}")
+            fail(f"remote Stage 30 smoke has unexpected repo_only divergences: {sorted(repo_only)}")
         if remote.get(MIGRATION_NAME) != REMOTE_VERSION:
-            fail("remote-pending smoke ledger receipt missing")
+            fail("remote Stage 30 fixture ledger receipt missing")
 
     required_sql = (
         FAILURE_CLASS,
@@ -204,9 +275,7 @@ def main() -> None:
     for identifier in EXPECTED_IDS.values():
         if identifier not in migration:
             fail(f"fixture migration missing expected identifier: {identifier}")
-
-    bearer_literals = re.findall(r"(?<![0-9a-fA-F])[0-9a-fA-F]{64}(?![0-9a-fA-F])", migration)
-    if bearer_literals:
+    if re.findall(r"(?<![0-9a-fA-F])[0-9a-fA-F]{64}(?![0-9a-fA-F])", migration):
         fail(f"{DATA_LEAK_CLASS} bearer-looking 64-hex literal committed in fixture migration")
     if "raw_network_origin" in lower or "cf-connecting-ip" in lower or "x-forwarded-for" in lower:
         fail(f"{DATA_LEAK_CLASS} network-origin material appeared in fixture migration")
@@ -236,21 +305,31 @@ def main() -> None:
             fail("repository-only next stage drifted")
         if next_stage.get("allowed_now") is not True or next_stage.get("requires_ci_and_merge_first") is not True:
             fail("fixture application interlock drifted")
-    else:
+    elif state == STATE_REMOTE:
         if next_stage.get("name") != "EXECUTE_STAGE30_FIVE_ROUTE_EDGE_RUNTIME_SMOKE":
             fail("remote-pending next stage drifted")
         if next_stage.get("allowed_now") is not True or next_stage.get("requires_ci_and_merge_first") is not False:
             fail("live smoke execution interlock drifted")
         if next_stage.get("requires_one_shot_proof_workflow") is not True:
             fail("live smoke one-shot workflow interlock missing")
+    else:
+        if next_stage.get("name") != "PREPARE_STAGE30_RUNTIME_SMOKE_CLEANUP":
+            fail("post-proof cleanup next stage drifted")
+        if next_stage.get("allowed_now") is not True:
+            fail("cleanup preparation unexpectedly blocked")
+        if next_stage.get("requires_repo_first_cleanup_migration") is not True:
+            fail("repo-first cleanup migration interlock missing")
+        if next_stage.get("requires_ci_and_merge_before_cleanup_apply") is not True:
+            fail("cleanup apply interlock missing")
 
     print("STUDENT_ACCESS_CLIENT_RUNTIME_SMOKE_GUARD=PASS")
     print(f"CURRENT_STATE={state}")
     print("EDGE_RUNTIME_VERSION=3")
-    print("SYNTHETIC_CUSTOMER_FIXTURE=" + ("REMOTE_VERIFIED" if state == STATE_REMOTE else "REPO_ONLY"))
+    print("SYNTHETIC_CUSTOMER_FIXTURE=" + ("REPO_ONLY" if state == STATE_REPO else "REMOTE_VERIFIED"))
     print("EXPECTED_EDGE_ROUTES=5")
     print("FLUTTER_ACTIVE_TRANSPORT=directRpc")
-    print("LIVE_SMOKE_EXECUTED=false")
+    print("LIVE_SMOKE_EXECUTED=" + str(proof_complete).lower())
+    print("LIVE_SMOKE_REEXECUTION=" + ("SEALED" if proof_complete else "NOT_YET_SEALED"))
     print("FIXTURE_CLEANUP_REQUIRED=true")
     print("EDGE_SELECTION=DENIED")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
