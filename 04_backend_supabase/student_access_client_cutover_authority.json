@@ -15,7 +15,8 @@
   "edge_error_detail_failure_class": "BGF-EDGE-CLIENT-ERROR-DETAIL-LEAK-202",
   "rollback_reconciliation_failure_classes": [
     "BGF-ROLLBACK-PROOF-CUTOVER-RECONCILIATION-213",
-    "BGF-HISTORICAL-GUARD-DOWNSTREAM-AUTHORITY-ADVANCE-214"
+    "BGF-HISTORICAL-GUARD-DOWNSTREAM-AUTHORITY-ADVANCE-214",
+    "BGF-ROLLBACK-PROOF-WORKFLOW-CROSS-PR-RETRIGGER-215"
   ],
   "purpose": "Lifecycle authority for moving all five anonymous student possession-token routes through one client transport toward the verified Edge v3 gateway, with bounded Edge error semantics, an explicit rollback resolver, fail-closed reconciliation and no fail-open fallback.",
   "current_state": "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE",
@@ -112,6 +113,18 @@
     "launch_gate_promotion": false,
     "proof_reexecution_allowed": false
   },
+  "rollback_reexecution_sentinel": {
+    "failure_class": "BGF-ROLLBACK-PROOF-WORKFLOW-CROSS-PR-RETRIGGER-215",
+    "observed_cross_pr_workflow_run_id": 32473348632,
+    "observed_cross_pr_job_id": 96744561273,
+    "observed_pr_number": 58,
+    "candidate_guard_failed_before_flutter_setup": true,
+    "focused_proof_step_executed": false,
+    "second_proof_execution_occurred": false,
+    "workflow_sealed_to_pr_number": 57,
+    "workflow_sealed_to_head_ref": "blackgold/stage30-runtime-rollback-proof",
+    "future_cross_pr_execution_allowed": false
+  },
   "cutover_invariants": {
     "all_five_routes_move_as_one_security_boundary": true,
     "partial_cutover_forbidden": true,
@@ -146,6 +159,7 @@
   "reconciliation": {
     "failure_class": "BGF-ROLLBACK-PROOF-CUTOVER-RECONCILIATION-213",
     "historical_guard_advance_failure_class": "BGF-HISTORICAL-GUARD-DOWNSTREAM-AUTHORITY-ADVANCE-214",
+    "workflow_retrigger_failure_class": "BGF-ROLLBACK-PROOF-WORKFLOW-CROSS-PR-RETRIGGER-215",
     "rollback_proof_reconciled": true,
     "production_transport_changed": false,
     "edge_gateway_selected": false,
