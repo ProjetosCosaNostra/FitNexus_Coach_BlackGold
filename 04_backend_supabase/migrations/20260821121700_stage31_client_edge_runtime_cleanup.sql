@@ -4,11 +4,15 @@
 --   BGF-STAGE31-CLIENT-EDGE-RUNTIME-FIXTURE-216
 --   BGF-STAGE31-CLIENT-EDGE-RUNTIME-PROOF-REEXECUTION-219
 --   BGF-STAGE31-CLIENT-EDGE-RUNTIME-CLEANUP-225
+--   BGF-STAGE31-CLEANUP-SETNULL-ORPHAN-226
 --
 -- This cleanup is allowed only while the authoritative customer domain is still exactly
 -- the Stage 31 synthetic fixture and the observed live-proof mutations match the sealed
 -- receipt. The network-origin selector uses only operation/time/count semantics; no raw
 -- network origin or origin digest is embedded in repository source.
+-- Security events are deleted explicitly before the access-link cascade because their
+-- link FK uses ON DELETE SET NULL rather than CASCADE; relying on the parent delete would
+-- preserve synthetic security-event residue.
 do $$
 declare
   v_user constant uuid := 'e06ec62d-e9b7-54a8-8fb9-d47828499939';
@@ -24,7 +28,6 @@ declare
   v_count integer;
   v_deleted integer;
 begin
-  -- Any new real customer-domain row blocks cleanup transactionally.
   if (select count(*) from auth.users) <> 1
      or (select count(*) from public.profiles) <> 1
      or (select count(*) from public.organizations) <> 1
@@ -38,9 +41,7 @@ begin
      or (select count(*) from public.workout_sessions) <> 1
      or (select count(*) from public.workout_exercise_logs) <> 1
      or (select count(*) from public.workout_feedback) <> 1 then
-    raise exception using
-      errcode = 'P0001',
-      message = 'STAGE31_CLEANUP_CUSTOMER_DOMAIN_NO_LONGER_SYNTHETIC_ONLY';
+    raise exception using errcode = 'P0001', message = 'STAGE31_CLEANUP_CUSTOMER_DOMAIN_NO_LONGER_SYNTHETIC_ONLY';
   end if;
 
   if (select count(*) from auth.users where id = v_user) <> 1
@@ -53,33 +54,25 @@ begin
      or (select count(*) from public.training_plans where id = v_plan and student_id = v_student and organization_id = v_org and name = 'Stage31 Synthetic Plan' and is_active) <> 1
      or (select count(*) from public.training_exercises where id = v_exercise and training_plan_id = v_plan and organization_id = v_org and name = 'Stage31 Synthetic Exercise') <> 1
      or (select count(*) from public.student_access_links where id = v_link and student_id = v_student and organization_id = v_org and is_active and rotation_number = 1 and revoked_at is null) <> 1 then
-    raise exception using
-      errcode = 'P0001',
-      message = 'STAGE31_CLEANUP_FIXTURE_IDENTITY_MISMATCH';
+    raise exception using errcode = 'P0001', message = 'STAGE31_CLEANUP_FIXTURE_IDENTITY_MISMATCH';
   end if;
 
   if (select count(*) from public.workout_sessions where id = v_session and organization_id = v_org and student_id = v_student and training_plan_id = v_plan and student_access_link_id = v_link and status = 'completed' and completed_at is not null) <> 1
      or (select count(*) from public.workout_exercise_logs where id = v_log and organization_id = v_org and session_id = v_session and training_plan_id = v_plan and exercise_id = v_exercise and completed and completed_at is not null) <> 1
      or (select count(*) from public.workout_feedback where id = v_feedback and organization_id = v_org and student_id = v_student and session_id = v_session and perceived_exertion = 5 and pain_score = 0 and energy_score = 4 and pain_location is null and note is null) <> 1 then
-    raise exception using
-      errcode = 'P0001',
-      message = 'STAGE31_CLEANUP_LIVE_PROOF_BUSINESS_RECEIPT_DRIFT';
+    raise exception using errcode = 'P0001', message = 'STAGE31_CLEANUP_LIVE_PROOF_BUSINESS_RECEIPT_DRIFT';
   end if;
 
   if (select count(*) from private.student_access_command_receipts where link_id = v_link) <> 3
      or (select count(*) from private.student_access_command_receipts where link_id = v_link and operation = 'start_workout' and command_id = '31000000000000000000000000000001' and completed_at is not null) <> 1
      or (select count(*) from private.student_access_command_receipts where link_id = v_link and operation = 'set_completion' and command_id = '31000000000000000000000000000002' and completed_at is not null) <> 1
      or (select count(*) from private.student_access_command_receipts where link_id = v_link and operation = 'submit_feedback' and command_id = '31000000000000000000000000000003' and completed_at is not null) <> 1 then
-    raise exception using
-      errcode = 'P0001',
-      message = 'STAGE31_CLEANUP_COMMAND_RECEIPT_DRIFT';
+    raise exception using errcode = 'P0001', message = 'STAGE31_CLEANUP_COMMAND_RECEIPT_DRIFT';
   end if;
 
   if (select count(*) from private.student_access_rate_buckets where link_id = v_link) <> 5
      or (select count(distinct operation) from private.student_access_rate_buckets where link_id = v_link and window_started_at = v_proof_window and request_count = 1 and operation in ('get_workout','start_workout','set_completion','get_feedback_context','submit_feedback')) <> 5 then
-    raise exception using
-      errcode = 'P0001',
-      message = 'STAGE31_CLEANUP_LINK_RATE_BUCKET_DRIFT';
+    raise exception using errcode = 'P0001', message = 'STAGE31_CLEANUP_LINK_RATE_BUCKET_DRIFT';
   end if;
 
   if (select count(*) from private.student_access_security_events where link_id = v_link or organization_id = v_org or student_id = v_student) <> 3
@@ -87,9 +80,7 @@ begin
      or (select count(*) from private.student_access_security_events where link_id = v_link and outcome = 'allowed' and operation = 'set_completion' and command_id = '31000000000000000000000000000002') <> 1
      or (select count(*) from private.student_access_security_events where link_id = v_link and outcome = 'allowed' and operation = 'submit_feedback' and command_id = '31000000000000000000000000000003') <> 1
      or (select count(*) from private.student_access_security_signals where link_id = v_link or organization_id = v_org or student_id = v_student) <> 0 then
-    raise exception using
-      errcode = 'P0001',
-      message = 'STAGE31_CLEANUP_SECURITY_RECEIPT_DRIFT';
+    raise exception using errcode = 'P0001', message = 'STAGE31_CLEANUP_SECURITY_RECEIPT_DRIFT';
   end if;
 
   if (select count(*) from private.growth_events where organization_id = v_org) <> 5
@@ -99,9 +90,7 @@ begin
      or (select count(*) from private.growth_events where organization_id = v_org and event_name = 'training_delivered') <> 1
      or (select count(*) from private.growth_events where organization_id = v_org and event_name = 'workout_logged') <> 1
      or (select count(*) from private.growth_attribution where organization_id = v_org) <> 0 then
-    raise exception using
-      errcode = 'P0001',
-      message = 'STAGE31_CLEANUP_GROWTH_RECEIPT_DRIFT';
+    raise exception using errcode = 'P0001', message = 'STAGE31_CLEANUP_GROWTH_RECEIPT_DRIFT';
   end if;
 
   if (select count(*) from public.billing_checkout_intents where organization_id = v_org) <> 0
@@ -115,9 +104,7 @@ begin
      or (select count(*) from public.training_plan_lineage where organization_id = v_org or student_id = v_student) <> 0
      or (select count(*) from public.training_templates where organization_id = v_org) <> 0
      or (select count(*) from public.training_template_exercises where organization_id = v_org) <> 0 then
-    raise exception using
-      errcode = 'P0001',
-      message = 'STAGE31_CLEANUP_UNEXPECTED_SYNTHETIC_DOMAIN_MUTATION';
+    raise exception using errcode = 'P0001', message = 'STAGE31_CLEANUP_UNEXPECTED_SYNTHETIC_DOMAIN_MUTATION';
   end if;
 
   select count(*)::integer into v_count
@@ -128,9 +115,7 @@ begin
      and last_seen_at >= v_proof_window
      and last_seen_at < v_proof_window + interval '1 minute';
   if v_count <> 5 then
-    raise exception using
-      errcode = 'P0001',
-      message = 'STAGE31_CLEANUP_NETWORK_BUCKET_SELECTOR_MISMATCH';
+    raise exception using errcode = 'P0001', message = 'STAGE31_CLEANUP_NETWORK_BUCKET_SELECTOR_MISMATCH';
   end if;
 
   delete from private.student_access_network_rate_buckets
@@ -141,13 +126,25 @@ begin
      and last_seen_at < v_proof_window + interval '1 minute';
   get diagnostics v_deleted = row_count;
   if v_deleted <> 5 then
-    raise exception using
-      errcode = 'P0001',
-      message = 'STAGE31_CLEANUP_NETWORK_BUCKET_DELETE_COUNT_MISMATCH';
+    raise exception using errcode = 'P0001', message = 'STAGE31_CLEANUP_NETWORK_BUCKET_DELETE_COUNT_MISMATCH';
   end if;
 
-  -- Organization deletion cascades the synthetic student/workout/subscription/growth/link
-  -- domain. It must happen before auth-user deletion because owner_user_id is restrictive.
+  -- The security-event link FK is ON DELETE SET NULL, not CASCADE. Delete the exact
+  -- synthetic proof events first or they would survive the customer-domain cascade.
+  delete from private.student_access_security_events
+   where link_id = v_link or organization_id = v_org or student_id = v_student;
+  get diagnostics v_deleted = row_count;
+  if v_deleted <> 3 then
+    raise exception using errcode = 'P0001', message = 'STAGE31_CLEANUP_SECURITY_EVENT_DELETE_COUNT_MISMATCH';
+  end if;
+
+  delete from private.student_access_security_signals
+   where link_id = v_link or organization_id = v_org or student_id = v_student;
+  get diagnostics v_deleted = row_count;
+  if v_deleted <> 0 then
+    raise exception using errcode = 'P0001', message = 'STAGE31_CLEANUP_UNEXPECTED_SECURITY_SIGNAL_DELETE';
+  end if;
+
   delete from public.organizations where id = v_org;
   get diagnostics v_deleted = row_count;
   if v_deleted <> 1 then
@@ -185,9 +182,7 @@ begin
             and request_count = 1
             and last_seen_at >= v_proof_window
             and last_seen_at < v_proof_window + interval '1 minute') <> 0 then
-    raise exception using
-      errcode = 'P0001',
-      message = 'STAGE31_CLEANUP_POSTCONDITION_FAILED';
+    raise exception using errcode = 'P0001', message = 'STAGE31_CLEANUP_POSTCONDITION_FAILED';
   end if;
 end;
 $$;
