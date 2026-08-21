@@ -19,6 +19,12 @@ PROFESSOR_REPOSITORY = ROOT / "03_app_flutter" / "fitnexus_app" / "lib" / "featu
 WEB_INDEX = ROOT / "03_app_flutter" / "fitnexus_app" / "web" / "index.html"
 
 CALLSITE_MODEL_FAILURE = "BGF-GUARD-RPC-CALLSITE-COLOCATION-200"
+EDGE_SELECTION_STATE = "CLIENT_EDGE_SELECTED_POST_CUTOVER_PROOF_PENDING"
+DIRECT_STATES = (
+    "CLIENT_SINGLE_TRANSPORT_SOURCE_INTEGRATED_DIRECT_MODE",
+    "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE",
+    "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE",
+)
 ROUTES = {
     "get_workout": "get_student_workout_v2",
     "start_workout": "start_student_workout_v2",
@@ -60,6 +66,45 @@ def read_json(path: Path) -> dict:
     if not isinstance(value, dict):
         fail("BGF-STUDENT-ACCESS-BOUNDARY-FILE-MISSING-152", "cutover authority must be an object")
     return value
+
+
+def verify_central_transport_callsites(
+    *,
+    workout: str,
+    feedback: str,
+    contract: str,
+    runtime: str,
+    inventory: dict,
+) -> None:
+    if inventory.get("repositories_call_supabase_rpc_directly") is not False:
+        fail(CALLSITE_MODEL_FAILURE, "centralized transport authority says repositories still call RPC directly")
+    if inventory.get("repositories_call_single_transport") is not True:
+        fail(CALLSITE_MODEL_FAILURE, "single-transport repository authority missing")
+
+    for action, rpc in ROUTES.items():
+        require(
+            contract,
+            f"'{action}': '{rpc}'",
+            "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151",
+            f"central transport lost hardened v2 route: {action}->{rpc}",
+        )
+
+    require(workout, "action: 'get_workout'", CALLSITE_MODEL_FAILURE, "workout get route no longer enters centralized transport")
+    require(workout, "action: 'start_workout'", CALLSITE_MODEL_FAILURE, "workout start route no longer enters centralized transport")
+    require(workout, "action: 'set_completion'", CALLSITE_MODEL_FAILURE, "workout completion route no longer enters centralized transport")
+    require(feedback, "action: 'get_feedback_context'", CALLSITE_MODEL_FAILURE, "feedback context route no longer enters centralized transport")
+    require(feedback, "action: 'submit_feedback'", CALLSITE_MODEL_FAILURE, "feedback submit route no longer enters centralized transport")
+    require(workout, "'p_command_id': commandId", "BGF-STUDENT-ACCESS-REPLAY-148", "workout command id mapping disappeared")
+    require(feedback, "'p_command_id': commandId", "BGF-STUDENT-ACCESS-REPLAY-148", "feedback command id mapping disappeared")
+
+    forbid(workout, ".rpc(", CALLSITE_MODEL_FAILURE, "workout repository bypassed the centralized transport with RPC")
+    forbid(feedback, ".rpc(", CALLSITE_MODEL_FAILURE, "feedback repository bypassed the centralized transport with RPC")
+    forbid(workout, ".functions.invoke(", CALLSITE_MODEL_FAILURE, "workout repository bypassed the centralized transport with Edge invocation")
+    forbid(feedback, ".functions.invoke(", CALLSITE_MODEL_FAILURE, "feedback repository bypassed the centralized transport with Edge invocation")
+
+    require(runtime, "return _client.rpc(directRpc, params: directParams);", "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151", "controlled rollback direct branch disappeared from centralized transport")
+    require(runtime, "return _invokeEdge(action: action, payload: edgePayload);", CALLSITE_MODEL_FAILURE, "centralized Edge branch disappeared")
+    require(runtime, "_client.functions.invoke(", CALLSITE_MODEL_FAILURE, "centralized Edge function invocation disappeared")
 
 
 def main() -> None:
@@ -123,6 +168,7 @@ def main() -> None:
         legacy_guard_class = cutover.get("guard_callsite_model_failure_class")
         if CALLSITE_MODEL_FAILURE not in guard_classes and legacy_guard_class != CALLSITE_MODEL_FAILURE:
             fail(CALLSITE_MODEL_FAILURE, "centralized call-site guard prevention authority missing")
+
         state = cutover.get("current_state")
         if state == "CLIENT_EDGE_CUTOVER_PREPARATION_DIRECT_PATH_ACTIVE":
             for needle in (
@@ -138,30 +184,79 @@ def main() -> None:
                 "'p_command_id'",
             ):
                 require(feedback, needle, "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151", f"feedback v2 boundary missing: {needle}")
-        elif state in (
-            "CLIENT_SINGLE_TRANSPORT_SOURCE_INTEGRATED_DIRECT_MODE",
-            "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE",
-            "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE",
-        ):
+        elif state in DIRECT_STATES:
             contract = read(TRANSPORT_CONTRACT)
             runtime = read(TRANSPORT_RUNTIME)
             inventory = cutover.get("current_client_inventory", {})
-            if inventory.get("repositories_call_supabase_rpc_directly") is not False:
-                fail(CALLSITE_MODEL_FAILURE, "centralized transport authority says repositories still call RPC directly")
-            if inventory.get("repositories_call_single_transport") is not True:
-                fail(CALLSITE_MODEL_FAILURE, "single-transport repository authority missing")
-            for action, rpc in ROUTES.items():
-                require(contract, f"'{action}': '{rpc}'", "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151", f"central transport lost hardened v2 route: {action}->{rpc}")
-            require(runtime, "return _client.rpc(directRpc, params: directParams);", "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151", "active direct mode no longer resolves the centralized v2 RPC map")
-            require(workout, "action: 'get_workout'", CALLSITE_MODEL_FAILURE, "workout get route no longer enters centralized transport")
-            require(workout, "action: 'start_workout'", CALLSITE_MODEL_FAILURE, "workout start route no longer enters centralized transport")
-            require(workout, "action: 'set_completion'", CALLSITE_MODEL_FAILURE, "workout completion route no longer enters centralized transport")
-            require(feedback, "action: 'get_feedback_context'", CALLSITE_MODEL_FAILURE, "feedback context route no longer enters centralized transport")
-            require(feedback, "action: 'submit_feedback'", CALLSITE_MODEL_FAILURE, "feedback submit route no longer enters centralized transport")
-            require(workout, "'p_command_id': commandId", "BGF-STUDENT-ACCESS-REPLAY-148", "workout command id mapping disappeared")
-            require(feedback, "'p_command_id': commandId", "BGF-STUDENT-ACCESS-REPLAY-148", "feedback command id mapping disappeared")
-            forbid(workout, ".rpc(", CALLSITE_MODEL_FAILURE, "workout repository bypassed the centralized transport")
-            forbid(feedback, ".rpc(", CALLSITE_MODEL_FAILURE, "feedback repository bypassed the centralized transport")
+            transport = cutover.get("transport_contract", {})
+            if transport.get("active_mode") != "directRpc" or transport.get("resolved_mode") != "directRpc":
+                fail(CALLSITE_MODEL_FAILURE, "direct-state authority no longer resolves directRpc")
+            if transport.get("edge_gateway_selected") is not False:
+                fail(CALLSITE_MODEL_FAILURE, "direct-state authority unexpectedly selected Edge")
+            if transport.get("automatic_edge_to_direct_fallback") is not False:
+                fail(CALLSITE_MODEL_FAILURE, "direct-state authority enabled automatic Edge fallback")
+            verify_central_transport_callsites(
+                workout=workout,
+                feedback=feedback,
+                contract=contract,
+                runtime=runtime,
+                inventory=inventory,
+            )
+        elif state == EDGE_SELECTION_STATE:
+            contract = read(TRANSPORT_CONTRACT)
+            runtime = read(TRANSPORT_RUNTIME)
+            inventory = cutover.get("current_client_inventory", {})
+            transport = cutover.get("transport_contract", {})
+            selection = cutover.get("stage32_selection", {})
+
+            if inventory.get("transport_mode") != "edge_gateway" or inventory.get("flutter_uses_edge_gateway") is not True:
+                fail(CALLSITE_MODEL_FAILURE, "Edge-selected state lacks matching client inventory")
+            if inventory.get("direct_v2_rpc_path_active") is not True or inventory.get("direct_anon_v2_rpc_execute_revoked") is not False:
+                fail("BGF-DIRECT-RPC-REVOCATION-BEFORE-ROLLBACK-198", "controlled rollback RPC path was removed before post-cutover proofs")
+
+            for key, expected in {
+                "active_mode": "edgeGateway",
+                "resolved_mode": "edgeGateway",
+                "edge_gateway_selected": True,
+                "automatic_edge_to_direct_fallback": False,
+                "explicit_rollback_requested": False,
+                "explicit_rollback_authorized": False,
+                "direct_rpc_execute_revoked": False,
+                "rollback_verified": False,
+                "client_cutover_verified": False,
+                "exact_route_count": 5,
+                "edge_path_active_in_repository_source": True,
+                "behavioral_transport_change": True,
+            }.items():
+                if transport.get(key) != expected:
+                    fail(CALLSITE_MODEL_FAILURE, f"Edge-selected transport authority drifted: {key}")
+
+            for key, expected in {
+                "source_selected_edge_gateway": True,
+                "all_five_routes_share_single_transport": True,
+                "automatic_edge_to_direct_fallback": False,
+                "direct_rpc_grants_changed": False,
+                "post_cutover_live_proof_completed": False,
+                "post_cutover_rollback_proof_completed": False,
+                "launch_gate_promoted": False,
+            }.items():
+                if selection.get(key) != expected:
+                    fail(CALLSITE_MODEL_FAILURE, f"Stage 32 selection receipt drifted: {key}")
+
+            require(contract, "StudentAccessTransportMode.edgeGateway;", CALLSITE_MODEL_FAILURE, "production transport source is not Edge-selected")
+            require(contract, "static const bool edgeGatewaySelected = true;", CALLSITE_MODEL_FAILURE, "Edge selection source flag disappeared")
+            require(contract, "static const bool automaticEdgeToDirectFallback = false;", CALLSITE_MODEL_FAILURE, "automatic Edge-to-direct fallback prohibition disappeared")
+            require(contract, "static const bool directRpcExecuteRevoked = false;", "BGF-DIRECT-RPC-REVOCATION-BEFORE-ROLLBACK-198", "source self-attested direct RPC revocation")
+            require(contract, "static const bool rollbackVerified = false;", "BGF-DIRECT-RPC-REVOCATION-BEFORE-ROLLBACK-198", "source self-attested post-cutover rollback verification")
+            require(contract, "static const bool clientCutoverVerified = false;", CALLSITE_MODEL_FAILURE, "source self-attested post-cutover runtime verification")
+
+            verify_central_transport_callsites(
+                workout=workout,
+                feedback=feedback,
+                contract=contract,
+                runtime=runtime,
+                inventory=inventory,
+            )
         else:
             fail(CALLSITE_MODEL_FAILURE, f"security guard has no client-callsite model for state: {state}")
 
@@ -188,6 +283,8 @@ def main() -> None:
     print("LEGACY_RPC_BYPASS=DENIED")
     print(f"CALLSITE_MODEL_PREVENTION={CALLSITE_MODEL_FAILURE}")
     print("TOKEN_QUERY_LEAK=DENIED")
+    if cutover is not None:
+        print(f"CLIENT_CALLSITE_STATE={cutover.get('current_state')}")
 
 
 if __name__ == "__main__":
