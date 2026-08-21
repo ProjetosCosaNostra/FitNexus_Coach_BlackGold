@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "59385ef6a7b4d8ad90703b1cbb52c0755f1f8948",
-  "observed_at_utc": "2026-08-21T06:29:40Z",
+  "baseline_main_sha": "ff29a59626f7a4ab5e198cfef2c27b5cd1dfde1b",
+  "observed_at_utc": "2026-08-21T07:57:17Z",
   "source": "Supabase.list_migrations",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -36,13 +36,6 @@
       "reason": "Historical no-op ledger row created during advisor guard misuse; preserved as remote history evidence and intentionally has no repository SQL file.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-MIGRATION-TOOL-MISROUTE-097"
-    },
-    {
-      "direction": "repo_only",
-      "name": "stage30_edge_runtime_smoke_fixture",
-      "reason": "Controlled synthetic fixture for the Stage 30 five-route Edge runtime smoke. Apply only after CI and merge while the customer domain remains empty; cleanup is mandatory immediately after the live proof.",
-      "owner": "BlackGold Forge",
-      "related_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-FIXTURE-RESIDUE-203"
     }
   ],
   "remote_migrations": [
@@ -94,6 +87,7 @@
     {"version":"20260820070524","name":"stage27_network_rate_limit_verification_interlock"},
     {"version":"20260820173521","name":"stage28_threshold_proof_synthetic_cleanup"},
     {"version":"20260820192415","name":"stage29_valid_student_route_fixture"},
-    {"version":"20260820234123","name":"stage29_valid_route_fixture_cleanup"}
+    {"version":"20260820234123","name":"stage29_valid_route_fixture_cleanup"},
+    {"version":"20260821075532","name":"stage30_edge_runtime_smoke_fixture"}
   ]
 }
