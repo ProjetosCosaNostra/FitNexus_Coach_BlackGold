@@ -8,14 +8,19 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 BACKEND = ROOT / "04_backend_supabase"
+APP = ROOT / "03_app_flutter" / "fitnexus_app"
 AUTHORITY = BACKEND / "student_access_client_edge_runtime_proof_authority.json"
 LEDGER = BACKEND / "migration_ledger_authority.json"
+CUTOVER = BACKEND / "student_access_client_cutover_authority.json"
+CONTRACT = APP / "lib" / "features" / "student" / "student_access_transport_contract.dart"
 FIXTURE_SQL = BACKEND / "migrations" / "20260821104600_stage31_client_edge_runtime_fixture.sql"
 
 CURRENT_STATE = "CLIENT_EDGE_RUNTIME_PROOF_FIXTURE_REMOTE_LIVE_PROOF_PENDING_DIRECT_MODE"
 REPO_STATE = "CLIENT_EDGE_RUNTIME_PROOF_FIXTURE_REPO_ONLY_DIRECT_MODE"
 CURRENT_BASELINE = "669b5f4816aafcaf87647e4eaa98dd0a1bb43ffb"
 PREPARATION_BASELINE = "40042c82a658dd991b6b025ec619fa064898fc52"
+STAGE31_PREREQ_CUTOVER_STATE = "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE"
+STAGE31_PREREQ_CUTOVER_BASELINE = "eb578b06fed57987b3dba94d7c9a7931974743c4"
 REMOTE_VERSION = "20260821113205"
 FIXTURE_NAME = "stage31_client_edge_runtime_fixture"
 HISTORICAL_CLASS = "BGF-STAGE31-HISTORICAL-GUARD-REPOONLY-PROJECTION-220"
@@ -67,7 +72,6 @@ def validate_current() -> tuple[dict, dict]:
         },
         "Stage 31 remote authority",
     )
-
     fixture = authority.get("fixture", {})
     require(
         fixture,
@@ -87,21 +91,12 @@ def validate_current() -> tuple[dict, dict]:
         },
         "Stage 31 remote fixture",
     )
-
     pre = authority.get("pre_apply_receipt", {})
     if pre.get("source") != "Supabase.execute_sql" or pre.get("observed_at_utc") != "2026-08-21T11:31:17Z":
         fail("fresh pre-apply receipt identity drifted")
     for key in (
-        "auth_users",
-        "profiles",
-        "organizations",
-        "students",
-        "training_plans",
-        "training_exercises",
-        "access_links",
-        "workout_sessions",
-        "workout_logs",
-        "workout_feedback",
+        "auth_users", "profiles", "organizations", "students", "training_plans",
+        "training_exercises", "access_links", "workout_sessions", "workout_logs", "workout_feedback",
     ):
         if pre.get(key) != 0:
             fail(f"pre-apply customer domain was not empty: {key}")
@@ -139,10 +134,8 @@ def validate_current() -> tuple[dict, dict]:
         },
         "Stage 31 fixture post-apply counts",
     )
-
-    production = authority.get("production_boundary", {})
     require(
-        production,
+        authority.get("production_boundary", {}),
         {
             "active_transport": "directRpc",
             "resolved_transport": "directRpc",
@@ -156,33 +149,21 @@ def validate_current() -> tuple[dict, dict]:
             "client_cutover_verified": False,
             "behavioral_transport_change": False,
         },
-        "Stage 31 production boundary",
+        "historical Stage 31 production boundary",
     )
-
     runtime = authority.get("runtime_proof", {})
     if runtime.get("workflow_run_id") is not None or runtime.get("result") is not None:
         fail("live client proof receipt appeared before the dedicated proof stage")
     for key in (
-        "flutter_transport_edge_path_verified",
-        "get_workout_verified",
-        "start_workout_verified",
-        "set_completion_verified",
-        "get_feedback_context_verified",
-        "submit_feedback_verified",
-        "all_five_routes_verified",
-        "raw_token_returned",
-        "raw_network_origin_returned",
-        "real_customer_data_used",
-        "real_customer_data_mutated",
-        "proof_reexecution_allowed",
-        "cleanup_completed",
+        "flutter_transport_edge_path_verified", "get_workout_verified", "start_workout_verified",
+        "set_completion_verified", "get_feedback_context_verified", "submit_feedback_verified",
+        "all_five_routes_verified", "raw_token_returned", "raw_network_origin_returned",
+        "real_customer_data_used", "real_customer_data_mutated", "proof_reexecution_allowed", "cleanup_completed",
     ):
         if runtime.get(key) is not False:
             fail(f"Stage 31 runtime proof self-attested during fixture reconciliation: {key}")
-
-    next_stage = authority.get("next_stage", {})
     require(
-        next_stage,
+        authority.get("next_stage", {}),
         {
             "name": "PREPARE_STAGE31_CLIENT_EDGE_RUNTIME_LIVE_PROOF",
             "allowed_now": True,
@@ -197,20 +178,13 @@ def validate_current() -> tuple[dict, dict]:
     if any(value is not False for value in authority.get("launch_authority", {}).values()):
         fail("Stage 31 fixture reconciliation gained launch authority")
 
-    if ledger.get("baseline_main_sha") != CURRENT_BASELINE:
-        fail("migration ledger baseline does not match merged fixture source")
-    if ledger.get("observed_at_utc") != "2026-08-21T11:34:15Z":
-        fail("migration ledger observation timestamp drifted")
-    remote = {
-        row.get("name"): row.get("version")
-        for row in ledger.get("remote_migrations", [])
-        if isinstance(row, dict)
-    }
+    if ledger.get("baseline_main_sha") != CURRENT_BASELINE or ledger.get("observed_at_utc") != "2026-08-21T11:34:15Z":
+        fail("Stage 31 migration ledger observation/baseline drifted")
+    remote = {row.get("name"): row.get("version") for row in ledger.get("remote_migrations", []) if isinstance(row, dict)}
     if remote.get(FIXTURE_NAME) != REMOTE_VERSION:
         fail("Stage 31 remote migration receipt missing from ledger")
     repo_only = {
-        row.get("name")
-        for row in ledger.get("declared_divergences", [])
+        row.get("name") for row in ledger.get("declared_divergences", [])
         if isinstance(row, dict) and row.get("direction") == "repo_only"
     }
     if repo_only:
@@ -225,7 +199,6 @@ def validate_current() -> tuple[dict, dict]:
     ):
         if fragment not in sql:
             fail(f"merged Stage 31 fixture source drifted: {fragment}")
-
     return authority, ledger
 
 
@@ -258,8 +231,7 @@ def repo_ledger_projection(current: dict) -> dict:
     value["baseline_main_sha"] = PREPARATION_BASELINE
     value["observed_at_utc"] = "2026-08-21T10:44:35Z"
     value["remote_migrations"] = [
-        row
-        for row in value.get("remote_migrations", [])
+        row for row in value.get("remote_migrations", [])
         if not (isinstance(row, dict) and row.get("name") == FIXTURE_NAME)
     ]
     value["declared_divergences"].append(
@@ -274,27 +246,92 @@ def repo_ledger_projection(current: dict) -> dict:
     return value
 
 
+def historical_cutover_projection(current: dict) -> dict:
+    value = json.loads(json.dumps(current))
+    value["current_state"] = STAGE31_PREREQ_CUTOVER_STATE
+    value["baseline_main_sha"] = STAGE31_PREREQ_CUTOVER_BASELINE
+    value["current_client_inventory"].update(
+        {
+            "transport_mode": "direct_rpc",
+            "flutter_uses_edge_gateway": False,
+            "direct_v2_rpc_path_active": True,
+            "direct_anon_v2_rpc_execute_revoked": False,
+            "client_direct_rpc_fallback_removed": False,
+            "repositories_call_supabase_rpc_directly": False,
+            "repositories_call_single_transport": True,
+        }
+    )
+    value["transport_contract"].update(
+        {
+            "active_mode": "directRpc",
+            "resolved_mode": "directRpc",
+            "edge_gateway_selected": False,
+            "automatic_edge_to_direct_fallback": False,
+            "explicit_rollback_requested": False,
+            "explicit_rollback_authorized": False,
+            "direct_rpc_execute_revoked": False,
+            "rollback_verified": False,
+            "client_cutover_verified": False,
+            "edge_candidate_path_compiled_behind_inactive_mode": True,
+            "behavioral_transport_change": False,
+        }
+    )
+    value["transport_contract"].pop("edge_path_active_in_repository_source", None)
+    value["rollback_harness"].update(
+        {
+            "production_active_mode": "directRpc",
+            "explicit_rollback_requested": False,
+            "explicit_rollback_authorized": False,
+            "runtime_rollback_verified": True,
+            "runtime_rollback_proof_kind": "isolated_resolver_no_network",
+            "harness_ready": True,
+        }
+    )
+    value["rollback_harness"].pop("pre_cutover_runtime_rollback_verified", None)
+    value["rollback_harness"].pop("post_cutover_runtime_rollback_verified", None)
+    value.pop("stage32_selection", None)
+    value["next_stage"] = {
+        "name": "STAGE31_CLIENT_EDGE_RUNTIME_PROOF_PREPARATION",
+        "allowed_now": True,
+        "requires_synthetic_customer_fixture": True,
+        "requires_production_transport_change": False,
+        "requires_direct_rpc_grants_to_remain": True,
+        "may_select_edge_gateway_now": False,
+        "may_revoke_direct_rpc_execute_now": False,
+    }
+    return value
+
+
+def historical_contract_projection(source: str) -> str:
+    value = source.replace("StudentAccessTransportMode.edgeGateway;", "StudentAccessTransportMode.directRpc;", 1)
+    value = value.replace("static const bool edgeGatewaySelected = true;", "static const bool edgeGatewaySelected = false;", 1)
+    return value
+
+
 def run(mode: str) -> None:
     if mode not in MODES:
         fail(f"unsupported mode: {mode}")
 
     current_authority, current_ledger = validate_current()
+    current_cutover = load(CUTOVER)
+    current_contract = CONTRACT.read_text(encoding="utf-8")
+
     with tempfile.TemporaryDirectory(prefix="fitnexus-stage31-remote-reconcile-") as tmp:
         temp_root = Path(tmp)
         temp_authority = temp_root / "student_access_client_edge_runtime_proof_authority.json"
         temp_ledger = temp_root / "migration_ledger_authority.json"
-        temp_authority.write_text(
-            json.dumps(repo_authority_projection(current_authority), indent=2) + "\n",
-            encoding="utf-8",
-        )
-        temp_ledger.write_text(
-            json.dumps(repo_ledger_projection(current_ledger), indent=2) + "\n",
-            encoding="utf-8",
-        )
+        temp_cutover = temp_root / "student_access_client_cutover_authority.json"
+        temp_contract = temp_root / "student_access_transport_contract_historical.dart"
+        temp_authority.write_text(json.dumps(repo_authority_projection(current_authority), indent=2) + "\n", encoding="utf-8")
+        temp_ledger.write_text(json.dumps(repo_ledger_projection(current_ledger), indent=2) + "\n", encoding="utf-8")
+        temp_cutover.write_text(json.dumps(historical_cutover_projection(current_cutover), indent=2) + "\n", encoding="utf-8")
+        temp_contract.write_text(historical_contract_projection(current_contract), encoding="utf-8")
 
         stage31_guard = importlib.import_module("verify_student_access_client_edge_runtime_preparation")
         stage31_guard.AUTHORITY = temp_authority
         stage31_guard.LEDGER = temp_ledger
+        stage31_guard.CUTOVER = temp_cutover
+        stage31_guard.CONTRACT = temp_contract
 
         if mode == "stage31":
             stage31_guard.main()
@@ -302,6 +339,8 @@ def run(mode: str) -> None:
             compat = importlib.import_module("verify_stage31_repo_only_historical_guard_compat")
             compat.STAGE31_AUTHORITY = temp_authority
             compat.LEDGER = temp_ledger
+            compat.CUTOVER = temp_cutover
+            compat.CONTRACT = temp_contract
             compat.run(mode)
 
     print("STAGE31_FIXTURE_REMOTE_RECONCILIATION_GUARD=PASS")
@@ -312,8 +351,7 @@ def run(mode: str) -> None:
     print("FIXTURE_REMOTE_APPLIED=true")
     print("FIXTURE_LEDGER=REMOTE_RECONCILED")
     print("LIVE_CLIENT_EDGE_PROOF=NOT_EXECUTED")
-    print("PRODUCTION_ACTIVE_TRANSPORT=directRpc")
-    print("EDGE_SELECTION=false")
+    print("HISTORICAL_STAGE31_PRODUCTION_TRANSPORT=directRpc")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
     print("NEXT=PREPARE_STAGE31_CLIENT_EDGE_RUNTIME_LIVE_PROOF")
     print("LAUNCH_GATE_PROMOTION=DENIED")
