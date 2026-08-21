@@ -3,7 +3,7 @@
   "project_ref": "mceukeondizkwlpfxzgf",
   "prevention_class": "BGF-STAGE31-LIVE-PROOF-WORKFLOW-SEAL-223",
   "delivery_failure_class": "BGF-STAGE31-READY-FOR-REVIEW-EVENT-NONDELIVERY-224",
-  "purpose": "Immutable pre-execution seal binding the Stage31 Flutter-to-Edge live proof to an exact proof head, with an exact opened-event fallback trigger after ready_for_review delivery produced no Actions run.",
+  "purpose": "Immutable execution seal and receipt for the Stage31 Flutter-to-Edge live proof, including the exact opened-event fallback used after ready_for_review event non-delivery.",
   "proof_pr": {
     "number": 61,
     "head_branch": "blackgold/stage31-client-edge-live-proof",
@@ -20,9 +20,10 @@
     "fallback_event": "pull_request.opened",
     "fallback_branch": "blackgold/stage31-live-proof-open-trigger-224",
     "fallback_head_sha": "8f1c1933c5822d4a20abc8bb9260007f1a109cc3",
-    "fallback_head_is_immutable_for_execution": true,
-    "fallback_opened_event_is_single_lifecycle_transition": true,
-    "proof_checkout_still_uses_original_proof_head": true
+    "fallback_trigger_pr": 64,
+    "fallback_trigger_pr_closed_unmerged_after_execution": true,
+    "fallback_head_consumed": true,
+    "proof_checkout_still_used_original_proof_head": true
   },
   "workflow_contract": {
     "file": ".github/workflows/stage31_client_edge_runtime_live_proof.yml",
@@ -55,9 +56,22 @@
     "cleanup_required_after_proof": true
   },
   "execution_receipt": {
-    "workflow_run_id": null,
-    "job_id": null,
-    "result": null,
-    "executed": false
+    "workflow_run_id": 32480597745,
+    "job_id": 96765899124,
+    "result": "SUCCESS",
+    "executed": true,
+    "run_attempt": 1,
+    "proof_test_result": "ALL_TESTS_PASSED",
+    "routes_verified": 5,
+    "proof_head_checked_out": "b8be62be0ba36c61b9557bed03e72dc05b0a43f0",
+    "raw_synthetic_token_printed": false,
+    "production_transport_change": false,
+    "edge_selection": false,
+    "automatic_edge_to_direct_fallback": false,
+    "direct_rpc_grants_changed": false,
+    "real_customer_data_used": false,
+    "launch_gate_promotion": false,
+    "proof_reexecution_allowed": false,
+    "cleanup_completed": false
   }
 }
