@@ -13,9 +13,13 @@
     "BGF-GUARD-COMMENT-SEMANTIC-FALSE-POSITIVE-201"
   ],
   "edge_error_detail_failure_class": "BGF-EDGE-CLIENT-ERROR-DETAIL-LEAK-202",
-  "purpose": "Repository-first authority for moving all five anonymous student possession-token routes through one client transport toward the verified Edge v3 gateway, with bounded Edge error semantics, explicit rollback control and no fail-open fallback.",
-  "current_state": "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE",
-  "baseline_main_sha": "5f088a361f2ee78a88fc0435250a83d571eda34c",
+  "rollback_reconciliation_failure_classes": [
+    "BGF-ROLLBACK-PROOF-CUTOVER-RECONCILIATION-213",
+    "BGF-HISTORICAL-GUARD-DOWNSTREAM-AUTHORITY-ADVANCE-214"
+  ],
+  "purpose": "Lifecycle authority for moving all five anonymous student possession-token routes through one client transport toward the verified Edge v3 gateway, with bounded Edge error semantics, an explicit rollback resolver, fail-closed reconciliation and no fail-open fallback.",
+  "current_state": "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE",
+  "baseline_main_sha": "eb578b06fed57987b3dba94d7c9a7931974743c4",
   "prerequisites": {
     "stage29_authority": "04_backend_supabase/student_access_valid_route_authority.json",
     "stage29_required_state": "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_COMPLETE",
@@ -23,7 +27,11 @@
     "valid_token_edge_route_verified_live": true,
     "valid_route_synthetic_cleanup_complete": true,
     "network_origin_spoof_resistance_verified": true,
-    "network_origin_rate_limit_threshold_429_verified": true
+    "network_origin_rate_limit_threshold_429_verified": true,
+    "stage30_runtime_smoke_authority": "04_backend_supabase/student_access_client_runtime_smoke_authority.json",
+    "stage30_runtime_smoke_required_state": "EDGE_RUNTIME_SMOKE_LIVE_VERIFIED_CLEANUP_COMPLETE",
+    "stage30_runtime_rollback_authority": "04_backend_supabase/student_access_runtime_rollback_authority.json",
+    "stage30_runtime_rollback_required_state": "RUNTIME_ROLLBACK_PROOF_RECONCILED_DIRECT_MODE"
   },
   "current_client_inventory": {
     "transport_mode": "direct_rpc",
@@ -86,8 +94,23 @@
     "unauthorized_rollback_fails_closed": true,
     "rollback_from_non_edge_mode_rejected": true,
     "authorized_edge_to_direct_transition_unit_tested": true,
-    "runtime_rollback_verified": false,
+    "runtime_rollback_verified": true,
+    "runtime_rollback_proof_kind": "isolated_resolver_no_network",
     "harness_ready": true
+  },
+  "rollback_proof_receipt": {
+    "authority_file": "04_backend_supabase/student_access_runtime_rollback_authority.json",
+    "workflow_run_id": 32464990624,
+    "job_id": 96719614075,
+    "result": "PASS",
+    "focused_tests_passed_count": 6,
+    "production_transport_change": false,
+    "network_call_executed": false,
+    "real_customer_data_used": false,
+    "direct_rpc_grants_changed": false,
+    "edge_selection": false,
+    "launch_gate_promotion": false,
+    "proof_reexecution_allowed": false
   },
   "cutover_invariants": {
     "all_five_routes_move_as_one_security_boundary": true,
@@ -95,7 +118,7 @@
     "automatic_edge_failure_fallback_to_direct_rpc_forbidden": true,
     "edge_failure_must_fail_closed_after_cutover": true,
     "rollback_is_explicit_controlled_transition_not_per_request_fallback": true,
-    "direct_execute_must_remain_until_rollback_proof": true,
+    "direct_execute_must_remain_until_post_cutover_rollback_proof": true,
     "direct_execute_revocation_requires_post_cutover_runtime_proof": true,
     "raw_possession_token_logging_forbidden": true,
     "raw_network_origin_logging_forbidden": true,
@@ -109,22 +132,33 @@
     "rollback_harness_ready": true,
     "read_only_edge_runtime_smoke_after_client_source_change": false,
     "command_edge_runtime_smoke_with_synthetic_fixture": false,
-    "explicit_rollback_proof": false,
+    "explicit_rollback_proof": true,
     "cutover_receipt_materialized": false
   },
   "required_before_direct_rpc_revocation": {
     "flutter_edge_gateway_active": false,
     "five_routes_verified_via_edge": false,
     "automatic_direct_fallback_absent": true,
-    "rollback_path_verified": false,
+    "post_cutover_rollback_path_verified": false,
     "post_cutover_observation_window_passed": false,
     "security_advisor_rechecked": false
   },
+  "reconciliation": {
+    "failure_class": "BGF-ROLLBACK-PROOF-CUTOVER-RECONCILIATION-213",
+    "historical_guard_advance_failure_class": "BGF-HISTORICAL-GUARD-DOWNSTREAM-AUTHORITY-ADVANCE-214",
+    "rollback_proof_reconciled": true,
+    "production_transport_changed": false,
+    "edge_gateway_selected": false,
+    "direct_rpc_execute_revoked": false,
+    "launch_gate_promoted": false,
+    "historical_guards_must_validate_current_authority_before_projection": true
+  },
   "next_stage": {
-    "name": "STAGE30_CONTROLLED_EDGE_RUNTIME_SMOKE_FIXTURE",
+    "name": "STAGE31_CLIENT_EDGE_RUNTIME_PROOF_PREPARATION",
     "allowed_now": true,
     "requires_synthetic_customer_fixture": true,
-    "requires_migration_ledger_protocol": true,
+    "requires_production_transport_change": false,
+    "requires_direct_rpc_grants_to_remain": true,
     "may_select_edge_gateway_now": false,
     "may_revoke_direct_rpc_execute_now": false
   },
