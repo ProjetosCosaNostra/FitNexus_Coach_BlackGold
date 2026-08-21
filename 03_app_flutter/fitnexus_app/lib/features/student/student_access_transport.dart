@@ -11,8 +11,8 @@ import 'student_access_transport_contract.dart';
 /// present only for explicit controlled rollback while its grants are still
 /// intentionally intact; Edge failures never trigger it automatically.
 ///
-/// Stage 31's verification-only constructor remains available for sealed test
-/// and integration evidence. Production repositories continue to use [instance].
+/// Verification seams are test/integration-proof only. Production feature
+/// repositories continue to use [instance].
 class StudentAccessTransport {
   StudentAccessTransport._({
     SupabaseClient? clientOverride,
@@ -40,6 +40,24 @@ class StudentAccessTransport {
       configuredModeOverride: configuredMode,
       explicitRollbackRequestedOverride: false,
       explicitRollbackAuthorizedOverride: false,
+    );
+  }
+
+  /// Sealed post-cutover rollback-proof seam only. This exercises the same
+  /// resolver and direct-RPC branch used by [invoke], but requires the configured
+  /// mode to be Edge and forces both explicit rollback gates true inside the
+  /// isolated proof object. It never mutates the production singleton or the
+  /// production constants, and production repositories are forbidden from using
+  /// it by the Stage 32 rollback source guard.
+  @visibleForTesting
+  factory StudentAccessTransport.forAuthorizedRollbackProof({
+    required SupabaseClient client,
+  }) {
+    return StudentAccessTransport._(
+      clientOverride: client,
+      configuredModeOverride: StudentAccessTransportMode.edgeGateway,
+      explicitRollbackRequestedOverride: true,
+      explicitRollbackAuthorizedOverride: true,
     );
   }
 
