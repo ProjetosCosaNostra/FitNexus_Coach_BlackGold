@@ -13,6 +13,7 @@ FIXTURE_NAME = "stage32_post_cutover_edge_runtime_fixture"
 FIXTURE_VERSION = "20260821171334"
 FAILURE_CLASS = "BGF-STAGE32-POST-CUTOVER-RUNTIME-FIXTURE-231"
 REARM_NAME = "stage32_rearm_expired_fixture_r1"
+REARM_VERSION = "20260821214005"
 REARM_FAILURE_CLASS = "BGF-SUPABASE-EXECUTE-SQL-READONLY-DML-237"
 HISTORICAL_STAGE31_BASELINE = "05b44ebda7976c679ec8198260def688d1e203f8"
 HISTORICAL_STAGE31_OBSERVED = "2026-08-21T16:15:04Z"
@@ -60,18 +61,25 @@ def projected_ledger(current: dict) -> tuple[dict, str]:
         and fixture_is_remote
         and REARM_NAME not in remote
     )
+    rearm_is_remote = (
+        not repo_only
+        and fixture_is_remote
+        and remote.get(REARM_NAME) == REARM_VERSION
+    )
     clean_remote = not repo_only and fixture_is_remote and REARM_NAME not in remote
 
     if fixture_is_repo_only:
         actual_state = "FIXTURE_REPO_ONLY"
     elif rearm_is_repo_only:
         actual_state = "FIXTURE_REMOTE_REARM_REPO_ONLY"
+    elif rearm_is_remote:
+        actual_state = "FIXTURE_REMOTE_REARM_REMOTE_RECONCILED"
     elif clean_remote:
         actual_state = "FIXTURE_REMOTE_RECONCILED"
     else:
         fail(
             "Stage32 migration ledger must be exactly fixture-repo-only, fixture-remote, "
-            "or fixture-remote plus the single declared rearm repo-only divergence"
+            "fixture-remote plus rearm-repo-only, or fixture-remote plus rearm-remote"
         )
 
     value = json.loads(json.dumps(current))
@@ -107,12 +115,16 @@ def run(mode: str) -> None:
         for row in ledger.get("declared_divergences", [])
         if isinstance(row, dict) and row.get("direction") == "repo_only"
     }
+    remote_names = {
+        row.get("name")
+        for row in ledger.get("remote_migrations", [])
+        if isinstance(row, dict)
+    }
 
     # Validate the real current lifecycle before constructing a non-authoritative
-    # Stage31 projection. When the rearm migration is repository-only, the dedicated
-    # compatibility guard removes only that planned divergence before invoking the
-    # unchanged Stage32 authority guard.
-    if REARM_NAME in repo_only_names:
+    # Stage31 projection. The dedicated rearm compatibility guard handles either the
+    # repository-only or remote-reconciled rearm without modifying Stage32 history.
+    if REARM_NAME in repo_only_names or REARM_NAME in remote_names:
         current_guard = importlib.import_module(
             "verify_stage32_rearm_repo_only_current_compat"
         )
