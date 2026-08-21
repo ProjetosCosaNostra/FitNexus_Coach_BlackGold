@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "cd1f4a476ff9b0dc7ea378974a87c254f4bbbc64",
-  "observed_at_utc": "2026-08-21T17:13:56.735665Z",
+  "baseline_main_sha": "2b3dbfa2543230f8ae17a9838c610b326d453d02",
+  "observed_at_utc": "2026-08-21T21:29:21.68853Z",
   "source": "Supabase.list_migrations",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -36,6 +36,13 @@
       "reason": "Historical no-op ledger row created during advisor guard misuse; preserved as remote history evidence and intentionally has no repository SQL file.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-MIGRATION-TOOL-MISROUTE-097"
+    },
+    {
+      "direction": "repo_only",
+      "name": "stage32_rearm_expired_fixture_r1",
+      "reason": "Fail-closed synthetic-only rearm migration required because the first Stage32 proof was consumed before network and the connector rejected the repository-first UPDATE through execute_sql as a read-only transaction. Apply exactly once only after CI and merge while the exact fixture remains expired and mutation residue remains zero.",
+      "owner": "BlackGold Forge",
+      "related_failure_class": "BGF-SUPABASE-EXECUTE-SQL-READONLY-DML-237"
     }
   ],
   "remote_migrations": [
