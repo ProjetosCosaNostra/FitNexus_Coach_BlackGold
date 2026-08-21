@@ -16,7 +16,15 @@ REEXECUTION_CLASS = "BGF-STAGE30-RUNTIME-SMOKE-PROOF-REEXECUTION-204"
 DATA_LEAK_CLASS = "BGF-STAGE30-RUNTIME-SMOKE-RESPONSE-DATA-LEAK-205"
 COMMAND_FLOW_CLASS = "BGF-STAGE30-RUNTIME-SMOKE-COMMAND-FLOW-206"
 MIGRATION_NAME = "stage30_edge_runtime_smoke_fixture"
+REMOTE_VERSION = "20260821075532"
 SEED = "fitnexus-stage30-edge-runtime-smoke-fixture-v1"
+STATE_REPO = "EDGE_RUNTIME_SMOKE_FIXTURE_REPO_ONLY"
+STATE_REMOTE = "EDGE_RUNTIME_SMOKE_FIXTURE_REMOTE_LIVE_PROOF_PENDING"
+ALLOWED_STATES = {STATE_REPO, STATE_REMOTE}
+BASELINES = {
+    STATE_REPO: "59385ef6a7b4d8ad90703b1cbb52c0755f1f8948",
+    STATE_REMOTE: "ff29a59626f7a4ab5e198cfef2c27b5cd1dfde1b",
+}
 EXPECTED_IDS = {
     "user_id": "33e39af7-f470-510e-8a9c-fc70b16ba26e",
     "organization_id": "a0749405-6367-52d5-ad8b-5115b8d3a905",
@@ -73,10 +81,12 @@ def main() -> None:
         fail("response-data-leak failure class drifted")
     if authority.get("command_flow_failure_class") != COMMAND_FLOW_CLASS:
         fail("command-flow failure class drifted")
-    if authority.get("current_state") != "EDGE_RUNTIME_SMOKE_FIXTURE_REPO_ONLY":
-        fail("fixture repository-only authority self-promoted")
-    if authority.get("baseline_main_sha") != "59385ef6a7b4d8ad90703b1cbb52c0755f1f8948":
-        fail("fixture baseline main SHA drifted")
+
+    state = authority.get("current_state")
+    if state not in ALLOWED_STATES:
+        fail(f"unsupported Stage 30 smoke lifecycle state: {state}")
+    if authority.get("baseline_main_sha") != BASELINES[state]:
+        fail("smoke lifecycle baseline main SHA drifted")
 
     cutover_ref = authority.get("client_cutover_authority", {})
     if cutover.get("current_state") != cutover_ref.get("required_state"):
@@ -93,9 +103,6 @@ def main() -> None:
     expected_fixture = {
         "repository_file": "04_backend_supabase/migrations/20260821063000_stage30_edge_runtime_smoke_fixture.sql",
         "migration_name": MIGRATION_NAME,
-        "migration_ledger_state": "repo_only",
-        "remote_applied": False,
-        "remote_version": None,
         "requires_empty_customer_domain": True,
         "synthetic_only": True,
         "token_seed": SEED,
@@ -111,6 +118,17 @@ def main() -> None:
     for key, expected in EXPECTED_IDS.items():
         if fixture.get(key) != expected:
             fail(f"fixture identifier drift for {key}")
+
+    if state == STATE_REPO:
+        if fixture.get("migration_ledger_state") != "repo_only":
+            fail("repository-only fixture ledger state drifted")
+        if fixture.get("remote_applied") is not False or fixture.get("remote_version") is not None:
+            fail("repository-only fixture self-promoted")
+    else:
+        if fixture.get("migration_ledger_state") != "remote_reconciled":
+            fail("remote fixture is not reconciled")
+        if fixture.get("remote_applied") is not True or fixture.get("remote_version") != REMOTE_VERSION:
+            fail("remote fixture receipt missing")
 
     if authority.get("expected_route_sequence") != ROUTES:
         fail("five-route smoke sequence drifted")
@@ -129,8 +147,9 @@ def main() -> None:
     runtime = authority.get("runtime_proof", {})
     if runtime.get("edge_runtime_version") != 3:
         fail("runtime smoke not anchored to Edge v3")
+    if runtime.get("fixture_deployed") is not (state == STATE_REMOTE):
+        fail("fixture deployment authority drifted")
     for key in (
-        "fixture_deployed",
         "get_workout_verified",
         "start_workout_verified",
         "set_completion_verified",
@@ -142,11 +161,11 @@ def main() -> None:
         "cleanup_completed",
     ):
         if runtime.get(key) is not False:
-            fail(f"runtime proof self-attested before fixture apply: {key}")
+            fail(f"runtime proof self-attested before live smoke: {key}")
     if runtime.get("proof_workflow_run_id") is not None or runtime.get("proof_result") is not None:
         fail("runtime proof receipt appeared before execution")
     if runtime.get("proof_reexecution_allowed") is not False:
-        fail("live smoke reexecution must fail closed")
+        fail("live smoke proof must become sealed after success")
     for key in ("raw_token_returned", "raw_network_origin_returned", "real_student_data_used", "real_student_data_mutated"):
         if runtime.get(key) is not False:
             fail(f"privacy/synthetic proof invariant drift: {key}")
@@ -156,11 +175,17 @@ def main() -> None:
         for row in ledger.get("declared_divergences", [])
         if row.get("direction") == "repo_only"
     }
-    if repo_only != {MIGRATION_NAME}:
-        fail(f"expected only the Stage 30 fixture repo_only divergence, observed {sorted(repo_only)}")
-    remote_names = {row.get("name") for row in ledger.get("remote_migrations", [])}
-    if MIGRATION_NAME in remote_names:
-        fail("fixture migration self-attested as remotely applied")
+    remote = {row.get("name"): row.get("version") for row in ledger.get("remote_migrations", [])}
+    if state == STATE_REPO:
+        if repo_only != {MIGRATION_NAME}:
+            fail(f"expected only Stage 30 fixture repo_only, observed {sorted(repo_only)}")
+        if MIGRATION_NAME in remote:
+            fail("fixture migration self-attested as remotely applied")
+    else:
+        if repo_only:
+            fail(f"remote-pending smoke has unexpected repo_only divergences: {sorted(repo_only)}")
+        if remote.get(MIGRATION_NAME) != REMOTE_VERSION:
+            fail("remote-pending smoke ledger receipt missing")
 
     required_sql = (
         FAILURE_CLASS,
@@ -188,7 +213,7 @@ def main() -> None:
 
     promotion = authority.get("promotion_rules", {})
     if promotion.get("may_apply_fixture_after_ci_and_merge") is not True:
-        fail("fixture application unexpectedly blocked")
+        fail("fixture application authority drifted")
     for key in (
         "may_execute_live_smoke_before_fixture_remote_apply",
         "may_select_edge_gateway_after_fixture_apply_only",
@@ -206,15 +231,23 @@ def main() -> None:
             fail(f"missing promotion interlock: {key}")
 
     next_stage = authority.get("next_stage", {})
-    if next_stage.get("name") != "APPLY_STAGE30_EDGE_RUNTIME_SMOKE_FIXTURE":
-        fail("next stage drifted")
-    if next_stage.get("allowed_now") is not True or next_stage.get("requires_ci_and_merge_first") is not True:
-        fail("fixture next-stage interlock drifted")
+    if state == STATE_REPO:
+        if next_stage.get("name") != "APPLY_STAGE30_EDGE_RUNTIME_SMOKE_FIXTURE":
+            fail("repository-only next stage drifted")
+        if next_stage.get("allowed_now") is not True or next_stage.get("requires_ci_and_merge_first") is not True:
+            fail("fixture application interlock drifted")
+    else:
+        if next_stage.get("name") != "EXECUTE_STAGE30_FIVE_ROUTE_EDGE_RUNTIME_SMOKE":
+            fail("remote-pending next stage drifted")
+        if next_stage.get("allowed_now") is not True or next_stage.get("requires_ci_and_merge_first") is not False:
+            fail("live smoke execution interlock drifted")
+        if next_stage.get("requires_one_shot_proof_workflow") is not True:
+            fail("live smoke one-shot workflow interlock missing")
 
     print("STUDENT_ACCESS_CLIENT_RUNTIME_SMOKE_GUARD=PASS")
-    print("CURRENT_STATE=EDGE_RUNTIME_SMOKE_FIXTURE_REPO_ONLY")
+    print(f"CURRENT_STATE={state}")
     print("EDGE_RUNTIME_VERSION=3")
-    print("SYNTHETIC_CUSTOMER_FIXTURE=REPO_ONLY")
+    print("SYNTHETIC_CUSTOMER_FIXTURE=" + ("REMOTE_VERIFIED" if state == STATE_REMOTE else "REPO_ONLY"))
     print("EXPECTED_EDGE_ROUTES=5")
     print("FLUTTER_ACTIVE_TRANSPORT=directRpc")
     print("LIVE_SMOKE_EXECUTED=false")
