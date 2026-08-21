@@ -15,6 +15,8 @@ RATE_AUTHORITY = BACKEND / "student_access_network_rate_limit_authority.json"
 NETWORK_AUTHORITY = BACKEND / "student_access_network_origin_boundary.json"
 CONTRACT = APP / "features" / "student" / "student_access_transport_contract.dart"
 TRANSPORT = APP / "features" / "student" / "student_access_transport.dart"
+EDGE_ERRORS = APP / "features" / "student" / "student_access_edge_error_contract.dart"
+ERROR_MESSAGES = APP / "features" / "student" / "student_access_error_contract.dart"
 WORKOUT = APP / "features" / "student" / "student_workout_repository.dart"
 FEEDBACK = APP / "features" / "student" / "student_feedback_repository.dart"
 
@@ -25,7 +27,11 @@ FAILURE_CLASSES = [
     "BGF-DIRECT-RPC-REVOCATION-BEFORE-ROLLBACK-198",
     "BGF-CLIENT-CUTOVER-SELF-ATTESTATION-199",
 ]
-COMMENT_FALSE_POSITIVE_FAILURE_CLASS = "BGF-GUARD-COMMENT-SEMANTIC-FALSE-POSITIVE-201"
+GUARD_FAILURE_CLASSES = [
+    "BGF-GUARD-RPC-CALLSITE-COLOCATION-200",
+    "BGF-GUARD-COMMENT-SEMANTIC-FALSE-POSITIVE-201",
+]
+EDGE_DETAIL_FAILURE_CLASS = "BGF-EDGE-CLIENT-ERROR-DETAIL-LEAK-202"
 ROUTES = {
     "get_workout": "get_student_workout_v2",
     "start_workout": "start_student_workout_v2",
@@ -54,12 +60,6 @@ def data(path: Path) -> dict:
 
 
 def code_without_comments(source: str) -> str:
-    """Remove Dart comments before semantic-token checks.
-
-    BGF-GUARD-COMMENT-SEMANTIC-FALSE-POSITIVE-201 was created after a guard
-    interpreted the documentation phrase `no try/catch` as executable catch
-    syntax. Security decisions must be based on code tokens, not comments.
-    """
     without_blocks = re.sub(r"/\*.*?\*/", "", source, flags=re.DOTALL)
     return re.sub(r"//[^\n]*", "", without_blocks)
 
@@ -73,17 +73,23 @@ def main() -> None:
     contract_source = text(CONTRACT)
     transport_source = text(TRANSPORT)
     transport_code = code_without_comments(transport_source)
+    edge_errors = code_without_comments(text(EDGE_ERRORS))
+    error_messages = code_without_comments(text(ERROR_MESSAGES))
     workout = text(WORKOUT)
     feedback = text(FEEDBACK)
 
-    if authority.get("schema_version") != 1 or authority.get("project_ref") != "mceukeondizkwlpfxzgf":
+    if authority.get("schema_version") != 2 or authority.get("project_ref") != "mceukeondizkwlpfxzgf":
         fail("Stage 30 authority identity drifted")
     if authority.get("failure_classes") != FAILURE_CLASSES:
         fail("Stage 30 failure-class authority drifted")
-    if authority.get("current_state") != "CLIENT_SINGLE_TRANSPORT_SOURCE_INTEGRATED_DIRECT_MODE":
-        fail(f"{FAILURE_CLASSES[4]} Stage 30 source-integration state drifted")
-    if authority.get("baseline_main_sha") != "a484b759e9aca0bb3761d6e58919e682b4795e5b":
-        fail("Stage 30 source-integration baseline SHA drifted")
+    if authority.get("guard_failure_classes") != GUARD_FAILURE_CLASSES:
+        fail("Stage 30 guard-failure prevention authority drifted")
+    if authority.get("edge_error_detail_failure_class") != EDGE_DETAIL_FAILURE_CLASS:
+        fail("Stage 30 Edge detail failure class drifted")
+    if authority.get("current_state") != "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE":
+        fail(f"{FAILURE_CLASSES[4]} Stage 30 error/rollback state drifted")
+    if authority.get("baseline_main_sha") != "5f088a361f2ee78a88fc0435250a83d571eda34c":
+        fail("Stage 30 error/rollback baseline SHA drifted")
 
     prerequisites = authority.get("prerequisites", {})
     if valid_route.get("current_state") != "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_COMPLETE":
@@ -140,18 +146,20 @@ def main() -> None:
     if ".rpc(" in repository_source or ".functions.invoke(" in repository_source:
         fail(f"{FAILURE_CLASSES[1]} repository bypassed the single transport")
     for action in ROUTES:
-        count = repository_source.count(f"action: '{action}'")
-        if count != 1:
-            fail(f"{FAILURE_CLASSES[1]} action must enter the single transport exactly once: {action}={count}")
+        if repository_source.count(f"action: '{action}'") != 1:
+            fail(f"{FAILURE_CLASSES[1]} action must enter the single transport exactly once: {action}")
     if repository_source.count("StudentAccessTransport.instance.invoke(") != 5:
         fail(f"{FAILURE_CLASSES[1]} expected exactly five repository transport call sites")
 
     contract = authority.get("transport_contract", {})
     for key, expected in {
         "active_mode": "directRpc",
+        "resolved_mode": "directRpc",
         "edge_function_name": "student-access-gateway",
         "edge_gateway_selected": False,
         "automatic_edge_to_direct_fallback": False,
+        "explicit_rollback_requested": False,
+        "explicit_rollback_authorized": False,
         "direct_rpc_execute_revoked": False,
         "rollback_verified": False,
         "client_cutover_verified": False,
@@ -162,18 +170,23 @@ def main() -> None:
         if contract.get(key) != expected:
             fail(f"transport contract authority drift for {key}")
 
-    required_contract = (
+    for fragment in (
         "StudentAccessTransportMode.directRpc",
         "static const String edgeFunctionName = 'student-access-gateway';",
         "static const bool edgeGatewaySelected = false;",
         "static const bool automaticEdgeToDirectFallback = false;",
+        "static const bool explicitRollbackRequested = false;",
+        "static const bool explicitRollbackAuthorized = false;",
         "static const bool directRpcExecuteRevoked = false;",
         "static const bool rollbackVerified = false;",
         "static const bool clientCutoverVerified = false;",
-    )
-    missing_contract = [fragment for fragment in required_contract if fragment not in contract_source]
-    if missing_contract:
-        fail(f"transport contract source drifted: {missing_contract}")
+        "if (!explicitRollbackRequested) return configuredMode;",
+        "if (!explicitRollbackAuthorized)",
+        "configuredMode != StudentAccessTransportMode.edgeGateway",
+        "return StudentAccessTransportMode.directRpc;",
+    ):
+        if fragment not in contract_source:
+            fail(f"transport/rollback contract source drifted: {fragment}")
     for action, rpc in ROUTES.items():
         if contract_source.count(f"'{action}': '{rpc}'") != 1:
             fail(f"{FAILURE_CLASSES[1]} transport route map drift: {action}")
@@ -183,13 +196,79 @@ def main() -> None:
         "return _invokeEdge(action: action, payload: edgePayload);",
         "_client.functions.invoke(",
         "StudentAccessTransportContract.edgeFunctionName",
+        "StudentAccessTransportContract.resolvedMode",
+        "on FunctionException catch (error)",
+        "normalizeStudentEdgeFunctionException(",
+        "studentAccessStateError(code, context: context)",
     ):
         if fragment not in transport_code:
             fail(f"single transport runtime incomplete: {fragment}")
-    if re.search(r"\bcatch\s*\(", transport_code) and "_client.rpc" in transport_code:
-        fail(f"{FAILURE_CLASSES[2]} transport contains potential Edge -> direct exception fallback")
-    if "automaticEdgeToDirectFallback = true" in contract_source:
-        fail(f"{FAILURE_CLASSES[2]} automatic Edge -> direct fail-open fallback enabled")
+
+    catch_match = re.search(
+        r"on\s+FunctionException\s+catch\s*\(error\)\s*\{(?P<body>.*?)\n\s*\}",
+        transport_code,
+        flags=re.DOTALL,
+    )
+    if catch_match is None:
+        fail("Edge FunctionException handler disappeared")
+    catch_body = catch_match.group("body")
+    if "_client.rpc" in catch_body or "directRpc" in catch_body:
+        fail(f"{FAILURE_CLASSES[2]} Edge exception handler can fall back to direct RPC")
+    if "error.details" not in catch_body or "normalizeStudentEdgeFunctionException" not in catch_body:
+        fail("Edge exception is not normalized through the bounded contract")
+
+    for fragment in (
+        "_trustedStudentEdgeErrorCodes",
+        "STUDENT_NETWORK_RATE_LIMITED",
+        "STUDENT_GATEWAY_UNAVAILABLE",
+        "STUDENT_GATEWAY_REQUEST_FAILED",
+        "parsed < 1 || parsed > 60",
+    ):
+        if fragment not in edge_errors:
+            fail(f"{EDGE_DETAIL_FAILURE_CLASS} Edge error normalizer drift: {fragment}")
+    for forbidden in ("...detailMap", "return detailMap", "'details':", '"details":'):
+        if forbidden in edge_errors:
+            fail(f"{EDGE_DETAIL_FAILURE_CLASS} arbitrary exception details can escape: {forbidden}")
+    for fragment in (
+        "case 'STUDENT_NETWORK_RATE_LIMITED':",
+        "case 'STUDENT_GATEWAY_UNAVAILABLE':",
+        "case 'STUDENT_GATEWAY_REQUEST_FAILED':",
+        "Muitas ações em pouco tempo",
+        "Não foi possível confirmar o acesso agora",
+    ):
+        if fragment not in error_messages:
+            fail(f"student-facing Edge error mapping drift: {fragment}")
+
+    error_authority = authority.get("edge_error_contract", {})
+    for key, expected in {
+        "function_exception_caught": True,
+        "trusted_gateway_error_allowlist": True,
+        "arbitrary_exception_details_returned": False,
+        "raw_token_details_returned": False,
+        "raw_network_origin_details_returned": False,
+        "retry_after_min_seconds": 1,
+        "retry_after_max_seconds": 60,
+        "unknown_non_2xx_collapses_to_generic_code": True,
+        "network_rate_limit_maps_to_existing_user_semantics": True,
+        "automatic_direct_rpc_fallback_on_exception": False,
+    }.items():
+        if error_authority.get(key) != expected:
+            fail(f"Edge error authority drift for {key}")
+
+    rollback = authority.get("rollback_harness", {})
+    for key, expected in {
+        "resolver": "resolveStudentAccessTransportMode",
+        "production_active_mode": "directRpc",
+        "explicit_rollback_requested": False,
+        "explicit_rollback_authorized": False,
+        "unauthorized_rollback_fails_closed": True,
+        "rollback_from_non_edge_mode_rejected": True,
+        "authorized_edge_to_direct_transition_unit_tested": True,
+        "runtime_rollback_verified": False,
+        "harness_ready": True,
+    }.items():
+        if rollback.get(key) != expected:
+            fail(f"rollback harness authority drift for {key}")
 
     invariants = authority.get("cutover_invariants", {})
     for key in (
@@ -202,6 +281,7 @@ def main() -> None:
         "direct_execute_revocation_requires_post_cutover_runtime_proof",
         "raw_possession_token_logging_forbidden",
         "raw_network_origin_logging_forbidden",
+        "arbitrary_edge_exception_detail_echo_forbidden",
         "launch_gate_promotion_forbidden",
     ):
         if invariants.get(key) is not True:
@@ -211,18 +291,19 @@ def main() -> None:
     for key in (
         "edge_transport_implementation_compiles",
         "all_five_repository_calls_routed_through_single_transport",
+        "edge_error_contract_mapped_to_existing_student_errors",
+        "rollback_harness_ready",
     ):
         if before_edge.get(key) is not True:
-            fail(f"source integration prerequisite missing: {key}")
+            fail(f"source/harness prerequisite missing: {key}")
     for key in (
-        "edge_error_contract_mapped_to_existing_student_errors",
         "read_only_edge_runtime_smoke_after_client_source_change",
         "command_edge_runtime_smoke_with_synthetic_fixture",
         "explicit_rollback_proof",
         "cutover_receipt_materialized",
     ):
         if before_edge.get(key) is not False:
-            fail(f"{FAILURE_CLASSES[4]} future Edge-selection proof self-attested: {key}")
+            fail(f"{FAILURE_CLASSES[4]} runtime/cutover proof self-attested: {key}")
 
     before_revoke = authority.get("required_before_direct_rpc_revocation", {})
     if before_revoke.get("automatic_direct_fallback_absent") is not True:
@@ -238,30 +319,34 @@ def main() -> None:
             fail(f"{FAILURE_CLASSES[3]} direct-RPC revocation prerequisite self-attested: {key}")
 
     next_stage = authority.get("next_stage", {})
-    if next_stage.get("name") != "STAGE30_EDGE_ERROR_CONTRACT_AND_ROLLBACK_HARNESS":
+    if next_stage.get("name") != "STAGE30_CONTROLLED_EDGE_RUNTIME_SMOKE_FIXTURE":
         fail("Stage 30 next-stage authority drifted")
     if next_stage.get("allowed_now") is not True:
-        fail("error-contract/rollback harness work unexpectedly blocked")
+        fail("controlled Edge runtime smoke work unexpectedly blocked")
+    if next_stage.get("requires_synthetic_customer_fixture") is not True:
+        fail("runtime smoke lost synthetic-fixture requirement")
+    if next_stage.get("requires_migration_ledger_protocol") is not True:
+        fail("runtime smoke lost migration-ledger interlock")
     if next_stage.get("may_select_edge_gateway_now") is not False:
         fail(f"{FAILURE_CLASSES[0]} Edge selection prematurely authorized")
     if next_stage.get("may_revoke_direct_rpc_execute_now") is not False:
         fail(f"{FAILURE_CLASSES[3]} direct RPC revocation prematurely authorized")
 
     if any(value is not False for value in authority.get("launch_authority", {}).values()):
-        fail("Stage 30 source integration gained launch authority")
+        fail("Stage 30 source/harness work gained launch authority")
 
     print("STUDENT_ACCESS_CLIENT_CUTOVER_PREPARATION_GUARD=PASS")
-    print("CURRENT_STATE=CLIENT_SINGLE_TRANSPORT_SOURCE_INTEGRATED_DIRECT_MODE")
+    print("CURRENT_STATE=CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE")
     print("STAGE29_VALID_ROUTE_AND_CLEANUP=VERIFIED")
     print("EDGE_RUNTIME_VERSION=3")
     print("SINGLE_TRANSPORT_CALL_SITES=5")
     print("ACTIVE_TRANSPORT=directRpc")
-    print("EDGE_CANDIDATE_COMPILED_BEHIND_INACTIVE_MODE=true")
-    print("AUTOMATIC_EDGE_TO_DIRECT_FALLBACK=false")
-    print(f"COMMENT_FALSE_POSITIVE_PREVENTION={COMMENT_FALSE_POSITIVE_FAILURE_CLASS}")
+    print("EDGE_ERROR_CONTRACT=BOUNDED_AND_USER_SAFE")
+    print("EDGE_EXCEPTION_DIRECT_FALLBACK=DENIED")
+    print("ROLLBACK_HARNESS=READY_NOT_RUNTIME_VERIFIED")
     print("ROLLBACK_VERIFIED=false")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
-    print("NEXT=STAGE30_EDGE_ERROR_CONTRACT_AND_ROLLBACK_HARNESS")
+    print("NEXT=STAGE30_CONTROLLED_EDGE_RUNTIME_SMOKE_FIXTURE")
     print("LAUNCH_GATE_PROMOTION=DENIED")
 
 
