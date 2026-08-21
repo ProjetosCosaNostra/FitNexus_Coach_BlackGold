@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "aba1937b426c1bb681e4e39065fbfb840653c41e",
-  "observed_at_utc": "2026-08-21T08:10:05Z",
+  "baseline_main_sha": "0a240a0481bcc13794b887e9ff755c058140172d",
+  "observed_at_utc": "2026-08-21T08:37:05Z",
   "source": "Supabase.list_migrations",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -36,13 +36,6 @@
       "reason": "Historical no-op ledger row created during advisor guard misuse; preserved as remote history evidence and intentionally has no repository SQL file.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-MIGRATION-TOOL-MISROUTE-097"
-    },
-    {
-      "direction": "repo_only",
-      "name": "stage30_edge_runtime_smoke_cleanup",
-      "reason": "Fail-closed cleanup for the sealed Stage 30 five-route synthetic Edge runtime smoke. Apply only after CI and merge against the exact observed synthetic mutation state.",
-      "owner": "BlackGold Forge",
-      "related_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-CLEANUP-SCOPE-207"
     }
   ],
   "remote_migrations": [
@@ -95,6 +88,7 @@
     {"version":"20260820173521","name":"stage28_threshold_proof_synthetic_cleanup"},
     {"version":"20260820192415","name":"stage29_valid_student_route_fixture"},
     {"version":"20260820234123","name":"stage29_valid_route_fixture_cleanup"},
-    {"version":"20260821075532","name":"stage30_edge_runtime_smoke_fixture"}
+    {"version":"20260821075532","name":"stage30_edge_runtime_smoke_fixture"},
+    {"version":"20260821083507","name":"stage30_edge_runtime_smoke_cleanup"}
   ]
 }
