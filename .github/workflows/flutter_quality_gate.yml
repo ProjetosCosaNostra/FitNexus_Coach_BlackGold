@@ -16,6 +16,7 @@ on:
       - '04_backend_supabase/student_access_client_runtime_smoke_authority.json'
       - '04_backend_supabase/student_access_runtime_rollback_authority.json'
       - '04_backend_supabase/student_access_client_edge_runtime_proof_authority.json'
+      - '04_backend_supabase/student_access_production_edge_selection_authority.json'
       - '04_backend_supabase/stage31_live_proof_workflow_seal_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
@@ -42,6 +43,7 @@ on:
       - '04_backend_supabase/student_access_client_runtime_smoke_authority.json'
       - '04_backend_supabase/student_access_runtime_rollback_authority.json'
       - '04_backend_supabase/student_access_client_edge_runtime_proof_authority.json'
+      - '04_backend_supabase/student_access_production_edge_selection_authority.json'
       - '04_backend_supabase/stage31_live_proof_workflow_seal_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
@@ -133,6 +135,9 @@ jobs:
 
       - name: Stage 31 live proof workflow seal guard
         run: python ../../04_backend_supabase/tools/verify_stage31_live_proof_workflow_seal.py
+
+      - name: Stage 32 production Edge selection preparation guard
+        run: python ../../04_backend_supabase/tools/verify_student_access_production_edge_selection_preparation.py
 
       - name: Student client Edge runtime smoke lifecycle guard
         run: python ../../04_backend_supabase/tools/verify_stage31_live_proof_cleanup_reconciliation.py smoke
