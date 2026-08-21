@@ -3,7 +3,8 @@
   "project_ref": "mceukeondizkwlpfxzgf",
   "stage": "STAGE32_POST_CUTOVER_LIVE_PROOF_FAILURE_R0",
   "baseline_main_sha": "c43a2662de1f92b08dad4ed1b22c51357a0ff269",
-  "status": "PRE_NETWORK_BOOTSTRAP_FAILURE_RECORDED_FIXTURE_EXPIRED_REPAIR_R1_REQUIRED",
+  "r2_baseline_main_sha": "2b3dbfa2543230f8ae17a9838c610b326d453d02",
+  "status": "PRE_NETWORK_FAILURE_RECORDED_REARM_MIGRATION_REPO_ONLY",
   "failure_classes": [
     {
       "id": "BGF-STAGE32-FLUTTER-TEST-SHARED-PREFERENCES-PLUGIN-235",
@@ -12,6 +13,10 @@
     {
       "id": "BGF-STAGE32-SYNTHETIC-FIXTURE-TTL-EXPIRED-BEFORE-RETRY-236",
       "rule": "Time-bounded synthetic fixtures must pass a fresh expiry gate immediately before event delivery. An expired fixture must be rearmed or replaced by an exact repository-first synthetic-only operation before a new proof seal is allowed."
+    },
+    {
+      "id": "BGF-SUPABASE-EXECUTE-SQL-READONLY-DML-237",
+      "rule": "For the authoritative FitNexus production Supabase connector, execute_sql must be treated as read-only evidence collection. Repository-first remote DML must be materialized as a named migration and applied exactly once with Supabase.apply_migration after CI and merge, then reconciled in the migration ledger. A read-only SQLSTATE 25006 attempt is not a mutation receipt and must never be retried through execute_sql."
     }
   ],
   "consumed_attempt": {
@@ -73,6 +78,42 @@
     "link_not_expired": false,
     "fixture_usable_for_new_live_proof": false
   },
+  "pre_rearm_receipt": {
+    "source": "Supabase.execute_sql",
+    "observed_at_utc": "2026-08-21T21:29:21.68853Z",
+    "auth_users": 1,
+    "profiles": 1,
+    "organizations": 1,
+    "organization_members": 1,
+    "organization_subscriptions": 1,
+    "students": 1,
+    "training_plans": 1,
+    "training_exercises": 1,
+    "access_links": 1,
+    "workout_sessions": 0,
+    "workout_logs": 0,
+    "workout_feedback": 0,
+    "fixture_command_receipts": 0,
+    "fixture_rate_buckets": 0,
+    "fixture_security_events": 0,
+    "fixture_security_signals": 0,
+    "link_expired": true,
+    "rpc_count": 5,
+    "all_five_anon_execute_intact": true,
+    "all_five_authenticated_execute_intact": true
+  },
+  "execute_sql_dml_failure_receipt": {
+    "source": "Supabase.execute_sql",
+    "attempted_after_preflight_observed_at_utc": "2026-08-21T21:29:21.68853Z",
+    "operation_file": "04_backend_supabase/operations/stage32_rearm_expired_fixture_r1.sql",
+    "result": "FAIL_READ_ONLY_TRANSACTION",
+    "sqlstate": "25006",
+    "message_class": "cannot execute UPDATE in a read-only transaction",
+    "failed_statement_class": "UPDATE public.student_access_links expires_at",
+    "transaction_mutation_applied": false,
+    "retry_through_execute_sql_allowed": false,
+    "replacement_mechanism": "Supabase.apply_migration"
+  },
   "direct_rpc_grant_receipt": {
     "source": "Supabase.execute_sql",
     "observed_at_utc": "2026-08-21T21:23:42.651192Z",
@@ -93,12 +134,21 @@
   "repair_r1": {
     "shared_preferences_mock_required_before_supabase_initialize": true,
     "required_test_fragment": "SharedPreferences.setMockInitialValues(<String, Object>{});",
-    "fixture_rearm_operation_file": "04_backend_supabase/operations/stage32_rearm_expired_fixture_r1.sql",
+    "historical_operation_file": "04_backend_supabase/operations/stage32_rearm_expired_fixture_r1.sql",
+    "historical_operation_execution_allowed": false,
+    "fixture_rearm_migration_file": "04_backend_supabase/migrations/20260821213000_stage32_rearm_expired_fixture_r1.sql",
+    "fixture_rearm_migration_name": "stage32_rearm_expired_fixture_r1",
+    "migration_ledger_state": "repo_only",
+    "remote_applied": false,
+    "remote_version": null,
+    "authorized_remote_mutation_tool": "Supabase.apply_migration",
     "fixture_rearm_hours": 6,
     "requires_exact_synthetic_fixture_identity": true,
     "requires_zero_runtime_mutation_residue": true,
     "requires_expired_link_before_rearm": true,
     "requires_fresh_direct_rpc_grant_check_before_rearm": true,
+    "requires_fresh_migration_ledger_check_immediately_before_apply": true,
+    "requires_exact_merged_sql": true,
     "requires_new_proof_head": true,
     "requires_new_workflow_seal": true,
     "requires_new_trigger_head": true,
@@ -106,8 +156,11 @@
     "old_trigger_pr_must_remain_closed_unmerged": true
   },
   "next_stage": {
-    "name": "MERGE_STAGE32_PRE_NETWORK_FAILURE_RECOVERY_R1_PREPARATION",
+    "name": "APPLY_STAGE32_REARM_EXPIRED_FIXTURE_R1_MIGRATION",
+    "allowed_only_after_ci_and_merge": true,
     "may_rearm_fixture_before_ci_and_merge": false,
+    "may_mutate_via_execute_sql": false,
+    "requires_apply_migration": true,
     "may_deliver_new_live_proof_event_before_rearm_receipt": false,
     "may_rerun_consumed_workflow": false,
     "may_reuse_consumed_proof_head": false,
