@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:fitnexus_app/features/student/student_access_transport.dart';
 import 'package:fitnexus_app/features/student/student_access_transport_contract.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 const String _expectedStudentId = 'bdbe631a-4c44-53fc-a0da-38310bbdf90e';
@@ -114,6 +115,12 @@ void main() {
       final url = _requiredEnv('STAGE32_SUPABASE_URL');
       final publishableKey =
           _requiredEnv('STAGE32_SUPABASE_PUBLISHABLE_KEY');
+
+      // flutter_test does not load platform plugins. supabase_flutter's auth
+      // persistence uses SharedPreferences during initialization, so install the
+      // in-memory test backend before Supabase.initialize. The first sealed R0
+      // attempt failed here before any network call (BGF-STAGE32-...-235).
+      SharedPreferences.setMockInitialValues(<String, Object>{});
 
       // flutter_test installs a mock HttpClient for widget isolation. This is a
       // deliberately live integration proof of the production-selected client path.
