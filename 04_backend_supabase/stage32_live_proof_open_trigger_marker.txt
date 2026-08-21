@@ -1,0 +1,6 @@
+STAGE32_POST_CUTOVER_LIVE_PROOF_OPEN_TRIGGER
+PURPOSE=one_shot_workflow_event_delivery_only
+PRODUCTION_SOURCE_CHANGE=false
+LIVE_PROOF_SOURCE_BRANCH=blackgold/stage32-post-cutover-live-proof
+LIVE_PROOF_SOURCE_PR=71
+MERGE_THIS_BRANCH=false
