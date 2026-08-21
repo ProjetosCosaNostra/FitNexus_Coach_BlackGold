@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "failure_class": "BGF-STAGE30-RUNTIME-SMOKE-FIXTURE-RESIDUE-203",
+  "proof_reexecution_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-PROOF-REEXECUTION-204",
+  "response_data_leak_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-RESPONSE-DATA-LEAK-205",
+  "command_flow_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-COMMAND-FLOW-206",
+  "purpose": "Repository-first lifecycle authority for a controlled synthetic five-route Edge v3 runtime smoke before any Flutter transport selection.",
+  "current_state": "EDGE_RUNTIME_SMOKE_FIXTURE_REPO_ONLY",
+  "baseline_main_sha": "59385ef6a7b4d8ad90703b1cbb52c0755f1f8948",
+  "client_cutover_authority": {
+    "file": "04_backend_supabase/student_access_client_cutover_authority.json",
+    "required_state": "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE",
+    "active_transport": "directRpc",
+    "edge_gateway_selected": false,
+    "rollback_verified": false,
+    "direct_rpc_execute_revoked": false
+  },
+  "fixture": {
+    "repository_file": "04_backend_supabase/migrations/20260821063000_stage30_edge_runtime_smoke_fixture.sql",
+    "migration_name": "stage30_edge_runtime_smoke_fixture",
+    "migration_ledger_state": "repo_only",
+    "remote_applied": false,
+    "remote_version": null,
+    "requires_empty_customer_domain": true,
+    "synthetic_only": true,
+    "token_seed": "fitnexus-stage30-edge-runtime-smoke-fixture-v1",
+    "raw_token_is_public_synthetic_test_material": true,
+    "database_stores_token_hash_only": true,
+    "repository_contains_bearer_literal": false,
+    "expiry_hours": 2,
+    "user_id": "33e39af7-f470-510e-8a9c-fc70b16ba26e",
+    "organization_id": "a0749405-6367-52d5-ad8b-5115b8d3a905",
+    "student_id": "81d3be6f-824e-59bc-8fa0-27acf046d6d3",
+    "plan_id": "82b92191-a8e3-5bb2-8f5d-fec9a59a57bb",
+    "exercise_id": "fe116050-9061-5627-8e3a-dedd863d6447",
+    "link_id": "53dfab53-5ff8-573a-ab2a-faaea24107db",
+    "cleanup_required_after_proof": true
+  },
+  "expected_route_sequence": [
+    "get_workout",
+    "start_workout",
+    "set_completion",
+    "get_feedback_context",
+    "submit_feedback"
+  ],
+  "expected_command_inputs": {
+    "set_completion_completed": true,
+    "feedback_perceived_exertion": 5,
+    "feedback_pain_score": 0,
+    "feedback_energy_score": 4,
+    "feedback_pain_location": null,
+    "feedback_note": null,
+    "expected_feedback_risk_signal": "low"
+  },
+  "runtime_proof": {
+    "edge_runtime_version": 3,
+    "fixture_deployed": false,
+    "get_workout_verified": false,
+    "start_workout_verified": false,
+    "set_completion_verified": false,
+    "get_feedback_context_verified": false,
+    "submit_feedback_verified": false,
+    "all_five_routes_verified": false,
+    "completed_session_verified": false,
+    "feedback_submitted_verified": false,
+    "raw_token_returned": false,
+    "raw_network_origin_returned": false,
+    "real_student_data_used": false,
+    "real_student_data_mutated": false,
+    "proof_workflow_run_id": null,
+    "proof_result": null,
+    "proof_reexecution_allowed": false,
+    "cleanup_completed": false
+  },
+  "promotion_rules": {
+    "may_apply_fixture_after_ci_and_merge": true,
+    "may_execute_live_smoke_before_fixture_remote_apply": false,
+    "may_select_edge_gateway_after_fixture_apply_only": false,
+    "live_smoke_required_before_edge_selection": true,
+    "cleanup_required_before_edge_selection": true,
+    "runtime_rollback_proof_required_before_edge_selection": true,
+    "may_revoke_direct_rpc_execute_now": false,
+    "launch_gate_authority": false
+  },
+  "next_stage": {
+    "name": "APPLY_STAGE30_EDGE_RUNTIME_SMOKE_FIXTURE",
+    "allowed_now": true,
+    "requires_ci_and_merge_first": true
+  }
+}

@@ -12,6 +12,7 @@ CLEANUP_MIGRATION = BACKEND / "migrations" / "20260820085600_stage28_threshold_p
 AUTHORITY = BACKEND / "student_access_network_rate_limit_authority.json"
 NETWORK_AUTHORITY = BACKEND / "student_access_network_origin_boundary.json"
 VALID_ROUTE_AUTHORITY = BACKEND / "student_access_valid_route_authority.json"
+SMOKE_AUTHORITY = BACKEND / "student_access_client_runtime_smoke_authority.json"
 LEDGER = BACKEND / "migration_ledger_authority.json"
 EXTERNAL_GATES = BACKEND / "external_gate_evidence_placeholders.json"
 TRANSPORT = APP / "features" / "student" / "student_access_transport.dart"
@@ -31,6 +32,8 @@ FINAL_STATE = "DATABASE_AND_EDGE_THRESHOLD_VERIFIED_SYNTHETIC_CLEANUP_COMPLETE"
 NEXT_STAGE_REPO_ONLY = "stage29_valid_student_route_fixture"
 STAGE29_CLEANUP_REPO_ONLY = "stage29_valid_route_fixture_cleanup"
 STAGE29_CLEANUP_STATE = "VALID_ROUTE_LIVE_VERIFIED_CLEANUP_REPO_ONLY"
+STAGE30_SMOKE_REPO_ONLY = "stage30_edge_runtime_smoke_fixture"
+STAGE30_SMOKE_STATE = "EDGE_RUNTIME_SMOKE_FIXTURE_REPO_ONLY"
 THRESHOLDS = {
     "get_workout": 120,
     "start_workout": 30,
@@ -74,13 +77,7 @@ def require_valid_route_identity(valid_route: dict | None) -> dict:
 
 
 def verify_direct_client_boundary() -> str:
-    """Accept direct-v2 evidence by behavior, not literal/call-site co-location.
-
-    Before Stage 30 each repository carried both its RPC literal and `.rpc` call.
-    Stage 30 intentionally centralizes the five literals in the transport contract
-    and dispatches them through one generic `_client.rpc(directRpc, ...)` call.
-    Treating co-location as authority produced BGF-GUARD-RPC-CALLSITE-COLOCATION-200.
-    """
+    """Accept direct-v2 evidence by behavior, not literal/call-site co-location."""
     colocated = {rpc: False for rpc in DIRECT_V2_RPCS}
     for path in APP.rglob("*.dart"):
         source = path.read_text(encoding="utf-8")
@@ -100,7 +97,7 @@ def verify_direct_client_boundary() -> str:
     required_dispatch = "_client.rpc(directRpc, params: directParams)"
     if required_dispatch not in transport:
         fail(f"{CALLSITE_MODEL_FAILURE_CLASS} centralized direct-v2 dispatcher missing")
-    if "StudentAccessTransportContract.activeMode" not in transport:
+    if "StudentAccessTransportContract.resolvedMode" not in transport:
         fail(f"{CALLSITE_MODEL_FAILURE_CLASS} transport mode authority is bypassed")
     if "StudentAccessTransportMode.directRpc" not in contract:
         fail(f"{CALLSITE_MODEL_FAILURE_CLASS} directRpc mode disappeared before cutover")
@@ -118,6 +115,7 @@ def main() -> None:
     authority = data(AUTHORITY)
     network = data(NETWORK_AUTHORITY)
     valid_route = data(VALID_ROUTE_AUTHORITY) if VALID_ROUTE_AUTHORITY.is_file() else None
+    smoke = data(SMOKE_AUTHORITY) if SMOKE_AUTHORITY.is_file() else None
     ledger = data(LEDGER)
     external = data(EXTERNAL_GATES)
     migration = text(MIGRATION).lower()
@@ -285,6 +283,29 @@ def main() -> None:
         if verification_state.get("synthetic_business_rows_remaining") != 14:
             fail("Stage 29 cleanup expected residue authority drifted")
         declared_next_stage = STAGE29_CLEANUP_REPO_ONLY
+    elif repo_only == {STAGE30_SMOKE_REPO_ONLY}:
+        if smoke is None:
+            fail("Stage 30 smoke repo_only divergence exists without smoke authority")
+        if smoke.get("schema_version") != 1 or smoke.get("project_ref") != "mceukeondizkwlpfxzgf":
+            fail("Stage 30 smoke authority identity drifted")
+        if smoke.get("current_state") != STAGE30_SMOKE_STATE:
+            fail("Stage 30 smoke repo_only divergence is not backed by repository-only authority")
+        fixture = smoke.get("fixture", {})
+        if fixture.get("migration_name") != STAGE30_SMOKE_REPO_ONLY:
+            fail("Stage 30 smoke migration name drifted")
+        if fixture.get("remote_applied") is not False or fixture.get("migration_ledger_state") != "repo_only":
+            fail("Stage 30 smoke fixture self-promoted before remote apply")
+        proof = smoke.get("runtime_proof", {})
+        if proof.get("fixture_deployed") is not False or proof.get("all_five_routes_verified") is not False:
+            fail("Stage 30 runtime smoke self-attested before fixture deployment")
+        if proof.get("cleanup_completed") is not False:
+            fail("Stage 30 runtime smoke cleanup self-attested before proof")
+        client = smoke.get("client_cutover_authority", {})
+        if client.get("active_transport") != "directRpc" or client.get("edge_gateway_selected") is not False:
+            fail("Stage 30 smoke changed active Flutter transport before runtime proof")
+        if client.get("direct_rpc_execute_revoked") is not False:
+            fail("Stage 30 smoke revoked direct RPC execute before cutover proof")
+        declared_next_stage = STAGE30_SMOKE_REPO_ONLY
     else:
         fail(f"unexpected repo_only divergence set: {sorted(repo_only)}")
 
