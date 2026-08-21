@@ -14,7 +14,8 @@
   ],
   "reconciliation_failure_classes": [
     "BGF-ROLLBACK-PROOF-CUTOVER-RECONCILIATION-213",
-    "BGF-HISTORICAL-GUARD-DOWNSTREAM-AUTHORITY-ADVANCE-214"
+    "BGF-HISTORICAL-GUARD-DOWNSTREAM-AUTHORITY-ADVANCE-214",
+    "BGF-ROLLBACK-PROOF-WORKFLOW-CROSS-PR-RETRIGGER-215"
   ],
   "prerequisites": {
     "runtime_smoke_authority_file": "04_backend_supabase/student_access_client_runtime_smoke_authority.json",
@@ -84,6 +85,20 @@
     "launch_gate_promotion": false,
     "workflow_trigger": "pull_request_opened_one_shot",
     "proof_reexecution_allowed": false
+  },
+  "reexecution_sentinel": {
+    "failure_class": "BGF-ROLLBACK-PROOF-WORKFLOW-CROSS-PR-RETRIGGER-215",
+    "observed_cross_pr_workflow_run_id": 32473348632,
+    "observed_cross_pr_job_id": 96744561273,
+    "observed_pr_number": 58,
+    "candidate_guard_failed_before_flutter_setup": true,
+    "focused_proof_step_executed": false,
+    "proof_boundary_receipt_executed": false,
+    "second_proof_execution_occurred": false,
+    "permanent_job_condition_installed": true,
+    "allowed_pr_number": 57,
+    "allowed_head_ref": "blackgold/stage30-runtime-rollback-proof",
+    "future_cross_pr_execution_allowed": false
   },
   "cutover_reconciliation": {
     "cutover_authority_reconciled": true,
