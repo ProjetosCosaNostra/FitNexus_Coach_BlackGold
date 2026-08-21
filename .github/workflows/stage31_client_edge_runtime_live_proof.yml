@@ -1,0 +1,71 @@
+name: Stage 31 Flutter Client Edge Runtime Live Proof
+
+on:
+  pull_request:
+    types: [ready_for_review]
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  client-edge-live-proof:
+    if: >-
+      github.event.pull_request.number == 61 &&
+      github.event.pull_request.head.ref == 'blackgold/stage31-client-edge-live-proof' &&
+      github.event.pull_request.head.sha == 'b8be62be0ba36c61b9557bed03e72dc05b0a43f0' &&
+      github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout exact sealed proof head
+        uses: actions/checkout@v6
+        with:
+          ref: b8be62be0ba36c61b9557bed03e72dc05b0a43f0
+
+      - name: Stage 31 live proof candidate guard
+        run: python 04_backend_supabase/tools/verify_student_access_stage31_live_proof_candidate.py
+
+      - name: Set up Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter pub get
+
+      - name: Derive masked synthetic proof token
+        shell: bash
+        run: |
+          TOKEN="$(python - <<'PY'
+          import hashlib
+          print(hashlib.sha256(b'fitnexus-stage31-client-edge-runtime-proof-v1').hexdigest())
+          PY
+          )"
+          echo "::add-mask::$TOKEN"
+          echo "STAGE31_SYNTHETIC_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+          echo "STAGE31_LIVE_PROOF_ENABLED=1" >> "$GITHUB_ENV"
+          echo "STAGE31_SUPABASE_URL=https://mceukeondizkwlpfxzgf.supabase.co" >> "$GITHUB_ENV"
+          echo "STAGE31_SUPABASE_PUBLISHABLE_KEY=sb_publishable_aggqgASWuWfgBJAlrRKoeg_Gg2qnjHQ" >> "$GITHUB_ENV"
+
+      - name: Execute sealed Flutter to Edge proof once
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter test test/student_access_stage31_live_edge_proof_test.dart --reporter expanded
+
+      - name: Proof boundary receipt
+        run: |
+          echo 'STAGE31_FLUTTER_EDGE_LIVE_PROOF=COMPLETED'
+          echo 'SEALED_PR=61'
+          echo 'SEALED_HEAD=b8be62be0ba36c61b9557bed03e72dc05b0a43f0'
+          echo 'ROUTES_EXPECTED=5'
+          echo 'PRODUCTION_TRANSPORT_CHANGE=false'
+          echo 'EDGE_SELECTION=false'
+          echo 'AUTOMATIC_EDGE_TO_DIRECT_FALLBACK=false'
+          echo 'DIRECT_RPC_GRANTS_CHANGED=false'
+          echo 'REAL_CUSTOMER_DATA_USED=false'
+          echo 'RAW_SYNTHETIC_TOKEN_PRINTED=false'
+          echo 'LAUNCH_GATE_PROMOTION=DENIED'

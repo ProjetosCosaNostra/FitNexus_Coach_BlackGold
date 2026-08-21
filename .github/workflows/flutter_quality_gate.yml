@@ -16,12 +16,14 @@ on:
       - '04_backend_supabase/student_access_client_runtime_smoke_authority.json'
       - '04_backend_supabase/student_access_runtime_rollback_authority.json'
       - '04_backend_supabase/student_access_client_edge_runtime_proof_authority.json'
+      - '04_backend_supabase/stage31_live_proof_workflow_seal_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
       - '04_backend_supabase/migrations/**'
       - '04_backend_supabase/functions/**'
       - '04_backend_supabase/tools/**'
       - '.github/workflows/flutter_quality_gate.yml'
+      - '.github/workflows/stage31_client_edge_runtime_live_proof.yml'
   push:
     branches:
       - main
@@ -40,12 +42,14 @@ on:
       - '04_backend_supabase/student_access_client_runtime_smoke_authority.json'
       - '04_backend_supabase/student_access_runtime_rollback_authority.json'
       - '04_backend_supabase/student_access_client_edge_runtime_proof_authority.json'
+      - '04_backend_supabase/stage31_live_proof_workflow_seal_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
       - '04_backend_supabase/migrations/**'
       - '04_backend_supabase/functions/**'
       - '04_backend_supabase/tools/**'
       - '.github/workflows/flutter_quality_gate.yml'
+      - '.github/workflows/stage31_client_edge_runtime_live_proof.yml'
 
 permissions:
   contents: read
@@ -126,6 +130,9 @@ jobs:
 
       - name: Stage 31 client Edge runtime preparation guard
         run: python ../../04_backend_supabase/tools/verify_stage31_fixture_remote_reconciliation.py stage31
+
+      - name: Stage 31 live proof workflow seal guard
+        run: python ../../04_backend_supabase/tools/verify_stage31_live_proof_workflow_seal.py
 
       - name: Student client Edge runtime smoke lifecycle guard
         run: python ../../04_backend_supabase/tools/verify_stage31_fixture_remote_reconciliation.py smoke
