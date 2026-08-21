@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "stage": "STAGE32_POST_CUTOVER_LIVE_PROOF_R1_OPEN_TRIGGER",
+  "purpose": "Fallback pull_request.opened event delivery only if the preferred ready_for_review event on the sealed R1 proof PR does not materialize the one-shot workflow run.",
+  "proof_pr": 77,
+  "proof_head_sha": "344433bf502b519563fe328ab71e59249766e3dd",
+  "production_transport": "edgeGateway",
+  "production_singleton": "StudentAccessTransport.instance",
+  "automatic_edge_to_direct_fallback": false,
+  "direct_rpc_execute_revoked": false,
+  "merge_allowed": false,
+  "live_proof_executed": false,
+  "launch_gate_promotion": false
+}
