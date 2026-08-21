@@ -20,9 +20,11 @@ on:
       - '04_backend_supabase/student_access_stage32_post_cutover_runtime_proof_authority.json'
       - '04_backend_supabase/stage31_live_proof_workflow_seal_authority.json'
       - '04_backend_supabase/stage32_post_cutover_live_proof_workflow_seal_authority.json'
+      - '04_backend_supabase/stage32_post_cutover_live_proof_failure_r0_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
       - '04_backend_supabase/migrations/**'
+      - '04_backend_supabase/operations/**'
       - '04_backend_supabase/functions/**'
       - '04_backend_supabase/tools/**'
       - '.github/workflows/flutter_quality_gate.yml'
@@ -50,9 +52,11 @@ on:
       - '04_backend_supabase/student_access_stage32_post_cutover_runtime_proof_authority.json'
       - '04_backend_supabase/stage31_live_proof_workflow_seal_authority.json'
       - '04_backend_supabase/stage32_post_cutover_live_proof_workflow_seal_authority.json'
+      - '04_backend_supabase/stage32_post_cutover_live_proof_failure_r0_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
       - '04_backend_supabase/migrations/**'
+      - '04_backend_supabase/operations/**'
       - '04_backend_supabase/functions/**'
       - '04_backend_supabase/tools/**'
       - '.github/workflows/flutter_quality_gate.yml'
@@ -150,6 +154,9 @@ jobs:
 
       - name: Stage 32 post-cutover live proof workflow seal guard
         run: python ../../04_backend_supabase/tools/verify_stage32_post_cutover_live_proof_workflow_seal.py
+
+      - name: Stage 32 pre-network failure recovery R1 guard
+        run: python ../../04_backend_supabase/tools/verify_stage32_pre_network_failure_recovery_r1.py
 
       - name: Student client Edge runtime smoke lifecycle guard
         run: python ../../04_backend_supabase/tools/verify_stage32_post_cutover_repo_only_historical_compat.py smoke
