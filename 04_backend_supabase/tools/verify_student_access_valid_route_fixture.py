@@ -10,6 +10,7 @@ BACKEND = ROOT / "04_backend_supabase"
 APP = ROOT / "03_app_flutter" / "fitnexus_app" / "lib"
 AUTHORITY = BACKEND / "student_access_valid_route_authority.json"
 GATEWAY_AUTHORITY = BACKEND / "student_access_edge_gateway_authority.json"
+SMOKE_AUTHORITY = BACKEND / "student_access_client_runtime_smoke_authority.json"
 LEDGER = BACKEND / "migration_ledger_authority.json"
 FIXTURE_SQL = BACKEND / "migrations" / "20260820180000_stage29_valid_student_route_fixture.sql"
 CLEANUP_SQL = BACKEND / "migrations" / "20260820194000_stage29_valid_route_fixture_cleanup.sql"
@@ -28,6 +29,8 @@ DERIVED_TOKEN = hashlib.sha256(TOKEN_SEED.encode("utf-8")).hexdigest()
 FIXTURE_VERSION = "20260820192415"
 SEALED_RUN = 32409055932
 CLEANUP_NAME = "stage29_valid_route_fixture_cleanup"
+STAGE30_SMOKE_NAME = "stage30_edge_runtime_smoke_fixture"
+STAGE30_SMOKE_STATE = "EDGE_RUNTIME_SMOKE_FIXTURE_REPO_ONLY"
 
 STATE_REPO = "VALID_ROUTE_SYNTHETIC_FIXTURE_REPO_ONLY"
 STATE_REMOTE = "VALID_ROUTE_SYNTHETIC_FIXTURE_REMOTE_LIVE_PROOF_PENDING"
@@ -71,9 +74,33 @@ def data(path: Path) -> dict:
     raise AssertionError("unreachable")
 
 
+def stage30_smoke_repo_only_is_authorized(smoke: dict | None) -> bool:
+    if smoke is None:
+        return False
+    if smoke.get("schema_version") != 1 or smoke.get("project_ref") != "mceukeondizkwlpfxzgf":
+        return False
+    if smoke.get("current_state") != STAGE30_SMOKE_STATE:
+        return False
+    fixture = smoke.get("fixture", {})
+    proof = smoke.get("runtime_proof", {})
+    client = smoke.get("client_cutover_authority", {})
+    return (
+        fixture.get("migration_name") == STAGE30_SMOKE_NAME
+        and fixture.get("migration_ledger_state") == "repo_only"
+        and fixture.get("remote_applied") is False
+        and proof.get("fixture_deployed") is False
+        and proof.get("all_five_routes_verified") is False
+        and proof.get("cleanup_completed") is False
+        and client.get("active_transport") == "directRpc"
+        and client.get("edge_gateway_selected") is False
+        and client.get("direct_rpc_execute_revoked") is False
+    )
+
+
 def main() -> None:
     authority = data(AUTHORITY)
     gateway = data(GATEWAY_AUTHORITY)
+    smoke = data(SMOKE_AUTHORITY) if SMOKE_AUTHORITY.is_file() else None
     ledger = data(LEDGER)
     fixture_sql = text(FIXTURE_SQL)
     cleanup_sql = text(CLEANUP_SQL) if CLEANUP_SQL.is_file() else ""
@@ -190,6 +217,10 @@ def main() -> None:
         if remote.get("stage29_valid_student_route_fixture") != FIXTURE_VERSION:
             fail("fixture remote ledger receipt missing")
         expected_repo_only = {CLEANUP_NAME} if state == STATE_CLEANUP_REPO else set()
+        if state == STATE_CLEAN and repo_only == {STAGE30_SMOKE_NAME}:
+            if not stage30_smoke_repo_only_is_authorized(smoke):
+                fail("Stage 30 repo_only divergence is not backed by a fail-closed smoke authority")
+            expected_repo_only = {STAGE30_SMOKE_NAME}
         if repo_only != expected_repo_only:
             fail(f"unexpected repo_only set for {state}: {sorted(repo_only)}")
 
