@@ -141,6 +141,7 @@ def main() -> None:
         elif state in (
             "CLIENT_SINGLE_TRANSPORT_SOURCE_INTEGRATED_DIRECT_MODE",
             "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE",
+            "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE",
         ):
             contract = read(TRANSPORT_CONTRACT)
             runtime = read(TRANSPORT_RUNTIME)
