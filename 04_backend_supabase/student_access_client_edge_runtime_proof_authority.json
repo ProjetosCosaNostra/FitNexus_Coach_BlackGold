@@ -2,14 +2,17 @@
   "schema_version": 1,
   "project_ref": "mceukeondizkwlpfxzgf",
   "purpose": "Repository-first lifecycle authority for proving the real Flutter student transport Edge path with a controlled synthetic fixture before any production Edge selection.",
-  "current_state": "CLIENT_EDGE_RUNTIME_PROOF_FIXTURE_REPO_ONLY_DIRECT_MODE",
-  "baseline_main_sha": "40042c82a658dd991b6b025ec619fa064898fc52",
+  "current_state": "CLIENT_EDGE_RUNTIME_PROOF_FIXTURE_REMOTE_LIVE_PROOF_PENDING_DIRECT_MODE",
+  "baseline_main_sha": "669b5f4816aafcaf87647e4eaa98dd0a1bb43ffb",
+  "preparation_baseline_main_sha": "40042c82a658dd991b6b025ec619fa064898fc52",
   "failure_classes": [
     "BGF-STAGE31-CLIENT-EDGE-RUNTIME-FIXTURE-216",
     "BGF-STAGE31-VERIFICATION-SEAM-PRODUCTION-LEAK-217",
     "BGF-STAGE31-CLIENT-EDGE-RUNTIME-PROOF-PREMATURE-218",
     "BGF-STAGE31-CLIENT-EDGE-RUNTIME-PROOF-REEXECUTION-219"
   ],
+  "historical_guard_projection_failure_class": "BGF-STAGE31-HISTORICAL-GUARD-REPOONLY-PROJECTION-220",
+  "fixture_remote_reconciliation_failure_class": "BGF-STAGE31-FIXTURE-REMOTE-RECONCILIATION-221",
   "prerequisites": {
     "cutover_authority_file": "04_backend_supabase/student_access_client_cutover_authority.json",
     "cutover_required_state": "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE",
@@ -37,12 +40,27 @@
     "workout_feedback": 0,
     "customer_domain_empty": true
   },
+  "pre_apply_receipt": {
+    "source": "Supabase.execute_sql",
+    "observed_at_utc": "2026-08-21T11:31:17Z",
+    "auth_users": 0,
+    "profiles": 0,
+    "organizations": 0,
+    "students": 0,
+    "training_plans": 0,
+    "training_exercises": 0,
+    "access_links": 0,
+    "workout_sessions": 0,
+    "workout_logs": 0,
+    "workout_feedback": 0,
+    "customer_domain_empty": true
+  },
   "fixture": {
     "repository_file": "04_backend_supabase/migrations/20260821104600_stage31_client_edge_runtime_fixture.sql",
     "migration_name": "stage31_client_edge_runtime_fixture",
-    "migration_ledger_state": "repo_only",
-    "remote_applied": false,
-    "remote_version": null,
+    "migration_ledger_state": "remote_reconciled",
+    "remote_applied": true,
+    "remote_version": "20260821113205",
     "requires_empty_customer_domain": true,
     "synthetic_only": true,
     "token_seed": "fitnexus-stage31-client-edge-runtime-proof-v1",
@@ -59,6 +77,28 @@
     "exercise_id": "51871b03-c901-5a8f-b659-40f63e1f22e4",
     "link_id": "4ad0ced0-fc32-50cb-8287-fb4f971942a5",
     "cleanup_required_after_proof": true
+  },
+  "remote_apply_receipt": {
+    "source_sql_main_sha": "669b5f4816aafcaf87647e4eaa98dd0a1bb43ffb",
+    "source_file_sha": "d64787b2fec532676fc2914e0ef707d4d2973c40",
+    "migration_name": "stage31_client_edge_runtime_fixture",
+    "remote_version": "20260821113205",
+    "apply_result": "SUCCESS",
+    "post_apply_counts": {
+      "auth_users": 1,
+      "organizations": 1,
+      "students": 1,
+      "training_plans": 1,
+      "training_exercises": 1,
+      "access_links": 1,
+      "workout_sessions": 0,
+      "workout_logs": 0,
+      "workout_feedback": 0
+    },
+    "migration_postcondition_included_token_resolution": true,
+    "raw_synthetic_token_returned": false,
+    "raw_network_origin_returned": false,
+    "real_customer_data_used": false
   },
   "client_verification_seam": {
     "runtime_file": "03_app_flutter/fitnexus_app/lib/features/student/student_access_transport.dart",
@@ -136,11 +176,11 @@
     "post_cutover_rollback_proof_still_required_before_direct_rpc_revocation": true
   },
   "next_stage": {
-    "name": "APPLY_STAGE31_CLIENT_EDGE_RUNTIME_FIXTURE",
+    "name": "PREPARE_STAGE31_CLIENT_EDGE_RUNTIME_LIVE_PROOF",
     "allowed_now": true,
-    "requires_ci_and_merge_first": true,
-    "requires_exact_merged_sql": true,
-    "requires_fresh_migration_ledger_check_immediately_before_apply": true,
+    "requires_exact_pr_and_head_seal_before_first_execution": true,
+    "requires_one_shot_workflow": true,
+    "requires_fixture_remote_applied": true,
     "may_select_edge_gateway_now": false,
     "may_revoke_direct_rpc_execute_now": false
   },
