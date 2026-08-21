@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'student_access_edge_error_contract.dart';
+import 'student_access_error_contract.dart';
 import 'student_access_transport_contract.dart';
 
 /// Single client-side transport boundary for every student possession-token
@@ -49,10 +50,18 @@ class StudentAccessTransport {
       );
       return response.data;
     } on FunctionException catch (error) {
-      return normalizeStudentEdgeFunctionException(
+      final Map<String, dynamic> normalized =
+          normalizeStudentEdgeFunctionException(
         status: error.status,
         details: error.details,
       );
+      final String code = normalized['error']?.toString() ??
+          'STUDENT_GATEWAY_REQUEST_FAILED';
+      final StudentAccessErrorContext context =
+          action == 'get_feedback_context' || action == 'submit_feedback'
+              ? StudentAccessErrorContext.feedback
+              : StudentAccessErrorContext.workout;
+      throw studentAccessStateError(code, context: context);
     }
   }
 }
