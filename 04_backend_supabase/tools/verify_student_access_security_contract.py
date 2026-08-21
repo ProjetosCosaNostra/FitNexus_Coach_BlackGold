@@ -72,7 +72,6 @@ def main() -> None:
     web_index = read(WEB_INDEX).lower()
     cutover = read_json(CUTOVER_AUTHORITY) if CUTOVER_AUTHORITY.exists() else None
 
-    # Finite bearer lifetime + explicit rotation/revocation lineage.
     for needle in (
         "expires_at = now() + interval '30 days'",
         "revoked_at timestamptz",
@@ -82,14 +81,8 @@ def main() -> None:
         "issue_student_access_token_v2",
         "student_access_rotation_cooldown",
     ):
-        require(
-            sql,
-            needle,
-            "BGF-STUDENT-ACCESS-UNBOUNDED-BEARER-147",
-            f"finite lifetime/rotation invariant disappeared: {needle}",
-        )
+        require(sql, needle, "BGF-STUDENT-ACCESS-UNBOUNDED-BEARER-147", f"finite lifetime/rotation invariant disappeared: {needle}")
 
-    # Successful anonymous traffic is rate bounded and leaves operational telemetry.
     for needle in (
         "private.student_access_rate_buckets",
         "student_access_rate_limited",
@@ -97,14 +90,8 @@ def main() -> None:
         "'rate_limited'",
         "p_limit_per_minute",
     ):
-        require(
-            sql,
-            needle,
-            "BGF-STUDENT-ACCESS-RATE-LIMIT-149",
-            f"rate-limit/abuse-monitoring invariant disappeared: {needle}",
-        )
+        require(sql, needle, "BGF-STUDENT-ACCESS-RATE-LIMIT-149", f"rate-limit/abuse-monitoring invariant disappeared: {needle}")
 
-    # Mutable possession-token commands carry a 128-bit random command id and server receipt.
     for needle in (
         "private.student_access_command_receipts",
         "command_id ~ '^[0-9a-f]{32}$'",
@@ -112,29 +99,11 @@ def main() -> None:
         "student_access_command_finish_v2",
         "'replay'",
     ):
-        require(
-            sql,
-            needle,
-            "BGF-STUDENT-ACCESS-REPLAY-148",
-            f"replay/idempotency invariant disappeared: {needle}",
-        )
+        require(sql, needle, "BGF-STUDENT-ACCESS-REPLAY-148", f"replay/idempotency invariant disappeared: {needle}")
 
-    require(
-        command_id,
-        "Random.secure()",
-        "BGF-STUDENT-ACCESS-REPLAY-148",
-        "client command ids must use a cryptographically secure RNG",
-    )
-    require(
-        command_id,
-        "index < 16",
-        "BGF-STUDENT-ACCESS-REPLAY-148",
-        "client command ids must retain 16 random bytes / 128 bits",
-    )
+    require(command_id, "Random.secure()", "BGF-STUDENT-ACCESS-REPLAY-148", "client command ids must use a cryptographically secure RNG")
+    require(command_id, "index < 16", "BGF-STUDENT-ACCESS-REPLAY-148", "client command ids must retain 16 random bytes / 128 bits")
 
-    # Client code must remain bound to the hardened v2 functions. Stage 30 may centralize
-    # the function names in a transport map; guards must not assume the literal and .rpc()
-    # call live in the same repository file (BGF-GUARD-RPC-CALLSITE-COLOCATION-200).
     if cutover is None:
         for needle in (
             "'get_student_workout_v2'",
@@ -142,25 +111,17 @@ def main() -> None:
             "'set_student_exercise_completion_v2'",
             "'p_command_id'",
         ):
-            require(
-                workout,
-                needle,
-                "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151",
-                f"workout client bypassed the v2 boundary: {needle}",
-            )
+            require(workout, needle, "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151", f"workout client bypassed the v2 boundary: {needle}")
         for needle in (
             "'get_student_feedback_context_v2'",
             "'submit_student_workout_feedback_v2'",
             "'p_command_id'",
         ):
-            require(
-                feedback,
-                needle,
-                "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151",
-                f"feedback client bypassed the v2 boundary: {needle}",
-            )
+            require(feedback, needle, "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151", f"feedback client bypassed the v2 boundary: {needle}")
     else:
-        if cutover.get("guard_callsite_model_failure_class") != CALLSITE_MODEL_FAILURE:
+        guard_classes = cutover.get("guard_failure_classes", [])
+        legacy_guard_class = cutover.get("guard_callsite_model_failure_class")
+        if CALLSITE_MODEL_FAILURE not in guard_classes and legacy_guard_class != CALLSITE_MODEL_FAILURE:
             fail(CALLSITE_MODEL_FAILURE, "centralized call-site guard prevention authority missing")
         state = cutover.get("current_state")
         if state == "CLIENT_EDGE_CUTOVER_PREPARATION_DIRECT_PATH_ACTIVE":
@@ -177,7 +138,10 @@ def main() -> None:
                 "'p_command_id'",
             ):
                 require(feedback, needle, "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151", f"feedback v2 boundary missing: {needle}")
-        elif state == "CLIENT_SINGLE_TRANSPORT_SOURCE_INTEGRATED_DIRECT_MODE":
+        elif state in (
+            "CLIENT_SINGLE_TRANSPORT_SOURCE_INTEGRATED_DIRECT_MODE",
+            "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE",
+        ):
             contract = read(TRANSPORT_CONTRACT)
             runtime = read(TRANSPORT_RUNTIME)
             inventory = cutover.get("current_client_inventory", {})
@@ -186,18 +150,8 @@ def main() -> None:
             if inventory.get("repositories_call_single_transport") is not True:
                 fail(CALLSITE_MODEL_FAILURE, "single-transport repository authority missing")
             for action, rpc in ROUTES.items():
-                require(
-                    contract,
-                    f"'{action}': '{rpc}'",
-                    "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151",
-                    f"central transport lost hardened v2 route: {action}->{rpc}",
-                )
-            require(
-                runtime,
-                "return _client.rpc(directRpc, params: directParams);",
-                "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151",
-                "active direct mode no longer resolves the centralized v2 RPC map",
-            )
+                require(contract, f"'{action}': '{rpc}'", "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151", f"central transport lost hardened v2 route: {action}->{rpc}")
+            require(runtime, "return _client.rpc(directRpc, params: directParams);", "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151", "active direct mode no longer resolves the centralized v2 RPC map")
             require(workout, "action: 'get_workout'", CALLSITE_MODEL_FAILURE, "workout get route no longer enters centralized transport")
             require(workout, "action: 'start_workout'", CALLSITE_MODEL_FAILURE, "workout start route no longer enters centralized transport")
             require(workout, "action: 'set_completion'", CALLSITE_MODEL_FAILURE, "workout completion route no longer enters centralized transport")
@@ -210,12 +164,7 @@ def main() -> None:
         else:
             fail(CALLSITE_MODEL_FAILURE, f"security guard has no client-callsite model for state: {state}")
 
-    require(
-        professor,
-        "'issue_student_access_token_v2'",
-        "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151",
-        "professor token issuance must use the bounded v2 rotation boundary",
-    )
+    require(professor, "'issue_student_access_token_v2'", "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151", "professor token issuance must use the bounded v2 rotation boundary")
 
     for legacy_grant in (
         "revoke execute on function public.issue_student_access_token(uuid) from authenticated",
@@ -225,32 +174,11 @@ def main() -> None:
         "revoke execute on function public.get_student_feedback_context(text) from anon, authenticated",
         "revoke execute on function public.submit_student_workout_feedback(text,uuid,integer,integer,integer,text,text) from anon, authenticated",
     ):
-        require(
-            sql,
-            legacy_grant,
-            "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151",
-            f"legacy RPC remained client-callable: {legacy_grant}",
-        )
+        require(sql, legacy_grant, "BGF-STUDENT-ACCESS-LEGACY-RPC-BYPASS-151", f"legacy RPC remained client-callable: {legacy_grant}")
 
-    # Bearer tokens may be in the fragment route, never in the top-level query string.
-    forbid(
-        experience,
-        "Uri.base.queryParameters['token']",
-        "BGF-STUDENT-ACCESS-URL-LEAK-150",
-        "student bearer token must not be read from the top-level URL query string",
-    )
-    require(
-        experience,
-        "Uri.base.fragment",
-        "BGF-STUDENT-ACCESS-URL-LEAK-150",
-        "student bearer token must remain fragment-scoped",
-    )
-    require(
-        web_index,
-        '<meta name="referrer" content="no-referrer">',
-        "BGF-STUDENT-ACCESS-URL-LEAK-150",
-        "web shell must keep an explicit no-referrer policy",
-    )
+    forbid(experience, "Uri.base.queryParameters['token']", "BGF-STUDENT-ACCESS-URL-LEAK-150", "student bearer token must not be read from the top-level URL query string")
+    require(experience, "Uri.base.fragment", "BGF-STUDENT-ACCESS-URL-LEAK-150", "student bearer token must remain fragment-scoped")
+    require(web_index, '<meta name="referrer" content="no-referrer">', "BGF-STUDENT-ACCESS-URL-LEAK-150", "web shell must keep an explicit no-referrer policy")
 
     print("STUDENT_ACCESS_SECURITY_CONTRACT_GUARD=PASS")
     print("FINITE_TOKEN_LIFETIME=PASS")
