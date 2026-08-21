@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "purpose": "Authority for the explicit student Edge-to-direct rollback resolver proof without changing production transport, using customer data or revoking direct RPC execute privileges.",
+  "current_state": "RUNTIME_ROLLBACK_PROOF_VERIFIED_DIRECT_MODE",
+  "baseline_main_sha": "f1b97f3b56124f2fd2d3edcff7060afd82f08c1e",
+  "failure_classes": [
+    "BGF-ROLLBACK-PROOF-PRODUCTION-MODE-MUTATION-208",
+    "BGF-ROLLBACK-PROOF-UNAUTHORIZED-FAILOPEN-209",
+    "BGF-ROLLBACK-PROOF-AUTOMATIC-FALLBACK-210",
+    "BGF-ROLLBACK-PROOF-DIRECT-GRANT-REVOCATION-211",
+    "BGF-ROLLBACK-PROOF-REEXECUTION-212"
+  ],
+  "prerequisites": {
+    "runtime_smoke_authority_file": "04_backend_supabase/student_access_client_runtime_smoke_authority.json",
+    "runtime_smoke_required_state": "EDGE_RUNTIME_SMOKE_LIVE_VERIFIED_CLEANUP_COMPLETE",
+    "runtime_smoke_routes_verified": 5,
+    "runtime_smoke_cleanup_completed": true,
+    "runtime_smoke_synthetic_residue_zero": true,
+    "cutover_authority_file": "04_backend_supabase/student_access_client_cutover_authority.json",
+    "cutover_required_state": "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE",
+    "edge_runtime_version": 3
+  },
+  "proof_surface": {
+    "resolver_file": "03_app_flutter/fitnexus_app/lib/features/student/student_access_transport_contract.dart",
+    "focused_test_file": "03_app_flutter/fitnexus_app/test/student_access_runtime_rollback_proof_test.dart",
+    "workflow_file": ".github/workflows/stage30_runtime_rollback_proof.yml",
+    "resolver": "resolveStudentAccessTransportMode",
+    "configured_edge_without_rollback_resolves_edge": true,
+    "unauthorized_edge_rollback_must_throw": true,
+    "authorized_edge_rollback_must_resolve_direct_rpc": true,
+    "rollback_from_direct_mode_must_throw": true,
+    "authorized_resolution_must_be_deterministic": true,
+    "network_client_required_for_proof": false,
+    "real_customer_data_required_for_proof": false
+  },
+  "production_boundary": {
+    "active_transport": "directRpc",
+    "resolved_transport": "directRpc",
+    "edge_gateway_selected": false,
+    "automatic_edge_to_direct_fallback": false,
+    "explicit_rollback_requested": false,
+    "explicit_rollback_authorized": false,
+    "direct_rpc_execute_revoked": false,
+    "client_cutover_verified": false,
+    "runtime_rollback_verified": true,
+    "behavioral_transport_change": false
+  },
+  "runtime_proof": {
+    "workflow_run_id": 32464990624,
+    "result": "PASS",
+    "focused_test_passed": true,
+    "focused_tests_passed_count": 6,
+    "production_constants_unchanged": true,
+    "edge_without_rollback_verified": true,
+    "unauthorized_rollback_fail_closed_verified": true,
+    "authorized_edge_to_direct_verified": true,
+    "rollback_from_direct_rejected_verified": true,
+    "deterministic_resolution_verified": true,
+    "network_call_executed": false,
+    "real_customer_data_used": false,
+    "direct_rpc_grants_changed": false,
+    "edge_selected": false,
+    "launch_gate_promoted": false,
+    "proof_reexecution_allowed": false
+  },
+  "proof_receipt": {
+    "workflow_run_id": 32464990624,
+    "job_id": 96719614075,
+    "result": "PASS",
+    "focused_test_result": "All tests passed!",
+    "focused_tests_passed_count": 6,
+    "production_transport_change": false,
+    "network_call_executed": false,
+    "real_customer_data_used": false,
+    "direct_rpc_grants_changed": false,
+    "edge_selection": false,
+    "launch_gate_promotion": false,
+    "workflow_trigger": "pull_request_opened_one_shot",
+    "proof_reexecution_allowed": false
+  },
+  "cutover_reconciliation": {
+    "cutover_authority_reconciled": false,
+    "required_next_state": "CLIENT_RUNTIME_ROLLBACK_VERIFIED_DIRECT_MODE",
+    "production_transport_change_allowed_in_reconciliation": false,
+    "edge_selection_allowed_in_reconciliation": false,
+    "direct_rpc_execute_revocation_allowed_in_reconciliation": false
+  },
+  "promotion_rules": {
+    "may_change_production_active_mode_during_proof": false,
+    "may_select_edge_gateway_during_proof": false,
+    "may_enable_automatic_edge_to_direct_fallback": false,
+    "may_revoke_direct_rpc_execute_during_proof": false,
+    "may_use_real_customer_data": false,
+    "may_promote_launch_gates": false,
+    "edge_selection_requires_separate_post_proof_stage": true
+  },
+  "next_stage": {
+    "name": "RECONCILE_STAGE30_ROLLBACK_PROOF_IN_CUTOVER_AUTHORITY",
+    "allowed_now": true,
+    "requires_production_transport_change": false,
+    "may_select_edge_gateway_now": false,
+    "may_revoke_direct_rpc_execute_now": false
+  }
+}
