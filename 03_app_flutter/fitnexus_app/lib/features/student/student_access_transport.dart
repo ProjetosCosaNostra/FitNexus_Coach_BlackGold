@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'student_access_edge_error_contract.dart';
@@ -5,17 +6,60 @@ import 'student_access_error_contract.dart';
 import 'student_access_transport_contract.dart';
 
 /// Single client-side transport boundary for every student possession-token
-/// action. Stage 30 keeps the active mode on direct RPC while compiling the
-/// Edge path behind the same interface.
+/// action. Production remains on the authority-owned direct RPC mode until a
+/// separate cutover stage explicitly changes that contract.
 ///
-/// Edge failures are normalized into a bounded student-error contract. They
-/// never trigger a per-request direct-RPC fallback.
+/// Stage 31 exposes a verification-only constructor so the already compiled
+/// Edge path can be exercised with an injected client and explicit mode while
+/// production repositories continue to use [instance]. Edge failures are
+/// normalized and never trigger a per-request direct-RPC fallback.
 class StudentAccessTransport {
-  StudentAccessTransport._();
+  StudentAccessTransport._({
+    SupabaseClient? clientOverride,
+    StudentAccessTransportMode? configuredModeOverride,
+    bool? explicitRollbackRequestedOverride,
+    bool? explicitRollbackAuthorizedOverride,
+  })  : _clientOverride = clientOverride,
+        _configuredModeOverride = configuredModeOverride,
+        _explicitRollbackRequestedOverride =
+            explicitRollbackRequestedOverride,
+        _explicitRollbackAuthorizedOverride =
+            explicitRollbackAuthorizedOverride;
 
   static final StudentAccessTransport instance = StudentAccessTransport._();
 
-  SupabaseClient get _client => Supabase.instance.client;
+  /// Test/integration-proof seam only. Production feature repositories are
+  /// forbidden by source guards from referencing this constructor.
+  @visibleForTesting
+  factory StudentAccessTransport.forVerification({
+    required SupabaseClient client,
+    required StudentAccessTransportMode configuredMode,
+  }) {
+    return StudentAccessTransport._(
+      clientOverride: client,
+      configuredModeOverride: configuredMode,
+      explicitRollbackRequestedOverride: false,
+      explicitRollbackAuthorizedOverride: false,
+    );
+  }
+
+  final SupabaseClient? _clientOverride;
+  final StudentAccessTransportMode? _configuredModeOverride;
+  final bool? _explicitRollbackRequestedOverride;
+  final bool? _explicitRollbackAuthorizedOverride;
+
+  SupabaseClient get _client => _clientOverride ?? Supabase.instance.client;
+
+  StudentAccessTransportMode get _configuredMode =>
+      _configuredModeOverride ?? StudentAccessTransportContract.activeMode;
+
+  bool get _explicitRollbackRequested =>
+      _explicitRollbackRequestedOverride ??
+      StudentAccessTransportContract.explicitRollbackRequested;
+
+  bool get _explicitRollbackAuthorized =>
+      _explicitRollbackAuthorizedOverride ??
+      StudentAccessTransportContract.explicitRollbackAuthorized;
 
   Future<dynamic> invoke({
     required String action,
@@ -28,12 +72,14 @@ class StudentAccessTransport {
       throw StateError('Ação de aluno não autorizada pelo transporte: $action');
     }
 
-    final StudentAccessTransportMode configuredMode =
-        StudentAccessTransportContract.activeMode;
+    final StudentAccessTransportMode configuredMode = _configuredMode;
     final StudentAccessTransportMode resolvedMode =
-        StudentAccessTransportContract.resolvedMode;
-    if (!StudentAccessTransportContract.explicitRollbackRequested &&
-        resolvedMode != configuredMode) {
+        resolveStudentAccessTransportMode(
+      configuredMode: configuredMode,
+      explicitRollbackRequested: _explicitRollbackRequested,
+      explicitRollbackAuthorized: _explicitRollbackAuthorized,
+    );
+    if (!_explicitRollbackRequested && resolvedMode != configuredMode) {
       throw StateError('Divergência inesperada no transporte estudantil.');
     }
 
