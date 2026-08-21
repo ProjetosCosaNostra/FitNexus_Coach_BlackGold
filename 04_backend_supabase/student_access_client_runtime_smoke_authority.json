@@ -7,8 +7,8 @@
   "command_flow_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-COMMAND-FLOW-206",
   "cleanup_scope_failure_class": "BGF-STAGE30-RUNTIME-SMOKE-CLEANUP-SCOPE-207",
   "purpose": "Lifecycle authority for a controlled synthetic five-route Edge v3 runtime smoke before any Flutter transport selection.",
-  "current_state": "EDGE_RUNTIME_SMOKE_LIVE_VERIFIED_CLEANUP_REPO_ONLY",
-  "baseline_main_sha": "aba1937b426c1bb681e4e39065fbfb840653c41e",
+  "current_state": "EDGE_RUNTIME_SMOKE_LIVE_VERIFIED_CLEANUP_COMPLETE",
+  "baseline_main_sha": "0a240a0481bcc13794b887e9ff755c058140172d",
   "client_cutover_authority": {
     "file": "04_backend_supabase/student_access_client_cutover_authority.json",
     "required_state": "CLIENT_EDGE_ERROR_CONTRACT_ROLLBACK_HARNESS_READY_DIRECT_MODE",
@@ -56,7 +56,7 @@
   },
   "runtime_proof": {
     "edge_runtime_version": 3,
-    "fixture_deployed": true,
+    "fixture_deployed": false,
     "get_workout_verified": true,
     "start_workout_verified": true,
     "set_completion_verified": true,
@@ -72,7 +72,10 @@
     "proof_workflow_run_id": 32461357789,
     "proof_result": "PASS",
     "proof_reexecution_allowed": false,
-    "cleanup_completed": false
+    "cleanup_completed": true,
+    "synthetic_business_rows_remaining": 0,
+    "synthetic_security_rows_remaining": 0,
+    "synthetic_network_proof_rows_remaining": 0
   },
   "live_proof_receipt": {
     "workflow_run_id": 32461357789,
@@ -132,9 +135,9 @@
   "cleanup_migration": {
     "repository_file": "04_backend_supabase/migrations/20260821081005_stage30_edge_runtime_smoke_cleanup.sql",
     "migration_name": "stage30_edge_runtime_smoke_cleanup",
-    "migration_ledger_state": "repo_only",
-    "remote_applied": false,
-    "remote_version": null,
+    "migration_ledger_state": "remote_reconciled",
+    "remote_applied": true,
+    "remote_version": "20260821083507",
     "requires_synthetic_only_customer_domain": true,
     "expected_auth_users_before_cleanup": 1,
     "expected_organizations_before_cleanup": 1,
@@ -156,6 +159,33 @@
     "organization_deleted_before_auth_user": true,
     "transactional_postcondition_required": true
   },
+  "cleanup_receipt": {
+    "migration_name": "stage30_edge_runtime_smoke_cleanup",
+    "remote_version": "20260821083507",
+    "remote_applied": true,
+    "result": "PASS",
+    "auth_users_remaining": 0,
+    "profiles_remaining": 0,
+    "organizations_remaining": 0,
+    "organization_members_remaining": 0,
+    "organization_subscriptions_remaining": 0,
+    "students_remaining": 0,
+    "training_plans_remaining": 0,
+    "training_exercises_remaining": 0,
+    "access_links_remaining": 0,
+    "workout_sessions_remaining": 0,
+    "workout_logs_remaining": 0,
+    "workout_feedback_remaining": 0,
+    "fixture_growth_events_remaining": 0,
+    "fixture_link_rate_buckets_remaining": 0,
+    "fixture_command_receipts_remaining": 0,
+    "fixture_security_events_remaining": 0,
+    "fixture_security_signals_remaining": 0,
+    "proof_network_buckets_remaining": 0,
+    "raw_network_origin_read": false,
+    "network_origin_digest_read": false,
+    "migration_ledger_state": "remote_reconciled"
+  },
   "promotion_rules": {
     "may_apply_fixture_after_ci_and_merge": true,
     "may_execute_live_smoke_before_fixture_remote_apply": false,
@@ -167,9 +197,11 @@
     "launch_gate_authority": false
   },
   "next_stage": {
-    "name": "APPLY_STAGE30_RUNTIME_SMOKE_CLEANUP",
+    "name": "PROVE_STAGE30_RUNTIME_ROLLBACK_HARNESS",
     "allowed_now": true,
-    "requires_ci_and_merge_first": true,
-    "requires_exact_merged_sql": true
+    "requires_production_transport_change": false,
+    "requires_real_customer_data": false,
+    "requires_direct_rpc_grants_intact": true,
+    "may_select_edge_gateway_after_this_state_only": false
   }
 }
