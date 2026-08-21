@@ -3,13 +3,24 @@ enum StudentAccessTransportMode {
   edgeGateway,
 }
 
+StudentAccessTransportMode resolveStudentAccessTransportMode({
+  required StudentAccessTransportMode configuredMode,
+  required bool explicitRollbackRequested,
+  required bool explicitRollbackAuthorized,
+}) {
+  if (!explicitRollbackRequested) return configuredMode;
+  if (!explicitRollbackAuthorized) {
+    throw StateError('Rollback do transporte estudantil não autorizado.');
+  }
+  if (configuredMode != StudentAccessTransportMode.edgeGateway) {
+    throw StateError('Rollback explícito exige Edge como transporte configurado.');
+  }
+  return StudentAccessTransportMode.directRpc;
+}
+
 /// Repository-first client transport contract for the student possession-token
-/// surface. Stage 30 intentionally keeps [activeMode] on [directRpc].
-///
-/// The Edge candidate is compiled/configured as a target contract only. A later
-/// cutover stage may change the active mode after runtime rollback proof. There
-/// is deliberately no per-request Edge -> direct fallback because that would
-/// bypass the network-origin controls enforced by the Edge gateway.
+/// surface. Stage 30 still keeps [activeMode] on [directRpc]. The rollback
+/// controls are explicit configuration, never an exception-driven fallback.
 abstract final class StudentAccessTransportContract {
   static const StudentAccessTransportMode activeMode =
       StudentAccessTransportMode.directRpc;
@@ -18,9 +29,18 @@ abstract final class StudentAccessTransportContract {
 
   static const bool edgeGatewaySelected = false;
   static const bool automaticEdgeToDirectFallback = false;
+  static const bool explicitRollbackRequested = false;
+  static const bool explicitRollbackAuthorized = false;
   static const bool directRpcExecuteRevoked = false;
   static const bool rollbackVerified = false;
   static const bool clientCutoverVerified = false;
+
+  static StudentAccessTransportMode get resolvedMode =>
+      resolveStudentAccessTransportMode(
+        configuredMode: activeMode,
+        explicitRollbackRequested: explicitRollbackRequested,
+        explicitRollbackAuthorized: explicitRollbackAuthorized,
+      );
 
   static const Map<String, String> actionToDirectRpc = <String, String>{
     'get_workout': 'get_student_workout_v2',
