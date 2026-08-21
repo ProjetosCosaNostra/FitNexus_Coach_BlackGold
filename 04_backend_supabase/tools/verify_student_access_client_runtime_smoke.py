@@ -89,13 +89,58 @@ def verify_cutover_boundary(authority: dict, cutover: dict) -> None:
         },
         "runtime smoke client boundary",
     )
+    if cutover.get("schema_version") != 2 or cutover.get("project_ref") != "mceukeondizkwlpfxzgf":
+        fail("cutover authority identity drifted")
     if cutover.get("current_state") != ref.get("required_state"):
         fail("cutover authority prerequisite state drifted")
-    if cutover.get("active_transport") != "directRpc":
-        fail("production transport changed before rollback proof")
-    for key in ("edge_gateway_selected", "rollback_verified", "direct_rpc_execute_revoked"):
-        if cutover.get(key) is not False:
-            fail(f"cutover authority self-promoted: {key}")
+
+    inventory = cutover.get("current_client_inventory", {})
+    require_exact(
+        inventory,
+        {
+            "transport_mode": "direct_rpc",
+            "flutter_uses_edge_gateway": False,
+            "direct_v2_rpc_path_active": True,
+            "direct_anon_v2_rpc_execute_revoked": False,
+            "repositories_call_supabase_rpc_directly": False,
+            "repositories_call_single_transport": True,
+        },
+        "cutover current-client inventory",
+    )
+
+    contract = cutover.get("transport_contract", {})
+    require_exact(
+        contract,
+        {
+            "active_mode": "directRpc",
+            "resolved_mode": "directRpc",
+            "edge_gateway_selected": False,
+            "automatic_edge_to_direct_fallback": False,
+            "explicit_rollback_requested": False,
+            "explicit_rollback_authorized": False,
+            "direct_rpc_execute_revoked": False,
+            "rollback_verified": False,
+            "client_cutover_verified": False,
+            "behavioral_transport_change": False,
+        },
+        "cutover transport contract",
+    )
+
+    harness = cutover.get("rollback_harness", {})
+    require_exact(
+        harness,
+        {
+            "production_active_mode": "directRpc",
+            "explicit_rollback_requested": False,
+            "explicit_rollback_authorized": False,
+            "unauthorized_rollback_fails_closed": True,
+            "rollback_from_non_edge_mode_rejected": True,
+            "authorized_edge_to_direct_transition_unit_tested": True,
+            "runtime_rollback_verified": False,
+            "harness_ready": True,
+        },
+        "cutover rollback harness",
+    )
 
 
 def verify_fixture(authority: dict, state: str) -> None:
