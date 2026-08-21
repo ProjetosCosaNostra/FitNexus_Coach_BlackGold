@@ -14,13 +14,22 @@ LEDGER = BACKEND / "migration_ledger_authority.json"
 SEAL = BACKEND / "stage31_live_proof_workflow_seal_authority.json"
 CLEANUP_SQL = BACKEND / "migrations" / "20260821121700_stage31_client_edge_runtime_cleanup.sql"
 
-STATE = "CLIENT_EDGE_RUNTIME_PROOF_LIVE_VERIFIED_CLEANUP_REPO_ONLY_DIRECT_MODE"
+STATE_REPO = "CLIENT_EDGE_RUNTIME_PROOF_LIVE_VERIFIED_CLEANUP_REPO_ONLY_DIRECT_MODE"
+STATE_CLEAN = "CLIENT_EDGE_RUNTIME_PROOF_LIVE_VERIFIED_CLEANUP_COMPLETE_DIRECT_MODE"
 PRE_PROOF_STATE = "CLIENT_EDGE_RUNTIME_PROOF_FIXTURE_REMOTE_LIVE_PROOF_PENDING_DIRECT_MODE"
-BASELINE = "543d3d103d4656c0e4976829320d54f31c944eee"
+BASELINES = {
+    STATE_REPO: "543d3d103d4656c0e4976829320d54f31c944eee",
+    STATE_CLEAN: "05b44ebda7976c679ec8198260def688d1e203f8",
+}
+LEDGER_OBSERVED = {
+    STATE_REPO: "2026-08-21T12:16:43Z",
+    STATE_CLEAN: "2026-08-21T16:15:04Z",
+}
 PRE_PROOF_BASELINE = "669b5f4816aafcaf87647e4eaa98dd0a1bb43ffb"
 FIXTURE_NAME = "stage31_client_edge_runtime_fixture"
 FIXTURE_VERSION = "20260821113205"
 CLEANUP_NAME = "stage31_client_edge_runtime_cleanup"
+CLEANUP_VERSION = "20260821161224"
 CLEANUP_CLASS = "BGF-STAGE31-CLIENT-EDGE-RUNTIME-CLEANUP-225"
 DELIVERY_CLASS = "BGF-STAGE31-READY-FOR-REVIEW-EVENT-NONDELIVERY-224"
 RUN_ID = 32480597745
@@ -50,23 +59,26 @@ def require(mapping: dict, expected: dict, label: str) -> None:
             fail(f"{label} drift: {key}")
 
 
-def validate_current() -> tuple[dict, dict]:
+def validate_current() -> tuple[dict, dict, str]:
     authority = load(AUTHORITY)
     ledger = load(LEDGER)
     seal = load(SEAL)
     sql = CLEANUP_SQL.read_text(encoding="utf-8")
+
+    state = authority.get("current_state")
+    if state not in BASELINES:
+        fail(f"unsupported Stage 31 cleanup lifecycle state: {state}")
 
     require(
         authority,
         {
             "schema_version": 1,
             "project_ref": "mceukeondizkwlpfxzgf",
-            "current_state": STATE,
-            "baseline_main_sha": BASELINE,
+            "baseline_main_sha": BASELINES[state],
             "workflow_delivery_failure_class": DELIVERY_CLASS,
             "cleanup_failure_class": CLEANUP_CLASS,
         },
-        "Stage 31 post-proof authority",
+        "Stage 31 authority",
     )
     require(
         authority.get("production_boundary", {}),
@@ -83,9 +95,8 @@ def validate_current() -> tuple[dict, dict]:
         },
         "production boundary",
     )
-    fixture = authority.get("fixture", {})
     require(
-        fixture,
+        authority.get("fixture", {}),
         {
             "migration_name": FIXTURE_NAME,
             "migration_ledger_state": "remote_reconciled",
@@ -96,38 +107,44 @@ def validate_current() -> tuple[dict, dict]:
         },
         "Stage 31 fixture",
     )
-    runtime = authority.get("runtime_proof", {})
+
+    cleanup_complete = state == STATE_CLEAN
+    runtime_expected = {
+        "workflow_run_id": RUN_ID,
+        "workflow_job_id": JOB_ID,
+        "result": "PASS",
+        "proof_pr": 61,
+        "proof_head": PROOF_HEAD,
+        "trigger_pr": 64,
+        "trigger_head": TRIGGER_HEAD,
+        "trigger_pr_closed_unmerged_after_execution": True,
+        "flutter_transport_edge_path_verified": True,
+        "get_workout_verified": True,
+        "start_workout_verified": True,
+        "set_completion_verified": True,
+        "get_feedback_context_verified": True,
+        "submit_feedback_verified": True,
+        "all_five_routes_verified": True,
+        "synthetic_fixture_mutated_as_expected": True,
+        "raw_token_returned": False,
+        "raw_network_origin_returned": False,
+        "real_customer_data_used": False,
+        "real_customer_data_mutated": False,
+        "proof_reexecution_allowed": False,
+        "cleanup_completed": cleanup_complete,
+    }
+    if cleanup_complete:
+        runtime_expected.update(
+            {
+                "synthetic_business_rows_remaining": 0,
+                "synthetic_security_rows_remaining": 0,
+                "synthetic_network_proof_rows_remaining": 0,
+            }
+        )
+    require(authority.get("runtime_proof", {}), runtime_expected, "Stage 31 live proof receipt")
+
     require(
-        runtime,
-        {
-            "workflow_run_id": RUN_ID,
-            "workflow_job_id": JOB_ID,
-            "result": "PASS",
-            "proof_pr": 61,
-            "proof_head": PROOF_HEAD,
-            "trigger_pr": 64,
-            "trigger_head": TRIGGER_HEAD,
-            "trigger_pr_closed_unmerged_after_execution": True,
-            "flutter_transport_edge_path_verified": True,
-            "get_workout_verified": True,
-            "start_workout_verified": True,
-            "set_completion_verified": True,
-            "get_feedback_context_verified": True,
-            "submit_feedback_verified": True,
-            "all_five_routes_verified": True,
-            "synthetic_fixture_mutated_as_expected": True,
-            "raw_token_returned": False,
-            "raw_network_origin_returned": False,
-            "real_customer_data_used": False,
-            "real_customer_data_mutated": False,
-            "proof_reexecution_allowed": False,
-            "cleanup_completed": False,
-        },
-        "Stage 31 live proof receipt",
-    )
-    receipt = authority.get("post_proof_database_receipt", {})
-    require(
-        receipt,
+        authority.get("post_proof_database_receipt", {}),
         {
             "source": "Supabase.execute_sql",
             "observed_at_utc": "2026-08-21T12:13:33Z",
@@ -167,38 +184,103 @@ def validate_current() -> tuple[dict, dict]:
         },
         "proof object receipt",
     )
-    require(
-        authority.get("cleanup", {}),
-        {
-            "repository_file": "04_backend_supabase/migrations/20260821121700_stage31_client_edge_runtime_cleanup.sql",
-            "migration_name": CLEANUP_NAME,
-            "migration_ledger_state": "repo_only",
-            "remote_applied": False,
-            "remote_version": None,
-            "failure_class": CLEANUP_CLASS,
-            "requires_exact_proof_receipt": True,
-            "requires_synthetic_only_customer_domain": True,
-            "raw_network_origin_selector_forbidden": True,
-            "origin_digest_selector_forbidden": True,
-            "cleanup_completed": False,
-        },
-        "cleanup authority",
-    )
-    require(
-        authority.get("next_stage", {}),
-        {
-            "name": "APPLY_STAGE31_CLIENT_EDGE_RUNTIME_CLEANUP",
-            "allowed_now": True,
-            "requires_ci_and_merge_first": True,
-            "requires_exact_merged_sql": True,
-            "requires_fresh_migration_ledger_check_immediately_before_apply": True,
-            "may_select_edge_gateway_now": False,
-            "may_revoke_direct_rpc_execute_now": False,
-        },
-        "Stage 31 cleanup frontier",
-    )
+
+    cleanup_expected = {
+        "repository_file": "04_backend_supabase/migrations/20260821121700_stage31_client_edge_runtime_cleanup.sql",
+        "migration_name": CLEANUP_NAME,
+        "failure_class": CLEANUP_CLASS,
+        "requires_exact_proof_receipt": True,
+        "requires_synthetic_only_customer_domain": True,
+        "raw_network_origin_selector_forbidden": True,
+        "origin_digest_selector_forbidden": True,
+        "cleanup_completed": cleanup_complete,
+    }
+    if cleanup_complete:
+        cleanup_expected.update(
+            {
+                "migration_ledger_state": "remote_reconciled",
+                "remote_applied": True,
+                "remote_version": CLEANUP_VERSION,
+            }
+        )
+    else:
+        cleanup_expected.update(
+            {
+                "migration_ledger_state": "repo_only",
+                "remote_applied": False,
+                "remote_version": None,
+            }
+        )
+    require(authority.get("cleanup", {}), cleanup_expected, "cleanup authority")
+
+    if cleanup_complete:
+        require(
+            authority.get("cleanup_receipt", {}),
+            {
+                "source": "Supabase.execute_sql",
+                "observed_at_utc": "2026-08-21T16:14:54Z",
+                "migration_name": CLEANUP_NAME,
+                "remote_version": CLEANUP_VERSION,
+                "remote_applied": True,
+                "result": "PASS",
+                "auth_users_remaining": 0,
+                "profiles_remaining": 0,
+                "organizations_remaining": 0,
+                "organization_members_remaining": 0,
+                "organization_subscriptions_remaining": 0,
+                "subscription_authority_events_remaining": 0,
+                "students_remaining": 0,
+                "training_plans_remaining": 0,
+                "training_exercises_remaining": 0,
+                "access_links_remaining": 0,
+                "workout_sessions_remaining": 0,
+                "workout_logs_remaining": 0,
+                "workout_feedback_remaining": 0,
+                "fixture_growth_events_remaining": 0,
+                "fixture_growth_attribution_remaining": 0,
+                "fixture_link_rate_buckets_remaining": 0,
+                "fixture_command_receipts_remaining": 0,
+                "fixture_security_events_remaining": 0,
+                "fixture_security_signals_remaining": 0,
+                "proof_network_buckets_remaining": 0,
+                "raw_network_origin_read": False,
+                "network_origin_digest_read": False,
+                "migration_ledger_state": "remote_reconciled",
+            },
+            "cleanup completion receipt",
+        )
+        require(
+            authority.get("next_stage", {}),
+            {
+                "name": "PREPARE_PRODUCTION_EDGE_TRANSPORT_SELECTION",
+                "allowed_now": True,
+                "requires_cleanup_complete": True,
+                "requires_all_five_routes_cutover": True,
+                "requires_no_automatic_edge_to_direct_fallback": True,
+                "requires_direct_rpc_grants_intact": True,
+                "may_revoke_direct_rpc_execute_now": False,
+            },
+            "post-cleanup frontier",
+        )
+    else:
+        if "cleanup_receipt" in authority:
+            fail("cleanup receipt appeared before remote cleanup")
+        require(
+            authority.get("next_stage", {}),
+            {
+                "name": "APPLY_STAGE31_CLIENT_EDGE_RUNTIME_CLEANUP",
+                "allowed_now": True,
+                "requires_ci_and_merge_first": True,
+                "requires_exact_merged_sql": True,
+                "requires_fresh_migration_ledger_check_immediately_before_apply": True,
+                "may_select_edge_gateway_now": False,
+                "may_revoke_direct_rpc_execute_now": False,
+            },
+            "Stage 31 cleanup frontier",
+        )
+
     if any(value is not False for value in authority.get("launch_authority", {}).values()):
-        fail("Stage 31 post-proof authority gained launch authority")
+        fail("Stage 31 authority gained launch authority")
 
     require(
         seal.get("execution_receipt", {}),
@@ -221,11 +303,13 @@ def validate_current() -> tuple[dict, dict]:
             "proof_reexecution_allowed": False,
             "cleanup_completed": False,
         },
-        "workflow execution seal",
+        "historical workflow execution seal",
     )
 
-    if ledger.get("baseline_main_sha") != BASELINE or ledger.get("observed_at_utc") != "2026-08-21T12:16:43Z":
-        fail("fresh post-proof migration ledger baseline/observation drifted")
+    if ledger.get("baseline_main_sha") != BASELINES[state]:
+        fail("migration ledger baseline drifted")
+    if ledger.get("observed_at_utc") != LEDGER_OBSERVED[state]:
+        fail("migration ledger observation timestamp drifted")
     remote = {
         row.get("name"): row.get("version")
         for row in ledger.get("remote_migrations", [])
@@ -233,16 +317,23 @@ def validate_current() -> tuple[dict, dict]:
     }
     if remote.get(FIXTURE_NAME) != FIXTURE_VERSION:
         fail("Stage 31 fixture remote receipt disappeared from ledger")
-    if CLEANUP_NAME in remote:
-        fail("Stage 31 cleanup self-attested as remotely applied before merge/apply")
     repo_only = [
-        row for row in ledger.get("declared_divergences", [])
+        row
+        for row in ledger.get("declared_divergences", [])
         if isinstance(row, dict) and row.get("direction") == "repo_only"
     ]
-    if len(repo_only) != 1 or repo_only[0].get("name") != CLEANUP_NAME:
-        fail("Stage 31 cleanup is not the unique repo_only migration divergence")
-    if repo_only[0].get("related_failure_class") != CLEANUP_CLASS:
-        fail("Stage 31 cleanup repo_only failure-class authority drifted")
+    if cleanup_complete:
+        if remote.get(CLEANUP_NAME) != CLEANUP_VERSION:
+            fail("Stage 31 cleanup remote receipt missing")
+        if repo_only:
+            fail("Stage 31 cleanup reconciliation left a repo_only divergence")
+    else:
+        if CLEANUP_NAME in remote:
+            fail("Stage 31 cleanup self-attested as remotely applied before merge/apply")
+        if len(repo_only) != 1 or repo_only[0].get("name") != CLEANUP_NAME:
+            fail("Stage 31 cleanup is not the unique repo_only migration divergence")
+        if repo_only[0].get("related_failure_class") != CLEANUP_CLASS:
+            fail("Stage 31 cleanup repo_only failure-class authority drifted")
 
     required_sql = (
         CLEANUP_CLASS,
@@ -278,7 +369,7 @@ def validate_current() -> tuple[dict, dict]:
     if re.findall(r"(?<![0-9a-fA-F])[0-9a-fA-F]{64}(?![0-9a-fA-F])", sql):
         fail("Stage 31 cleanup contains a bearer-looking 64-hex literal")
 
-    return authority, ledger
+    return authority, ledger, state
 
 
 def pre_proof_authority_projection(current: dict) -> dict:
@@ -292,6 +383,7 @@ def pre_proof_authority_projection(current: dict) -> dict:
     value.pop("post_proof_database_receipt", None)
     value.pop("proof_objects", None)
     value.pop("cleanup", None)
+    value.pop("cleanup_receipt", None)
     value["runtime_proof"] = {
         "workflow_run_id": None,
         "result": None,
@@ -342,13 +434,18 @@ def pre_proof_ledger_projection(current: dict) -> dict:
         for row in value.get("declared_divergences", [])
         if not (isinstance(row, dict) and row.get("direction") == "repo_only")
     ]
+    value["remote_migrations"] = [
+        row
+        for row in value.get("remote_migrations", [])
+        if not (isinstance(row, dict) and row.get("name") == CLEANUP_NAME)
+    ]
     return value
 
 
 def run(mode: str) -> None:
     if mode not in MODES:
         fail(f"unsupported mode: {mode}")
-    authority, ledger = validate_current()
+    authority, ledger, state = validate_current()
 
     with tempfile.TemporaryDirectory(prefix="fitnexus-stage31-post-proof-compat-") as tmp:
         temp_root = Path(tmp)
@@ -367,19 +464,29 @@ def run(mode: str) -> None:
         historical.LEDGER = temp_ledger
         historical.run(mode)
 
+    cleanup_complete = state == STATE_CLEAN
     print("STAGE31_LIVE_PROOF_CLEANUP_RECONCILIATION_GUARD=PASS")
     print(f"MODE={mode}")
-    print(f"CURRENT_STATE={STATE}")
+    print(f"CURRENT_STATE={state}")
     print(f"WORKFLOW_RUN_ID={RUN_ID}")
     print(f"WORKFLOW_JOB_ID={JOB_ID}")
     print("FLUTTER_EDGE_ROUTES_VERIFIED=5")
     print("PROOF_REEXECUTION_ALLOWED=false")
-    print("CLEANUP_LEDGER=REPO_ONLY")
-    print("CLEANUP_REMOTE_APPLIED=false")
+    print("CLEANUP_LEDGER=" + ("REMOTE_RECONCILED" if cleanup_complete else "REPO_ONLY"))
+    print("CLEANUP_REMOTE_APPLIED=" + str(cleanup_complete).lower())
+    print("SYNTHETIC_RESIDUE=" + ("ZERO" if cleanup_complete else "CONTROLLED_PENDING"))
     print("PRODUCTION_ACTIVE_TRANSPORT=directRpc")
     print("EDGE_SELECTION=false")
+    print("AUTOMATIC_EDGE_TO_DIRECT_FALLBACK=false")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
-    print("NEXT=APPLY_STAGE31_CLIENT_EDGE_RUNTIME_CLEANUP_AFTER_CI_AND_MERGE")
+    print(
+        "NEXT="
+        + (
+            "PREPARE_PRODUCTION_EDGE_TRANSPORT_SELECTION"
+            if cleanup_complete
+            else "APPLY_STAGE31_CLIENT_EDGE_RUNTIME_CLEANUP_AFTER_CI_AND_MERGE"
+        )
+    )
     print("LAUNCH_GATE_PROMOTION=DENIED")
 
 

@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "543d3d103d4656c0e4976829320d54f31c944eee",
-  "observed_at_utc": "2026-08-21T12:16:43Z",
+  "baseline_main_sha": "05b44ebda7976c679ec8198260def688d1e203f8",
+  "observed_at_utc": "2026-08-21T16:15:04Z",
   "source": "Supabase.list_migrations",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -36,13 +36,6 @@
       "reason": "Historical no-op ledger row created during advisor guard misuse; preserved as remote history evidence and intentionally has no repository SQL file.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-MIGRATION-TOOL-MISROUTE-097"
-    },
-    {
-      "direction": "repo_only",
-      "name": "stage31_client_edge_runtime_cleanup",
-      "reason": "Fail-closed cleanup for the successfully executed Stage 31 Flutter-client-to-Edge synthetic proof. Apply only after CI and merge while the authoritative customer domain still exactly matches the sealed proof receipt.",
-      "owner": "BlackGold Forge",
-      "related_failure_class": "BGF-STAGE31-CLIENT-EDGE-RUNTIME-CLEANUP-225"
     }
   ],
   "remote_migrations": [
@@ -97,6 +90,7 @@
     {"version":"20260820234123","name":"stage29_valid_route_fixture_cleanup"},
     {"version":"20260821075532","name":"stage30_edge_runtime_smoke_fixture"},
     {"version":"20260821083507","name":"stage30_edge_runtime_smoke_cleanup"},
-    {"version":"20260821113205","name":"stage31_client_edge_runtime_fixture"}
+    {"version":"20260821113205","name":"stage31_client_edge_runtime_fixture"},
+    {"version":"20260821161224","name":"stage31_client_edge_runtime_cleanup"}
   ]
 }
