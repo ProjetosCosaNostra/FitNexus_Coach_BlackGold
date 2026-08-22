@@ -181,7 +181,9 @@ begin
   revoke execute on function public.submit_student_workout_feedback_v2(text,uuid,integer,integer,integer,text,text,text)
     from public, anon, authenticated;
 
-  -- Postcondition: external direct execution is gone; privileged Edge backend remains usable.
+  -- Postcondition: effective external direct execution is gone. Testing anon/authenticated
+  -- effective privilege also proves that no PUBLIC EXECUTE grant remains, while service_role
+  -- stays available to the Edge gateway's privileged backend credential.
   select count(*)::integer into v_count
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
@@ -193,7 +195,6 @@ begin
        'start_student_workout_v2',
        'submit_student_workout_feedback_v2'
      )
-     and not has_function_privilege('public', p.oid, 'EXECUTE')
      and not has_function_privilege('anon', p.oid, 'EXECUTE')
      and not has_function_privilege('authenticated', p.oid, 'EXECUTE')
      and has_function_privilege('service_role', p.oid, 'EXECUTE');
