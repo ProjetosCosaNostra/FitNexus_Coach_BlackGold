@@ -1,0 +1,53 @@
+name: Stage 35 Alert Dispatcher Receipt Candidate
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/stage35_alert_dispatcher_receipt_candidate_authority.json'
+      - '04_backend_supabase/student_access_current_boundary_authority.json'
+      - '04_backend_supabase/student_access_alert_delivery_contract.json'
+      - '04_backend_supabase/stage33_post_revocation_proof_cleanup_authority.json'
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/operations/stage35_alert_delivery_receipt_store_candidate.sql'
+      - '04_backend_supabase/functions/student-access-alert-dispatcher/**'
+      - '04_backend_supabase/functions/student-access-gateway/**'
+      - '04_backend_supabase/tools/verify_stage35_alert_dispatcher_receipt_candidate.py'
+      - '.github/workflows/stage35_alert_dispatcher_receipt_candidate.yml'
+  push:
+    branches:
+      - 'blackgold/**'
+      - main
+    paths:
+      - '04_backend_supabase/stage35_alert_dispatcher_receipt_candidate_authority.json'
+      - '04_backend_supabase/student_access_current_boundary_authority.json'
+      - '04_backend_supabase/student_access_alert_delivery_contract.json'
+      - '04_backend_supabase/stage33_post_revocation_proof_cleanup_authority.json'
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/operations/stage35_alert_delivery_receipt_store_candidate.sql'
+      - '04_backend_supabase/functions/student-access-alert-dispatcher/**'
+      - '04_backend_supabase/functions/student-access-gateway/**'
+      - '04_backend_supabase/tools/verify_stage35_alert_dispatcher_receipt_candidate.py'
+      - '.github/workflows/stage35_alert_dispatcher_receipt_candidate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-alert-dispatcher-receipt-candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Stage 35 alert dispatcher receipt candidate guard
+        run: python 04_backend_supabase/tools/verify_stage35_alert_dispatcher_receipt_candidate.py
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Alert dispatcher candidate typecheck
+        run: deno check 04_backend_supabase/functions/student-access-alert-dispatcher/index.ts
