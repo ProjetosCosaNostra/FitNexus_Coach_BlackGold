@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE33_DIRECT_RPC_PRIVILEGE_REVOCATION_ASSESSMENT",
+  "baseline_main_sha": "8648c7160bf1f7410f933a75583d714205d864c5",
+  "current_state": "DIRECT_RPC_REVOCATION_GATES_ASSESSED_PREPARATION_ALLOWED_NO_MUTATION",
+  "purpose": "Assess, without mutating production, whether the explicit observation and security prerequisites for retiring direct student v2 RPC execution have been satisfied after the verified Edge cutover and verified real post-cutover rollback proof. This authority permits only repository-first preparation of a separate revocation lifecycle; it does not itself revoke privileges or promote launch gates.",
+  "failure_classes": [
+    "BGF-STAGE33-PRIVILEGE-REVOCATION-PREMATURE-245",
+    "BGF-STAGE33-OBSERVATION-WINDOW-SEMANTIC-DRIFT-246",
+    "BGF-STAGE33-SECURITY-ADVISOR-SURFACE-DRIFT-247",
+    "BGF-STAGE33-GATEWAY-BACKEND-CREDENTIAL-ASSUMPTION-248"
+  ],
+  "prerequisites": {
+    "edge_live_proof_run_id": 32532170382,
+    "edge_live_proof_result": "SUCCESS",
+    "edge_live_proof_cleanup_remote_version": "20260821222724",
+    "edge_live_proof_cleanup_complete": true,
+    "rollback_live_proof_run_id": 32540031081,
+    "rollback_live_proof_result": "SUCCESS",
+    "rollback_cleanup_remote_version": "20260822003559",
+    "rollback_cleanup_complete": true,
+    "rollback_proof_reexecution_allowed": false,
+    "production_active_transport": "edgeGateway",
+    "production_singleton": "StudentAccessTransport.instance",
+    "automatic_edge_to_direct_fallback": false,
+    "production_explicit_rollback_requested": false,
+    "production_explicit_rollback_authorized": false,
+    "direct_rpc_execute_revoked": false
+  },
+  "observation_gate": {
+    "semantics_source": "04_backend_supabase/migrations/20260819192100_stage24_student_access_abuse_observability.sql",
+    "security_posture_view": "private.student_access_security_posture_v1",
+    "authoritative_window_seconds": 3600,
+    "window_reason": "Stage24 derives the service-side security posture from signals whose last_seen_at is within the previous 60 minutes.",
+    "observation_start_checkpoint_utc": "2026-08-22T00:37:12.866972Z",
+    "observed_at_utc": "2026-08-22T02:00:41.968609Z",
+    "seconds_since_checkpoint": 5009,
+    "minimum_window_satisfied": true,
+    "posture": "quiet",
+    "signals_60m": 0,
+    "security_events_60m": 0,
+    "network_origin_buckets_seen_60m": 0,
+    "latest_network_origin_bucket_seen_at_utc": "2026-08-20T08:46:53.9259Z",
+    "customer_domain_auth_users": 0,
+    "customer_domain_organizations": 0,
+    "customer_domain_students": 0,
+    "customer_domain_workout_sessions": 0,
+    "source": "Supabase.execute_sql",
+    "result": "PASS"
+  },
+  "security_advisor_gate": {
+    "source": "Supabase.get_advisors(security)",
+    "rechecked_after_observation_window": true,
+    "total_warning_count": 11,
+    "anon_security_definer_warning_count": 5,
+    "authenticated_security_definer_warning_count": 6,
+    "target_direct_rpc_anon_warning_count": 5,
+    "target_direct_rpc_authenticated_warning_count": 5,
+    "issue_student_access_token_v2_authenticated_warning_count": 1,
+    "unexpected_warning_count": 0,
+    "target_warning_interpretation": "Expected exposure still present before revocation; the five student route v2 functions are intentionally still callable directly by anon/authenticated at this assessment frontier.",
+    "issue_token_interpretation": "issue_student_access_token_v2(uuid) remains an authenticated professor/manager authority and is explicitly outside the direct student route revocation target.",
+    "result": "PASS_WITH_EXPECTED_PRE_REVOCATION_WARNINGS"
+  },
+  "target_direct_rpc_surface": {
+    "functions": [
+      "public.get_student_feedback_context_v2(text)",
+      "public.get_student_workout_v2(text)",
+      "public.set_student_exercise_completion_v2(text,uuid,uuid,boolean,text)",
+      "public.start_student_workout_v2(text,text)",
+      "public.submit_student_workout_feedback_v2(text,uuid,integer,integer,integer,text,text,text)"
+    ],
+    "function_count": 5,
+    "anon_execute_count": 5,
+    "authenticated_execute_count": 5,
+    "service_role_execute_count": 5,
+    "direct_grants_intact_before_preparation": true,
+    "issue_student_access_token_v2_is_target": false
+  },
+  "gateway_backend_boundary": {
+    "source_file": "04_backend_supabase/functions/student-access-gateway/index.ts",
+    "route_map_count": 5,
+    "backend_credential_sources": [
+      "SUPABASE_SECRET_KEYS.default",
+      "SUPABASE_SERVICE_ROLE_KEY"
+    ],
+    "backend_calls_rest_rpc_with_privileged_server_credential": true,
+    "gateway_does_not_depend_on_anon_or_authenticated_execute_for_backend_route_forwarding": true,
+    "raw_student_token_logging_allowed": false,
+    "automatic_direct_client_fallback_allowed": false
+  },
+  "decision": {
+    "post_cutover_edge_proof_gate": "PASS",
+    "post_cutover_rollback_proof_gate": "PASS",
+    "post_cutover_cleanup_gate": "PASS",
+    "observation_window_gate": "PASS",
+    "security_advisor_recheck_gate": "PASS_WITH_EXPECTED_PRE_REVOCATION_WARNINGS",
+    "repository_first_revocation_preparation_allowed": true,
+    "remote_privilege_revocation_allowed_now": false,
+    "reason_remote_revocation_not_yet_allowed": "A separate repository-first revocation migration, fail-closed guard, CI/merge receipt, fresh pre-apply gate, post-revocation Edge verification plan and rollback/regrant recovery plan must be materialized before any grant mutation.",
+    "alert_delivery_gate_is_separate_from_revocation_preparation": true,
+    "incident_response_gate_promoted": false,
+    "production_deployment_gate_promoted": false,
+    "paid_ads_gate_promoted": false
+  },
+  "next_stage": {
+    "name": "PREPARE_STAGE33_DIRECT_RPC_REVOCATION_AND_POST_REVOCATION_EDGE_PROOF_LIFECYCLE",
+    "allowed_now": true,
+    "requires_repository_first_revocation_migration": true,
+    "requires_exact_five_rpc_target_set": true,
+    "requires_issue_student_access_token_v2_preserved": true,
+    "requires_service_role_execute_preserved": true,
+    "requires_anon_and_authenticated_execute_revoked_only_after_ci_merge": true,
+    "requires_fresh_quiet_security_posture_before_apply": true,
+    "requires_post_revocation_edge_runtime_verification": true,
+    "requires_prepared_regrant_recovery_path_before_apply": true,
+    "may_revoke_direct_rpc_execute_now": false,
+    "may_promote_incident_response_gate": false,
+    "may_promote_production_deployment_gate": false,
+    "may_enable_paid_ads": false
+  }
+}
