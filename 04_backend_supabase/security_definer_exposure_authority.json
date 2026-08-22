@@ -2,14 +2,15 @@
   "schema_version": 2,
   "failure_class": "BGF-SECURITY-DEFINER-EXPOSURE-DRIFT-159",
   "project_ref": "mceukeondizkwlpfxzgf",
-  "current_state": "STAGE33_REVOCATION_REPO_ONLY_REMOTE_PRE_REVOCATION",
-  "baseline_main_sha": "2f8bd11ac0a4ba4e605807fb17c6c78ff3939041",
-  "observed_at_utc": "2026-08-22T02:15:46.465445Z",
-  "source": "Supabase pg_proc + has_function_privilege live audit + repository migration privilege replay",
+  "current_state": "STAGE33_REVOCATION_REMOTE_RECONCILED_POST_REVOCATION",
+  "baseline_main_sha": "35e1c117d63349f27470160da5f58ef6077c47bc",
+  "observed_at_utc": "2026-08-22T06:00:17.171196Z",
+  "source": "Supabase pg_proc + has_function_privilege live audit + repository migration privilege replay + post-revocation Security Advisor",
   "policy": {
     "public_security_definer_default_execute": "denied",
     "new_exposure": "fail_closed_until_explicitly_reviewed_and_allowlisted",
-    "anonymous_exposure": "only possession_token_v2_boundary_until_stage33_remote_revocation",
+    "anonymous_exposure": "denied_for_all_five_student_possession_token_v2_routes_after_stage33_remote_revocation",
+    "authenticated_student_route_exposure": "denied_for_all_five_student_possession_token_v2_routes_after_stage33_remote_revocation",
     "legacy_student_rpc_exposure": "denied",
     "repository_target_may_advance_before_remote": "only_when_exact_repo_only_migration_is_declared",
     "issue_student_access_token_v2_authenticated_authority": "preserved"
@@ -25,14 +26,14 @@
       "identity_arguments": "text",
       "roles": ["anon", "authenticated"],
       "boundary": "student_possession_token_v2",
-      "reason": "Historical direct student route retained only through verified Edge cutover, post-cutover Edge proof and real rollback proof; Stage33 is preparing its retirement."
+      "reason": "Historical direct student route retained through verified Edge cutover, post-cutover Edge proof and real rollback proof, then retired by Stage33."
     },
     {
       "function": "get_student_workout_v2",
       "identity_arguments": "text",
       "roles": ["anon", "authenticated"],
       "boundary": "student_possession_token_v2",
-      "reason": "Historical direct student route retained only through verified Edge cutover, post-cutover Edge proof and real rollback proof; Stage33 is preparing its retirement."
+      "reason": "Historical direct student route retained through verified Edge cutover, post-cutover Edge proof and real rollback proof, then retired by Stage33."
     },
     {
       "function": "issue_student_access_token_v2",
@@ -46,21 +47,21 @@
       "identity_arguments": "text,uuid,uuid,boolean,text",
       "roles": ["anon", "authenticated"],
       "boundary": "student_possession_token_v2",
-      "reason": "Historical direct student route retained only through verified Edge cutover, post-cutover Edge proof and real rollback proof; Stage33 is preparing its retirement."
+      "reason": "Historical direct student route retained through verified Edge cutover, post-cutover Edge proof and real rollback proof, then retired by Stage33."
     },
     {
       "function": "start_student_workout_v2",
       "identity_arguments": "text,text",
       "roles": ["anon", "authenticated"],
       "boundary": "student_possession_token_v2",
-      "reason": "Historical direct student route retained only through verified Edge cutover, post-cutover Edge proof and real rollback proof; Stage33 is preparing its retirement."
+      "reason": "Historical direct student route retained through verified Edge cutover, post-cutover Edge proof and real rollback proof, then retired by Stage33."
     },
     {
       "function": "submit_student_workout_feedback_v2",
       "identity_arguments": "text,uuid,integer,integer,integer,text,text,text",
       "roles": ["anon", "authenticated"],
       "boundary": "student_possession_token_v2",
-      "reason": "Historical direct student route retained only through verified Edge cutover, post-cutover Edge proof and real rollback proof; Stage33 is preparing its retirement."
+      "reason": "Historical direct student route retained through verified Edge cutover, post-cutover Edge proof and real rollback proof, then retired by Stage33."
     }
   ],
   "repository_target_approved_exposures": [
@@ -76,9 +77,9 @@
     "migration_name": "stage33_direct_rpc_revocation_and_post_revocation_fixture",
     "migration_file": "04_backend_supabase/migrations/20260822022000_stage33_direct_rpc_revocation_and_post_revocation_fixture.sql",
     "migration_blob_sha": "8f079770f077913d94229df272583945320d943d",
-    "migration_ledger_state": "repo_only",
-    "remote_applied": false,
-    "remote_version": null,
+    "migration_ledger_state": "remote_reconciled",
+    "remote_applied": true,
+    "remote_version": "20260822032456",
     "target_student_route_count": 5,
     "remote_pre_revocation_anon_exposures": 5,
     "remote_pre_revocation_authenticated_exposures": 6,
@@ -86,6 +87,10 @@
     "repository_target_authenticated_exposures": 1,
     "service_role_preserved_for_edge_backend": true,
     "issue_student_access_token_v2_preserved": true,
-    "remote_revocation_allowed_now": false
+    "remote_revocation_allowed_now": false,
+    "post_revocation_live_anon_execute_count": 0,
+    "post_revocation_live_authenticated_execute_count": 0,
+    "post_revocation_live_service_role_execute_count": 5,
+    "post_revocation_student_route_advisor_warnings": 0
   }
 }
