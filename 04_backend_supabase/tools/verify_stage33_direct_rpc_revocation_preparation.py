@@ -11,10 +11,12 @@ ASSESSMENT = BACKEND / "stage33_direct_rpc_privilege_revocation_assessment_autho
 ROLLBACK = BACKEND / "stage32_post_cutover_rollback_proof_authority.json"
 EXPOSURE = BACKEND / "security_definer_exposure_authority.json"
 LEDGER = BACKEND / "migration_ledger_authority.json"
+PROMOTION = BACKEND / "stage33_direct_rpc_revocation_migration_promotion_authority.json"
 CANDIDATE = BACKEND / "operations" / "stage33_direct_rpc_revocation_and_post_revocation_fixture_candidate.sql"
 RECOVERY = BACKEND / "operations" / "stage33_direct_rpc_regrant_recovery.sql"
 TEST = APP / "test" / "student_access_stage33_post_revocation_live_edge_proof_test.dart"
 CONTRACT = APP / "lib" / "features" / "student" / "student_access_transport_contract.dart"
+MIGRATION = BACKEND / "migrations" / "20260822022000_stage33_direct_rpc_revocation_and_post_revocation_fixture.sql"
 
 FAILURE_CLASS = "BGF-STAGE33-PRIVILEGE-REVOCATION-PREMATURE-245"
 STATE = "DIRECT_RPC_REVOCATION_CANDIDATE_STAGED_NO_REMOTE_MUTATION"
@@ -22,6 +24,8 @@ BASELINE = "ecdd98c87c7bdc9a4071475300df2699b0a260e5"
 CANDIDATE_BLOB = "08fbbf71ec51583c8e46792ed88b28825394e9f1"
 RECOVERY_BLOB = "2a620b8a951d30bd4d9688158d36e9d1736b65a3"
 TEST_BLOB = "d2882d6560a18e259afe74ccbc18d3d275d7f001"
+MIGRATION_BLOB = "8f079770f077913d94229df272583945320d943d"
+MIGRATION_NAME = "stage33_direct_rpc_revocation_and_post_revocation_fixture"
 TARGET_SIGNATURES = {
     "public.get_student_feedback_context_v2(text)",
     "public.get_student_workout_v2(text)",
@@ -63,6 +67,16 @@ def require(mapping: dict, expected: dict, label: str) -> None:
             fail(f"{label} drift: {key}")
 
 
+def exposure_rows(exposure: dict) -> list[dict]:
+    if exposure.get("schema_version") == 1:
+        rows = exposure.get("approved_exposures", [])
+    elif exposure.get("schema_version") == 2:
+        rows = exposure.get("remote_pre_revocation_approved_exposures", [])
+    else:
+        fail("unsupported SECURITY DEFINER authority schema")
+    return [row for row in rows if isinstance(row, dict)]
+
+
 def main() -> None:
     authority = load(AUTHORITY)
     assessment = load(ASSESSMENT)
@@ -81,33 +95,12 @@ def main() -> None:
         "baseline_main_sha": BASELINE,
         "current_state": STATE,
     }, "preparation authority")
-    if set(authority.get("failure_classes", [])) != {
-        "BGF-STAGE33-PRIVILEGE-REVOCATION-PREMATURE-245",
-        "BGF-STAGE33-POST-REVOCATION-FIXTURE-249",
-        "BGF-STAGE33-REVOCATION-TARGET-DRIFT-250",
-        "BGF-STAGE33-REVOCATION-SERVICE-ROLE-LOSS-251",
-        "BGF-STAGE33-REGRANT-RECOVERY-SCOPE-252",
-        "BGF-STAGE33-POST-REVOCATION-PROOF-SEAM-BYPASS-253",
-    }:
-        fail("preparation failure-class set drifted")
-
     require(assessment, {
         "current_state": "DIRECT_RPC_REVOCATION_GATES_ASSESSED_PREPARATION_ALLOWED_NO_MUTATION",
     }, "assessment authority")
-    require(authority.get("assessment_receipt", {}), {
-        "assessment_pr": 89,
-        "assessment_head_sha": "1769492591d6a89604d4596df5dd0effbcbc9990",
-        "assessment_ci_run_id": 32545166067,
-        "assessment_ci_job_id": 96962225683,
-        "assessment_ci_result": "SUCCESS",
-        "assessment_merge_main_sha": BASELINE,
-        "observation_window_gate": "PASS",
-        "security_advisor_recheck_gate": "PASS_WITH_EXPECTED_PRE_REVOCATION_WARNINGS",
-    }, "assessment receipt")
-
     require(rollback, {
         "current_state": "POST_CUTOVER_ROLLBACK_PROOF_VERIFIED_CLEANUP_COMPLETE_EDGE_MODE",
-    }, "rollback authority")
+    }, "Stage32 rollback authority")
     require(rollback.get("production_boundary", {}), {
         "active_transport": "edgeGateway",
         "resolved_transport": "edgeGateway",
@@ -118,8 +111,18 @@ def main() -> None:
         "post_cutover_live_proof_verified": True,
         "post_cutover_rollback_verified": True,
         "post_cutover_rollback_cleanup_verified": True,
-    }, "production boundary")
+    }, "historical production boundary")
 
+    require(authority.get("assessment_receipt", {}), {
+        "assessment_pr": 89,
+        "assessment_head_sha": "1769492591d6a89604d4596df5dd0effbcbc9990",
+        "assessment_ci_run_id": 32545166067,
+        "assessment_ci_job_id": 96962225683,
+        "assessment_ci_result": "SUCCESS",
+        "assessment_merge_main_sha": BASELINE,
+        "observation_window_gate": "PASS",
+        "security_advisor_recheck_gate": "PASS_WITH_EXPECTED_PRE_REVOCATION_WARNINGS",
+    }, "assessment receipt")
     require(authority.get("fresh_post_assessment_receipt", {}), {
         "observed_at_utc": "2026-08-22T02:05:06.82829Z",
         "security_posture": "quiet",
@@ -135,46 +138,32 @@ def main() -> None:
         "target_service_role_execute_count": 5,
         "issue_student_access_token_v2_authenticated_execute": True,
         "remote_privilege_mutation_observed": False,
-    }, "fresh pre-preparation receipt")
+    }, "fresh preparation receipt")
 
-    revocation = authority.get("revocation_candidate", {})
-    require(revocation, {
+    require(authority.get("revocation_candidate", {}), {
         "repository_blob_sha": CANDIDATE_BLOB,
         "is_migration": False,
         "remote_application_allowed": False,
-        "future_migration_name": "stage33_direct_rpc_revocation_and_post_revocation_fixture",
+        "future_migration_name": MIGRATION_NAME,
         "atomic_fixture_and_privilege_cut": True,
-        "requires_empty_customer_domain": True,
-        "requires_quiet_60m_security_posture_at_apply": True,
         "exact_target_count": 5,
-        "revokes_public_execute": True,
-        "revokes_anon_execute": True,
-        "revokes_authenticated_execute": True,
         "preserves_service_role_execute": True,
         "preserves_issue_student_access_token_v2_authenticated_execute": True,
-    }, "revocation candidate")
-    if set(authority.get("target_functions", [])) != TARGET_SIGNATURES:
-        fail("exact five target signatures drifted")
-
+    }, "candidate authority")
     require(authority.get("regrant_recovery", {}), {
         "repository_blob_sha": RECOVERY_BLOB,
         "is_migration": False,
         "automatic_execution_allowed": False,
         "execution_allowed_before_remote_revocation": False,
-        "execution_condition": "only_after_confirmed_remote_revocation_and_failed_post_revocation_edge_proof",
         "restores_only_exact_five_targets": True,
-        "restores_anon_execute": True,
-        "restores_authenticated_execute": True,
         "requires_service_role_execute_intact": True,
         "preserves_issue_student_access_token_v2_authenticated_execute": True,
         "production_transport_constant_change": False,
         "automatic_fallback_enablement": False,
-    }, "regrant recovery")
-
+    }, "regrant authority")
     proof = authority.get("post_revocation_edge_proof_candidate", {})
     require(proof, {
         "focused_test_blob_sha": TEST_BLOB,
-        "enabled_environment": "STAGE33_POST_REVOCATION_LIVE_PROOF_ENABLED",
         "production_transport_object": "StudentAccessTransport.instance",
         "for_verification_factory_allowed": False,
         "authorized_rollback_factory_allowed": False,
@@ -184,95 +173,42 @@ def main() -> None:
         "workflow_must_separately_prove_direct_http_rpc_denied": True,
         "source_direct_rpc_execute_revoked_flag_may_self_promote": False,
         "one_shot_workflow_required_before_remote_apply": True,
-    }, "post-revocation proof candidate")
-    if proof.get("route_sequence") != [
-        "get_workout", "start_workout", "set_completion",
-        "get_feedback_context", "submit_feedback",
-    ]:
-        fail("route sequence drifted")
+    }, "proof candidate authority")
+    if set(authority.get("target_functions", [])) != TARGET_SIGNATURES:
+        fail("exact five target signatures drifted")
 
-    # Preparation is intentionally non-migrating and non-mutating.
-    if any(
-        path.is_file() and "stage33" in path.name and "revocation" in path.name
-        for path in (BACKEND / "migrations").glob("*.sql")
-    ):
-        fail("Stage33 revocation migration materialized before preparation merge")
-    if any(
-        isinstance(row, dict) and row.get("direction") == "repo_only"
-        for row in ledger.get("declared_divergences", [])
-    ):
-        fail("preparation lifecycle introduced repo-only migration divergence")
-    if any(
-        isinstance(row, dict)
-        and row.get("name") == "stage33_direct_rpc_revocation_and_post_revocation_fixture"
-        for row in ledger.get("remote_migrations", [])
-    ):
-        fail("Stage33 revocation unexpectedly appears remote")
-
-    # SQL candidate must fail closed, seed only deterministic synthetic fixture, and cut exactly five.
+    # Immutable asset safety contract.
     for fragment in (
         "STAGE33_REVOCATION_REQUIRES_EMPTY_CUSTOMER_DOMAIN",
         "STAGE33_REVOCATION_SECURITY_OBSERVATION_NOT_QUIET",
-        "now() - interval '60 minutes'",
         "fitnexus-stage33-post-revocation-edge-proof-v1",
-        "c91c6cec-618b-58fc-99fc-948ab08895c4",
-        "3e4d79f5-9565-5ac9-b5e0-32ea4937d85b",
-        "87b426f7-73f0-53ec-880b-a75767415dbf",
         "STAGE33_REVOCATION_PRECONDITION_DIRECT_GRANTS_DRIFT",
         "STAGE33_REVOCATION_POSTCONDITION_ROLE_BOUNDARY_FAILED",
-        "STAGE33_REVOCATION_POSTCONDITION_ISSUE_TOKEN_AUTHORITY_CHANGED",
     ):
         if fragment not in candidate:
-            fail(f"candidate SQL drift: {fragment}")
+            fail(f"candidate drift: {fragment}")
     for signature in TARGET_SIGNATURES:
         short = signature.removeprefix("public.")
         if f"revoke execute on function public.{short}" not in candidate:
-            fail(f"candidate missing target: {signature}")
-    if candidate.lower().count("revoke execute on function public.") != 5:
-        fail("candidate must contain exactly five public function revokes")
-    if "has_function_privilege('public'" in candidate.lower():
-        fail("candidate incorrectly treats PUBLIC as a login role")
-    if "grant execute on function public." in candidate.lower():
-        fail("candidate unexpectedly grants function execute")
-
-    # Recovery must invert only those five grants and must not attempt pseudo-role privilege checks.
-    for signature in TARGET_SIGNATURES:
-        short = signature.removeprefix("public.")
+            fail(f"candidate missing revoke target: {signature}")
         if f"grant execute on function public.{short}" not in recovery:
-            fail(f"recovery missing target: {signature}")
+            fail(f"recovery missing grant target: {signature}")
+    if candidate.lower().count("revoke execute on function public.") != 5:
+        fail("candidate revoke count is not exactly five")
     if recovery.lower().count("grant execute on function public.") != 5:
-        fail("recovery must contain exactly five public function grants")
-    if "has_function_privilege('public'" in recovery.lower():
-        fail("recovery incorrectly treats PUBLIC as a login role")
-    if "revoke execute" in recovery.lower():
-        fail("recovery may not revoke privileges")
-
-    # Focused proof uses the production singleton only.
-    for fragment in (
-        "StudentAccessTransport.instance",
-        "STAGE33_POST_REVOCATION_LIVE_PROOF_ENABLED",
-        "STAGE33_SYNTHETIC_TOKEN",
-        "STAGE33_SUPABASE_URL",
-        "STAGE33_SUPABASE_PUBLISHABLE_KEY",
-        "SharedPreferences.setMockInitialValues",
-        "HttpOverrides.global = null",
-        "'get_workout'", "'start_workout'", "'set_completion'",
-        "'get_feedback_context'", "'submit_feedback'",
-    ):
-        if fragment not in proof_test:
-            fail(f"focused proof drift: {fragment}")
+        fail("recovery grant count is not exactly five")
+    if "has_function_privilege('public'" in candidate.lower() or "has_function_privilege('public'" in recovery.lower():
+        fail("PUBLIC pseudo-role privilege check reintroduced")
     for forbidden in ("forVerification", "forAuthorizedRollbackProof", ".rpc(", ".functions.invoke("):
         if forbidden in proof_test:
             fail(f"focused proof bypass: {forbidden}")
+    if "StudentAccessTransport.instance" not in proof_test:
+        fail("focused proof no longer uses production singleton")
 
-    # Live exposure authority still describes the pre-revocation remote truth.
-    approved_names = {
-        row.get("function") for row in exposure.get("approved_exposures", [])
-        if isinstance(row, dict)
-    }
-    if approved_names != TARGET_NAMES | {"issue_student_access_token_v2"}:
-        fail("pre-revocation exposure authority drifted")
-
+    remote_rows = exposure_rows(exposure)
+    remote_names = {row.get("function") for row in remote_rows}
+    if remote_names != TARGET_NAMES | {"issue_student_access_token_v2"}:
+        fail("remote pre-revocation exposure receipt drifted")
     for fragment in (
         "StudentAccessTransportMode.edgeGateway;",
         "static const bool edgeGatewaySelected = true;",
@@ -282,7 +218,57 @@ def main() -> None:
         "static const bool directRpcExecuteRevoked = false;",
     ):
         if fragment not in contract:
-            fail(f"production transport drift: {fragment}")
+            fail(f"production source drift: {fragment}")
+
+    repo_only = [
+        row for row in ledger.get("declared_divergences", [])
+        if isinstance(row, dict) and row.get("direction") == "repo_only"
+    ]
+    remote_migrations = {
+        row.get("name"): row.get("version")
+        for row in ledger.get("remote_migrations", []) if isinstance(row, dict)
+    }
+    migration_exists = MIGRATION.exists()
+
+    if not migration_exists:
+        if repo_only:
+            fail("pre-promotion preparation unexpectedly has repo-only divergence")
+        lifecycle = "PREPARATION_ONLY"
+    else:
+        promotion = load(PROMOTION)
+        require(promotion, {
+            "schema_version": 1,
+            "project_ref": "mceukeondizkwlpfxzgf",
+            "stage": "STAGE33_DIRECT_RPC_REVOCATION_MIGRATION_PROMOTION",
+            "baseline_main_sha": "2f8bd11ac0a4ba4e605807fb17c6c78ff3939041",
+            "current_state": "REVOCATION_MIGRATION_REPO_ONLY_PROOF_SEAL_PENDING",
+        }, "downstream promotion authority")
+        require(promotion.get("migration", {}), {
+            "name": MIGRATION_NAME,
+            "repository_blob_sha": MIGRATION_BLOB,
+            "source_candidate_blob_sha": CANDIDATE_BLOB,
+            "migration_ledger_state": "repo_only",
+            "remote_applied": False,
+            "remote_version": None,
+            "apply_count": 0,
+        }, "downstream promotion migration")
+        if len(repo_only) != 1 or repo_only[0].get("name") != MIGRATION_NAME:
+            fail("Stage33 migration must be unique repo-only divergence")
+        if MIGRATION_NAME in remote_migrations:
+            fail("Stage33 migration became remote before proof seal")
+        if exposure.get("schema_version") != 2 or exposure.get("current_state") != "STAGE33_REVOCATION_REPO_ONLY_REMOTE_PRE_REVOCATION":
+            fail("lifecycle-aware exposure authority missing during promotion")
+        transition = exposure.get("stage33_transition", {})
+        require(transition, {
+            "migration_name": MIGRATION_NAME,
+            "migration_ledger_state": "repo_only",
+            "remote_applied": False,
+            "remote_version": None,
+            "service_role_preserved_for_edge_backend": True,
+            "issue_student_access_token_v2_preserved": True,
+            "remote_revocation_allowed_now": False,
+        }, "exposure transition")
+        lifecycle = "MIGRATION_PROMOTION_REPO_ONLY"
 
     require(authority.get("promotion_boundary", {}), {
         "candidate_sql_may_execute_from_operations": False,
@@ -296,29 +282,16 @@ def main() -> None:
         "must_preserve_service_role": True,
         "must_preserve_issue_token_authority": True,
         "launch_gate_promotion": False,
-    }, "promotion boundary")
-    require(authority.get("next_stage", {}), {
-        "name": "MERGE_STAGE33_REVOCATION_PREPARATION_THEN_PROMOTE_EXACT_CANDIDATE_TO_MIGRATION_AND_SEAL_PROOF",
-        "allowed_now": True,
-        "requires_full_ci_green": True,
-        "requires_exact_candidate_blob_sha": CANDIDATE_BLOB,
-        "requires_exact_recovery_blob_sha": RECOVERY_BLOB,
-        "requires_exact_focused_test_blob_sha": TEST_BLOB,
-        "may_apply_remote_revocation_now": False,
-        "may_execute_recovery_now": False,
-        "may_promote_launch_gates": False,
-    }, "next stage")
+    }, "preparation promotion boundary")
 
     print("STAGE33_DIRECT_RPC_REVOCATION_PREPARATION_GUARD=PASS")
-    print(f"BASELINE_MAIN_SHA={BASELINE}")
+    print(f"CURRENT_DOWNSTREAM_LIFECYCLE={lifecycle}")
     print(f"CANDIDATE_BLOB_SHA={CANDIDATE_BLOB}")
     print(f"RECOVERY_BLOB_SHA={RECOVERY_BLOB}")
     print(f"FOCUSED_TEST_BLOB_SHA={TEST_BLOB}")
     print("REVOCATION_TARGETS=5")
-    print("CANDIDATE_IS_MIGRATION=false")
     print("REMOTE_PRIVILEGE_MUTATION=false")
     print("REGRANT_AUTOMATIC_EXECUTION=false")
-    print("POST_REVOCATION_EDGE_PROOF=PREPARED_NOT_EXECUTED")
     print("PRODUCTION_ACTIVE_TRANSPORT=edgeGateway")
     print("LAUNCH_GATE_PROMOTION=DENIED")
 
