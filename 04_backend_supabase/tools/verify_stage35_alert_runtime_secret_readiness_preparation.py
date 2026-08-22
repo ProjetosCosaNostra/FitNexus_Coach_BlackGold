@@ -22,6 +22,12 @@ CLEANUP_BLOB = "ca8a824131120d912d0fe98687820c2b320e33f5"
 DISPATCHER_BLOB = "0aece761d707d8befb64a0fb89ce495fc50255a0"
 ONE_SHOT_BLOB = "079a140e36a851eb0f787397929ffbe3351aba48"
 FAILURE_CLASS = "BGF-STAGE35-ALERT-SECRET-READINESS-SELF-ATTESTATION-292"
+REQUIRED_SECRETS = [
+    "SUPABASE_ACCESS_TOKEN",
+    "STUDENT_ACCESS_ALERT_DISPATCH_TOKEN",
+    "STUDENT_ACCESS_ALERT_TELEGRAM_BOT_TOKEN",
+    "STUDENT_ACCESS_ALERT_TELEGRAM_CHAT_ID",
+]
 
 
 def fail(message: str) -> None:
@@ -58,8 +64,8 @@ def require(mapping: dict, expected: dict, label: str) -> None:
 
 
 def main() -> None:
-    # First replay only the repository guards of the already-merged Stage35 seal.
-    # This does not trigger its one-shot external provider workflow.
+    # Replay repository guards of the already-merged Stage35 seal only. This cannot trigger
+    # the sealed provider workflow because it is a plain Python guard invocation.
     seal = importlib.import_module("verify_stage35_alert_dispatcher_deployment_proof_seal_lifecycle")
     seal.main()
 
@@ -71,8 +77,12 @@ def main() -> None:
         "project_ref": "mceukeondizkwlpfxzgf",
         "stage": "STAGE35_ALERT_RUNTIME_SECRET_READINESS_ASSESSMENT",
         "baseline_main_sha": BASELINE,
-        "current_state": "RUNTIME_SECRET_READINESS_ASSESSMENT_STAGED_FIXTURE_NOT_PROMOTED",
     }, "secret readiness authority")
+    if authority.get("current_state") not in {
+        "RUNTIME_SECRET_READINESS_ASSESSMENT_STAGED_FIXTURE_NOT_PROMOTED",
+        "RUNTIME_SECRET_READINESS_BLOCKED_MISSING_GITHUB_SECRETS_FIXTURE_NOT_PROMOTED",
+    }:
+        fail("secret readiness authority state drifted")
 
     require(authority.get("deployment_proof_seal_receipt", {}), {
         "seal_pr": 101,
@@ -136,27 +146,44 @@ def main() -> None:
         fail("secret readiness must not advance the migration ledger")
 
     readiness = authority.get("runtime_secret_readiness", {})
-    require(readiness, {
-        "status": "UNVERIFIED",
-        "assessment_scope": "github_actions_secret_presence_only",
-        "required_secret_names": [
-            "SUPABASE_ACCESS_TOKEN",
-            "STUDENT_ACCESS_ALERT_DISPATCH_TOKEN",
-            "STUDENT_ACCESS_ALERT_TELEGRAM_BOT_TOKEN",
-            "STUDENT_ACCESS_ALERT_TELEGRAM_CHAT_ID",
-        ],
-        "assessment_run_id": None,
-        "assessment_job_id": None,
-        "supabase_access_token_present": None,
-        "dispatch_token_present": None,
-        "telegram_bot_token_present": None,
-        "telegram_chat_id_present": None,
-        "all_required_github_secrets_present": None,
-        "secret_values_may_be_printed": False,
-        "github_presence_proves_supabase_edge_runtime_configured": False,
-        "provider_destination_verified": False,
-        "remote_mutation_allowed_while_unverified": False,
-    }, "secret readiness")
+    if readiness.get("required_secret_names") != REQUIRED_SECRETS:
+        fail("required secret-name set drifted")
+    if readiness.get("assessment_scope") != "github_actions_secret_presence_only":
+        fail("secret readiness assessment scope drifted")
+    if readiness.get("github_presence_proves_supabase_edge_runtime_configured") is not False:
+        fail("GitHub secret presence must not self-attest Supabase runtime configuration")
+    if readiness.get("provider_destination_verified") is not False:
+        fail("provider destination was self-attested before external proof")
+
+    status = readiness.get("status")
+    if status == "UNVERIFIED":
+        require(readiness, {
+            "assessment_run_id": None,
+            "assessment_job_id": None,
+            "supabase_access_token_present": None,
+            "dispatch_token_present": None,
+            "telegram_bot_token_present": None,
+            "telegram_chat_id_present": None,
+            "all_required_github_secrets_present": None,
+        }, "unverified readiness")
+        if readiness.get("remote_mutation_allowed_while_unverified") is not False:
+            fail("unverified readiness cannot allow remote mutation")
+    elif status == "BLOCKED_MISSING_GITHUB_SECRETS":
+        require(readiness, {
+            "assessment_run_id": 32591093864,
+            "assessment_job_id": 97074948758,
+            "assessment_result": "OBSERVED",
+            "supabase_access_token_present": False,
+            "dispatch_token_present": False,
+            "telegram_bot_token_present": False,
+            "telegram_chat_id_present": False,
+            "all_required_github_secrets_present": False,
+            "missing_secret_names": REQUIRED_SECRETS,
+            "secret_values_printed": False,
+            "remote_mutation_allowed": False,
+        }, "blocked readiness receipt")
+    else:
+        fail(f"unsupported readiness status: {status}")
 
     require(authority.get("promotion_rules", {}), {
         "may_promote_fixture_migration_now": False,
@@ -178,6 +205,7 @@ def main() -> None:
     }, "promotion rules")
 
     print("STAGE35_ALERT_RUNTIME_SECRET_READINESS_PREPARATION=PASS")
+    print(f"RUNTIME_SECRET_READINESS={status}")
     print("ASSESSMENT_SCOPE=github_actions_secret_presence_only")
     print("SECRET_VALUES_PRINTED=false")
     print("CONTROLLED_FIXTURE_PROMOTED=false")
