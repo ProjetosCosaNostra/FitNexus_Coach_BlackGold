@@ -1,0 +1,147 @@
+name: Stage 33 Post-Revocation Edge Runtime Live Proof
+
+on:
+  pull_request:
+    types: [ready_for_review, opened]
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  post-revocation-edge-runtime-live-proof:
+    if: >-
+      (
+        (
+          github.event.action == 'ready_for_review' &&
+          github.event.pull_request.number == 92 &&
+          github.event.pull_request.head.ref == 'blackgold/stage33-post-revocation-live-proof-candidate' &&
+          github.event.pull_request.head.sha == 'b8123abb7f0dda364f49d9f7342e5887c7da6553'
+        ) ||
+        (
+          github.event.action == 'opened' &&
+          github.event.pull_request.head.ref == 'blackgold/stage33-post-revocation-live-proof-open-trigger' &&
+          github.event.pull_request.head.sha == 'd2ac5815532ac1671c942ac6e8d491c7ac5ecd89'
+        )
+      ) &&
+      github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout exact sealed Stage 33 proof candidate head
+        uses: actions/checkout@v6
+        with:
+          ref: b8123abb7f0dda364f49d9f7342e5887c7da6553
+
+      - name: Stage 33 post-revocation proof candidate guard
+        run: python 04_backend_supabase/tools/verify_stage33_post_revocation_live_proof_candidate.py
+
+      - name: Derive masked Stage 33 synthetic proof token
+        shell: bash
+        run: |
+          TOKEN="$(python - <<'PY'
+          import hashlib
+          print(hashlib.sha256(b'fitnexus-stage33-post-revocation-edge-proof-v1').hexdigest())
+          PY
+          )"
+          echo "::add-mask::$TOKEN"
+          echo "STAGE33_SYNTHETIC_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+          echo "STAGE33_POST_REVOCATION_LIVE_PROOF_ENABLED=1" >> "$GITHUB_ENV"
+          echo "STAGE33_SUPABASE_URL=https://mceukeondizkwlpfxzgf.supabase.co" >> "$GITHUB_ENV"
+          echo "STAGE33_SUPABASE_PUBLISHABLE_KEY=sb_publishable_aggqgASWuWfgBJAlrRKoeg_Gg2qnjHQ" >> "$GITHUB_ENV"
+
+      - name: Prove direct anonymous RPC execution is denied after revocation
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import sys
+          import urllib.error
+          import urllib.request
+
+          base = os.environ['STAGE33_SUPABASE_URL'].rstrip('/')
+          key = os.environ['STAGE33_SUPABASE_PUBLISHABLE_KEY']
+          token = os.environ['STAGE33_SYNTHETIC_TOKEN']
+          url = f"{base}/rest/v1/rpc/get_student_workout_v2"
+          payload = json.dumps({'p_token': token}).encode('utf-8')
+          request = urllib.request.Request(
+              url,
+              data=payload,
+              method='POST',
+              headers={
+                  'apikey': key,
+                  'Authorization': f'Bearer {key}',
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+              },
+          )
+          status = 0
+          body = ''
+          try:
+              with urllib.request.urlopen(request, timeout=25) as response:
+                  status = response.status
+                  body = response.read(8192).decode('utf-8', errors='replace')
+          except urllib.error.HTTPError as exc:
+              status = exc.code
+              body = exc.read(8192).decode('utf-8', errors='replace')
+          except Exception as exc:
+              print(f'STAGE33_DIRECT_RPC_DENIAL_PROOF=FAIL transport={type(exc).__name__}')
+              sys.exit(1)
+
+          forbidden = (
+              'Stage33 Post-Revocation Synthetic Student',
+              '87b426f7-73f0-53ec-880b-a75767415dbf',
+              '059af7ff-3b6b-5e41-ac46-e4e73e4b5107',
+          )
+          if 200 <= status < 300:
+              print(f'STAGE33_DIRECT_RPC_DENIAL_PROOF=FAIL status={status} reason=direct_rpc_still_callable')
+              sys.exit(1)
+          if any(value in body for value in forbidden):
+              print(f'STAGE33_DIRECT_RPC_DENIAL_PROOF=FAIL status={status} reason=synthetic_fixture_leaked')
+              sys.exit(1)
+          if status not in {401, 403, 404}:
+              print(f'STAGE33_DIRECT_RPC_DENIAL_PROOF=FAIL status={status} reason=unexpected_denial_semantics')
+              sys.exit(1)
+
+          print('STAGE33_DIRECT_RPC_DENIAL_PROOF=PASS')
+          print(f'STAGE33_DIRECT_RPC_DENIAL_HTTP_STATUS={status}')
+          print('STAGE33_DIRECT_RPC_SYNTHETIC_DATA_RETURNED=false')
+          PY
+
+      - name: Set up Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter pub get
+
+      - name: Execute sealed five-route production Edge proof once
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter test test/student_access_stage33_post_revocation_live_edge_proof_test.dart --reporter expanded
+
+      - name: Stage 33 post-revocation proof boundary receipt
+        run: |
+          echo 'STAGE33_POST_REVOCATION_EDGE_LIVE_PROOF=COMPLETED'
+          echo 'SEALED_PROOF_PR=92'
+          echo 'SEALED_PROOF_HEAD=b8123abb7f0dda364f49d9f7342e5887c7da6553'
+          echo 'OPEN_TRIGGER_HEAD=d2ac5815532ac1671c942ac6e8d491c7ac5ecd89'
+          echo 'PRODUCTION_SINGLETON=StudentAccessTransport.instance'
+          echo 'PRODUCTION_ACTIVE_TRANSPORT=edgeGateway'
+          echo 'AUTOMATIC_EDGE_TO_DIRECT_FALLBACK=false'
+          echo 'DIRECT_HTTP_RPC_DENIAL_REQUIRED=true'
+          echo 'ROUTES_EXPECTED=5'
+          echo 'SERVICE_ROLE_EDGE_BACKEND_EXPECTED=true'
+          echo 'ISSUE_TOKEN_AUTHORITY_EXPECTED_PRESERVED=true'
+          echo 'REAL_CUSTOMER_DATA_USED=false'
+          echo 'RAW_SYNTHETIC_TOKEN_PRINTED=false'
+          echo 'PROOF_REEXECUTION_ALLOWED=false'
+          echo 'CANDIDATE_MERGE_ALLOWED=false'
+          echo 'FALLBACK_TRIGGER_MERGE_ALLOWED=false'
+          echo 'CLEANUP_REQUIRED=true'
+          echo 'LAUNCH_GATE_PROMOTION=DENIED'
