@@ -47,7 +47,7 @@ def require(mapping: dict, expected: dict, label: str) -> None:
 
 
 def main() -> None:
-    # First prove the real current lifecycle frontier (successful proof, cleanup repo-only).
+    # First prove the actual current frontier: proof consumed, cleanup remote-complete.
     current = importlib.import_module("verify_stage32_post_cutover_rollback_proof_preparation")
     current.main()
 
@@ -55,7 +55,7 @@ def main() -> None:
     rollback = load(ROLLBACK)
     workflow = text(WORKFLOW)
 
-    # The seal authority is intentionally retained as the immutable PRE-EVENT snapshot.
+    # Immutable authority remains the exact PRE-EVENT seal snapshot.
     require(seal, {
         "schema_version": 1,
         "project_ref": "mceukeondizkwlpfxzgf",
@@ -82,8 +82,7 @@ def main() -> None:
         "open_before_seal_merge_allowed": False,
     }, "fallback trigger seal")
 
-    contract = seal.get("workflow_contract", {})
-    require(contract, {
+    require(seal.get("workflow_contract", {}), {
         "file": ".github/workflows/stage32_post_cutover_rollback_live_proof.yml",
         "event": "pull_request",
         "event_types": ["ready_for_review", "opened"],
@@ -130,7 +129,7 @@ def main() -> None:
         if forbidden in workflow:
             fail(f"sealed workflow became replayable through {forbidden}")
 
-    # Historical seal snapshot must still show that no execution had happened when sealed.
+    # The historical seal snapshot remains pre-event forever.
     require(seal.get("execution_receipt", {}), {
         "workflow_run_id": None,
         "job_id": None,
@@ -152,7 +151,7 @@ def main() -> None:
         "cleanup_completed": False,
     }, "historical pre-event execution snapshot")
 
-    # Actual execution truth lives in the current rollback authority after consumption.
+    # Actual proof/cleanup truth lives in the current rollback authority.
     require(rollback.get("runtime_proof", {}), {
         "workflow_run_id": 32540031081,
         "workflow_job_id": 96948118831,
@@ -169,9 +168,17 @@ def main() -> None:
         "direct_rpc_privilege_revocation": False,
         "real_customer_data_used": False,
         "proof_reexecution_allowed": False,
-        "cleanup_completed": False,
+        "cleanup_completed": True,
         "launch_gate_promotion": False,
     }, "consumed proof execution")
+    require(rollback.get("cleanup", {}), {
+        "migration_name": "stage32_post_cutover_rollback_proof_cleanup",
+        "migration_ledger_state": "remote_reconciled",
+        "remote_applied": True,
+        "remote_version": "20260822003559",
+        "cleanup_completed": True,
+        "revokes_direct_rpc_execute": False,
+    }, "completed cleanup")
 
     print("STAGE32_POST_CUTOVER_ROLLBACK_LIVE_PROOF_WORKFLOW_SEAL_GUARD=PASS")
     print(f"SEALED_PROOF_HEAD={PROOF_HEAD}")
@@ -180,7 +187,8 @@ def main() -> None:
     print("ROLLBACK_LIVE_PROOF_JOB=96948118831")
     print("ROLLBACK_LIVE_PROOF=SUCCESS")
     print("PROOF_REEXECUTION_ALLOWED=false")
-    print("CLEANUP_LEDGER_STATE=repo_only")
+    print("CLEANUP_REMOTE_VERSION=20260822003559")
+    print("ROLLBACK_SYNTHETIC_RESIDUE=ZERO")
     print("PRODUCTION_ACTIVE_TRANSPORT=edgeGateway")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
     print("LAUNCH_GATE_PROMOTION=DENIED")
