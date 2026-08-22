@@ -46,13 +46,13 @@ def project_stage32_ledger(current: dict) -> dict:
         if isinstance(row, dict) and row.get("direction") == "repo_only"
     ]
     if len(repo_only) != 1 or repo_only[0].get("name") != STAGE33_NAME:
-        fail("Stage33 migration must be the unique repo-only divergence before proof seal")
+        fail("Stage33 migration must be the unique repo-only divergence before remote apply")
     remote = {
         row.get("name"): row.get("version")
         for row in current.get("remote_migrations", []) if isinstance(row, dict)
     }
     if STAGE33_NAME in remote:
-        fail("Stage33 migration unexpectedly remote during repo-only promotion")
+        fail("Stage33 migration unexpectedly remote during workflow-seal lifecycle")
     if remote.get("stage32_post_cutover_rollback_proof_cleanup") != "20260822003559":
         fail("Stage32 rollback cleanup remote receipt disappeared")
 
@@ -74,11 +74,12 @@ def run(mode: str) -> None:
     if mode not in MODES:
         fail(f"unsupported mode: {mode}")
 
-    # Never project first: prove the actual current Stage33 authority and repo-only frontier.
-    promotion = importlib.import_module(
-        "verify_stage33_direct_rpc_revocation_migration_promotion"
+    # Prove the actual downstream seal frontier first, then project only the later
+    # Stage33 repo-only migration row away for immutable Stage32 historical guards.
+    seal_history = importlib.import_module(
+        "verify_stage33_post_revocation_seal_historical_compat"
     )
-    promotion.main()
+    seal_history.main()
 
     projected = project_stage32_ledger(load(LEDGER))
     stage32_wrapper = importlib.import_module("verify_stage32_rollback_fixture_historical_compat")
@@ -98,8 +99,6 @@ def run(mode: str) -> None:
             elif mode == "rollback_prep":
                 rollback_prep.main()
             else:
-                # The seal guard imports/calls the same rollback preparation module;
-                # its global LEDGER is already projected above.
                 rollback_seal.main()
         finally:
             stage32_wrapper.LEDGER = original_wrapper_ledger
@@ -107,14 +106,14 @@ def run(mode: str) -> None:
 
     print("STAGE33_REVOCATION_HISTORICAL_COMPAT=PASS")
     print(f"MODE={mode}")
-    print("ACTUAL_STAGE33_STATE=REVOCATION_MIGRATION_REPO_ONLY_PROOF_SEAL_PENDING")
+    print("ACTUAL_STAGE33_STATE=POST_REVOCATION_ONE_SHOT_SEALED_REMOTE_APPLY_PENDING")
     print(f"ACTUAL_STAGE33_MIGRATION={STAGE33_NAME}")
     print("ACTUAL_STAGE33_REMOTE_APPLIED=false")
+    print("ACTUAL_STAGE33_PROOF_EVENT_ALLOWED=false")
     print("PROJECTED_STAGE33_REPO_ONLY_ROW_REMOVED=true")
     print(f"PROJECTED_LEDGER_BASELINE={STAGE32_BASELINE}")
     print(f"PROJECTED_LEDGER_OBSERVED={STAGE32_OBSERVED}")
     print("HISTORICAL_PROOF_REEXECUTION_ALLOWED=false")
-    print("REMOTE_PRIVILEGE_REVOCATION=false")
     print("PRODUCTION_ACTIVE_TRANSPORT=edgeGateway")
     print("LAUNCH_GATE_PROMOTION=DENIED")
 

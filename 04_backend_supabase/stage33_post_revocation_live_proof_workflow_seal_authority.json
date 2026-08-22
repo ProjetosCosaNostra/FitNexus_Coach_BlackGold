@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE33_POST_REVOCATION_LIVE_PROOF_WORKFLOW_SEAL",
+  "baseline_main_sha": "c64222cc0dc22886dcfe569b2629a5c9ea2efb71",
+  "current_state": "POST_REVOCATION_ONE_SHOT_SEALED_REMOTE_APPLY_PENDING",
+  "purpose": "Seal an exact one-shot GitHub Actions delivery path for proving that direct anonymous RPC execution is denied after Stage33 privilege retirement while all five student routes continue to work through the production-selected Edge transport. The workflow may not execute before verified remote revocation.",
+  "failure_classes": [
+    "BGF-STAGE33-POST-REVOCATION-CANDIDATE-DRIFT-257",
+    "BGF-STAGE33-PROOF-BEFORE-REMOTE-REVOCATION-258",
+    "BGF-STAGE33-POST-REVOCATION-WORKFLOW-SEAL-259",
+    "BGF-STAGE33-DIRECT-DENIAL-PROOF-BYPASS-260",
+    "BGF-STAGE33-REVOCATION-PROOF-REEXECUTION-255"
+  ],
+  "migration_promotion_receipt": {
+    "pr": 91,
+    "head_sha": "9f34e5e89b1e19e8ccc6b59a0fb6b07f76a35e4b",
+    "quality_gate_run_id": 32548219593,
+    "quality_gate_job_id": 96970462892,
+    "quality_gate_result": "SUCCESS",
+    "postgres_compat_run_id": 32548219583,
+    "postgres_compat_job_id": 96970463027,
+    "postgres_compat_result": "SUCCESS",
+    "merge_main_sha": "c64222cc0dc22886dcfe569b2629a5c9ea2efb71"
+  },
+  "proof_candidate": {
+    "pr": 92,
+    "branch": "blackgold/stage33-post-revocation-live-proof-candidate",
+    "head_sha": "b8123abb7f0dda364f49d9f7342e5887c7da6553",
+    "quality_gate_run_id": 32548471258,
+    "quality_gate_job_id": 96971104493,
+    "quality_gate_result": "SUCCESS",
+    "draft": true,
+    "head_frozen": true,
+    "must_never_merge": true
+  },
+  "fallback_trigger": {
+    "branch": "blackgold/stage33-post-revocation-live-proof-open-trigger",
+    "head_sha": "d2ac5815532ac1671c942ac6e8d491c7ac5ecd89",
+    "marker_file": "04_backend_supabase/stage33_post_revocation_live_proof_open_trigger_marker.json",
+    "pr": null,
+    "opened": false,
+    "open_allowed_before_preferred_event_failure": false,
+    "must_never_merge": true,
+    "head_frozen": true
+  },
+  "workflow": {
+    "file": ".github/workflows/stage33_post_revocation_edge_runtime_live_proof.yml",
+    "preferred_event": "pull_request.ready_for_review",
+    "preferred_exact_pr": 92,
+    "preferred_exact_branch": "blackgold/stage33-post-revocation-live-proof-candidate",
+    "preferred_exact_head_sha": "b8123abb7f0dda364f49d9f7342e5887c7da6553",
+    "fallback_event": "pull_request.opened",
+    "fallback_exact_branch": "blackgold/stage33-post-revocation-live-proof-open-trigger",
+    "fallback_exact_head_sha": "d2ac5815532ac1671c942ac6e8d491c7ac5ecd89",
+    "run_attempt_required": 1,
+    "workflow_dispatch_allowed": false,
+    "schedule_allowed": false,
+    "synchronize_allowed": false,
+    "reopened_allowed": false,
+    "checkout_exact_candidate_head": true,
+    "candidate_guard_before_network_proof": true,
+    "service_role_secret_allowed": false,
+    "direct_http_denial_before_edge_test": true,
+    "direct_http_denial_target": "public.get_student_workout_v2(text)",
+    "direct_http_allowed_statuses": [401, 403, 404],
+    "five_route_edge_proof_required": true,
+    "focused_test_file": "03_app_flutter/fitnexus_app/test/student_access_stage33_post_revocation_live_edge_proof_test.dart"
+  },
+  "revocation_migration": {
+    "name": "stage33_direct_rpc_revocation_and_post_revocation_fixture",
+    "repository_file": "04_backend_supabase/migrations/20260822022000_stage33_direct_rpc_revocation_and_post_revocation_fixture.sql",
+    "repository_blob_sha": "8f079770f077913d94229df272583945320d943d",
+    "migration_ledger_state_before_apply": "repo_only",
+    "remote_applied_at_seal_creation": false,
+    "remote_version": null,
+    "apply_count": 0,
+    "apply_once_only_after_seal_merge": true
+  },
+  "recovery": {
+    "file": "04_backend_supabase/operations/stage33_direct_rpc_regrant_recovery.sql",
+    "blob_sha": "2a620b8a951d30bd4d9688158d36e9d1736b65a3",
+    "automatic_execution_allowed": false,
+    "execution_before_confirmed_failed_post_revocation_proof_allowed": false
+  },
+  "production_boundary": {
+    "active_transport": "edgeGateway",
+    "automatic_edge_to_direct_fallback": false,
+    "explicit_rollback_requested": false,
+    "explicit_rollback_authorized": false,
+    "source_direct_rpc_execute_revoked": false,
+    "source_flag_promotion_during_proof_allowed": false
+  },
+  "pre_apply_gate": {
+    "fresh_gate_required_after_seal_merge": true,
+    "security_posture_must_be": "quiet",
+    "signals_60m_must_be": 0,
+    "security_events_60m_must_be": 0,
+    "network_buckets_60m_must_be": 0,
+    "customer_runtime_domain_must_be_empty": true,
+    "target_anon_execute_before_apply": 5,
+    "target_authenticated_execute_before_apply": 5,
+    "target_service_role_execute_before_apply": 5,
+    "issue_token_authenticated_execute_required": true,
+    "security_advisor_recheck_required": true,
+    "expected_pre_revocation_advisor_warnings": 11,
+    "receipt": null,
+    "result": "PENDING"
+  },
+  "execution_receipt": {
+    "workflow_run_id": null,
+    "workflow_job_id": null,
+    "run_attempt": null,
+    "result": null,
+    "delivery_path": null,
+    "proof_reexecution_allowed": false
+  },
+  "seal_boundary": {
+    "seal_must_merge_before_remote_apply": true,
+    "remote_apply_allowed_before_seal_merge": false,
+    "proof_event_allowed_before_verified_remote_apply": false,
+    "candidate_ready_for_review_allowed_before_verified_remote_apply": false,
+    "fallback_open_allowed_before_preferred_event_failure": false,
+    "candidate_merge_allowed": false,
+    "fallback_merge_allowed": false,
+    "proof_rerun_allowed": false,
+    "launch_gate_promotion": false
+  },
+  "next_stage": {
+    "name": "MERGE_SEAL_RUN_FRESH_PREAPPLY_GATE_APPLY_REVOCATION_ONCE_VERIFY_REMOTE_THEN_DELIVER_ONE_SHOT",
+    "allowed_now": true,
+    "requires_seal_ci_success": true,
+    "requires_exact_seal_head_merge": true,
+    "requires_fresh_preapply_gate_after_merge": true,
+    "requires_remote_apply_once": true,
+    "requires_remote_postcondition_verification_before_proof_event": true,
+    "may_apply_remote_revocation_before_seal_merge": false,
+    "may_deliver_proof_event_before_remote_verification": false,
+    "may_promote_launch_gates": false
+  }
+}

@@ -27,6 +27,7 @@ on:
       - '04_backend_supabase/stage33_direct_rpc_privilege_revocation_assessment_authority.json'
       - '04_backend_supabase/stage33_direct_rpc_revocation_preparation_authority.json'
       - '04_backend_supabase/stage33_direct_rpc_revocation_migration_promotion_authority.json'
+      - '04_backend_supabase/stage33_post_revocation_live_proof_workflow_seal_authority.json'
       - '04_backend_supabase/stage32_post_cutover_live_proof_failure_r0_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
@@ -39,6 +40,7 @@ on:
       - '.github/workflows/stage32_post_cutover_edge_runtime_live_proof.yml'
       - '.github/workflows/stage32_post_cutover_edge_runtime_live_proof_r1.yml'
       - '.github/workflows/stage32_post_cutover_rollback_live_proof.yml'
+      - '.github/workflows/stage33_post_revocation_edge_runtime_live_proof.yml'
   push:
     branches:
       - main
@@ -68,6 +70,7 @@ on:
       - '04_backend_supabase/stage33_direct_rpc_privilege_revocation_assessment_authority.json'
       - '04_backend_supabase/stage33_direct_rpc_revocation_preparation_authority.json'
       - '04_backend_supabase/stage33_direct_rpc_revocation_migration_promotion_authority.json'
+      - '04_backend_supabase/stage33_post_revocation_live_proof_workflow_seal_authority.json'
       - '04_backend_supabase/stage32_post_cutover_live_proof_failure_r0_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
@@ -80,6 +83,7 @@ on:
       - '.github/workflows/stage32_post_cutover_edge_runtime_live_proof.yml'
       - '.github/workflows/stage32_post_cutover_edge_runtime_live_proof_r1.yml'
       - '.github/workflows/stage32_post_cutover_rollback_live_proof.yml'
+      - '.github/workflows/stage33_post_revocation_edge_runtime_live_proof.yml'
 
 permissions:
   contents: read
@@ -194,8 +198,11 @@ jobs:
       - name: Stage 33 direct RPC revocation preparation guard
         run: python ../../04_backend_supabase/tools/verify_stage33_direct_rpc_revocation_preparation.py
 
-      - name: Stage 33 direct RPC revocation migration promotion guard
-        run: python ../../04_backend_supabase/tools/verify_stage33_direct_rpc_revocation_migration_promotion.py
+      - name: Stage 33 direct RPC revocation migration promotion historical guard
+        run: python ../../04_backend_supabase/tools/verify_stage33_post_revocation_seal_historical_compat.py
+
+      - name: Stage 33 post-revocation live proof workflow seal guard
+        run: python ../../04_backend_supabase/tools/verify_stage33_post_revocation_live_proof_workflow_seal.py
 
       - name: Student client Edge runtime smoke lifecycle guard
         run: python ../../04_backend_supabase/tools/verify_stage33_revocation_historical_compat.py smoke
