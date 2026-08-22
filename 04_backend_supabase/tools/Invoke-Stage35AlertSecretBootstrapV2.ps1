@@ -97,7 +97,7 @@ if ($null -ne $supabase) {
   if ($null -eq $npx) { Fail-Closed $FailureClassCli 'SUPABASE_CLI_AND_NPX_NOT_FOUND' }
   $script:SupabaseCommandKind = 'npx'; $script:SupabaseCommand = $npx.Source
 }
-if ((Invoke-SupabaseCli @('--version')) -ne 0) { Fail-Closed $FailureClassCli 'SUPABASE_CLI_NOT_EXECUTABLE' }
+if ((Invoke-SupabaseCli -Arguments @('--version')) -ne 0) { Fail-Closed $FailureClassCli 'SUPABASE_CLI_NOT_EXECUTABLE' }
 
 $supabaseAccessToken = Read-Secret 'SUPABASE_ACCESS_TOKEN' 'Supabase access token'
 $telegramBotToken = Read-Secret 'STUDENT_ACCESS_ALERT_TELEGRAM_BOT_TOKEN' 'Telegram bot token'
@@ -133,7 +133,7 @@ try {
   [IO.File]::WriteAllText($tempEnvFile,$envText,(New-Object Text.UTF8Encoding($false)))
   [Environment]::SetEnvironmentVariable('SUPABASE_ACCESS_TOKEN',$supabaseAccessToken,'Process')
 
-  if ((Invoke-SupabaseCli @('secrets','set','--project-ref',$ProjectRef,'--env-file',$tempEnvFile)) -ne 0) {
+  if ((Invoke-SupabaseCli -Arguments @('secrets','set','--project-ref',$ProjectRef,'--env-file',$tempEnvFile)) -ne 0) {
     Fail-Closed $FailureClassPartial 'SUPABASE_RUNTIME_SECRET_SET_FAILED'
   }
   $runtimeWritten = $true
