@@ -12,20 +12,14 @@ LEDGER = BACKEND / "migration_ledger_authority.json"
 
 FIXTURE_NAME = "stage32_post_cutover_rollback_fixture"
 FIXTURE_VERSION = "20260821235550"
-CURRENT_BASELINE = "4e686d526779cce4236b6e1b4fba42c4ba6ef3c7"
-CURRENT_OBSERVED = "2026-08-21T23:56:22.809328Z"
+ROLLBACK_CLEANUP_NAME = "stage32_post_cutover_rollback_proof_cleanup"
+CURRENT_BASELINE = "3a4f52114a9ad9fa57610f67b006e76a26d98009"
+CURRENT_OBSERVED = "2026-08-22T00:24:14.494794Z"
 CLEANUP_BASELINE = "62809bbd4f27d0616110dae19024b163a4911521"
 CLEANUP_OBSERVED = "2026-08-21T22:27:43.951028Z"
 MODES = {
-    "cleanup",
-    "current_rearm",
-    "r0_seal",
-    "r1_recovery",
-    "stage31",
-    "rate_limit",
-    "valid_route",
-    "smoke",
-    "rollback",
+    "cleanup", "current_rearm", "r0_seal", "r1_recovery", "stage31",
+    "rate_limit", "valid_route", "smoke", "rollback",
 }
 
 
@@ -44,34 +38,42 @@ def load(path: Path) -> dict:
 
 
 def projected_pre_rollback_fixture_ledger(current: dict) -> dict:
+    if current.get("baseline_main_sha") != CURRENT_BASELINE:
+        fail("current rollback cleanup ledger baseline drifted")
+    if current.get("observed_at_utc") != CURRENT_OBSERVED:
+        fail("current rollback cleanup ledger observation drifted")
+
     repo_only = [
-        row
-        for row in current.get("declared_divergences", [])
+        row for row in current.get("declared_divergences", [])
         if isinstance(row, dict) and row.get("direction") == "repo_only"
     ]
-    if repo_only:
-        fail("rollback fixture remains repo_only after authoritative remote apply")
-    if current.get("baseline_main_sha") != CURRENT_BASELINE:
-        fail("rollback fixture remote ledger baseline drifted")
-    if current.get("observed_at_utc") != CURRENT_OBSERVED:
-        fail("rollback fixture remote ledger observation drifted")
+    if len(repo_only) != 1 or repo_only[0].get("name") != ROLLBACK_CLEANUP_NAME:
+        fail("rollback cleanup must be the unique current repo-only migration")
 
     remote = {
         item.get("name"): item.get("version")
-        for item in current.get("remote_migrations", [])
-        if isinstance(item, dict)
+        for item in current.get("remote_migrations", []) if isinstance(item, dict)
     }
     if remote.get("stage32_post_cutover_live_proof_r1_cleanup") != "20260821222724":
         fail("R1 cleanup remote receipt disappeared")
     if remote.get(FIXTURE_NAME) != FIXTURE_VERSION:
         fail("rollback fixture remote receipt disappeared or changed")
+    if ROLLBACK_CLEANUP_NAME in remote:
+        fail("rollback cleanup is unexpectedly remote before apply")
 
     value = json.loads(json.dumps(current))
     value["baseline_main_sha"] = CLEANUP_BASELINE
     value["observed_at_utc"] = CLEANUP_OBSERVED
+    value["declared_divergences"] = [
+        item for item in value.get("declared_divergences", [])
+        if not (
+            isinstance(item, dict)
+            and item.get("direction") == "repo_only"
+            and item.get("name") == ROLLBACK_CLEANUP_NAME
+        )
+    ]
     value["remote_migrations"] = [
-        item
-        for item in value.get("remote_migrations", [])
+        item for item in value.get("remote_migrations", [])
         if not (isinstance(item, dict) and item.get("name") == FIXTURE_NAME)
     ]
     return value
@@ -81,23 +83,18 @@ def run(mode: str) -> None:
     if mode not in MODES:
         fail(f"unsupported mode: {mode}")
 
-    current = importlib.import_module(
-        "verify_stage32_post_cutover_rollback_proof_preparation"
-    )
+    current = importlib.import_module("verify_stage32_post_cutover_rollback_proof_preparation")
     current.main()
 
     projected = projected_pre_rollback_fixture_ledger(load(LEDGER))
     cleanup_guard = importlib.import_module(
         "verify_stage32_post_cutover_live_proof_r1_cleanup_preparation"
     )
-    cleanup_history = importlib.import_module(
-        "verify_stage32_r1_cleanup_historical_compat"
-    )
+    cleanup_history = importlib.import_module("verify_stage32_r1_cleanup_historical_compat")
 
-    with tempfile.TemporaryDirectory(prefix="fitnexus-stage32-rollback-fixture-history-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="fitnexus-stage32-rollback-history-") as tmp:
         temp_ledger = Path(tmp) / "migration_ledger_authority.json"
         temp_ledger.write_text(json.dumps(projected, indent=2) + "\n", encoding="utf-8")
-
         original_cleanup_ledger = cleanup_guard.LEDGER
         original_history_ledger = cleanup_history.LEDGER
         cleanup_guard.LEDGER = temp_ledger
@@ -113,16 +110,18 @@ def run(mode: str) -> None:
 
     print("STAGE32_ROLLBACK_FIXTURE_HISTORICAL_COMPAT=PASS")
     print(f"MODE={mode}")
-    print("ACTUAL_CURRENT_STATE=POST_CUTOVER_ROLLBACK_FIXTURE_REMOTE_LIVE_PROOF_PENDING_EDGE_MODE")
+    print("ACTUAL_CURRENT_STATE=POST_CUTOVER_ROLLBACK_PROOF_VERIFIED_CLEANUP_REPO_ONLY_EDGE_MODE")
     print(f"ACTUAL_ROLLBACK_FIXTURE={FIXTURE_NAME}")
     print(f"ACTUAL_ROLLBACK_FIXTURE_REMOTE_VERSION={FIXTURE_VERSION}")
-    print("ACTUAL_ROLLBACK_FIXTURE_REMOTE_APPLIED=true")
+    print(f"ACTUAL_ROLLBACK_CLEANUP={ROLLBACK_CLEANUP_NAME}")
+    print("ACTUAL_ROLLBACK_CLEANUP_LEDGER_STATE=repo_only")
+    print("PROJECTED_ROLLBACK_CLEANUP_REPO_ONLY_ROW_REMOVED=true")
     print("PROJECTED_ROLLBACK_FIXTURE_REMOTE_ROW_REMOVED=true")
     print(f"PROJECTED_LEDGER_BASELINE={CLEANUP_BASELINE}")
     print(f"PROJECTED_LEDGER_OBSERVED={CLEANUP_OBSERVED}")
     print("R1_EDGE_LIVE_PROOF_REEXECUTION_ALLOWED=false")
+    print("ROLLBACK_PROOF_REEXECUTION_ALLOWED=false")
     print("PRODUCTION_ACTIVE_TRANSPORT=edgeGateway")
-    print("ROLLBACK_PROOF_EXECUTED=false")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
     print("LAUNCH_GATE_PROMOTION=DENIED")
 
