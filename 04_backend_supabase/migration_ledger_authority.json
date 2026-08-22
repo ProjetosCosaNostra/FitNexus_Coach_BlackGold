@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "2f8bd11ac0a4ba4e605807fb17c6c78ff3939041",
-  "observed_at_utc": "2026-08-22T02:15:46.465445Z",
+  "baseline_main_sha": "35e1c117d63349f27470160da5f58ef6077c47bc",
+  "observed_at_utc": "2026-08-22T06:00:17.171196Z",
   "source": "Supabase.list_migrations+Supabase.execute_sql",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -39,10 +39,10 @@
     },
     {
       "direction": "repo_only",
-      "name": "stage33_direct_rpc_revocation_and_post_revocation_fixture",
-      "reason": "Exact Stage33 apply-once candidate: seeds the deterministic post-revocation Edge proof fixture and retires PUBLIC/anon/authenticated direct EXECUTE on exactly five student route v2 RPCs while preserving service_role and professor token issuance. Remote apply remains forbidden until the sealed one-shot proof workflow is merged and a fresh quiet/security-advisor pre-apply gate passes.",
+      "name": "stage33_post_revocation_proof_cleanup",
+      "reason": "Fail-closed cleanup for the consumed Stage33 post-revocation Edge proof. It removes only the exact synthetic fixture, exact proof receipts and exactly five proof-window Edge network-origin buckets while preserving the 13 historical network buckets and the permanent anon/auth direct-RPC revocation boundary.",
       "owner": "BlackGold Forge",
-      "related_failure_class": "BGF-STAGE33-PRIVILEGE-REVOCATION-PREMATURE-245"
+      "related_failure_class": "BGF-STAGE33-POST-REVOCATION-PROOF-CLEANUP-262"
     }
   ],
   "remote_migrations": [
@@ -103,6 +103,7 @@
     {"version":"20260821214005","name":"stage32_rearm_expired_fixture_r1"},
     {"version":"20260821222724","name":"stage32_post_cutover_live_proof_r1_cleanup"},
     {"version":"20260821235550","name":"stage32_post_cutover_rollback_fixture"},
-    {"version":"20260822003559","name":"stage32_post_cutover_rollback_proof_cleanup"}
+    {"version":"20260822003559","name":"stage32_post_cutover_rollback_proof_cleanup"},
+    {"version":"20260822032456","name":"stage33_direct_rpc_revocation_and_post_revocation_fixture"}
   ]
 }
