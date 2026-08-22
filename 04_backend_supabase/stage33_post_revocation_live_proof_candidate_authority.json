@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE33_POST_REVOCATION_LIVE_PROOF_CANDIDATE",
+  "baseline_main_sha": "c64222cc0dc22886dcfe569b2629a5c9ea2efb71",
+  "current_state": "POST_REVOCATION_PROOF_CANDIDATE_FROZEN_PRE_REMOTE_APPLY",
+  "purpose": "Freeze the exact repository candidate that will be checked out by the later sealed one-shot workflow after the Stage33 revocation migration is applied remotely. This candidate is proof-only, remains unmerged, and cannot itself mutate Supabase or revoke privileges.",
+  "failure_classes": [
+    "BGF-STAGE33-POST-REVOCATION-CANDIDATE-DRIFT-257",
+    "BGF-STAGE33-POST-REVOCATION-PROOF-SEAM-BYPASS-253",
+    "BGF-STAGE33-REVOCATION-PROOF-REEXECUTION-255",
+    "BGF-STAGE33-PROOF-BEFORE-REMOTE-REVOCATION-258"
+  ],
+  "promotion_receipt": {
+    "promotion_pr": 91,
+    "promotion_head_sha": "9f34e5e89b1e19e8ccc6b59a0fb6b07f76a35e4b",
+    "quality_gate_run_id": 32548219593,
+    "quality_gate_job_id": 96970462892,
+    "quality_gate_result": "SUCCESS",
+    "postgres_compat_run_id": 32548219583,
+    "postgres_compat_job_id": 96970463027,
+    "postgres_compat_result": "SUCCESS",
+    "merge_main_sha": "c64222cc0dc22886dcfe569b2629a5c9ea2efb71"
+  },
+  "revocation_migration": {
+    "name": "stage33_direct_rpc_revocation_and_post_revocation_fixture",
+    "repository_file": "04_backend_supabase/migrations/20260822022000_stage33_direct_rpc_revocation_and_post_revocation_fixture.sql",
+    "repository_blob_sha": "8f079770f077913d94229df272583945320d943d",
+    "migration_ledger_state": "repo_only",
+    "remote_applied": false,
+    "remote_version": null,
+    "apply_count": 0,
+    "remote_apply_required_before_live_proof_event": true
+  },
+  "focused_proof": {
+    "file": "03_app_flutter/fitnexus_app/test/student_access_stage33_post_revocation_live_edge_proof_test.dart",
+    "blob_sha": "d2882d6560a18e259afe74ccbc18d3d275d7f001",
+    "enabled_environment": "STAGE33_POST_REVOCATION_LIVE_PROOF_ENABLED",
+    "production_transport_object": "StudentAccessTransport.instance",
+    "route_count": 5,
+    "route_sequence": [
+      "get_workout",
+      "start_workout",
+      "set_completion",
+      "get_feedback_context",
+      "submit_feedback"
+    ],
+    "command_ids": [
+      "34000000000000000000000000000001",
+      "34000000000000000000000000000002",
+      "34000000000000000000000000000003"
+    ],
+    "for_verification_factory_allowed": false,
+    "authorized_rollback_factory_allowed": false,
+    "direct_rpc_calls_allowed": false,
+    "raw_edge_function_calls_allowed": false,
+    "direct_http_denial_check_is_workflow_owned": true
+  },
+  "production_boundary": {
+    "active_transport": "edgeGateway",
+    "automatic_edge_to_direct_fallback": false,
+    "explicit_rollback_requested": false,
+    "explicit_rollback_authorized": false,
+    "direct_rpc_execute_revoked_source_flag": false,
+    "source_flag_may_self_promote_in_candidate": false
+  },
+  "recovery_boundary": {
+    "file": "04_backend_supabase/operations/stage33_direct_rpc_regrant_recovery.sql",
+    "blob_sha": "2a620b8a951d30bd4d9688158d36e9d1736b65a3",
+    "automatic_execution_allowed": false,
+    "execution_allowed_before_failed_live_proof": false
+  },
+  "candidate_boundary": {
+    "must_remain_draft_until_remote_revocation_applied": true,
+    "must_never_merge": true,
+    "head_must_be_frozen_after_candidate_ci": true,
+    "proof_event_may_be_delivered_before_remote_apply": false,
+    "proof_run_attempt_must_equal_one": true,
+    "proof_rerun_allowed": false,
+    "fallback_trigger_must_never_merge": true,
+    "launch_gate_promotion": false
+  },
+  "next_stage": {
+    "name": "RUN_CANDIDATE_CI_FREEZE_HEAD_PREPARE_FALLBACK_THEN_SEAL_ONE_SHOT_WORKFLOW",
+    "allowed_now": true,
+    "requires_candidate_quality_gate_success": true,
+    "requires_exact_candidate_head_after_ci": true,
+    "requires_exact_fallback_trigger_head": true,
+    "requires_workflow_seal_merged_before_remote_apply": true,
+    "may_apply_remote_revocation_now": false,
+    "may_deliver_proof_event_now": false,
+    "may_merge_candidate": false,
+    "may_promote_launch_gates": false
+  }
+}
