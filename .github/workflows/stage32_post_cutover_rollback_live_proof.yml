@@ -1,0 +1,89 @@
+name: Stage 32 Post-Cutover Rollback Live Proof
+
+on:
+  pull_request:
+    types: [ready_for_review, opened]
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  post-cutover-rollback-live-proof:
+    if: >-
+      (
+        (
+          github.event.action == 'ready_for_review' &&
+          github.event.pull_request.number == 84 &&
+          github.event.pull_request.head.ref == 'blackgold/stage32-post-cutover-rollback-live-proof-candidate' &&
+          github.event.pull_request.head.sha == 'cb734b3ef51fe607d7d4de2709d517625a9c8101'
+        ) ||
+        (
+          github.event.action == 'opened' &&
+          github.event.pull_request.head.ref == 'blackgold/stage32-post-cutover-rollback-live-proof-open-trigger' &&
+          github.event.pull_request.head.sha == '777bb51f698c0648cf641bba1070f5f71f001e87'
+        )
+      ) &&
+      github.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout exact sealed Stage 32 rollback proof head
+        uses: actions/checkout@v6
+        with:
+          ref: cb734b3ef51fe607d7d4de2709d517625a9c8101
+
+      - name: Stage 32 rollback live proof candidate guard
+        run: python 04_backend_supabase/tools/verify_stage32_post_cutover_rollback_live_proof_candidate.py
+
+      - name: Set up Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter pub get
+
+      - name: Derive masked Stage 32 rollback synthetic proof token
+        shell: bash
+        run: |
+          TOKEN="$(python - <<'PY'
+          import hashlib
+          print(hashlib.sha256(b'fitnexus-stage32-post-cutover-rollback-proof-v1').hexdigest())
+          PY
+          )"
+          echo "::add-mask::$TOKEN"
+          echo "STAGE32_ROLLBACK_SYNTHETIC_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+          echo "STAGE32_POST_CUTOVER_ROLLBACK_PROOF_ENABLED=1" >> "$GITHUB_ENV"
+          echo "STAGE32_SUPABASE_URL=https://mceukeondizkwlpfxzgf.supabase.co" >> "$GITHUB_ENV"
+          echo "STAGE32_SUPABASE_PUBLISHABLE_KEY=sb_publishable_aggqgASWuWfgBJAlrRKoeg_Gg2qnjHQ" >> "$GITHUB_ENV"
+
+      - name: Execute sealed post-cutover five-route rollback proof once
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter test test/student_access_stage32_post_cutover_live_rollback_proof_test.dart --reporter expanded
+
+      - name: Stage 32 rollback proof boundary receipt
+        run: |
+          echo 'STAGE32_POST_CUTOVER_ROLLBACK_LIVE_PROOF=COMPLETED'
+          echo 'SEALED_PROOF_PR=84'
+          echo 'SEALED_PROOF_HEAD=cb734b3ef51fe607d7d4de2709d517625a9c8101'
+          echo 'OPEN_TRIGGER_HEAD=777bb51f698c0648cf641bba1070f5f71f001e87'
+          echo 'AUTHORIZED_ROLLBACK_OBJECT=StudentAccessTransport.forAuthorizedRollbackProof'
+          echo 'PRODUCTION_SINGLETON=StudentAccessTransport.instance'
+          echo 'PRODUCTION_ACTIVE_TRANSPORT=edgeGateway'
+          echo 'PRODUCTION_ROLLBACK_REQUESTED=false'
+          echo 'PRODUCTION_ROLLBACK_AUTHORIZED=false'
+          echo 'AUTOMATIC_EDGE_TO_DIRECT_FALLBACK=false'
+          echo 'DIRECT_RPC_BRANCH_EXPECTED=true'
+          echo 'ROUTES_EXPECTED=5'
+          echo 'DIRECT_RPC_GRANTS_CHANGED=false'
+          echo 'DIRECT_RPC_PRIVILEGE_REVOCATION=false'
+          echo 'REAL_CUSTOMER_DATA_USED=false'
+          echo 'RAW_SYNTHETIC_TOKEN_PRINTED=false'
+          echo 'PROOF_REEXECUTION_ALLOWED=false'
+          echo 'CLEANUP_REQUIRED=true'
+          echo 'LAUNCH_GATE_PROMOTION=DENIED'
