@@ -1,58 +1,91 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "failure_class": "BGF-SECURITY-DEFINER-EXPOSURE-DRIFT-159",
   "project_ref": "mceukeondizkwlpfxzgf",
-  "baseline_main_sha": "372e5d97572c78f19093d309d14b054b050a4e0b",
-  "observed_at_utc": "2026-08-19T15:10:00Z",
-  "source": "Supabase pg_proc + has_function_privilege live catalog audit",
+  "current_state": "STAGE33_REVOCATION_REPO_ONLY_REMOTE_PRE_REVOCATION",
+  "baseline_main_sha": "2f8bd11ac0a4ba4e605807fb17c6c78ff3939041",
+  "observed_at_utc": "2026-08-22T02:15:46.465445Z",
+  "source": "Supabase pg_proc + has_function_privilege live audit + repository migration privilege replay",
   "policy": {
     "public_security_definer_default_execute": "denied",
     "new_exposure": "fail_closed_until_explicitly_reviewed_and_allowlisted",
-    "anonymous_exposure": "only possession_token_v2_boundary",
-    "legacy_student_rpc_exposure": "denied"
+    "anonymous_exposure": "only possession_token_v2_boundary_until_stage33_remote_revocation",
+    "legacy_student_rpc_exposure": "denied",
+    "repository_target_may_advance_before_remote": "only_when_exact_repo_only_migration_is_declared",
+    "issue_student_access_token_v2_authenticated_authority": "preserved"
   },
-  "approved_exposures": [
+  "historical_baseline": {
+    "schema_version": 1,
+    "baseline_main_sha": "372e5d97572c78f19093d309d14b054b050a4e0b",
+    "observed_at_utc": "2026-08-19T15:10:00Z"
+  },
+  "remote_pre_revocation_approved_exposures": [
     {
       "function": "get_student_feedback_context_v2",
       "identity_arguments": "text",
       "roles": ["anon", "authenticated"],
       "boundary": "student_possession_token_v2",
-      "reason": "Read-only student feedback context after bounded possession-token validation and per-operation rate limiting."
+      "reason": "Historical direct student route retained only through verified Edge cutover, post-cutover Edge proof and real rollback proof; Stage33 is preparing its retirement."
     },
     {
       "function": "get_student_workout_v2",
       "identity_arguments": "text",
       "roles": ["anon", "authenticated"],
       "boundary": "student_possession_token_v2",
-      "reason": "Read-only workout retrieval after bounded possession-token validation and per-operation rate limiting."
+      "reason": "Historical direct student route retained only through verified Edge cutover, post-cutover Edge proof and real rollback proof; Stage33 is preparing its retirement."
     },
     {
       "function": "issue_student_access_token_v2",
       "identity_arguments": "uuid",
       "roles": ["authenticated"],
       "boundary": "professor_manager_authority",
-      "reason": "Token issuance is authenticated-only and verifies organization manager authority before reading or mutating rotation state."
+      "reason": "Token issuance remains authenticated-only and is explicitly outside the Stage33 student direct-route revocation target."
     },
     {
       "function": "set_student_exercise_completion_v2",
       "identity_arguments": "text,uuid,uuid,boolean,text",
       "roles": ["anon", "authenticated"],
       "boundary": "student_possession_token_v2",
-      "reason": "Student mutation is bounded by token validation, tenant binding, rate limiting and idempotent command receipts."
+      "reason": "Historical direct student route retained only through verified Edge cutover, post-cutover Edge proof and real rollback proof; Stage33 is preparing its retirement."
     },
     {
       "function": "start_student_workout_v2",
       "identity_arguments": "text,text",
       "roles": ["anon", "authenticated"],
       "boundary": "student_possession_token_v2",
-      "reason": "Workout start is bounded by token validation, tenant binding, rate limiting and idempotent command receipts."
+      "reason": "Historical direct student route retained only through verified Edge cutover, post-cutover Edge proof and real rollback proof; Stage33 is preparing its retirement."
     },
     {
       "function": "submit_student_workout_feedback_v2",
       "identity_arguments": "text,uuid,integer,integer,integer,text,text,text",
       "roles": ["anon", "authenticated"],
       "boundary": "student_possession_token_v2",
-      "reason": "Feedback mutation is bounded by token validation, tenant binding, rate limiting and idempotent command receipts."
+      "reason": "Historical direct student route retained only through verified Edge cutover, post-cutover Edge proof and real rollback proof; Stage33 is preparing its retirement."
     }
-  ]
+  ],
+  "repository_target_approved_exposures": [
+    {
+      "function": "issue_student_access_token_v2",
+      "identity_arguments": "uuid",
+      "roles": ["authenticated"],
+      "boundary": "professor_manager_authority",
+      "reason": "Stage33 retires only the five student possession-token direct routes. Professor/manager token issuance remains authenticated and separately authorized."
+    }
+  ],
+  "stage33_transition": {
+    "migration_name": "stage33_direct_rpc_revocation_and_post_revocation_fixture",
+    "migration_file": "04_backend_supabase/migrations/20260822022000_stage33_direct_rpc_revocation_and_post_revocation_fixture.sql",
+    "migration_blob_sha": "8f079770f077913d94229df272583945320d943d",
+    "migration_ledger_state": "repo_only",
+    "remote_applied": false,
+    "remote_version": null,
+    "target_student_route_count": 5,
+    "remote_pre_revocation_anon_exposures": 5,
+    "remote_pre_revocation_authenticated_exposures": 6,
+    "repository_target_anon_exposures": 0,
+    "repository_target_authenticated_exposures": 1,
+    "service_role_preserved_for_edge_backend": true,
+    "issue_student_access_token_v2_preserved": true,
+    "remote_revocation_allowed_now": false
+  }
 }
