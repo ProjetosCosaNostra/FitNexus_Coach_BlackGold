@@ -13,8 +13,9 @@ LEDGER = BACKEND / "migration_ledger_authority.json"
 FIXTURE_NAME = "stage32_post_cutover_rollback_fixture"
 FIXTURE_VERSION = "20260821235550"
 ROLLBACK_CLEANUP_NAME = "stage32_post_cutover_rollback_proof_cleanup"
-CURRENT_BASELINE = "3a4f52114a9ad9fa57610f67b006e76a26d98009"
-CURRENT_OBSERVED = "2026-08-22T00:24:14.494794Z"
+ROLLBACK_CLEANUP_VERSION = "20260822003559"
+CURRENT_BASELINE = "0e7324c47771be2c9c66e3c7bbf05481abea41aa"
+CURRENT_OBSERVED = "2026-08-22T00:37:12.866972Z"
 CLEANUP_BASELINE = "62809bbd4f27d0616110dae19024b163a4911521"
 CLEANUP_OBSERVED = "2026-08-21T22:27:43.951028Z"
 MODES = {
@@ -47,8 +48,8 @@ def projected_pre_rollback_fixture_ledger(current: dict) -> dict:
         row for row in current.get("declared_divergences", [])
         if isinstance(row, dict) and row.get("direction") == "repo_only"
     ]
-    if len(repo_only) != 1 or repo_only[0].get("name") != ROLLBACK_CLEANUP_NAME:
-        fail("rollback cleanup must be the unique current repo-only migration")
+    if repo_only:
+        fail("repo-only divergence remains after rollback cleanup remote reconciliation")
 
     remote = {
         item.get("name"): item.get("version")
@@ -58,23 +59,18 @@ def projected_pre_rollback_fixture_ledger(current: dict) -> dict:
         fail("R1 cleanup remote receipt disappeared")
     if remote.get(FIXTURE_NAME) != FIXTURE_VERSION:
         fail("rollback fixture remote receipt disappeared or changed")
-    if ROLLBACK_CLEANUP_NAME in remote:
-        fail("rollback cleanup is unexpectedly remote before apply")
+    if remote.get(ROLLBACK_CLEANUP_NAME) != ROLLBACK_CLEANUP_VERSION:
+        fail("rollback cleanup remote receipt disappeared or changed")
 
     value = json.loads(json.dumps(current))
     value["baseline_main_sha"] = CLEANUP_BASELINE
     value["observed_at_utc"] = CLEANUP_OBSERVED
-    value["declared_divergences"] = [
-        item for item in value.get("declared_divergences", [])
-        if not (
-            isinstance(item, dict)
-            and item.get("direction") == "repo_only"
-            and item.get("name") == ROLLBACK_CLEANUP_NAME
-        )
-    ]
     value["remote_migrations"] = [
         item for item in value.get("remote_migrations", [])
-        if not (isinstance(item, dict) and item.get("name") == FIXTURE_NAME)
+        if not (
+            isinstance(item, dict)
+            and item.get("name") in {FIXTURE_NAME, ROLLBACK_CLEANUP_NAME}
+        )
     ]
     return value
 
@@ -110,15 +106,16 @@ def run(mode: str) -> None:
 
     print("STAGE32_ROLLBACK_FIXTURE_HISTORICAL_COMPAT=PASS")
     print(f"MODE={mode}")
-    print("ACTUAL_CURRENT_STATE=POST_CUTOVER_ROLLBACK_PROOF_VERIFIED_CLEANUP_REPO_ONLY_EDGE_MODE")
+    print("ACTUAL_CURRENT_STATE=POST_CUTOVER_ROLLBACK_PROOF_VERIFIED_CLEANUP_COMPLETE_EDGE_MODE")
     print(f"ACTUAL_ROLLBACK_FIXTURE={FIXTURE_NAME}")
     print(f"ACTUAL_ROLLBACK_FIXTURE_REMOTE_VERSION={FIXTURE_VERSION}")
     print(f"ACTUAL_ROLLBACK_CLEANUP={ROLLBACK_CLEANUP_NAME}")
-    print("ACTUAL_ROLLBACK_CLEANUP_LEDGER_STATE=repo_only")
-    print("PROJECTED_ROLLBACK_CLEANUP_REPO_ONLY_ROW_REMOVED=true")
+    print(f"ACTUAL_ROLLBACK_CLEANUP_REMOTE_VERSION={ROLLBACK_CLEANUP_VERSION}")
+    print("PROJECTED_ROLLBACK_CLEANUP_REMOTE_ROW_REMOVED=true")
     print("PROJECTED_ROLLBACK_FIXTURE_REMOTE_ROW_REMOVED=true")
     print(f"PROJECTED_LEDGER_BASELINE={CLEANUP_BASELINE}")
     print(f"PROJECTED_LEDGER_OBSERVED={CLEANUP_OBSERVED}")
+    print("ROLLBACK_SYNTHETIC_RESIDUE=ZERO")
     print("R1_EDGE_LIVE_PROOF_REEXECUTION_ALLOWED=false")
     print("ROLLBACK_PROOF_REEXECUTION_ALLOWED=false")
     print("PRODUCTION_ACTIVE_TRANSPORT=edgeGateway")
