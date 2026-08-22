@@ -13,7 +13,8 @@
     "BGF-STAGE33-REGRANT-RECOVERY-SCOPE-252",
     "BGF-STAGE33-POST-REVOCATION-PROOF-SEAM-BYPASS-253",
     "BGF-STAGE33-REVOCATION-MIGRATION-PROMOTION-254",
-    "BGF-STAGE33-REVOCATION-PROOF-REEXECUTION-255"
+    "BGF-STAGE33-REVOCATION-PROOF-REEXECUTION-255",
+    "BGF-STAGE33-SQL-MARKER-COMMENT-COLLISION-256"
   ],
   "preparation_receipt": {
     "authority_file": "04_backend_supabase/stage33_direct_rpc_revocation_preparation_authority.json",
@@ -41,6 +42,20 @@
     "target_service_role_execute_count": 5,
     "issue_student_access_token_v2_authenticated_execute": true,
     "remote_privilege_mutation_observed": false
+  },
+  "guard_failure_receipt": {
+    "workflow_run_id": 32548083102,
+    "workflow_job_id": 96970087080,
+    "result": "FAIL_CLOSED_BEFORE_REMOTE_MUTATION",
+    "failure_class": "BGF-STAGE33-SQL-MARKER-COMMENT-COLLISION-256",
+    "failed_step": "Student network-origin rate-limit guard",
+    "failed_guard_path": "04_backend_supabase/tools/verify_stage33_revocation_historical_compat.py",
+    "nested_guard_path": "04_backend_supabase/tools/verify_stage33_direct_rpc_revocation_migration_promotion.py",
+    "root_cause": "The executable-body comparator used source.find('do $$'), so a documentation comment in the promoted migration containing the literal text do $$ was mistaken for the executable block start.",
+    "prevention_rule": "SQL executable marker extraction must match a standalone trimmed marker line exactly and must never accept comment/sub-string collisions.",
+    "migration_sql_changed": false,
+    "remote_privilege_mutation_observed": false,
+    "supabase_mutation_observed": false
   },
   "migration": {
     "name": "stage33_direct_rpc_revocation_and_post_revocation_fixture",
