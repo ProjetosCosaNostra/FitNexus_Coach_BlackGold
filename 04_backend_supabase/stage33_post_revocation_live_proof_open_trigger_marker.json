@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE33_POST_REVOCATION_LIVE_PROOF_OPEN_TRIGGER",
+  "purpose": "Fallback pull_request opened event carrier for the sealed Stage33 post-revocation one-shot workflow. This branch is event-only, must never merge, and may be opened only if the preferred ready_for_review event on the frozen proof candidate fails to materialize the sealed workflow after verified remote revocation.",
+  "baseline_main_sha": "c64222cc0dc22886dcfe569b2629a5c9ea2efb71",
+  "proof_candidate": {
+    "pr": 92,
+    "branch": "blackgold/stage33-post-revocation-live-proof-candidate",
+    "head_sha": "b8123abb7f0dda364f49d9f7342e5887c7da6553",
+    "quality_gate_run_id": 32548471258,
+    "quality_gate_job_id": 96971104493,
+    "quality_gate_result": "SUCCESS",
+    "draft": true,
+    "must_never_merge": true,
+    "head_frozen": true
+  },
+  "revocation_migration": {
+    "name": "stage33_direct_rpc_revocation_and_post_revocation_fixture",
+    "repository_blob_sha": "8f079770f077913d94229df272583945320d943d",
+    "remote_applied_at_marker_creation": false,
+    "proof_event_before_remote_apply_allowed": false
+  },
+  "production_boundary": {
+    "active_transport": "edgeGateway",
+    "automatic_edge_to_direct_fallback": false,
+    "explicit_rollback_requested": false,
+    "explicit_rollback_authorized": false
+  },
+  "event_boundary": {
+    "trigger_event": "pull_request.opened",
+    "open_before_workflow_seal_merge_allowed": false,
+    "open_before_verified_remote_revocation_allowed": false,
+    "open_if_preferred_event_materializes": false,
+    "must_never_merge": true,
+    "head_must_remain_frozen": true,
+    "run_attempt_must_equal_one": true,
+    "proof_rerun_allowed": false,
+    "launch_gate_promotion": false
+  }
+}
