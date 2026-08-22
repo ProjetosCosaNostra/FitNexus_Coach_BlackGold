@@ -175,6 +175,9 @@ jobs:
       - name: Stage 32 post-cutover rollback proof preparation guard
         run: python ../../04_backend_supabase/tools/verify_stage32_post_cutover_rollback_proof_preparation.py
 
+      - name: Stage 32 post-cutover rollback live proof candidate guard
+        run: python ../../04_backend_supabase/tools/verify_stage32_post_cutover_rollback_live_proof_candidate.py
+
       - name: Student client Edge runtime smoke lifecycle guard
         run: python ../../04_backend_supabase/tools/verify_stage32_rollback_fixture_historical_compat.py smoke
 
