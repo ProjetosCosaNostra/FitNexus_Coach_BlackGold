@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "4e686d526779cce4236b6e1b4fba42c4ba6ef3c7",
-  "observed_at_utc": "2026-08-21T23:56:22.809328Z",
+  "baseline_main_sha": "3a4f52114a9ad9fa57610f67b006e76a26d98009",
+  "observed_at_utc": "2026-08-22T00:24:14.494794Z",
   "source": "Supabase.list_migrations+Supabase.execute_sql",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -36,6 +36,13 @@
       "reason": "Historical no-op ledger row created during advisor guard misuse; preserved as remote history evidence and intentionally has no repository SQL file.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-MIGRATION-TOOL-MISROUTE-097"
+    },
+    {
+      "direction": "repo_only",
+      "name": "stage32_post_cutover_rollback_proof_cleanup",
+      "reason": "Fail-closed cleanup for the consumed successful Stage32 real post-cutover rollback proof. Apply exactly once only after cleanup CI and merge, then reconcile the remote receipt before any direct-RPC privilege revocation decision.",
+      "owner": "BlackGold Forge",
+      "related_failure_class": "BGF-STAGE32-POST-CUTOVER-ROLLBACK-CLEANUP-244"
     }
   ],
   "remote_migrations": [
@@ -44,7 +51,7 @@
     {"version":"20260818134341","name":"stage3_students_training_domain"},
     {"version":"20260818134457","name":"stage3_training_command_rpc"},
     {"version":"20260818153734","name":"stage5_student_access_workout_execution"},
-    {"version":"20260818194110","name":"stage6_professor_progress_dashboard"},
+    {"version":"20260818194110","name":"stage6_professor_onboarding"},
     {"version":"20260818194402","name":"stage6_foreign_key_index_hardening"},
     {"version":"20260818194733","name":"stage7_smart_training_templates"},
     {"version":"20260818202605","name":"stage8_student_feedback_risk_signals"},
