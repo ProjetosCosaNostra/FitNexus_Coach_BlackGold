@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "stage": "STAGE32_POST_CUTOVER_ROLLBACK_LIVE_PROOF_OPEN_TRIGGER",
+  "purpose": "Fallback pull_request.opened event delivery only if the preferred ready_for_review event on the sealed rollback proof PR does not materialize the one-shot rollback workflow run.",
+  "proof_pr": 84,
+  "proof_head_sha": "cb734b3ef51fe607d7d4de2709d517625a9c8101",
+  "production_transport": "edgeGateway",
+  "production_singleton": "StudentAccessTransport.instance",
+  "automatic_edge_to_direct_fallback": false,
+  "production_explicit_rollback_requested": false,
+  "production_explicit_rollback_authorized": false,
+  "direct_rpc_execute_revoked": false,
+  "merge_allowed": false,
+  "live_rollback_proof_executed": false,
+  "launch_gate_promotion": false
+}
