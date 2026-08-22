@@ -1,0 +1,55 @@
+name: Stage 34 Current Boundary Alert Contract Preparation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/student_access_current_boundary_authority.json'
+      - '04_backend_supabase/student_access_alert_delivery_contract.json'
+      - '04_backend_supabase/stage34_post_revocation_boundary_assessment_authority.json'
+      - '04_backend_supabase/stage33_post_revocation_proof_cleanup_authority.json'
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/security_definer_exposure_authority.json'
+      - '04_backend_supabase/student_access_client_cutover_authority.json'
+      - '04_backend_supabase/student_access_production_edge_selection_authority.json'
+      - '04_backend_supabase/student_access_network_origin_boundary.json'
+      - '04_backend_supabase/student_access_abuse_authority.json'
+      - '04_backend_supabase/operations/**'
+      - '04_backend_supabase/functions/student-access-alert-dispatcher/**'
+      - '04_backend_supabase/tools/verify_stage34_current_boundary_alert_contract_preparation.py'
+      - '03_app_flutter/fitnexus_app/lib/features/student/student_access_transport_contract.dart'
+      - '.github/workflows/stage34_current_boundary_alert_contract_preparation.yml'
+  push:
+    branches:
+      - 'blackgold/**'
+      - main
+    paths:
+      - '04_backend_supabase/student_access_current_boundary_authority.json'
+      - '04_backend_supabase/student_access_alert_delivery_contract.json'
+      - '04_backend_supabase/stage34_post_revocation_boundary_assessment_authority.json'
+      - '04_backend_supabase/stage33_post_revocation_proof_cleanup_authority.json'
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/security_definer_exposure_authority.json'
+      - '04_backend_supabase/student_access_client_cutover_authority.json'
+      - '04_backend_supabase/student_access_production_edge_selection_authority.json'
+      - '04_backend_supabase/student_access_network_origin_boundary.json'
+      - '04_backend_supabase/student_access_abuse_authority.json'
+      - '04_backend_supabase/operations/**'
+      - '04_backend_supabase/functions/student-access-alert-dispatcher/**'
+      - '04_backend_supabase/tools/verify_stage34_current_boundary_alert_contract_preparation.py'
+      - '03_app_flutter/fitnexus_app/lib/features/student/student_access_transport_contract.dart'
+      - '.github/workflows/stage34_current_boundary_alert_contract_preparation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-current-boundary-alert-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Stage 34 current boundary and alert contract preparation guard
+        run: python 04_backend_supabase/tools/verify_stage34_current_boundary_alert_contract_preparation.py
