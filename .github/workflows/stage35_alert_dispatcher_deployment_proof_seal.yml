@@ -13,7 +13,8 @@ on:
       - '04_backend_supabase/operations/stage35_alert_delivery_controlled_proof_cleanup_candidate.sql'
       - '04_backend_supabase/functions/student-access-alert-dispatcher/**'
       - '04_backend_supabase/tools/verify_stage35_alert_dispatcher_deployment_proof_seal.py'
-      - '.github/workflows/stage35_alert_external_delivery_live_proof.yml'
+      - '04_backend_supabase/tools/verify_stage35_alert_dispatcher_deployment_proof_seal_lifecycle.py'
+      - '.github/workflows/stage35_alert_external_delivery_one_shot_proof.yml'
       - '.github/workflows/stage35_alert_dispatcher_deployment_proof_seal.yml'
   push:
     branches:
@@ -28,7 +29,8 @@ on:
       - '04_backend_supabase/operations/stage35_alert_delivery_controlled_proof_cleanup_candidate.sql'
       - '04_backend_supabase/functions/student-access-alert-dispatcher/**'
       - '04_backend_supabase/tools/verify_stage35_alert_dispatcher_deployment_proof_seal.py'
-      - '.github/workflows/stage35_alert_external_delivery_live_proof.yml'
+      - '04_backend_supabase/tools/verify_stage35_alert_dispatcher_deployment_proof_seal_lifecycle.py'
+      - '.github/workflows/stage35_alert_external_delivery_one_shot_proof.yml'
       - '.github/workflows/stage35_alert_dispatcher_deployment_proof_seal.yml'
 
 permissions:
@@ -41,8 +43,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Stage 35 dispatcher deployment/proof seal guard
-        run: python 04_backend_supabase/tools/verify_stage35_alert_dispatcher_deployment_proof_seal.py
+      - name: Stage 35 dispatcher deployment/proof seal lifecycle guard
+        run: python 04_backend_supabase/tools/verify_stage35_alert_dispatcher_deployment_proof_seal_lifecycle.py
 
       - name: Stage 33 current cleanup historical compatibility
         run: python 04_backend_supabase/tools/verify_stage35_receipt_store_historical_compat.py current_cleanup
