@@ -26,6 +26,7 @@ on:
       - '04_backend_supabase/stage32_post_cutover_rollback_live_proof_workflow_seal_authority.json'
       - '04_backend_supabase/stage33_direct_rpc_privilege_revocation_assessment_authority.json'
       - '04_backend_supabase/stage33_direct_rpc_revocation_preparation_authority.json'
+      - '04_backend_supabase/stage33_direct_rpc_revocation_migration_promotion_authority.json'
       - '04_backend_supabase/stage32_post_cutover_live_proof_failure_r0_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
@@ -66,6 +67,7 @@ on:
       - '04_backend_supabase/stage32_post_cutover_rollback_live_proof_workflow_seal_authority.json'
       - '04_backend_supabase/stage33_direct_rpc_privilege_revocation_assessment_authority.json'
       - '04_backend_supabase/stage33_direct_rpc_revocation_preparation_authority.json'
+      - '04_backend_supabase/stage33_direct_rpc_revocation_migration_promotion_authority.json'
       - '04_backend_supabase/stage32_post_cutover_live_proof_failure_r0_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
@@ -148,16 +150,16 @@ jobs:
         run: python ../../04_backend_supabase/tools/verify_student_access_network_origin_boundary.py
 
       - name: Student network-origin rate-limit guard
-        run: python ../../04_backend_supabase/tools/verify_stage32_rollback_fixture_historical_compat.py rate_limit
+        run: python ../../04_backend_supabase/tools/verify_stage33_revocation_historical_compat.py rate_limit
 
       - name: Student Edge gateway candidate guard
         run: python ../../04_backend_supabase/tools/verify_student_access_edge_gateway_candidate.py
 
       - name: Student valid-route synthetic fixture guard
-        run: python ../../04_backend_supabase/tools/verify_stage32_rollback_fixture_historical_compat.py valid_route
+        run: python ../../04_backend_supabase/tools/verify_stage33_revocation_historical_compat.py valid_route
 
       - name: Stage 31 live proof cleanup reconciliation guard
-        run: python ../../04_backend_supabase/tools/verify_stage32_rollback_fixture_historical_compat.py stage31
+        run: python ../../04_backend_supabase/tools/verify_stage33_revocation_historical_compat.py stage31
 
       - name: Stage 31 live proof workflow seal guard
         run: python ../../04_backend_supabase/tools/verify_stage31_live_proof_workflow_seal.py
@@ -166,25 +168,25 @@ jobs:
         run: python ../../04_backend_supabase/tools/verify_student_access_production_edge_selection_preparation.py
 
       - name: Stage 32 historical post-cutover preparation guard
-        run: python ../../04_backend_supabase/tools/verify_stage32_rollback_fixture_historical_compat.py current_rearm
+        run: python ../../04_backend_supabase/tools/verify_stage33_revocation_historical_compat.py current_rearm
 
       - name: Stage 32 historical R0 workflow seal guard
-        run: python ../../04_backend_supabase/tools/verify_stage32_rollback_fixture_historical_compat.py r0_seal
+        run: python ../../04_backend_supabase/tools/verify_stage33_revocation_historical_compat.py r0_seal
 
       - name: Stage 32 historical pre-network recovery guard
-        run: python ../../04_backend_supabase/tools/verify_stage32_rollback_fixture_historical_compat.py r1_recovery
+        run: python ../../04_backend_supabase/tools/verify_stage33_revocation_historical_compat.py r1_recovery
 
       - name: Stage 32 post-cutover live proof R1 workflow seal guard
         run: python ../../04_backend_supabase/tools/verify_stage32_post_cutover_live_proof_r1_workflow_seal.py
 
       - name: Stage 32 R1 proof cleanup reconciliation guard
-        run: python ../../04_backend_supabase/tools/verify_stage32_rollback_fixture_historical_compat.py cleanup
+        run: python ../../04_backend_supabase/tools/verify_stage33_revocation_historical_compat.py cleanup
 
       - name: Stage 32 post-cutover rollback proof preparation guard
-        run: python ../../04_backend_supabase/tools/verify_stage32_post_cutover_rollback_proof_preparation.py
+        run: python ../../04_backend_supabase/tools/verify_stage33_revocation_historical_compat.py rollback_prep
 
       - name: Stage 32 post-cutover rollback live proof workflow seal guard
-        run: python ../../04_backend_supabase/tools/verify_stage32_post_cutover_rollback_live_proof_workflow_seal.py
+        run: python ../../04_backend_supabase/tools/verify_stage33_revocation_historical_compat.py rollback_seal
 
       - name: Stage 33 direct RPC privilege revocation assessment guard
         run: python ../../04_backend_supabase/tools/verify_stage33_direct_rpc_privilege_revocation_assessment.py
@@ -192,11 +194,14 @@ jobs:
       - name: Stage 33 direct RPC revocation preparation guard
         run: python ../../04_backend_supabase/tools/verify_stage33_direct_rpc_revocation_preparation.py
 
+      - name: Stage 33 direct RPC revocation migration promotion guard
+        run: python ../../04_backend_supabase/tools/verify_stage33_direct_rpc_revocation_migration_promotion.py
+
       - name: Student client Edge runtime smoke lifecycle guard
-        run: python ../../04_backend_supabase/tools/verify_stage32_rollback_fixture_historical_compat.py smoke
+        run: python ../../04_backend_supabase/tools/verify_stage33_revocation_historical_compat.py smoke
 
       - name: Student runtime rollback proof lifecycle guard
-        run: python ../../04_backend_supabase/tools/verify_stage32_rollback_fixture_historical_compat.py rollback
+        run: python ../../04_backend_supabase/tools/verify_stage33_revocation_historical_compat.py rollback
 
       - name: CF origin spoof sentinel source guard
         run: python ../../04_backend_supabase/tools/verify_cf_origin_spoof_sentinel_source.py
