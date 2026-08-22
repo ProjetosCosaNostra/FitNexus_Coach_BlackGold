@@ -79,11 +79,16 @@ def require(mapping: dict, expected: dict, label: str) -> None:
 
 
 def executable_body(source: str) -> str:
-    marker = "do $$"
-    index = source.find(marker)
-    if index < 0:
-        fail("SQL source missing do-block marker")
-    return source[index:]
+    # BGF-STAGE33-SQL-MARKER-COMMENT-COLLISION-256:
+    # a marker-looking substring inside documentation/comments is not executable SQL.
+    # Only a standalone trimmed marker line may begin the immutable do-block comparison.
+    offset = 0
+    for line in source.splitlines(keepends=True):
+        if line.strip().lower() == "do $$":
+            return source[offset:]
+        offset += len(line)
+    fail("SQL source missing standalone do-block marker")
+    raise AssertionError("unreachable")
 
 
 def main() -> None:
@@ -119,6 +124,7 @@ def main() -> None:
         "BGF-STAGE33-POST-REVOCATION-PROOF-SEAM-BYPASS-253",
         FAILURE_CLASS,
         "BGF-STAGE33-REVOCATION-PROOF-REEXECUTION-255",
+        "BGF-STAGE33-SQL-MARKER-COMMENT-COLLISION-256",
     }:
         fail("promotion failure-class set drifted")
 
@@ -151,6 +157,21 @@ def main() -> None:
         "issue_student_access_token_v2_authenticated_execute": True,
         "remote_privilege_mutation_observed": False,
     }, "fresh pre-promotion receipt")
+
+    failure_receipt = authority.get("guard_failure_receipt", {})
+    require(failure_receipt, {
+        "workflow_run_id": 32548083102,
+        "workflow_job_id": 96970087080,
+        "result": "FAIL_CLOSED_BEFORE_REMOTE_MUTATION",
+        "failure_class": "BGF-STAGE33-SQL-MARKER-COMMENT-COLLISION-256",
+        "migration_sql_changed": False,
+        "remote_privilege_mutation_observed": False,
+        "supabase_mutation_observed": False,
+    }, "guard failure receipt")
+    if failure_receipt.get("prevention_rule") != (
+        "SQL executable marker extraction must match a standalone trimmed marker line exactly and must never accept comment/sub-string collisions."
+    ):
+        fail("SQL marker collision prevention rule drifted")
 
     migration_authority = authority.get("migration", {})
     require(migration_authority, {
@@ -311,6 +332,7 @@ def main() -> None:
     print("REMOTE_PRIVILEGE_REVOCATION=false")
     print("REPOSITORY_TARGET_ANON_EXPOSURES=0")
     print("REPOSITORY_TARGET_AUTH_EXPOSURES=1_ISSUE_TOKEN_ONLY")
+    print("SQL_EXECUTABLE_MARKER_MATCH=STANDALONE_LINE_ONLY")
     print("PROOF_WORKFLOW_SEALED=false")
     print("PRODUCTION_ACTIVE_TRANSPORT=edgeGateway")
     print("LAUNCH_GATE_PROMOTION=DENIED")
