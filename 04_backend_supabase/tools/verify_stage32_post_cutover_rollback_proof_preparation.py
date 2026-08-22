@@ -12,11 +12,12 @@ CLEANUP = BACKEND / "migrations" / "20260822002500_stage32_post_cutover_rollback
 CONTRACT = APP / "lib" / "features" / "student" / "student_access_transport_contract.dart"
 TRANSPORT = APP / "lib" / "features" / "student" / "student_access_transport.dart"
 
-STATE = "POST_CUTOVER_ROLLBACK_PROOF_VERIFIED_CLEANUP_REPO_ONLY_EDGE_MODE"
+STATE = "POST_CUTOVER_ROLLBACK_PROOF_VERIFIED_CLEANUP_COMPLETE_EDGE_MODE"
 FAILURE_CLASS = "BGF-STAGE32-POST-CUTOVER-ROLLBACK-CLEANUP-244"
 CLEANUP_NAME = "stage32_post_cutover_rollback_proof_cleanup"
-BASELINE = "3a4f52114a9ad9fa57610f67b006e76a26d98009"
-OBSERVED = "2026-08-22T00:24:14.494794Z"
+CLEANUP_VERSION = "20260822003559"
+BASELINE = "0e7324c47771be2c9c66e3c7bbf05481abea41aa"
+OBSERVED = "2026-08-22T00:37:12.866972Z"
 PROOF_HEAD = "cb734b3ef51fe607d7d4de2709d517625a9c8101"
 
 
@@ -77,7 +78,7 @@ def main() -> None:
 
     require(authority.get("workflow_seal", {}), {
         "seal_pr": 85,
-        "seal_merge_main_sha": BASELINE,
+        "seal_merge_main_sha": "3a4f52114a9ad9fa57610f67b006e76a26d98009",
         "proof_pr": 84,
         "proof_head_sha": PROOF_HEAD,
         "fallback_trigger_pr": 86,
@@ -111,61 +112,20 @@ def main() -> None:
         "direct_rpc_privilege_revocation": False,
         "real_customer_data_used": False,
         "raw_synthetic_token_printed": False,
-        "cleanup_completed": False,
+        "cleanup_completed": True,
         "proof_reexecution_allowed": False,
         "launch_gate_promotion": False,
     }, "runtime proof")
 
-    require(authority.get("pre_cleanup_receipt", {}), {
-        "source": "Supabase.execute_sql",
-        "observed_at_utc": OBSERVED,
-        "auth_users": 1,
-        "profiles": 1,
-        "organizations": 1,
-        "organization_members": 1,
-        "organization_subscriptions": 1,
-        "subscription_authority_events": 1,
-        "students": 1,
-        "training_plans": 1,
-        "training_exercises": 1,
-        "access_links": 1,
-        "workout_sessions": 1,
-        "workout_logs": 1,
-        "workout_feedback": 1,
-        "expected_fixture_identity_exact": True,
-        "expected_business_receipts_exact": True,
-        "command_receipts": 3,
-        "command_receipts_exact": True,
-        "link_rate_buckets": 5,
-        "link_rate_operations_exact": 5,
-        "security_events": 3,
-        "security_events_exact": True,
-        "security_signals": 0,
-        "growth_events": 5,
-        "growth_events_exact": True,
-        "growth_attribution": 0,
-        "proof_window_network_buckets": 0,
-        "unexpected_synthetic_domain_rows": 0,
-        "rpc_count": 5,
-        "all_five_anon_execute_intact": True,
-        "all_five_authenticated_execute_intact": True,
-    }, "pre-cleanup receipt")
-    if authority.get("pre_cleanup_receipt", {}).get("growth_event_names") != {
-        "trial_started": 1,
-        "student_created": 1,
-        "training_created_or_duplicated": 1,
-        "training_delivered": 1,
-        "workout_logged": 1,
-    }:
-        fail("growth-event receipt drifted")
-
     require(authority.get("cleanup", {}), {
         "repository_file": "04_backend_supabase/migrations/20260822002500_stage32_post_cutover_rollback_proof_cleanup.sql",
         "migration_name": CLEANUP_NAME,
-        "migration_ledger_state": "repo_only",
-        "remote_applied": False,
-        "remote_version": None,
-        "cleanup_completed": False,
+        "migration_ledger_state": "remote_reconciled",
+        "remote_applied": True,
+        "remote_version": CLEANUP_VERSION,
+        "source_main_sha": BASELINE,
+        "apply_result": "SUCCESS",
+        "cleanup_completed": True,
         "requires_exact_receipts": True,
         "requires_zero_direct_path_network_origin_rows": True,
         "preserves_historical_global_network_rows": True,
@@ -174,36 +134,59 @@ def main() -> None:
         "revokes_direct_rpc_execute": False,
     }, "cleanup authority")
 
+    require(authority.get("post_cleanup_receipt", {}), {
+        "source": "Supabase.list_migrations+Supabase.execute_sql",
+        "observed_at_utc": OBSERVED,
+        "remote_cleanup_version": CLEANUP_VERSION,
+        "auth_users": 0,
+        "profiles": 0,
+        "organizations": 0,
+        "organization_members": 0,
+        "organization_subscriptions": 0,
+        "subscription_authority_events": 0,
+        "students": 0,
+        "training_plans": 0,
+        "training_exercises": 0,
+        "access_links": 0,
+        "workout_sessions": 0,
+        "workout_logs": 0,
+        "workout_feedback": 0,
+        "fixture_growth_events": 0,
+        "fixture_growth_attribution": 0,
+        "fixture_command_receipts": 0,
+        "fixture_link_rate_buckets": 0,
+        "fixture_security_events": 0,
+        "fixture_security_signals": 0,
+        "proof_window_network_rows": 0,
+        "global_network_buckets": 13,
+        "rpc_count": 5,
+        "all_five_anon_execute_intact": True,
+        "all_five_authenticated_execute_intact": True,
+        "synthetic_residue_zero": True,
+        "direct_rpc_grants_changed": False,
+    }, "post-cleanup receipt")
+
     if ledger.get("baseline_main_sha") != BASELINE or ledger.get("observed_at_utc") != OBSERVED:
         fail("migration ledger current receipt drifted")
     repo_only = [
         row for row in ledger.get("declared_divergences", [])
         if isinstance(row, dict) and row.get("direction") == "repo_only"
     ]
-    if len(repo_only) != 1 or repo_only[0].get("name") != CLEANUP_NAME:
-        fail("cleanup must be the unique repo-only migration")
-    if repo_only[0].get("related_failure_class") != FAILURE_CLASS:
-        fail("cleanup repo-only failure class drifted")
+    if repo_only:
+        fail("repo-only migration remains after rollback cleanup reconciliation")
     remote = {
         row.get("name"): row.get("version")
         for row in ledger.get("remote_migrations", []) if isinstance(row, dict)
     }
     if remote.get("stage32_post_cutover_rollback_fixture") != "20260821235550":
         fail("rollback fixture remote receipt disappeared")
-    if CLEANUP_NAME in remote:
-        fail("cleanup already appears remote before authorized apply")
+    if remote.get(CLEANUP_NAME) != CLEANUP_VERSION:
+        fail("rollback cleanup remote receipt disappeared or changed")
 
     for fragment in (
         "BGF-STAGE32-POST-CUTOVER-ROLLBACK-CLEANUP-244",
         "32540031081 / job 96948118831",
         PROOF_HEAD,
-        "eab31a9f-2206-4175-aa16-a8254ada91c6",
-        "62d5a65e-60f8-4c0d-b23d-4f29937d51f4",
-        "5d7f47c0-f132-4fbc-8cf5-5ea000a8257e",
-        "33000000000000000000000000000001",
-        "33000000000000000000000000000002",
-        "33000000000000000000000000000003",
-        "2026-08-22 00:21:00+00",
         "STAGE32_ROLLBACK_CLEANUP_DIRECT_PATH_NETWORK_BUCKET_UNEXPECTED",
         "STAGE32_ROLLBACK_CLEANUP_DIRECT_GRANTS_NOT_INTACT",
         "STAGE32_ROLLBACK_CLEANUP_POSTCONDITION_DIRECT_GRANTS_CHANGED",
@@ -217,10 +200,8 @@ def main() -> None:
     if "revoke execute" in lower or "grant execute" in lower:
         fail("cleanup migration changes direct-RPC grants")
     if "delete from private.student_access_network_rate_buckets" in lower:
-        fail("direct rollback cleanup must not delete historical network-origin buckets")
+        fail("cleanup mutated historical network-origin buckets")
 
-    # Production boundary is still Edge-selected; direct rollback exists only as a
-    # proof/test seam and the production constants remain rollback-inert.
     for fragment in (
         "static const StudentAccessTransportMode activeMode =",
         "StudentAccessTransportMode.edgeGateway;",
@@ -235,7 +216,7 @@ def main() -> None:
         if fragment not in contract:
             fail(f"production transport contract drift: {fragment}")
     if "factory StudentAccessTransport.forAuthorizedRollbackProof" not in transport:
-        fail("proof-only rollback factory disappeared before cleanup")
+        fail("proof-only rollback factory disappeared")
 
     require(authority.get("production_boundary", {}), {
         "active_transport": "edgeGateway",
@@ -249,33 +230,34 @@ def main() -> None:
         "post_cutover_live_proof_verified": True,
         "post_cutover_live_proof_cleanup_verified": True,
         "post_cutover_rollback_verified": True,
-        "post_cutover_rollback_cleanup_verified": False,
+        "post_cutover_rollback_cleanup_verified": True,
         "production_transport_change_allowed": False,
         "launch_gate_promotion": False,
     }, "production boundary")
 
     require(authority.get("next_stage", {}), {
-        "name": "MERGE_POST_CUTOVER_ROLLBACK_PROOF_CLEANUP_THEN_APPLY_ONCE",
+        "name": "ASSESS_POST_CUTOVER_DIRECT_RPC_PRIVILEGE_REVOCATION_GATES",
         "allowed_now": True,
-        "requires_full_ci_green": True,
-        "requires_merge_before_cleanup_apply": True,
-        "requires_fresh_exact_receipt_check_before_apply": True,
-        "requires_cleanup_absent_from_remote_ledger_before_apply": True,
-        "requires_exact_merged_cleanup_sql": True,
-        "requires_cleanup_remote_reconciliation_after_apply": True,
+        "requires_cleanup_remote_reconciled": True,
+        "requires_zero_synthetic_residue": True,
+        "requires_direct_rpc_grants_currently_intact": True,
+        "requires_observation_and_security_authority_review": True,
+        "requires_separate_explicit_privilege_revocation_authority": True,
         "may_rerun_rollback_proof": False,
+        "may_reapply_cleanup": False,
         "may_revoke_direct_rpc_execute_now": False,
         "may_promote_launch_gates": False,
     }, "next stage")
 
     print("STAGE32_POST_CUTOVER_ROLLBACK_PROOF_PREPARATION_GUARD=PASS")
-    print("CURRENT_LIFECYCLE=ROLLBACK_PROOF_SUCCESS_CLEANUP_REPO_ONLY")
+    print("CURRENT_LIFECYCLE=ROLLBACK_PROOF_SUCCESS_CLEANUP_REMOTE_COMPLETE")
     print("ROLLBACK_PROOF_RUN=32540031081")
     print("ROLLBACK_PROOF_JOB=96948118831")
     print(f"ROLLBACK_PROOF_HEAD={PROOF_HEAD}")
     print("ROLLBACK_ROUTES_VERIFIED=5")
     print("ROLLBACK_PROOF_REEXECUTION_ALLOWED=false")
-    print("CLEANUP_LEDGER_STATE=repo_only")
+    print(f"CLEANUP_REMOTE_VERSION={CLEANUP_VERSION}")
+    print("ROLLBACK_SYNTHETIC_RESIDUE=ZERO")
     print("DIRECT_PATH_NETWORK_BUCKETS=0")
     print("DIRECT_RPC_GRANTS=INTACT")
     print("DIRECT_RPC_PRIVILEGE_REVOCATION=false")
