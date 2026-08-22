@@ -74,11 +74,12 @@ def run(mode: str) -> None:
     if mode not in MODES:
         fail(f"unsupported mode: {mode}")
 
-    # Never project first: prove the actual current Stage33 authority and repo-only frontier.
-    promotion = importlib.import_module(
-        "verify_stage33_direct_rpc_revocation_migration_promotion"
+    # Never project first. At the candidate frontier, prove the current Stage33
+    # promotion plus the exact frozen proof candidate before historical projection.
+    candidate = importlib.import_module(
+        "verify_stage33_post_revocation_live_proof_candidate"
     )
-    promotion.main()
+    candidate.main()
 
     projected = project_stage32_ledger(load(LEDGER))
     stage32_wrapper = importlib.import_module("verify_stage32_rollback_fixture_historical_compat")
@@ -107,9 +108,10 @@ def run(mode: str) -> None:
 
     print("STAGE33_REVOCATION_HISTORICAL_COMPAT=PASS")
     print(f"MODE={mode}")
-    print("ACTUAL_STAGE33_STATE=REVOCATION_MIGRATION_REPO_ONLY_PROOF_SEAL_PENDING")
+    print("ACTUAL_STAGE33_STATE=POST_REVOCATION_PROOF_CANDIDATE_FROZEN_PRE_REMOTE_APPLY")
     print(f"ACTUAL_STAGE33_MIGRATION={STAGE33_NAME}")
     print("ACTUAL_STAGE33_REMOTE_APPLIED=false")
+    print("ACTUAL_STAGE33_PROOF_EVENT_ALLOWED=false")
     print("PROJECTED_STAGE33_REPO_ONLY_ROW_REMOVED=true")
     print(f"PROJECTED_LEDGER_BASELINE={STAGE32_BASELINE}")
     print(f"PROJECTED_LEDGER_OBSERVED={STAGE32_OBSERVED}")
