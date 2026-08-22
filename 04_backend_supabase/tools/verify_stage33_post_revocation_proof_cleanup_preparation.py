@@ -15,27 +15,22 @@ REVOCATION = BACKEND / "migrations" / "20260822022000_stage33_direct_rpc_revocat
 WORKFLOW = ROOT / ".github" / "workflows" / "stage33_post_revocation_edge_runtime_live_proof.yml"
 CONTRACT = APP / "lib" / "features" / "student" / "student_access_transport_contract.dart"
 
-STATE = "POST_REVOCATION_EDGE_PROOF_VERIFIED_CLEANUP_REPO_ONLY"
-BASELINE = "35e1c117d63349f27470160da5f58ef6077c47bc"
+STATE = "POST_REVOCATION_EDGE_PROOF_VERIFIED_CLEANUP_REMOTE_COMPLETE"
+BASELINE = "e30aa197fe5d19b9e385a8720944c6c9c10d34ee"
+OBSERVED = "2026-08-22T06:11:53.105067Z"
 REVOCATION_NAME = "stage33_direct_rpc_revocation_and_post_revocation_fixture"
 REVOCATION_VERSION = "20260822032456"
 REVOCATION_BLOB = "8f079770f077913d94229df272583945320d943d"
 CLEANUP_NAME = "stage33_post_revocation_proof_cleanup"
+CLEANUP_VERSION = "20260822061133"
 CLEANUP_BLOB = "d432cbe4cb77f7b5664c399bc11fa53ad89c60bf"
 WORKFLOW_BLOB = "5490d1569f7de8c93e5822426d2c75d588a0e3ef"
 FAILURE_CLASS = "BGF-STAGE33-POST-REVOCATION-PROOF-CLEANUP-262"
-TARGETS = (
-    "get_student_feedback_context_v2",
-    "get_student_workout_v2",
-    "set_student_exercise_completion_v2",
-    "start_student_workout_v2",
-    "submit_student_workout_feedback_v2",
-)
 
 
 def fail(message: str) -> None:
     raise SystemExit(
-        "STAGE33_POST_REVOCATION_PROOF_CLEANUP_PREPARATION_GUARD=FAIL\n"
+        "STAGE33_POST_REVOCATION_PROOF_CLEANUP_LIFECYCLE_GUARD=FAIL\n"
         f"FAILURE_CLASS={FAILURE_CLASS}\nDETAIL={message}"
     )
 
@@ -68,6 +63,8 @@ def git_blob_sha(path: Path) -> str:
 
 
 def require(mapping: dict, expected: dict, label: str) -> None:
+    if not isinstance(mapping, dict):
+        fail(f"{label} must be an object")
     for key, expected_value in expected.items():
         if mapping.get(key) != expected_value:
             fail(f"{label} drift: {key}")
@@ -136,36 +133,14 @@ def main() -> None:
         "direct_student_route_security_definer_warnings_remaining": 0,
     }, "remote revocation receipt")
 
-    require(authority.get("fresh_pre_cleanup_receipt", {}), {
-        "source": "Supabase.execute_sql",
-        "observed_at_utc": "2026-08-22T06:00:17.171196Z",
-        "auth_users": 1,
-        "organizations": 1,
-        "students": 1,
-        "workout_sessions": 1,
-        "workout_logs": 1,
-        "workout_feedback": 1,
-        "command_receipts": 3,
-        "link_rate_buckets": 5,
-        "security_events": 3,
-        "security_signals": 0,
-        "network_buckets": 18,
-        "growth_events": 11,
-        "anon_execute_count": 0,
-        "authenticated_execute_count": 0,
-        "service_role_execute_count": 5,
-        "issue_student_access_token_v2_authenticated_execute": True,
-    }, "fresh pre-cleanup receipt")
-
-    cleanup_auth = authority.get("cleanup", {})
-    require(cleanup_auth, {
+    require(authority.get("cleanup", {}), {
         "migration_name": CLEANUP_NAME,
         "migration_file": "04_backend_supabase/migrations/20260822033500_stage33_post_revocation_proof_cleanup.sql",
         "migration_blob_sha": CLEANUP_BLOB,
-        "migration_ledger_state": "repo_only",
-        "remote_applied": False,
-        "remote_version": None,
-        "apply_count": 0,
+        "migration_ledger_state": "remote_reconciled",
+        "remote_applied": True,
+        "remote_version": CLEANUP_VERSION,
+        "apply_count": 1,
         "apply_via": "Supabase.apply_migration",
         "requires_global_network_baseline_after_cleanup": 13,
         "requires_global_growth_baseline_after_cleanup": 6,
@@ -173,8 +148,57 @@ def main() -> None:
         "requires_authenticated_execute_after_cleanup": 0,
         "requires_service_role_execute_after_cleanup": 5,
         "requires_issue_token_authenticated_execute_after_cleanup": True,
-        "cleanup_completed": False,
-    }, "cleanup boundary")
+        "cleanup_completed": True,
+        "reapply_allowed": False,
+    }, "cleanup remote receipt")
+
+    require(authority.get("post_cleanup_receipt", {}), {
+        "source": "Supabase.execute_sql+Supabase.get_advisors",
+        "observed_at_utc": OBSERVED,
+        "auth_users": 0,
+        "profiles": 0,
+        "organizations": 0,
+        "organization_members": 0,
+        "organization_subscriptions": 0,
+        "subscription_authority_events": 0,
+        "students": 0,
+        "training_plans": 0,
+        "training_exercises": 0,
+        "access_links": 0,
+        "workout_sessions": 0,
+        "workout_logs": 0,
+        "workout_feedback": 0,
+        "command_receipts": 0,
+        "link_rate_buckets": 0,
+        "security_events": 0,
+        "security_signals": 0,
+        "fixture_growth_events": 0,
+        "fixture_growth_attribution": 0,
+        "global_growth_events": 6,
+        "global_network_buckets": 13,
+        "proof_network_buckets": 0,
+        "anon_execute_count": 0,
+        "authenticated_execute_count": 0,
+        "service_role_execute_count": 5,
+        "issue_student_access_token_v2_authenticated_execute": True,
+        "security_posture_after_cleanup": "quiet",
+        "direct_student_route_security_definer_warnings": 0,
+    }, "post-cleanup receipt")
+    if authority["post_cleanup_receipt"].get("remaining_security_advisor_warnings") != [
+        "authenticated_security_definer_function_executable:issue_student_access_token_v2"
+    ]:
+        fail("post-cleanup advisor warning set drifted")
+
+    require(authority.get("production_boundary", {}), {
+        "active_transport": "edgeGateway",
+        "production_singleton": "StudentAccessTransport.instance",
+        "automatic_edge_to_direct_fallback": False,
+        "remote_direct_rpc_execute_revoked": True,
+        "source_direct_rpc_execute_revoked_flag": False,
+        "post_revocation_edge_runtime_proof_verified": True,
+        "cleanup_verified": True,
+        "launch_gate_promotion": False,
+    }, "production boundary")
 
     if git_blob_sha(REVOCATION) != REVOCATION_BLOB:
         fail("revocation migration blob drifted")
@@ -183,26 +207,22 @@ def main() -> None:
     if git_blob_sha(WORKFLOW) != WORKFLOW_BLOB:
         fail("consumed one-shot workflow blob drifted")
 
-    if ledger.get("baseline_main_sha") != BASELINE:
-        fail("migration ledger baseline drifted")
-    if ledger.get("observed_at_utc") != "2026-08-22T06:00:17.171196Z":
-        fail("migration ledger observation drifted")
+    if ledger.get("baseline_main_sha") != BASELINE or ledger.get("observed_at_utc") != OBSERVED:
+        fail("migration ledger post-cleanup receipt drifted")
     remote = {
         row.get("name"): row.get("version")
         for row in ledger.get("remote_migrations", []) if isinstance(row, dict)
     }
     if remote.get(REVOCATION_NAME) != REVOCATION_VERSION:
         fail("Stage33 revocation remote receipt missing or changed")
-    if CLEANUP_NAME in remote:
-        fail("cleanup unexpectedly remote before cleanup PR merge")
+    if remote.get(CLEANUP_NAME) != CLEANUP_VERSION:
+        fail("Stage33 cleanup remote receipt missing or changed")
     repo_only = [
         row for row in ledger.get("declared_divergences", [])
         if isinstance(row, dict) and row.get("direction") == "repo_only"
     ]
-    if len(repo_only) != 1 or repo_only[0].get("name") != CLEANUP_NAME:
-        fail("cleanup must be the unique repo-only divergence")
-    if repo_only[0].get("related_failure_class") != FAILURE_CLASS:
-        fail("cleanup repo-only failure-class binding drifted")
+    if repo_only:
+        fail("remote-complete cleanup lifecycle must not retain repo-only divergence")
 
     require(exposure, {
         "schema_version": 2,
@@ -229,8 +249,6 @@ def main() -> None:
     for required in (
         "workflow run 32548995700 / job 96972506797",
         "b8123abb7f0dda364f49d9f7342e5887c7da6553",
-        "stage33_cleanup_customer_domain_no_longer_exact_synthetic_proof",
-        "stage33_cleanup_live_proof_business_receipt_drift",
         "34000000000000000000000000000001",
         "34000000000000000000000000000002",
         "34000000000000000000000000000003",
@@ -267,24 +285,40 @@ def main() -> None:
     require(authority.get("promotion_rules", {}), {
         "may_reexecute_stage33_proof": False,
         "may_reapply_stage33_revocation_migration": False,
-        "may_apply_cleanup_before_cleanup_pr_merge": False,
+        "may_reapply_stage33_cleanup_migration": False,
         "may_use_execute_sql_for_cleanup_dml": False,
         "may_regrant_direct_rpc_execute_automatically": False,
         "may_promote_launch_gates": False,
     }, "promotion rules")
 
-    print("STAGE33_POST_REVOCATION_PROOF_CLEANUP_PREPARATION_GUARD=PASS")
+    require(authority.get("next_stage", {}), {
+        "name": "RECONCILE_POST_REVOCATION_SECURITY_AND_CLIENT_AUTHORITIES",
+        "allowed_now": True,
+        "requires_cleanup_remote_reconciled": True,
+        "requires_zero_synthetic_residue": True,
+        "requires_direct_anon_execute": 0,
+        "requires_direct_authenticated_execute": 0,
+        "requires_service_role_execute": 5,
+        "requires_issue_token_authenticated_execute": True,
+        "may_replay_proof": False,
+        "may_regrant_direct_rpc_execute": False,
+        "may_promote_launch_gates": False,
+    }, "next stage")
+
+    print("STAGE33_POST_REVOCATION_PROOF_CLEANUP_LIFECYCLE_GUARD=PASS")
     print(f"REVOCATION_REMOTE_VERSION={REVOCATION_VERSION}")
+    print(f"CLEANUP_REMOTE_VERSION={CLEANUP_VERSION}")
     print(f"CLEANUP_BLOB_SHA={CLEANUP_BLOB}")
-    print("CLEANUP_LEDGER_STATE=repo_only")
-    print("PROOF_RUN_CONSUMED=32548995700")
-    print("PROOF_REEXECUTION_ALLOWED=false")
+    print("CLEANUP_LEDGER_STATE=remote_reconciled")
+    print("SYNTHETIC_RESIDUE=0")
+    print("HISTORICAL_NETWORK_BUCKETS=13")
+    print("HISTORICAL_GROWTH_EVENTS=6")
     print("DIRECT_ANON_EXECUTE=0")
     print("DIRECT_AUTHENTICATED_EXECUTE=0")
     print("EDGE_SERVICE_ROLE_EXECUTE=5")
-    print("EXPECTED_NETWORK_BUCKETS_AFTER_CLEANUP=13")
-    print("EXPECTED_GLOBAL_GROWTH_EVENTS_AFTER_CLEANUP=6")
-    print("CLEANUP_REMOTE_APPLIED=false")
+    print("ISSUE_TOKEN_AUTHENTICATED_EXECUTE=true")
+    print("PROOF_REEXECUTION_ALLOWED=false")
+    print("CLEANUP_REAPPLY_ALLOWED=false")
     print("LAUNCH_GATE_PROMOTION=DENIED")
 
 
