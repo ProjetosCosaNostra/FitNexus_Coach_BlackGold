@@ -1,0 +1,49 @@
+name: Stage 34 Post-Revocation Boundary Assessment
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/stage34_post_revocation_boundary_assessment_authority.json'
+      - '04_backend_supabase/stage33_post_revocation_proof_cleanup_authority.json'
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/security_definer_exposure_authority.json'
+      - '04_backend_supabase/student_access_client_cutover_authority.json'
+      - '04_backend_supabase/student_access_production_edge_selection_authority.json'
+      - '04_backend_supabase/student_access_network_origin_boundary.json'
+      - '04_backend_supabase/student_access_abuse_authority.json'
+      - '04_backend_supabase/operations/**'
+      - '04_backend_supabase/tools/verify_stage34_post_revocation_boundary_assessment.py'
+      - '03_app_flutter/fitnexus_app/lib/features/student/student_access_transport_contract.dart'
+      - '.github/workflows/stage34_post_revocation_boundary_assessment.yml'
+  push:
+    branches:
+      - 'blackgold/**'
+      - main
+    paths:
+      - '04_backend_supabase/stage34_post_revocation_boundary_assessment_authority.json'
+      - '04_backend_supabase/stage33_post_revocation_proof_cleanup_authority.json'
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/security_definer_exposure_authority.json'
+      - '04_backend_supabase/student_access_client_cutover_authority.json'
+      - '04_backend_supabase/student_access_production_edge_selection_authority.json'
+      - '04_backend_supabase/student_access_network_origin_boundary.json'
+      - '04_backend_supabase/student_access_abuse_authority.json'
+      - '04_backend_supabase/operations/**'
+      - '04_backend_supabase/tools/verify_stage34_post_revocation_boundary_assessment.py'
+      - '03_app_flutter/fitnexus_app/lib/features/student/student_access_transport_contract.dart'
+      - '.github/workflows/stage34_post_revocation_boundary_assessment.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  assess-post-revocation-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Stage 34 post-revocation boundary assessment guard
+        run: python 04_backend_supabase/tools/verify_stage34_post_revocation_boundary_assessment.py
