@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE34_STUDENT_ACCESS_ALERT_DELIVERY_CONTRACT",
+  "baseline_main_sha": "c0ae8148fcb32f3190be3380d8989144a54fd1e7",
+  "current_state": "ALERT_DELIVERY_CONTRACT_PREPARED_RUNTIME_NOT_IMPLEMENTED",
+  "failure_classes": [
+    "BGF-STAGE34-ALERT-DELIVERY-RECEIPT-AMBIGUITY-270",
+    "BGF-STAGE34-ALERT-SECRET-LEAK-271",
+    "BGF-STAGE34-ALERT-PAYLOAD-PRIVACY-272",
+    "BGF-STAGE34-ALERT-DELIVERY-REPLAY-273",
+    "BGF-STAGE34-ALERT-PROVIDER-SELF-ATTESTATION-274"
+  ],
+  "purpose": "Repository-first external alert-delivery contract for high/critical student-access abuse signals. It defines a concrete zero-cost-capable Telegram Bot API adapter and a receipt-bearing controlled-signal proof without deploying, configuring secrets, creating synthetic signals, or promoting incident-response readiness in this stage.",
+  "producer_contract": {
+    "signal_table": "private.student_access_security_signals",
+    "supported_signal_types": [
+      "rate_limit_burst",
+      "command_replay_burst",
+      "token_rotation_burst",
+      "network_rate_limit_burst"
+    ],
+    "deliver_severities": ["high", "critical"],
+    "medium_delivery_required": false,
+    "network_rate_limit_burst_is_high": true,
+    "provider_delivery_must_not_block_student_request_path": true,
+    "provider_failure_must_not_regrant_or_bypass_security_controls": true
+  },
+  "provider_contract": {
+    "provider": "telegram_bot_api",
+    "delivery_method": "HTTPS_POST_sendMessage",
+    "base_url": "https://api.telegram.org",
+    "endpoint_template": "/bot<secret-token>/sendMessage",
+    "cost_model": "no_paid_provider_required_for_initial_contract",
+    "destination_is_runtime_secret": true,
+    "public_marketing_channel_is_not_assumed": true,
+    "required_runtime_secrets": [
+      "STUDENT_ACCESS_ALERT_TELEGRAM_BOT_TOKEN",
+      "STUDENT_ACCESS_ALERT_TELEGRAM_CHAT_ID"
+    ],
+    "secrets_must_not_exist_in_repository": true,
+    "secrets_must_not_be_logged": true,
+    "chat_id_must_not_be_hardcoded": true
+  },
+  "payload_contract": {
+    "format": "plain_text",
+    "required_fields": [
+      "system",
+      "environment",
+      "signal_id",
+      "signal_type",
+      "severity",
+      "operation",
+      "event_count",
+      "window_started_at",
+      "first_seen_at",
+      "last_seen_at",
+      "controlled_proof_marker"
+    ],
+    "system_value": "FitNexus Coach BlackGold",
+    "environment_value": "production",
+    "controlled_proof_marker_for_real_alerts": false,
+    "forbidden_fields": [
+      "raw_possession_token",
+      "authorization_header",
+      "apikey",
+      "service_role_key",
+      "supabase_secret_key",
+      "telegram_bot_token",
+      "raw_network_origin",
+      "network_origin_digest",
+      "subject_key",
+      "arbitrary_request_payload",
+      "student_name",
+      "email",
+      "phone"
+    ],
+    "organization_id_allowed": false,
+    "student_id_allowed": false,
+    "link_id_allowed": false,
+    "message_length_max": 2000
+  },
+  "idempotency_contract": {
+    "key_material": ["signal_id", "provider", "destination_scope"],
+    "same_signal_must_not_create_unbounded_duplicate_delivery": true,
+    "retry_allowed_only_after_failed_or_unknown_delivery": true,
+    "successful_provider_receipt_makes_delivery_terminal": true,
+    "provider_receipt_must_be_persisted_before_marking_delivered": true,
+    "proof_replay_after_success": false
+  },
+  "provider_success_receipt": {
+    "http_status": 200,
+    "response_json_ok": true,
+    "requires_positive_message_id": true,
+    "requires_result_chat_id_matches_configured_destination": true,
+    "raw_provider_response_persistence_allowed": false,
+    "persist_only": [
+      "provider",
+      "provider_message_id",
+      "destination_fingerprint",
+      "delivered_at",
+      "signal_id",
+      "attempt_number",
+      "controlled_proof_marker"
+    ],
+    "http_2xx_without_provider_ok_true_is_success": false,
+    "local_log_line_is_external_delivery_receipt": false,
+    "database_dispatch_row_without_provider_receipt_is_external_delivery_receipt": false
+  },
+  "runtime_candidate_boundary": {
+    "expected_edge_function_name": "student-access-alert-dispatcher",
+    "implementation_present_in_this_stage": false,
+    "deployment_allowed_in_this_stage": false,
+    "required_backend_credential": "service_role_or_supabase_secret_key_from_runtime_only",
+    "client_invocation_allowed": false,
+    "anon_invocation_allowed": false,
+    "authenticated_client_invocation_allowed": false,
+    "scheduled_or_service_side_invocation_only": true,
+    "student_access_gateway_inline_provider_call_allowed": false,
+    "reason_inline_provider_call_forbidden": "External provider latency or outage must not sit on the student request critical path."
+  },
+  "controlled_signal_proof_contract": {
+    "required": true,
+    "real_customer_data_allowed": false,
+    "synthetic_signal_required": true,
+    "synthetic_signal_must_be_uniquely_identifiable": true,
+    "allowed_signal_type": "network_rate_limit_burst",
+    "allowed_severity": "high",
+    "proof_marker": "fitnexus-stage34-alert-delivery-proof-v1",
+    "external_provider_success_receipt_required": true,
+    "provider_message_id_required": true,
+    "destination_match_required": true,
+    "provider_secret_printing_forbidden": true,
+    "raw_network_origin_generation_or_logging_required": false,
+    "proof_must_cleanup_synthetic_signal_and_delivery_receipt": true,
+    "one_shot_proof_required": true,
+    "proof_reexecution_after_success_allowed": false
+  },
+  "privacy_and_security": {
+    "raw_token_stored_or_sent": false,
+    "raw_network_origin_stored_or_sent": false,
+    "network_origin_digest_sent": false,
+    "subject_key_sent": false,
+    "arbitrary_request_payload_sent": false,
+    "provider_credentials_returned_to_client": false,
+    "provider_credentials_written_to_database": false,
+    "provider_credentials_committed_to_repository": false,
+    "delivery_failure_may_change_student_rpc_privileges": false,
+    "delivery_failure_may_enable_direct_fallback": false
+  },
+  "incident_response_boundary": {
+    "contract_is_runtime_evidence": false,
+    "implementation_is_runtime_evidence": false,
+    "deployment_without_controlled_delivery_receipt_is_runtime_evidence": false,
+    "successful_controlled_external_delivery_receipt_required": true,
+    "incident_response_gate_may_promote_after_this_contract_alone": false,
+    "production_deployment_gate_may_promote_after_this_contract_alone": false,
+    "paid_media_gate_may_promote_after_this_contract_alone": false
+  },
+  "next_stage": {
+    "name": "IMPLEMENT_ALERT_DISPATCHER_AND_RECEIPT_STORE_CANDIDATE_REPO_FIRST",
+    "allowed_now": false,
+    "requires_contract_merge": true,
+    "requires_current_boundary_authority_merge": true,
+    "requires_secret_values_not_in_repo": true,
+    "requires_no_remote_deployment_before_candidate_ci": true,
+    "requires_no_launch_gate_promotion": true
+  }
+}
