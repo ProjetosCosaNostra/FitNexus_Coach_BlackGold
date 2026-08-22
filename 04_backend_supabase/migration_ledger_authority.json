@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "6aad66c159c82c634af8ec58f0ec742267484b70",
-  "observed_at_utc": "2026-08-22T07:54:12.776139Z",
+  "baseline_main_sha": "4654c2c1d02ffe817958861fef52babef5a7d375",
+  "observed_at_utc": "2026-08-22T18:25:55.841264Z",
   "source": "Supabase.list_migrations+Supabase.execute_sql+Supabase.list_edge_functions",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -40,9 +40,16 @@
     {
       "direction": "repo_only",
       "name": "stage35_alert_delivery_receipt_store",
-      "reason": "Exact repository promotion of the reviewed Stage35 privacy-minimized alert delivery receipt-store candidate. Remote application remains forbidden until a separate dispatcher deployment and controlled external-delivery proof seal is merged.",
+      "reason": "Exact repository promotion of the reviewed Stage35 privacy-minimized alert delivery receipt-store candidate. Remote application remains forbidden until runtime-secret readiness, fresh pre-apply evidence, exact dispatcher deployment and the sealed one-shot external-delivery proof lifecycle authorize the controlled sequence.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-STAGE35-ALERT-CANDIDATE-REMOTE-MUTATION-281"
+    },
+    {
+      "direction": "repo_only",
+      "name": "stage35_alert_delivery_controlled_proof_fixture",
+      "reason": "Exact repository promotion of the sealed Stage35 synthetic alert proof fixture. Remote application is forbidden until runtime-secret readiness is externally evidenced and the receipt-store migration is applied first through the controlled deployment/proof sequence.",
+      "owner": "BlackGold Forge",
+      "related_failure_class": "BGF-STAGE35-ALERT-CONTROLLED-FIXTURE-PREMATURE-284"
     }
   ],
   "remote_migrations": [
