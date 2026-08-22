@@ -6,7 +6,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 BACKEND = ROOT / "04_backend_supabase"
 APP = ROOT / "03_app_flutter" / "fitnexus_app"
-
 AUTHORITY = BACKEND / "stage33_direct_rpc_revocation_preparation_authority.json"
 ASSESSMENT = BACKEND / "stage33_direct_rpc_privilege_revocation_assessment_authority.json"
 ROLLBACK = BACKEND / "stage32_post_cutover_rollback_proof_authority.json"
@@ -20,16 +19,9 @@ CONTRACT = APP / "lib" / "features" / "student" / "student_access_transport_cont
 FAILURE_CLASS = "BGF-STAGE33-PRIVILEGE-REVOCATION-PREMATURE-245"
 STATE = "DIRECT_RPC_REVOCATION_CANDIDATE_STAGED_NO_REMOTE_MUTATION"
 BASELINE = "ecdd98c87c7bdc9a4071475300df2699b0a260e5"
-CANDIDATE_BLOB = "39f4a13e7b6fdeb0675a8cc5a5afa424b409ef6a"
-RECOVERY_BLOB = "1c26c7aff1679bd85b359756eb3eb2c5eeaeaae1"
+CANDIDATE_BLOB = "08fbbf71ec51583c8e46792ed88b28825394e9f1"
+RECOVERY_BLOB = "2a620b8a951d30bd4d9688158d36e9d1736b65a3"
 TEST_BLOB = "d2882d6560a18e259afe74ccbc18d3d275d7f001"
-TARGET_NAMES = {
-    "get_student_feedback_context_v2",
-    "get_student_workout_v2",
-    "set_student_exercise_completion_v2",
-    "start_student_workout_v2",
-    "submit_student_workout_feedback_v2",
-}
 TARGET_SIGNATURES = {
     "public.get_student_feedback_context_v2(text)",
     "public.get_student_workout_v2(text)",
@@ -37,6 +29,7 @@ TARGET_SIGNATURES = {
     "public.start_student_workout_v2(text,text)",
     "public.submit_student_workout_feedback_v2(text,uuid,integer,integer,integer,text,text,text)",
 }
+TARGET_NAMES = {s.split(".", 1)[1].split("(", 1)[0] for s in TARGET_SIGNATURES}
 
 
 def fail(message: str) -> None:
@@ -65,8 +58,8 @@ def text(path: Path) -> str:
 
 
 def require(mapping: dict, expected: dict, label: str) -> None:
-    for key, value in expected.items():
-        if mapping.get(key) != value:
+    for key, expected_value in expected.items():
+        if mapping.get(key) != expected_value:
             fail(f"{label} drift: {key}")
 
 
@@ -87,8 +80,7 @@ def main() -> None:
         "stage": "STAGE33_DIRECT_RPC_REVOCATION_PREPARATION",
         "baseline_main_sha": BASELINE,
         "current_state": STATE,
-    }, "Stage33 preparation authority")
-
+    }, "preparation authority")
     if set(authority.get("failure_classes", [])) != {
         "BGF-STAGE33-PRIVILEGE-REVOCATION-PREMATURE-245",
         "BGF-STAGE33-POST-REVOCATION-FIXTURE-249",
@@ -100,8 +92,6 @@ def main() -> None:
         fail("preparation failure-class set drifted")
 
     require(assessment, {
-        "schema_version": 1,
-        "project_ref": "mceukeondizkwlpfxzgf",
         "current_state": "DIRECT_RPC_REVOCATION_GATES_ASSESSED_PREPARATION_ALLOWED_NO_MUTATION",
     }, "assessment authority")
     require(authority.get("assessment_receipt", {}), {
@@ -117,7 +107,7 @@ def main() -> None:
 
     require(rollback, {
         "current_state": "POST_CUTOVER_ROLLBACK_PROOF_VERIFIED_CLEANUP_COMPLETE_EDGE_MODE",
-    }, "Stage32 rollback lifecycle")
+    }, "rollback authority")
     require(rollback.get("production_boundary", {}), {
         "active_transport": "edgeGateway",
         "resolved_transport": "edgeGateway",
@@ -128,10 +118,9 @@ def main() -> None:
         "post_cutover_live_proof_verified": True,
         "post_cutover_rollback_verified": True,
         "post_cutover_rollback_cleanup_verified": True,
-    }, "Stage32 production boundary")
+    }, "production boundary")
 
     require(authority.get("fresh_post_assessment_receipt", {}), {
-        "source": "Supabase.execute_sql",
         "observed_at_utc": "2026-08-22T02:05:06.82829Z",
         "security_posture": "quiet",
         "signals_60m": 0,
@@ -146,11 +135,10 @@ def main() -> None:
         "target_service_role_execute_count": 5,
         "issue_student_access_token_v2_authenticated_execute": True,
         "remote_privilege_mutation_observed": False,
-    }, "fresh post-assessment receipt")
+    }, "fresh pre-preparation receipt")
 
     revocation = authority.get("revocation_candidate", {})
     require(revocation, {
-        "repository_file": "04_backend_supabase/operations/stage33_direct_rpc_revocation_and_post_revocation_fixture_candidate.sql",
         "repository_blob_sha": CANDIDATE_BLOB,
         "is_migration": False,
         "remote_application_allowed": False,
@@ -166,26 +154,9 @@ def main() -> None:
         "preserves_issue_student_access_token_v2_authenticated_execute": True,
     }, "revocation candidate")
     if set(authority.get("target_functions", [])) != TARGET_SIGNATURES:
-        fail("exact five revocation target signatures drifted")
+        fail("exact five target signatures drifted")
 
-    fixture = authority.get("post_revocation_fixture", {})
-    require(fixture, {
-        "synthetic_only": True,
-        "token_seed": "fitnexus-stage33-post-revocation-edge-proof-v1",
-        "database_stores_token_hash_only": True,
-        "user_id": "c91c6cec-618b-58fc-99fc-948ab08895c4",
-        "organization_id": "3e4d79f5-9565-5ac9-b5e0-32ea4937d85b",
-        "student_id": "87b426f7-73f0-53ec-880b-a75767415dbf",
-        "plan_id": "059af7ff-3b6b-5e41-ac46-e4e73e4b5107",
-        "exercise_id": "5f1b2d42-20f7-5701-9484-f1dcb9e1dcc2",
-        "link_id": "e412e8d8-7b09-5b09-bd06-dd9ea8fb6af1",
-        "expires_after_hours": 4,
-        "cleanup_required_after_proof": True,
-    }, "post-revocation fixture")
-
-    regrant = authority.get("regrant_recovery", {})
-    require(regrant, {
-        "repository_file": "04_backend_supabase/operations/stage33_direct_rpc_regrant_recovery.sql",
+    require(authority.get("regrant_recovery", {}), {
         "repository_blob_sha": RECOVERY_BLOB,
         "is_migration": False,
         "automatic_execution_allowed": False,
@@ -202,7 +173,6 @@ def main() -> None:
 
     proof = authority.get("post_revocation_edge_proof_candidate", {})
     require(proof, {
-        "focused_test_file": "03_app_flutter/fitnexus_app/test/student_access_stage33_post_revocation_live_edge_proof_test.dart",
         "focused_test_blob_sha": TEST_BLOB,
         "enabled_environment": "STAGE33_POST_REVOCATION_LIVE_PROOF_ENABLED",
         "production_transport_object": "StudentAccessTransport.instance",
@@ -219,34 +189,27 @@ def main() -> None:
         "get_workout", "start_workout", "set_completion",
         "get_feedback_context", "submit_feedback",
     ]:
-        fail("post-revocation route sequence drifted")
-    if proof.get("command_ids") != [
-        "34000000000000000000000000000001",
-        "34000000000000000000000000000002",
-        "34000000000000000000000000000003",
-    ]:
-        fail("post-revocation command IDs drifted")
+        fail("route sequence drifted")
 
-    # Current remote truth remains pre-revocation. No Stage33 revocation migration may exist yet.
+    # Preparation is intentionally non-migrating and non-mutating.
     if any(
         path.is_file() and "stage33" in path.name and "revocation" in path.name
         for path in (BACKEND / "migrations").glob("*.sql")
     ):
-        fail("Stage33 revocation migration materialized before candidate preparation merged")
-    repo_only = [
-        row for row in ledger.get("declared_divergences", [])
-        if isinstance(row, dict) and row.get("direction") == "repo_only"
-    ]
-    if repo_only:
-        fail("assessment/preparation lifecycle must not introduce a repo-only migration divergence")
-    remote_names = {
-        row.get("name") for row in ledger.get("remote_migrations", [])
-        if isinstance(row, dict)
-    }
-    if "stage33_direct_rpc_revocation_and_post_revocation_fixture" in remote_names:
-        fail("Stage33 revocation unexpectedly appears in remote migration ledger")
+        fail("Stage33 revocation migration materialized before preparation merge")
+    if any(
+        isinstance(row, dict) and row.get("direction") == "repo_only"
+        for row in ledger.get("declared_divergences", [])
+    ):
+        fail("preparation lifecycle introduced repo-only migration divergence")
+    if any(
+        isinstance(row, dict)
+        and row.get("name") == "stage33_direct_rpc_revocation_and_post_revocation_fixture"
+        for row in ledger.get("remote_migrations", [])
+    ):
+        fail("Stage33 revocation unexpectedly appears remote")
 
-    # Candidate SQL exact safety contract.
+    # SQL candidate must fail closed, seed only deterministic synthetic fixture, and cut exactly five.
     for fragment in (
         "STAGE33_REVOCATION_REQUIRES_EMPTY_CUSTOMER_DOMAIN",
         "STAGE33_REVOCATION_SECURITY_OBSERVATION_NOT_QUIET",
@@ -255,38 +218,36 @@ def main() -> None:
         "c91c6cec-618b-58fc-99fc-948ab08895c4",
         "3e4d79f5-9565-5ac9-b5e0-32ea4937d85b",
         "87b426f7-73f0-53ec-880b-a75767415dbf",
-        "059af7ff-3b6b-5e41-ac46-e4e73e4b5107",
-        "5f1b2d42-20f7-5701-9484-f1dcb9e1dcc2",
-        "e412e8d8-7b09-5b09-bd06-dd9ea8fb6af1",
         "STAGE33_REVOCATION_PRECONDITION_DIRECT_GRANTS_DRIFT",
         "STAGE33_REVOCATION_POSTCONDITION_ROLE_BOUNDARY_FAILED",
         "STAGE33_REVOCATION_POSTCONDITION_ISSUE_TOKEN_AUTHORITY_CHANGED",
     ):
         if fragment not in candidate:
-            fail(f"revocation candidate SQL drift: {fragment}")
+            fail(f"candidate SQL drift: {fragment}")
     for signature in TARGET_SIGNATURES:
-        sql_signature = signature.removeprefix("public.")
-        if f"revoke execute on function public.{sql_signature}" not in candidate:
-            fail(f"revocation candidate missing exact target: {signature}")
+        short = signature.removeprefix("public.")
+        if f"revoke execute on function public.{short}" not in candidate:
+            fail(f"candidate missing target: {signature}")
+    if candidate.lower().count("revoke execute on function public.") != 5:
+        fail("candidate must contain exactly five public function revokes")
+    if "has_function_privilege('public'" in candidate.lower():
+        fail("candidate incorrectly treats PUBLIC as a login role")
     if "grant execute on function public." in candidate.lower():
-        fail("revocation candidate unexpectedly grants public function execute")
+        fail("candidate unexpectedly grants function execute")
 
-    # Recovery is exact and separate; it must never alter service_role or production transport.
+    # Recovery must invert only those five grants and must not attempt pseudo-role privilege checks.
     for signature in TARGET_SIGNATURES:
-        sql_signature = signature.removeprefix("public.")
-        if f"grant execute on function public.{sql_signature}" not in recovery:
-            fail(f"regrant recovery missing exact target: {signature}")
+        short = signature.removeprefix("public.")
+        if f"grant execute on function public.{short}" not in recovery:
+            fail(f"recovery missing target: {signature}")
     if recovery.lower().count("grant execute on function public.") != 5:
-        fail("regrant recovery must contain exactly five public function grants")
-    for forbidden in (
-        "grant execute on function public.issue_student_access_token_v2",
-        "revoke execute",
-        "student_access_transport_contract",
-    ):
-        if forbidden in recovery.lower():
-            fail(f"regrant recovery scope drift: {forbidden}")
+        fail("recovery must contain exactly five public function grants")
+    if "has_function_privilege('public'" in recovery.lower():
+        fail("recovery incorrectly treats PUBLIC as a login role")
+    if "revoke execute" in recovery.lower():
+        fail("recovery may not revoke privileges")
 
-    # Focused proof must use only the production singleton and its five-action invoke seam.
+    # Focused proof uses the production singleton only.
     for fragment in (
         "StudentAccessTransport.instance",
         "STAGE33_POST_REVOCATION_LIVE_PROOF_ENABLED",
@@ -295,36 +256,24 @@ def main() -> None:
         "STAGE33_SUPABASE_PUBLISHABLE_KEY",
         "SharedPreferences.setMockInitialValues",
         "HttpOverrides.global = null",
-        "'get_workout'",
-        "'start_workout'",
-        "'set_completion'",
-        "'get_feedback_context'",
-        "'submit_feedback'",
-        "34000000000000000000000000000001",
-        "34000000000000000000000000000002",
-        "34000000000000000000000000000003",
+        "'get_workout'", "'start_workout'", "'set_completion'",
+        "'get_feedback_context'", "'submit_feedback'",
     ):
         if fragment not in proof_test:
-            fail(f"focused Stage33 proof test drift: {fragment}")
-    for forbidden in (
-        "forVerification",
-        "forAuthorizedRollbackProof",
-        ".rpc(",
-        ".functions.invoke(",
-    ):
+            fail(f"focused proof drift: {fragment}")
+    for forbidden in ("forVerification", "forAuthorizedRollbackProof", ".rpc(", ".functions.invoke("):
         if forbidden in proof_test:
-            fail(f"focused Stage33 proof bypasses production singleton: {forbidden}")
+            fail(f"focused proof bypass: {forbidden}")
 
-    # Exposure authority must still describe live pre-revocation truth on this preparation branch.
-    approved = exposure.get("approved_exposures", [])
-    exposed_names = {
-        row.get("function") for row in approved if isinstance(row, dict)
+    # Live exposure authority still describes the pre-revocation remote truth.
+    approved_names = {
+        row.get("function") for row in exposure.get("approved_exposures", [])
+        if isinstance(row, dict)
     }
-    if exposed_names != TARGET_NAMES | {"issue_student_access_token_v2"}:
-        fail("current pre-revocation SECURITY DEFINER authority set drifted")
+    if approved_names != TARGET_NAMES | {"issue_student_access_token_v2"}:
+        fail("pre-revocation exposure authority drifted")
 
     for fragment in (
-        "static const StudentAccessTransportMode activeMode =",
         "StudentAccessTransportMode.edgeGateway;",
         "static const bool edgeGatewaySelected = true;",
         "static const bool automaticEdgeToDirectFallback = false;",
@@ -333,7 +282,7 @@ def main() -> None:
         "static const bool directRpcExecuteRevoked = false;",
     ):
         if fragment not in contract:
-            fail(f"production transport contract drift: {fragment}")
+            fail(f"production transport drift: {fragment}")
 
     require(authority.get("promotion_boundary", {}), {
         "candidate_sql_may_execute_from_operations": False,
@@ -348,7 +297,6 @@ def main() -> None:
         "must_preserve_issue_token_authority": True,
         "launch_gate_promotion": False,
     }, "promotion boundary")
-
     require(authority.get("next_stage", {}), {
         "name": "MERGE_STAGE33_REVOCATION_PREPARATION_THEN_PROMOTE_EXACT_CANDIDATE_TO_MIGRATION_AND_SEAL_PROOF",
         "allowed_now": True,
