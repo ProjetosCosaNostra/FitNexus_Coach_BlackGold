@@ -24,6 +24,7 @@ on:
       - '04_backend_supabase/stage32_post_cutover_live_proof_r1_cleanup_authority.json'
       - '04_backend_supabase/stage32_post_cutover_rollback_proof_authority.json'
       - '04_backend_supabase/stage32_post_cutover_rollback_live_proof_workflow_seal_authority.json'
+      - '04_backend_supabase/stage33_direct_rpc_privilege_revocation_assessment_authority.json'
       - '04_backend_supabase/stage32_post_cutover_live_proof_failure_r0_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
@@ -62,6 +63,7 @@ on:
       - '04_backend_supabase/stage32_post_cutover_live_proof_r1_cleanup_authority.json'
       - '04_backend_supabase/stage32_post_cutover_rollback_proof_authority.json'
       - '04_backend_supabase/stage32_post_cutover_rollback_live_proof_workflow_seal_authority.json'
+      - '04_backend_supabase/stage33_direct_rpc_privilege_revocation_assessment_authority.json'
       - '04_backend_supabase/stage32_post_cutover_live_proof_failure_r0_authority.json'
       - '04_backend_supabase/cf_origin_spoof_sentinel_authority.json'
       - '04_backend_supabase/external_gate_evidence_placeholders.json'
@@ -181,6 +183,9 @@ jobs:
 
       - name: Stage 32 post-cutover rollback live proof workflow seal guard
         run: python ../../04_backend_supabase/tools/verify_stage32_post_cutover_rollback_live_proof_workflow_seal.py
+
+      - name: Stage 33 direct RPC privilege revocation assessment guard
+        run: python ../../04_backend_supabase/tools/verify_stage33_direct_rpc_privilege_revocation_assessment.py
 
       - name: Student client Edge runtime smoke lifecycle guard
         run: python ../../04_backend_supabase/tools/verify_stage32_rollback_fixture_historical_compat.py smoke
