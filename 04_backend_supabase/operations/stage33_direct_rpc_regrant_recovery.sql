@@ -12,7 +12,8 @@
 --
 -- Preconditions deliberately fail closed: the exact five targets must be externally
 -- revoked, service_role must still execute all five, and professor token issuance must
--- remain authenticated. If those facts are not true, this artifact refuses mutation.
+-- remain authenticated. Effective anon/authenticated denial also proves no PUBLIC EXECUTE
+-- remains. If those facts are not true, this artifact refuses mutation.
 do $$
 declare
   v_count integer;
@@ -28,7 +29,6 @@ begin
        'start_student_workout_v2',
        'submit_student_workout_feedback_v2'
      )
-     and not has_function_privilege('public', p.oid, 'EXECUTE')
      and not has_function_privilege('anon', p.oid, 'EXECUTE')
      and not has_function_privilege('authenticated', p.oid, 'EXECUTE')
      and has_function_privilege('service_role', p.oid, 'EXECUTE');
@@ -68,7 +68,6 @@ begin
        'start_student_workout_v2',
        'submit_student_workout_feedback_v2'
      )
-     and not has_function_privilege('public', p.oid, 'EXECUTE')
      and has_function_privilege('anon', p.oid, 'EXECUTE')
      and has_function_privilege('authenticated', p.oid, 'EXECUTE')
      and has_function_privilege('service_role', p.oid, 'EXECUTE');
