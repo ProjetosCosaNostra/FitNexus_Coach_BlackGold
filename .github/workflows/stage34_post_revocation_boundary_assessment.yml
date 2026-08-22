@@ -14,10 +14,11 @@ on:
       - '04_backend_supabase/student_access_network_origin_boundary.json'
       - '04_backend_supabase/student_access_abuse_authority.json'
       - '04_backend_supabase/operations/**'
+      - '04_backend_supabase/migrations/20260822075500_stage35_alert_delivery_receipt_store.sql'
       - '04_backend_supabase/functions/student-access-alert-dispatcher/**'
       - '04_backend_supabase/stage35_alert_dispatcher_receipt_candidate_authority.json'
-      - '04_backend_supabase/tools/verify_stage34_post_revocation_boundary_assessment.py'
-      - '04_backend_supabase/tools/verify_stage35_alert_dispatcher_receipt_candidate.py'
+      - '04_backend_supabase/stage35_alert_delivery_receipt_store_migration_promotion_authority.json'
+      - '04_backend_supabase/tools/verify_stage35_alert_receipt_store_migration_promotion.py'
       - '03_app_flutter/fitnexus_app/lib/features/student/student_access_transport_contract.dart'
       - '.github/workflows/stage34_post_revocation_boundary_assessment.yml'
   push:
@@ -34,10 +35,11 @@ on:
       - '04_backend_supabase/student_access_network_origin_boundary.json'
       - '04_backend_supabase/student_access_abuse_authority.json'
       - '04_backend_supabase/operations/**'
+      - '04_backend_supabase/migrations/20260822075500_stage35_alert_delivery_receipt_store.sql'
       - '04_backend_supabase/functions/student-access-alert-dispatcher/**'
       - '04_backend_supabase/stage35_alert_dispatcher_receipt_candidate_authority.json'
-      - '04_backend_supabase/tools/verify_stage34_post_revocation_boundary_assessment.py'
-      - '04_backend_supabase/tools/verify_stage35_alert_dispatcher_receipt_candidate.py'
+      - '04_backend_supabase/stage35_alert_delivery_receipt_store_migration_promotion_authority.json'
+      - '04_backend_supabase/tools/verify_stage35_alert_receipt_store_migration_promotion.py'
       - '03_app_flutter/fitnexus_app/lib/features/student/student_access_transport_contract.dart'
       - '.github/workflows/stage34_post_revocation_boundary_assessment.yml'
 
@@ -51,12 +53,5 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Stage 34 assessment lifecycle guard
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ -f 04_backend_supabase/stage35_alert_dispatcher_receipt_candidate_authority.json ]]; then
-            python 04_backend_supabase/tools/verify_stage35_alert_dispatcher_receipt_candidate.py
-          else
-            python 04_backend_supabase/tools/verify_stage34_post_revocation_boundary_assessment.py
-          fi
+      - name: Current Stage 34/35 migration lifecycle guard
+        run: python 04_backend_supabase/tools/verify_stage35_alert_receipt_store_migration_promotion.py
