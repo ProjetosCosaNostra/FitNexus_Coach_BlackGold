@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -10,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 BACKEND = ROOT / "04_backend_supabase"
 LEDGER = BACKEND / "migration_ledger_authority.json"
 EXPOSURE = BACKEND / "security_definer_exposure_authority.json"
+REVOCATION_FILE = BACKEND / "migrations" / "20260822022000_stage33_direct_rpc_revocation_and_post_revocation_fixture.sql"
 
 CURRENT_BASELINE = "35e1c117d63349f27470160da5f58ef6077c47bc"
 CURRENT_OBSERVED = "2026-08-22T06:00:17.171196Z"
@@ -132,14 +134,22 @@ def run(mode: str) -> None:
     stage32_history = importlib.import_module("verify_stage33_revocation_historical_compat")
 
     with tempfile.TemporaryDirectory(prefix="fitnexus-stage33-cleanup-history-") as tmp:
-        temp_ledger = Path(tmp) / "migration_ledger_authority.json"
-        temp_exposure = Path(tmp) / "security_definer_exposure_authority.json"
+        temp_root = Path(tmp)
+        temp_ledger = temp_root / "migration_ledger_authority.json"
+        temp_exposure = temp_root / "security_definer_exposure_authority.json"
+        historical_backend = temp_root / "historical_backend"
+        historical_migrations = historical_backend / "migrations"
+        historical_migrations.mkdir(parents=True)
+        if not REVOCATION_FILE.is_file():
+            fail("immutable Stage33 revocation migration disappeared before historical projection")
+        shutil.copy2(REVOCATION_FILE, historical_migrations / REVOCATION_FILE.name)
         temp_ledger.write_text(json.dumps(projected_ledger, indent=2) + "\n", encoding="utf-8")
         temp_exposure.write_text(json.dumps(projected_exposure, indent=2) + "\n", encoding="utf-8")
 
         modules = (assessment, preparation, promotion, seal)
         originals = [(module, module.LEDGER if hasattr(module, "LEDGER") else None, module.EXPOSURE) for module in modules]
         old_stage32_ledger = stage32_history.LEDGER
+        old_assessment_backend = assessment.BACKEND
         try:
             for module in modules:
                 if hasattr(module, "LEDGER"):
@@ -148,6 +158,10 @@ def run(mode: str) -> None:
             stage32_history.LEDGER = temp_ledger
 
             if mode == "assessment":
+                # The immutable assessment enumerates Stage33 revocation migration filenames
+                # dynamically through BACKEND/migrations. Project only that historical directory
+                # so the later cleanup migration cannot masquerade as part of the old assessment.
+                assessment.BACKEND = historical_backend
                 assessment.main()
             elif mode == "preparation":
                 preparation.main()
@@ -158,6 +172,7 @@ def run(mode: str) -> None:
             else:
                 stage32_history.run(mode)
         finally:
+            assessment.BACKEND = old_assessment_backend
             for module, old_ledger, old_exposure in originals:
                 if hasattr(module, "LEDGER") and old_ledger is not None:
                     module.LEDGER = old_ledger
@@ -171,6 +186,7 @@ def run(mode: str) -> None:
     print(f"ACTUAL_CLEANUP_REPO_ONLY={CLEANUP_NAME}")
     print("PROJECTED_HISTORICAL_REVOCATION_REMOTE_APPLIED=false")
     print("PROJECTED_HISTORICAL_REVOCATION_REPO_ONLY=true")
+    print("PROJECTED_HISTORICAL_LATER_CLEANUP_MIGRATION_VISIBLE=false")
     print("PROOF_REEXECUTION_ALLOWED=false")
     print("REMOTE_REGRANT_ALLOWED=false")
     print("LAUNCH_GATE_PROMOTION=DENIED")
