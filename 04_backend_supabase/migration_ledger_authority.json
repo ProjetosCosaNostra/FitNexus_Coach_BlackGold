@@ -51,7 +51,7 @@
     {"version":"20260818134341","name":"stage3_students_training_domain"},
     {"version":"20260818134457","name":"stage3_training_command_rpc"},
     {"version":"20260818153734","name":"stage5_student_access_workout_execution"},
-    {"version":"20260818194110","name":"stage6_professor_onboarding"},
+    {"version":"20260818194110","name":"stage6_professor_progress_dashboard"},
     {"version":"20260818194402","name":"stage6_foreign_key_index_hardening"},
     {"version":"20260818194733","name":"stage7_smart_training_templates"},
     {"version":"20260818202605","name":"stage8_student_feedback_risk_signals"},
