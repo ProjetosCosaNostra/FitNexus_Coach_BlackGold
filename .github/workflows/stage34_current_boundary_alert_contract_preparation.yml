@@ -15,7 +15,10 @@ on:
       - '04_backend_supabase/student_access_production_edge_selection_authority.json'
       - '04_backend_supabase/student_access_network_origin_boundary.json'
       - '04_backend_supabase/student_access_abuse_authority.json'
-      - '04_backend_supabase/tools/verify_stage34_current_boundary_alert_contract_preparation.py'
+      - '04_backend_supabase/stage35_alert_dispatcher_receipt_candidate_authority.json'
+      - '04_backend_supabase/operations/stage35_alert_delivery_receipt_store_candidate.sql'
+      - '04_backend_supabase/functions/student-access-alert-dispatcher/**'
+      - '04_backend_supabase/tools/verify_stage35_alert_dispatcher_receipt_candidate.py'
       - '03_app_flutter/fitnexus_app/lib/features/student/student_access_transport_contract.dart'
       - '.github/workflows/stage34_current_boundary_alert_contract_preparation.yml'
   push:
@@ -33,7 +36,10 @@ on:
       - '04_backend_supabase/student_access_production_edge_selection_authority.json'
       - '04_backend_supabase/student_access_network_origin_boundary.json'
       - '04_backend_supabase/student_access_abuse_authority.json'
-      - '04_backend_supabase/tools/verify_stage34_current_boundary_alert_contract_preparation.py'
+      - '04_backend_supabase/stage35_alert_dispatcher_receipt_candidate_authority.json'
+      - '04_backend_supabase/operations/stage35_alert_delivery_receipt_store_candidate.sql'
+      - '04_backend_supabase/functions/student-access-alert-dispatcher/**'
+      - '04_backend_supabase/tools/verify_stage35_alert_dispatcher_receipt_candidate.py'
       - '03_app_flutter/fitnexus_app/lib/features/student/student_access_transport_contract.dart'
       - '.github/workflows/stage34_current_boundary_alert_contract_preparation.yml'
 
@@ -47,5 +53,5 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Stage 34 current boundary and alert contract preparation guard
-        run: python 04_backend_supabase/tools/verify_stage34_current_boundary_alert_contract_preparation.py
+      - name: Current Stage 34/35 lifecycle guard
+        run: python 04_backend_supabase/tools/verify_stage35_alert_dispatcher_receipt_candidate.py
