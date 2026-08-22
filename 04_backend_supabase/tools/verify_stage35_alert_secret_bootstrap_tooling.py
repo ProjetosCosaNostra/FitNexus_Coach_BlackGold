@@ -127,6 +127,10 @@ def main() -> None:
         "tooling contract",
     )
 
+    normalized = script.replace("\r\n", "\n")
+    if not normalized.startswith("[CmdletBinding()]\nparam()\n"):
+        fail("bootstrap top-level parameter block must be exactly empty")
+
     expected_fragments = [
         "param()",
         "Read-Host -Prompt $Prompt -AsSecureString",
@@ -175,8 +179,6 @@ def main() -> None:
         if fragment.lower() in lower:
             fail(f"forbidden bootstrap behavior appeared: {fragment}")
 
-    if "param([" in script or "param (`n" in script:
-        fail("bootstrap unexpectedly accepts command-line parameters")
     if "--body $" in lower:
         fail("GitHub secret value appeared in command arguments")
 
