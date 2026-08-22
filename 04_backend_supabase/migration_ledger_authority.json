@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "0e7324c47771be2c9c66e3c7bbf05481abea41aa",
-  "observed_at_utc": "2026-08-22T00:37:12.866972Z",
+  "baseline_main_sha": "2f8bd11ac0a4ba4e605807fb17c6c78ff3939041",
+  "observed_at_utc": "2026-08-22T02:15:46.465445Z",
   "source": "Supabase.list_migrations+Supabase.execute_sql",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -36,6 +36,13 @@
       "reason": "Historical no-op ledger row created during advisor guard misuse; preserved as remote history evidence and intentionally has no repository SQL file.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-MIGRATION-TOOL-MISROUTE-097"
+    },
+    {
+      "direction": "repo_only",
+      "name": "stage33_direct_rpc_revocation_and_post_revocation_fixture",
+      "reason": "Exact Stage33 apply-once candidate: seeds the deterministic post-revocation Edge proof fixture and retires PUBLIC/anon/authenticated direct EXECUTE on exactly five student route v2 RPCs while preserving service_role and professor token issuance. Remote apply remains forbidden until the sealed one-shot proof workflow is merged and a fresh quiet/security-advisor pre-apply gate passes.",
+      "owner": "BlackGold Forge",
+      "related_failure_class": "BGF-STAGE33-PRIVILEGE-REVOCATION-PREMATURE-245"
     }
   ],
   "remote_migrations": [
