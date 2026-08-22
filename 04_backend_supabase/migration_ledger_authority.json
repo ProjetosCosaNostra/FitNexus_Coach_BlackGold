@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "3a4f52114a9ad9fa57610f67b006e76a26d98009",
-  "observed_at_utc": "2026-08-22T00:24:14.494794Z",
+  "baseline_main_sha": "0e7324c47771be2c9c66e3c7bbf05481abea41aa",
+  "observed_at_utc": "2026-08-22T00:37:12.866972Z",
   "source": "Supabase.list_migrations+Supabase.execute_sql",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -36,13 +36,6 @@
       "reason": "Historical no-op ledger row created during advisor guard misuse; preserved as remote history evidence and intentionally has no repository SQL file.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-MIGRATION-TOOL-MISROUTE-097"
-    },
-    {
-      "direction": "repo_only",
-      "name": "stage32_post_cutover_rollback_proof_cleanup",
-      "reason": "Fail-closed cleanup for the consumed successful Stage32 real post-cutover rollback proof. Apply exactly once only after cleanup CI and merge, then reconcile the remote receipt before any direct-RPC privilege revocation decision.",
-      "owner": "BlackGold Forge",
-      "related_failure_class": "BGF-STAGE32-POST-CUTOVER-ROLLBACK-CLEANUP-244"
     }
   ],
   "remote_migrations": [
@@ -102,6 +95,7 @@
     {"version":"20260821171334","name":"stage32_post_cutover_edge_runtime_fixture"},
     {"version":"20260821214005","name":"stage32_rearm_expired_fixture_r1"},
     {"version":"20260821222724","name":"stage32_post_cutover_live_proof_r1_cleanup"},
-    {"version":"20260821235550","name":"stage32_post_cutover_rollback_fixture"}
+    {"version":"20260821235550","name":"stage32_post_cutover_rollback_fixture"},
+    {"version":"20260822003559","name":"stage32_post_cutover_rollback_proof_cleanup"}
   ]
 }
