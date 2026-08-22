@@ -44,7 +44,7 @@
   },
   "revocation_candidate": {
     "repository_file": "04_backend_supabase/operations/stage33_direct_rpc_revocation_and_post_revocation_fixture_candidate.sql",
-    "repository_blob_sha": "39f4a13e7b6fdeb0675a8cc5a5afa424b409ef6a",
+    "repository_blob_sha": "08fbbf71ec51583c8e46792ed88b28825394e9f1",
     "is_migration": false,
     "remote_application_allowed": false,
     "future_migration_name": "stage33_direct_rpc_revocation_and_post_revocation_fixture",
@@ -80,7 +80,7 @@
   },
   "regrant_recovery": {
     "repository_file": "04_backend_supabase/operations/stage33_direct_rpc_regrant_recovery.sql",
-    "repository_blob_sha": "1c26c7aff1679bd85b359756eb3eb2c5eeaeaae1",
+    "repository_blob_sha": "2a620b8a951d30bd4d9688158d36e9d1736b65a3",
     "is_migration": false,
     "automatic_execution_allowed": false,
     "execution_allowed_before_remote_revocation": false,
@@ -136,8 +136,8 @@
     "name": "MERGE_STAGE33_REVOCATION_PREPARATION_THEN_PROMOTE_EXACT_CANDIDATE_TO_MIGRATION_AND_SEAL_PROOF",
     "allowed_now": true,
     "requires_full_ci_green": true,
-    "requires_exact_candidate_blob_sha": "39f4a13e7b6fdeb0675a8cc5a5afa424b409ef6a",
-    "requires_exact_recovery_blob_sha": "1c26c7aff1679bd85b359756eb3eb2c5eeaeaae1",
+    "requires_exact_candidate_blob_sha": "08fbbf71ec51583c8e46792ed88b28825394e9f1",
+    "requires_exact_recovery_blob_sha": "2a620b8a951d30bd4d9688158d36e9d1736b65a3",
     "requires_exact_focused_test_blob_sha": "d2882d6560a18e259afe74ccbc18d3d275d7f001",
     "may_apply_remote_revocation_now": false,
     "may_execute_recovery_now": false,
