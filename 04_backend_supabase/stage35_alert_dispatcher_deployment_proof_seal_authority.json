@@ -77,7 +77,7 @@
     "controlled_fixture_candidate_git_blob_sha": "745fd77814fa40909069e00de6b41c7292e8df7b",
     "cleanup_candidate_file": "04_backend_supabase/operations/stage35_alert_delivery_controlled_proof_cleanup_candidate.sql",
     "cleanup_candidate_git_blob_sha": "ca8a824131120d912d0fe98687820c2b320e33f5",
-    "one_shot_proof_workflow_file": ".github/workflows/stage35_alert_external_delivery_live_proof.yml",
+    "one_shot_proof_workflow_file": ".github/workflows/stage35_alert_external_delivery_one_shot_proof.yml",
     "one_shot_proof_workflow_git_blob_sha": "079a140e36a851eb0f787397929ffbe3351aba48",
     "proof_marker": "fitnexus-stage34-alert-delivery-proof-v1",
     "proof_trigger_branch": "blackgold/stage35-alert-external-delivery-proof-trigger",
