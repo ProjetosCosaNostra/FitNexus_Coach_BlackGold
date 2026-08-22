@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE34_POST_REVOCATION_BOUNDARY_RECONCILIATION_ASSESSMENT",
+  "baseline_main_sha": "8bffaabfa72103257fec80f997dc6b2fa6a86f48",
+  "observed_at_utc": "2026-08-22T06:12:09.300352Z",
+  "current_state": "ASSESSMENT_COMPLETE_FAIL_CLOSED_ALERT_DELIVERY_AND_SOURCE_AUTHORITY_RECONCILIATION_REQUIRED",
+  "failure_classes": [
+    "BGF-STAGE34-POST-REVOCATION-AUTHORITY-DRIFT-264",
+    "BGF-STAGE34-LIVE-SOURCE-REVOCATION-MISMATCH-265",
+    "BGF-STAGE34-ALERT-DELIVERY-EVIDENCE-GAP-266",
+    "BGF-STAGE34-HISTORICAL-AUTHORITY-AS-CURRENT-267"
+  ],
+  "purpose": "Repository-first assessment of the authoritative post-Stage33 student-access boundary after direct client RPC retirement and cleanup. It separates verified live truth from Stage32 historical snapshots, identifies the remaining alert-delivery evidence gap, and forbids source or launch promotion by self-attestation.",
+  "verified_live_truth": {
+    "source_authority": "04_backend_supabase/stage33_post_revocation_proof_cleanup_authority.json",
+    "stage33_cleanup_state": "POST_REVOCATION_EDGE_PROOF_VERIFIED_CLEANUP_REMOTE_COMPLETE",
+    "stage33_revocation_remote_version": "20260822032456",
+    "stage33_cleanup_remote_version": "20260822061133",
+    "synthetic_customer_runtime_residue": 0,
+    "global_historical_network_buckets": 13,
+    "global_historical_growth_events": 6,
+    "security_posture": "quiet",
+    "target_student_rpc_count": 5,
+    "anon_execute_count": 0,
+    "authenticated_execute_count": 0,
+    "service_role_execute_count": 5,
+    "issue_student_access_token_v2_authenticated_execute": true,
+    "direct_student_route_security_definer_warnings": 0,
+    "remaining_security_advisor_warning": "authenticated_security_definer_function_executable:issue_student_access_token_v2",
+    "production_edge_transport_verified": true,
+    "production_edge_route_count_verified": 5,
+    "post_cutover_direct_rollback_proof_verified_before_revocation": true,
+    "automatic_edge_to_direct_fallback": false,
+    "launch_gate_promotion": false
+  },
+  "immutable_proof_receipts": {
+    "stage32_post_cutover_edge_run": 32532170382,
+    "stage32_post_cutover_edge_job": 96926178484,
+    "stage32_post_cutover_rollback_run": 32540031081,
+    "stage32_post_cutover_rollback_job": 96948118831,
+    "stage33_post_revocation_edge_run": 32548995700,
+    "stage33_post_revocation_edge_job": 96972506797,
+    "proof_reexecution_allowed": false
+  },
+  "historical_snapshot_drift_inventory": {
+    "student_access_client_cutover_authority": {
+      "file": "04_backend_supabase/student_access_client_cutover_authority.json",
+      "schema_version": 2,
+      "recorded_current_state": "CLIENT_EDGE_SELECTED_POST_CUTOVER_PROOF_PENDING",
+      "recorded_direct_v2_rpc_path_active": true,
+      "recorded_direct_anon_v2_rpc_execute_revoked": false,
+      "recorded_five_routes_verified_via_edge": false,
+      "recorded_post_cutover_rollback_path_verified": false,
+      "recorded_observation_window_passed": false,
+      "recorded_security_advisor_rechecked": false,
+      "classification": "historical_stage32_snapshot_not_current_live_truth"
+    },
+    "student_access_production_edge_selection_authority": {
+      "file": "04_backend_supabase/student_access_production_edge_selection_authority.json",
+      "schema_version": 1,
+      "recorded_current_state": "PRODUCTION_EDGE_SELECTION_CANDIDATE_EDGE_MODE_POST_CUTOVER_PROOF_PENDING",
+      "recorded_post_cutover_live_proof_completed": false,
+      "recorded_post_cutover_rollback_proof_completed": false,
+      "recorded_direct_rpc_execute_revoked": false,
+      "classification": "historical_stage32_snapshot_not_current_live_truth"
+    },
+    "student_access_network_origin_boundary": {
+      "file": "04_backend_supabase/student_access_network_origin_boundary.json",
+      "schema_version": 5,
+      "recorded_current_state": "ORIGIN_SOURCE_SPOOF_RESISTANCE_AND_EDGE_THRESHOLD_VERIFIED",
+      "recorded_anonymous_v2_rpc_execute_required_by_current_client": true,
+      "recorded_valid_student_route_verified_live": false,
+      "recorded_edge_alert_delivery_verified": false,
+      "classification": "mixed_historical_network_proof_and_stale_client_boundary"
+    },
+    "student_access_transport_contract": {
+      "file": "03_app_flutter/fitnexus_app/lib/features/student/student_access_transport_contract.dart",
+      "active_mode": "edgeGateway",
+      "edge_gateway_selected": true,
+      "automatic_edge_to_direct_fallback": false,
+      "source_direct_rpc_execute_revoked": false,
+      "source_rollback_verified": false,
+      "source_client_cutover_verified": false,
+      "classification": "runtime_transport_correct_metadata_flags_stale_after_remote_stage33"
+    }
+  },
+  "security_observability_boundary": {
+    "abuse_authority_file": "04_backend_supabase/student_access_abuse_authority.json",
+    "abuse_authority_is_incident_response_evidence": false,
+    "posture_window_seconds": 3600,
+    "network_origin_control_verified": true,
+    "invalid_token_threshold_429_verified": true,
+    "cf_origin_spoof_resistance_verified": true,
+    "edge_valid_student_route_verified": true,
+    "edge_post_cutover_five_route_verified": true,
+    "edge_post_revocation_five_route_verified": true,
+    "alert_delivery_verified": false,
+    "alert_delivery_receipt_authority_found": false,
+    "alert_delivery_required_before_incident_response_promotion": true,
+    "alert_delivery_required_before_production_deployment_evidence_promotion": true
+  },
+  "alert_delivery_gap": {
+    "failure_class": "BGF-STAGE34-ALERT-DELIVERY-EVIDENCE-GAP-266",
+    "network_boundary_requirement": "alert delivery tested against controlled signal",
+    "abuse_authority_requirement": "Deploy-layer or edge-layer network-origin abuse control and alert delivery before production deployment evidence can be promoted.",
+    "current_verified_receipt": null,
+    "self_attestation_allowed": false,
+    "synthetic_database_signal_without_external_delivery_receipt_is_sufficient": false,
+    "incident_response_gate_blocked": true,
+    "production_deployment_gate_blocked": true,
+    "paid_ads_blocked": true
+  },
+  "source_reconciliation_boundary": {
+    "failure_class": "BGF-STAGE34-LIVE-SOURCE-REVOCATION-MISMATCH-265",
+    "live_remote_direct_rpc_revoked": true,
+    "source_direct_rpc_execute_revoked_flag": false,
+    "live_post_cutover_rollback_verified": true,
+    "source_rollback_verified_flag": false,
+    "live_client_cutover_verified": true,
+    "source_client_cutover_verified_flag": false,
+    "source_metadata_reconciliation_required": true,
+    "source_metadata_mutation_allowed_in_assessment": false,
+    "direct_rpc_runtime_branch_removal_authorized": false,
+    "automatic_direct_rpc_regrant_authorized": false,
+    "historical_guard_projection_required_before_source_flag_advance": true
+  },
+  "operations_inventory": {
+    "directory": "04_backend_supabase/operations",
+    "stage33_regrant_recovery_present": true,
+    "stage33_revocation_candidate_present": true,
+    "alert_delivery_operation_present": false,
+    "regrant_recovery_is_normal_flow": false
+  },
+  "assessment_result": {
+    "transport_cutover": "VERIFIED",
+    "post_cutover_rollback": "VERIFIED_BEFORE_REVOCATION",
+    "direct_rpc_retirement": "VERIFIED_AND_REMOTE_RECONCILED",
+    "synthetic_cleanup": "VERIFIED_AND_REMOTE_RECONCILED",
+    "network_origin_security": "VERIFIED_FOR_EDGE_PATH",
+    "security_advisor_recheck": "VERIFIED",
+    "source_metadata_reconciliation": "REQUIRED",
+    "alert_delivery_runtime_receipt": "MISSING",
+    "incident_response_readiness": "DENIED",
+    "production_deployment_readiness": "DENIED",
+    "paid_media_readiness": "DENIED"
+  },
+  "promotion_rules": {
+    "may_mutate_remote_privileges": false,
+    "may_regrant_direct_rpc_execute": false,
+    "may_reexecute_consumed_proofs": false,
+    "may_self_attest_alert_delivery": false,
+    "may_promote_incident_response_gate": false,
+    "may_promote_production_deployment_gate": false,
+    "may_enable_paid_ads": false
+  },
+  "next_stage": {
+    "name": "PREPARE_STAGE34_CURRENT_BOUNDARY_AUTHORITY_AND_ALERT_DELIVERY_CONTRACT",
+    "allowed_now": true,
+    "repository_only": true,
+    "requires_historical_guard_projection_for_source_metadata": true,
+    "requires_external_alert_delivery_contract_before_runtime_proof": true,
+    "requires_no_real_customer_data": true,
+    "requires_no_proof_replay": true,
+    "requires_no_remote_privilege_mutation": true,
+    "may_promote_launch_gates": false
+  }
+}
