@@ -8,7 +8,9 @@ on:
       - '04_backend_supabase/migration_ledger_authority.json'
       - '04_backend_supabase/migrations/20260823174500_stage38_billing_evidence_bound_activation.sql'
       - '04_backend_supabase/stage38_billing_evidence_bound_activation_promotion_authority.json'
+      - '04_backend_supabase/tools/stage38_billing_migration_frontier.py'
       - '04_backend_supabase/tools/verify_stage38_billing_evidence_bound_activation_promotion.py'
+      - '04_backend_supabase/tools/verify_stage38_promotion_historical_compat.py'
       - '.github/workflows/stage38_billing_evidence_bound_activation_promotion.yml'
 
 permissions:
@@ -21,8 +23,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Compile Stage38 guard
-        run: python -m py_compile 04_backend_supabase/tools/verify_stage38_billing_evidence_bound_activation_promotion.py
+      - name: Compile Stage38 guards and frontier helper
+        run: >-
+          python -m py_compile
+          04_backend_supabase/tools/stage38_billing_migration_frontier.py
+          04_backend_supabase/tools/verify_stage38_billing_evidence_bound_activation_promotion.py
+          04_backend_supabase/tools/verify_stage38_promotion_historical_compat.py
 
       - name: Migration ledger contract guard
         run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
@@ -39,8 +45,8 @@ jobs:
       - name: Stage37 preparation historical guard
         run: python 04_backend_supabase/tools/verify_stage37_billing_external_authority_preparation.py
 
-      - name: Stage38 evidence-bound activation promotion guard
-        run: python 04_backend_supabase/tools/verify_stage38_billing_evidence_bound_activation_promotion.py
+      - name: Stage38 evidence-bound activation promotion guard under historical projection
+        run: python 04_backend_supabase/tools/verify_stage38_promotion_historical_compat.py
 
       - name: PostgreSQL CREATE OR REPLACE VIEW compatibility guard
         run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py
