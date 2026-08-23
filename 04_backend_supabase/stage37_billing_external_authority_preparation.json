@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE37_BILLING_EXTERNAL_AUTHORITY_PREPARATION",
+  "baseline_main_sha": "6a9a96c77ade7f350c95b1fb1008127809de3904",
+  "current_state": "PREPARED_EXTERNAL_ACTION_REQUIRED_INTERNAL_ACTIVATION_NOT_EXTERNAL_EVIDENCE_BOUND_NO_PROMOTION",
+  "failure_classes": [
+    "BGF-STAGE37-BILLING-PREMATURE-ACTIVATION-319",
+    "BGF-STAGE37-BILLING-EVIDENCE-BINDING-GAP-320",
+    "BGF-STAGE37-BILLING-WEBHOOK-PROOF-MISSING-321",
+    "BGF-STAGE37-BILLING-CHECKOUT-PROOF-MISSING-322",
+    "BGF-STAGE37-BILLING-SECRET-LEAK-323",
+    "BGF-STAGE37-BILLING-GATE-CROSS-PROMOTION-324"
+  ],
+  "repo_authority": {
+    "billing_provider_gate_file": "04_backend_supabase/migrations/20260818225500_stage16_billing_provider_gate.sql",
+    "billing_authority_hardening_file": "04_backend_supabase/migrations/20260818230000_stage16_billing_authority_hardening.sql",
+    "checkout_authority_bridge_file": "04_backend_supabase/migrations/20260819051500_stage17_checkout_authority_private_bridge.sql",
+    "controlled_launch_file": "04_backend_supabase/migrations/20260819062000_stage20_controlled_launch_admission.sql",
+    "external_gate_placeholder_file": "04_backend_supabase/external_gate_evidence_placeholders.json",
+    "billing_contract_guard_file": "04_backend_supabase/tools/verify_billing_provider_contract.py",
+    "stage36_authority_file": "04_backend_supabase/stage36_controlled_launch_external_gate_assessment_authority.json",
+    "migration_ledger_file": "04_backend_supabase/migration_ledger_authority.json",
+    "billing_contract_guard_git_blob_sha": "aafc61f9844476f35a86487e736db87e826068a2",
+    "stage36_authority_git_blob_sha": "063cef255c4d47d7f47a74ee0294b135b137f331",
+    "migration_ledger_git_blob_sha": "0325ebc32f56b0ec7b6b6b693ef496791bbf71bb"
+  },
+  "fresh_remote_assessment": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-23T17:35:12.046993+00:00",
+    "selection": {
+      "scope": "BR_V1",
+      "provider_code": "asaas",
+      "state": "selected_pending_credentials",
+      "evidence_version": "2026-08-18-official-docs-v1",
+      "activated_at": null
+    },
+    "checkout_intents": 0,
+    "webhook_receipts": 0,
+    "active_brl_prices": 6,
+    "organizations": 0,
+    "auth_users": 0,
+    "service_direct_selection_update": false,
+    "service_direct_checkout_update": false,
+    "service_direct_webhook_insert": false,
+    "service_command_privileges": {
+      "activate_billing_provider_selection": {"anon": false, "authenticated": false, "service_role": true},
+      "attach_billing_provider_checkout": {"anon": false, "authenticated": false, "service_role": true},
+      "record_billing_webhook_receipt": {"anon": false, "authenticated": false, "service_role": true},
+      "mark_billing_webhook_receipt": {"anon": false, "authenticated": false, "service_role": true}
+    },
+    "remote_mutation_performed": false,
+    "provider_called": false,
+    "customer_data_used": false
+  },
+  "current_contract": {
+    "selected_provider": "asaas",
+    "selected_scope": "BR_V1",
+    "selection_starts_pending_external_credentials": true,
+    "checkout_blocks_while_selection_not_active": true,
+    "checkout_amount_authority": "SERVER_ONLY",
+    "checkout_idempotency_required": true,
+    "webhook_auth_verified_required": true,
+    "webhook_provider_event_idempotency_required": true,
+    "service_role_direct_billing_table_mutation_denied": true,
+    "billing_service_commands_service_role_only": true,
+    "silent_provider_fallback_forbidden": true
+  },
+  "evidence_binding_gap": {
+    "present": true,
+    "activation_command_checks_selected_provider": true,
+    "activation_command_checks_internal_evidence_version": true,
+    "activation_command_verifies_provider_credentials_directly": false,
+    "activation_command_requires_webhook_auth_test_receipt": false,
+    "activation_command_requires_webhook_replay_idempotency_receipt": false,
+    "activation_command_requires_checkout_end_to_end_receipt": false,
+    "stage20_billing_gate_becomes_ready_from_active_state_and_activated_at": true,
+    "placeholder_requires_more_evidence_than_stage20_runtime_predicate": true,
+    "assessment": "DO_NOT_ACTIVATE_UNTIL_EXTERNAL_EVIDENCE_IS_BOUND_BY_A_VERSIONED_FAIL_CLOSED_AUTHORITY"
+  },
+  "required_external_evidence": [
+    "provider account owner authorization",
+    "credential activation evidence without committing secrets",
+    "provider environment identifier",
+    "webhook authentication positive test receipt",
+    "webhook replay/idempotency test receipt",
+    "checkout end-to-end receipt",
+    "activation timestamp from authoritative billing state"
+  ],
+  "proof_sequence_preparation": [
+    {
+      "step": 1,
+      "name": "PROVIDER_OWNER_AUTHORIZATION",
+      "rule": "Obtain explicit provider-account owner authorization; no repository secret material."
+    },
+    {
+      "step": 2,
+      "name": "SECRET_BOUNDARY_CONFIGURATION",
+      "rule": "Configure provider credentials only in an approved secret store/runtime boundary and record only non-secret evidence references/digests."
+    },
+    {
+      "step": 3,
+      "name": "ENVIRONMENT_IDENTITY",
+      "rule": "Record a non-secret provider environment identifier sufficient to distinguish sandbox/production authority."
+    },
+    {
+      "step": 4,
+      "name": "EVIDENCE_BOUND_ACTIVATION_DESIGN",
+      "rule": "Before changing BR_V1 to active, add a versioned fail-closed authority that binds provider authorization evidence to activation; current activation command is insufficient by itself."
+    },
+    {
+      "step": 5,
+      "name": "WEBHOOK_AUTH_AND_REPLAY_PROOF",
+      "rule": "After credential authority is safely bound, prove authenticated webhook ingestion plus duplicate provider-event replay idempotency without customer data."
+    },
+    {
+      "step": 6,
+      "name": "CHECKOUT_END_TO_END_PROOF",
+      "rule": "Use controlled synthetic test data to prove server-priced checkout, provider redirect attachment, provider response lineage and idempotent replay."
+    },
+    {
+      "step": 7,
+      "name": "FINAL_BILLING_GATE_ATTESTATION",
+      "rule": "Only after all required evidence exists may a dedicated versioned promotion authority attest billing_provider_credentials; independent read must confirm active state and activated_at."
+    }
+  ],
+  "stage37_boundaries": {
+    "repo_only": true,
+    "read_only_remote_assessment": true,
+    "migration_added": false,
+    "supabase_mutation_allowed": false,
+    "provider_call_allowed": false,
+    "provider_activation_allowed": false,
+    "credential_value_recording_allowed": false,
+    "secret_value_recording_allowed": false,
+    "customer_data_allowed": false,
+    "billing_gate_promotion_allowed": false,
+    "launch_gate_promotion_allowed": false,
+    "paid_media_allowed": false,
+    "stage35_proof_reexecution_allowed": false
+  },
+  "gates": {
+    "billing_provider_credentials": "DENIED_PREPARED_EXTERNAL_ACTION_REQUIRED",
+    "controlled_launch": "DENIED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_stage": {
+    "name": "STAGE38_BILLING_EVIDENCE_BOUND_ACTIVATION_CONTRACT",
+    "objective": "Close the internal activation/evidence-binding gap before any Asaas provider activation or live billing proof.",
+    "may_activate_provider_now": false,
+    "may_call_provider_now": false,
+    "may_promote_billing_gate_now": false
+  }
+}
