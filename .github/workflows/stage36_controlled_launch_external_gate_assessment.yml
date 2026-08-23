@@ -1,0 +1,41 @@
+name: Stage 36 Controlled Launch External Gate Assessment
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/stage36_controlled_launch_external_gate_assessment_authority.json'
+      - '04_backend_supabase/tools/verify_stage36_controlled_launch_external_gate_assessment.py'
+      - '04_backend_supabase/external_gate_evidence_placeholders.json'
+      - '04_backend_supabase/migrations/20260819062000_stage20_controlled_launch_admission.sql'
+      - '04_backend_supabase/stage35_alert_external_delivery_cleanup_final_reconciliation_authority.json'
+      - '.github/workflows/stage36_controlled_launch_external_gate_assessment.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-stage36-assessment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Compile Stage36 assessment guard
+        run: python -m py_compile 04_backend_supabase/tools/verify_stage36_controlled_launch_external_gate_assessment.py
+
+      - name: Migration ledger contract guard
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: External gate evidence placeholder guard
+        run: python 04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py
+
+      - name: Controlled launch admission contract guard
+        run: python 04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+
+      - name: Stage36 controlled launch assessment guard
+        run: python 04_backend_supabase/tools/verify_stage36_controlled_launch_external_gate_assessment.py
+
+      - name: PostgreSQL CREATE OR REPLACE VIEW compatibility guard
+        run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py
