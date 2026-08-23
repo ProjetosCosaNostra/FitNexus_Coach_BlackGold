@@ -1,0 +1,54 @@
+name: Stage 35 External Delivery Cleanup Final Reconciliation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/stage35_alert_external_delivery_cleanup_final_reconciliation_authority.json'
+      - '04_backend_supabase/migrations/20260823161000_stage35_alert_delivery_controlled_proof_cleanup.sql'
+      - '04_backend_supabase/operations/stage35_alert_delivery_controlled_proof_cleanup_candidate.sql'
+      - '04_backend_supabase/tools/stage35_migration_frontier.py'
+      - '04_backend_supabase/tools/verify_stage35_external_delivery_cleanup_final_reconciliation.py'
+      - '04_backend_supabase/tools/verify_stage35_remote_migration_reconciliation.py'
+      - '04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py'
+      - '04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py'
+      - '.github/workflows/stage35_external_delivery_cleanup_final_reconciliation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-final-reconciliation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Compile Stage35 frontier and reconciliation guards
+        run: >-
+          python -m py_compile
+          04_backend_supabase/tools/stage35_migration_frontier.py
+          04_backend_supabase/tools/verify_stage35_external_delivery_cleanup_final_reconciliation.py
+          04_backend_supabase/tools/verify_stage35_remote_migration_reconciliation.py
+          04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py
+          04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py
+
+      - name: Final Stage35 cleanup reconciliation guard
+        run: python 04_backend_supabase/tools/verify_stage35_external_delivery_cleanup_final_reconciliation.py
+
+      - name: Historical remote reconciliation projection guard
+        run: python 04_backend_supabase/tools/verify_stage35_remote_migration_reconciliation.py
+
+      - name: Historical controlled fixture projection guard
+        run: python 04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py fixture
+
+      - name: Historical receipt-store projection guard
+        run: python 04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py receipt
+
+      - name: Historical dispatcher deployment-seal projection guard
+        run: python 04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py deployment_seal
+
+      - name: Historical Stage33 cleanup projection guard
+        run: python 04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py current_cleanup
