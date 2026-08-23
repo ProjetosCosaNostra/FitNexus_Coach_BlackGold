@@ -3,8 +3,8 @@
   "failure_class": "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
   "project_ref": "mceukeondizkwlpfxzgf",
   "project_name": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "a23dd9d892189b92a633634caf750606504e83ee",
-  "observed_at_utc": "2026-08-23T15:56:57.947085Z",
+  "baseline_main_sha": "db522140cc2b21840b5b48727cb15a82ca22f975",
+  "observed_at_utc": "2026-08-23T16:06:48.978350Z",
   "source": "Supabase.list_migrations+Supabase.execute_sql+Supabase.list_edge_functions",
   "comparison_key": "migration_name",
   "remote_version_semantics": "Remote ledger version is evidence of application order/time and is not required to equal the repository filename timestamp. Reconciliation matches stable migration names and separately preserves the observed remote version.",
@@ -36,6 +36,13 @@
       "reason": "Historical no-op ledger row created during advisor guard misuse; preserved as remote history evidence and intentionally has no repository SQL file.",
       "owner": "BlackGold Forge",
       "related_failure_class": "BGF-MIGRATION-TOOL-MISROUTE-097"
+    },
+    {
+      "direction": "repo_only",
+      "name": "stage35_alert_delivery_controlled_proof_cleanup",
+      "reason": "Exact repository promotion of the sealed Stage35 synthetic proof cleanup after immutable Telegram delivery PASS and fresh durable-receipt verification. Remote application remains forbidden until this promotion is CI-green and merged to main.",
+      "owner": "BlackGold Forge",
+      "related_failure_class": "BGF-STAGE35-ALERT-PROOF-CLEANUP-286"
     }
   ],
   "remote_migrations": [

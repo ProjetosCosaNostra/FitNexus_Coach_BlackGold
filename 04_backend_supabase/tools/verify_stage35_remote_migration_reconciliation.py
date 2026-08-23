@@ -14,8 +14,11 @@ DISPATCHER = BACKEND / "functions" / "student-access-alert-dispatcher" / "index.
 
 BASELINE = "a23dd9d892189b92a633634caf750606504e83ee"
 OBSERVED = "2026-08-23T15:56:57.947085Z"
+CLEANUP_PROMOTION_BASELINE = "db522140cc2b21840b5b48727cb15a82ca22f975"
+CLEANUP_PROMOTION_OBSERVED = "2026-08-23T16:06:48.978350Z"
 RECEIPT_NAME = "stage35_alert_delivery_receipt_store"
 FIXTURE_NAME = "stage35_alert_delivery_controlled_proof_fixture"
+CLEANUP_NAME = "stage35_alert_delivery_controlled_proof_cleanup"
 RECEIPT_VERSION = "20260823092354"
 FIXTURE_VERSION = "20260823145908"
 RECEIPT_BLOB = "9f1a625cd316362874aefcfd9e33d64f9ecd173d"
@@ -57,8 +60,36 @@ def require(mapping: dict, expected: dict, label: str) -> None:
             fail(f"{label} drift: {key}")
 
 
+def project_historical_reconciliation_ledger(current: dict) -> tuple[dict, bool]:
+    baseline = current.get("baseline_main_sha")
+    observed = current.get("observed_at_utc")
+    divergences = [row for row in current.get("declared_divergences", []) if isinstance(row, dict)]
+    remote_only = [row for row in divergences if row.get("direction") == "remote_only"]
+    repo_only = [row for row in divergences if row.get("direction") == "repo_only"]
+    if len(remote_only) != 3:
+        fail("historical Stage17 remote-only divergence count drifted")
+
+    if baseline == BASELINE and observed == OBSERVED:
+        if repo_only:
+            fail("historical reconciliation ledger unexpectedly contains repo-only rows")
+        return current, False
+
+    if baseline == CLEANUP_PROMOTION_BASELINE and observed == CLEANUP_PROMOTION_OBSERVED:
+        if {row.get("name") for row in repo_only} != {CLEANUP_NAME} or len(repo_only) != 1:
+            fail("cleanup-promotion frontier must contain exactly one cleanup repo-only row")
+        projected = json.loads(json.dumps(current))
+        projected["baseline_main_sha"] = BASELINE
+        projected["observed_at_utc"] = OBSERVED
+        projected["declared_divergences"] = remote_only
+        return projected, True
+
+    fail("ledger is neither historical reconciliation nor cleanup-promotion frontier")
+    raise AssertionError("unreachable")
+
+
 def main() -> None:
-    ledger = load(LEDGER)
+    current_ledger = load(LEDGER)
+    ledger, cleanup_frontier = project_historical_reconciliation_ledger(current_ledger)
     authority = load(AUTHORITY)
 
     require(ledger, {
@@ -67,15 +98,13 @@ def main() -> None:
         "baseline_main_sha": BASELINE,
         "observed_at_utc": OBSERVED,
         "source": "Supabase.list_migrations+Supabase.execute_sql+Supabase.list_edge_functions",
-    }, "ledger")
+    }, "historical reconciled ledger")
 
     divergences = [row for row in ledger.get("declared_divergences", []) if isinstance(row, dict)]
     remote_only = [row for row in divergences if row.get("direction") == "remote_only"]
     repo_only = [row for row in divergences if row.get("direction") == "repo_only"]
-    if len(remote_only) != 3:
-        fail("historical Stage17 remote-only divergence count drifted")
-    if repo_only:
-        fail("repo-only divergences must be empty after Stage35 remote reconciliation")
+    if len(remote_only) != 3 or repo_only:
+        fail("historical reconciliation divergence projection drifted")
 
     remote = {
         row.get("name"): row.get("version")
@@ -104,7 +133,7 @@ def main() -> None:
         "stage": "STAGE35_ALERT_REMOTE_MIGRATION_RECONCILIATION",
         "baseline_main_sha": BASELINE,
         "current_state": "RECEIPT_STORE_AND_CONTROLLED_FIXTURE_REMOTE_APPLY_RECONCILED_EXTERNAL_DELIVERY_PROOF_UNCONSUMED",
-    }, "authority")
+    }, "historical reconciliation authority")
 
     receipt = authority.get("remote_migration_receipt", {})
     require(receipt, {
@@ -142,7 +171,7 @@ def main() -> None:
         "direct_target_rpc_authenticated_execute_count": 0,
         "direct_target_rpc_service_role_execute_count": 5,
         "issue_student_access_token_v2_authenticated_execute": True,
-    }, "fresh remote receipt")
+    }, "historical fresh remote receipt")
 
     require(authority.get("repository_reconciliation", {}), {
         "receipt_store_moved_from_repo_only_to_remote_migrations": True,
@@ -169,7 +198,7 @@ def main() -> None:
         "telegram_provider_delivery_consumed": False,
         "durable_provider_receipt_exists": False,
         "controlled_signal_still_unclaimed": True,
-    }, "immutable proof history")
+    }, "historical proof boundary")
 
     require(authority.get("gates", {}), {
         "incident_response": "DENIED",
@@ -177,7 +206,7 @@ def main() -> None:
         "paid_media": "DENIED",
         "launch": "DENIED",
         "external_delivery_proof": "NOT_YET_CONSUMED",
-    }, "gates")
+    }, "historical gates")
 
     serialized = json.dumps(authority, sort_keys=True).lower()
     for forbidden in ("sbp_", "telegram_bot_token\": \"", "telegram_chat_id\": \"", "x-fitnexus-alert-dispatch-token\": \""):
@@ -185,16 +214,14 @@ def main() -> None:
             fail("authority appears to contain a secret value")
 
     print("STAGE35_REMOTE_MIGRATION_RECONCILIATION_GUARD=PASS")
-    print(f"BASELINE_MAIN_SHA={BASELINE}")
-    print(f"OBSERVED_AT_UTC={OBSERVED}")
+    print(f"HISTORICAL_BASELINE_MAIN_SHA={BASELINE}")
+    print(f"HISTORICAL_OBSERVED_AT_UTC={OBSERVED}")
+    print(f"CURRENT_CLEANUP_PROMOTION_FRONTIER={str(cleanup_frontier).lower()}")
     print(f"RECEIPT_STORE_REMOTE_VERSION={RECEIPT_VERSION}")
     print(f"CONTROLLED_FIXTURE_REMOTE_VERSION={FIXTURE_VERSION}")
-    print("REPO_ONLY_STAGE35_COUNT=0")
-    print("CONTROLLED_PROOF_SIGNALS=1")
-    print("ALERT_DELIVERY_RECEIPTS=0")
-    print("DIRECT_RPC_GRANTS=0/0/5")
-    print("PROVIDER_DELIVERY_CONSUMED=false")
-    print("REMOTE_MUTATION_BY_THIS_RECONCILIATION=false")
+    print("HISTORICAL_REPO_ONLY_STAGE35_COUNT=0")
+    print("PROOF_REEXECUTION_ALLOWED=false")
+    print("REMOTE_MUTATION_BY_THIS_GUARD=false")
     print("LAUNCH_GATE_PROMOTION=DENIED")
 
 
