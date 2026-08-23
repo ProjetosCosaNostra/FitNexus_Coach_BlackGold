@@ -1,69 +1,65 @@
-name: Stage 35 Alert Dispatcher Deployment Proof Seal
+name: Stage 35 Alert Controlled Fixture Migration Promotion
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - '04_backend_supabase/stage35_alert_dispatcher_deployment_proof_seal_authority.json'
-      - '04_backend_supabase/stage35_alert_delivery_receipt_store_migration_promotion_authority.json'
       - '04_backend_supabase/stage35_alert_controlled_fixture_migration_promotion_authority.json'
+      - '04_backend_supabase/stage35_alert_secret_post_bootstrap_reconciliation_contract_authority.json'
       - '04_backend_supabase/migration_ledger_authority.json'
-      - '04_backend_supabase/migrations/20260822075500_stage35_alert_delivery_receipt_store.sql'
-      - '04_backend_supabase/migrations/20260823091500_stage35_alert_delivery_controlled_proof_fixture.sql'
       - '04_backend_supabase/operations/stage35_alert_delivery_controlled_proof_fixture_candidate.sql'
       - '04_backend_supabase/operations/stage35_alert_delivery_controlled_proof_cleanup_candidate.sql'
+      - '04_backend_supabase/migrations/20260822075500_stage35_alert_delivery_receipt_store.sql'
+      - '04_backend_supabase/migrations/20260823091500_stage35_alert_delivery_controlled_proof_fixture.sql'
       - '04_backend_supabase/functions/student-access-alert-dispatcher/**'
-      - '04_backend_supabase/tools/verify_stage35_alert_dispatcher_deployment_proof_seal.py'
-      - '04_backend_supabase/tools/verify_stage35_alert_dispatcher_deployment_proof_seal_lifecycle.py'
       - '04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py'
       - '04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py'
       - '.github/workflows/stage35_alert_external_delivery_one_shot_proof.yml'
-      - '.github/workflows/stage35_alert_dispatcher_deployment_proof_seal.yml'
+      - '.github/workflows/stage35_alert_controlled_fixture_migration_promotion.yml'
   push:
     branches:
-      - 'blackgold/**'
-      - main
+      - 'blackgold/stage35-controlled-fixture-migration-promotion'
     paths:
-      - '04_backend_supabase/stage35_alert_dispatcher_deployment_proof_seal_authority.json'
-      - '04_backend_supabase/stage35_alert_delivery_receipt_store_migration_promotion_authority.json'
       - '04_backend_supabase/stage35_alert_controlled_fixture_migration_promotion_authority.json'
+      - '04_backend_supabase/stage35_alert_secret_post_bootstrap_reconciliation_contract_authority.json'
       - '04_backend_supabase/migration_ledger_authority.json'
-      - '04_backend_supabase/migrations/20260822075500_stage35_alert_delivery_receipt_store.sql'
-      - '04_backend_supabase/migrations/20260823091500_stage35_alert_delivery_controlled_proof_fixture.sql'
       - '04_backend_supabase/operations/stage35_alert_delivery_controlled_proof_fixture_candidate.sql'
       - '04_backend_supabase/operations/stage35_alert_delivery_controlled_proof_cleanup_candidate.sql'
+      - '04_backend_supabase/migrations/20260822075500_stage35_alert_delivery_receipt_store.sql'
+      - '04_backend_supabase/migrations/20260823091500_stage35_alert_delivery_controlled_proof_fixture.sql'
       - '04_backend_supabase/functions/student-access-alert-dispatcher/**'
-      - '04_backend_supabase/tools/verify_stage35_alert_dispatcher_deployment_proof_seal.py'
-      - '04_backend_supabase/tools/verify_stage35_alert_dispatcher_deployment_proof_seal_lifecycle.py'
       - '04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py'
       - '04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py'
       - '.github/workflows/stage35_alert_external_delivery_one_shot_proof.yml'
-      - '.github/workflows/stage35_alert_dispatcher_deployment_proof_seal.yml'
+      - '.github/workflows/stage35_alert_controlled_fixture_migration_promotion.yml'
 
 permissions:
   contents: read
 
 jobs:
-  verify-dispatcher-deployment-proof-seal:
+  verify-controlled-fixture-promotion:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Stage 35 dispatcher deployment/proof seal historical lifecycle guard
-        run: python 04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py deployment_seal
+      - name: Stage 35 controlled fixture migration promotion guard
+        run: python 04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py
 
-      - name: Stage 33 current cleanup historical compatibility
+      - name: Stage 35 receipt-store historical promotion projection
+        run: python 04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py receipt
+
+      - name: Stage 33 cleanup historical projection
         run: python 04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py current_cleanup
 
-      - name: Stage 35 controlled fixture promotion guard
-        run: python 04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py
+      - name: Stage 35 deployment-seal historical projection
+        run: python 04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py deployment_seal
 
       - name: Set up Deno
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
 
-      - name: Alert dispatcher sealed source typecheck
+      - name: Alert dispatcher exact source typecheck
         run: deno check 04_backend_supabase/functions/student-access-alert-dispatcher/index.ts

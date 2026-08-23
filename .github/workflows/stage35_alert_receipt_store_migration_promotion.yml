@@ -7,12 +7,16 @@ on:
     paths:
       - '04_backend_supabase/stage35_alert_dispatcher_receipt_candidate_authority.json'
       - '04_backend_supabase/stage35_alert_delivery_receipt_store_migration_promotion_authority.json'
+      - '04_backend_supabase/stage35_alert_controlled_fixture_migration_promotion_authority.json'
       - '04_backend_supabase/migration_ledger_authority.json'
       - '04_backend_supabase/operations/stage35_alert_delivery_receipt_store_candidate.sql'
       - '04_backend_supabase/migrations/20260822075500_stage35_alert_delivery_receipt_store.sql'
+      - '04_backend_supabase/migrations/20260823091500_stage35_alert_delivery_controlled_proof_fixture.sql'
       - '04_backend_supabase/functions/student-access-alert-dispatcher/**'
       - '04_backend_supabase/tools/verify_stage35_alert_receipt_store_migration_promotion.py'
       - '04_backend_supabase/tools/verify_stage35_receipt_store_historical_compat.py'
+      - '04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py'
+      - '04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py'
       - '.github/workflows/stage35_alert_receipt_store_migration_promotion.yml'
   push:
     branches:
@@ -21,12 +25,16 @@ on:
     paths:
       - '04_backend_supabase/stage35_alert_dispatcher_receipt_candidate_authority.json'
       - '04_backend_supabase/stage35_alert_delivery_receipt_store_migration_promotion_authority.json'
+      - '04_backend_supabase/stage35_alert_controlled_fixture_migration_promotion_authority.json'
       - '04_backend_supabase/migration_ledger_authority.json'
       - '04_backend_supabase/operations/stage35_alert_delivery_receipt_store_candidate.sql'
       - '04_backend_supabase/migrations/20260822075500_stage35_alert_delivery_receipt_store.sql'
+      - '04_backend_supabase/migrations/20260823091500_stage35_alert_delivery_controlled_proof_fixture.sql'
       - '04_backend_supabase/functions/student-access-alert-dispatcher/**'
       - '04_backend_supabase/tools/verify_stage35_alert_receipt_store_migration_promotion.py'
       - '04_backend_supabase/tools/verify_stage35_receipt_store_historical_compat.py'
+      - '04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py'
+      - '04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py'
       - '.github/workflows/stage35_alert_receipt_store_migration_promotion.yml'
 
 permissions:
@@ -39,11 +47,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Stage 35 receipt-store migration promotion guard
-        run: python 04_backend_supabase/tools/verify_stage35_alert_receipt_store_migration_promotion.py
+      - name: Stage 35 receipt-store migration historical promotion guard
+        run: python 04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py receipt
 
       - name: Stage 33 current cleanup historical compatibility
-        run: python 04_backend_supabase/tools/verify_stage35_receipt_store_historical_compat.py current_cleanup
+        run: python 04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py current_cleanup
+
+      - name: Stage 35 controlled fixture promotion guard
+        run: python 04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py
 
       - name: Set up Deno
         uses: denoland/setup-deno@v2
