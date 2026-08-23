@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE35_ALERT_EXTERNAL_DELIVERY_CLEANUP_FINAL_RECONCILIATION",
+  "baseline_main_sha": "0b8081aad409b48df22085da003e595578e0c5bb",
+  "current_state": "EXTERNAL_DELIVERY_PROOF_SEALED_CLEANUP_REMOTE_APPLIED_ZERO_SYNTHETIC_RESIDUE_FINAL_RECONCILIATION",
+  "failure_classes": [
+    "BGF-STAGE35-ALERT-PROOF-CLEANUP-286",
+    "BGF-STAGE35-ALERT-PROOF-RECEIPT-AMBIGUITY-287",
+    "BGF-STAGE35-ALERT-PROOF-CLEANUP-CROSSOVER-288",
+    "BGF-STAGE35-ALERT-PROOF-WORKFLOW-REPLAY-290",
+    "BGF-STAGE35-ALERT-EXTERNAL-PROOF-IMMUTABLE-312",
+    "BGF-STAGE35-ALERT-CLEANUP-PROMOTION-313",
+    "BGF-STAGE35-ALERT-CLEANUP-REMOTE-RECONCILIATION-314"
+  ],
+  "immutable_external_delivery_proof": {
+    "pull_request": 117,
+    "pull_request_closed_unmerged": true,
+    "pull_request_reopen_allowed": false,
+    "base_seal_main_sha": "db522140cc2b21840b5b48727cb15a82ca22f975",
+    "head_sha": "731b0626a5b87d03fc598d5632e60df73b2a22c7",
+    "workflow_run_id": 32650555123,
+    "workflow_job_id": 97221340290,
+    "workflow_run_attempt": 1,
+    "workflow_result": "SUCCESS",
+    "provider": "telegram_bot_api",
+    "provider_http_200_and_ok_true": true,
+    "provider_message_id_positive": true,
+    "provider_message_id_value_recorded_in_repo": false,
+    "provider_destination_match": true,
+    "durable_receipt_recorded_before_success": true,
+    "second_dispatch_result": "NO_ELIGIBLE_SIGNAL",
+    "second_dispatch_provider_replay": false,
+    "real_customer_data_used": false,
+    "raw_provider_or_runtime_secrets_printed": false,
+    "proof_reexecution_allowed": false
+  },
+  "cleanup_promotion_receipt": {
+    "pull_request": 118,
+    "base_sha": "db522140cc2b21840b5b48727cb15a82ca22f975",
+    "head_sha": "21d14c2c173b87abba946a9c5fdad38f55cb46d0",
+    "merge_main_sha": "0b8081aad409b48df22085da003e595578e0c5bb",
+    "quality_gate_run": 32650979151,
+    "quality_gate_result": "SUCCESS",
+    "cleanup_promotion_run": 32650979147,
+    "cleanup_promotion_result": "SUCCESS",
+    "immutable_stage31_32_33_proofs_reexecuted": false,
+    "migration_file": "04_backend_supabase/migrations/20260823161000_stage35_alert_delivery_controlled_proof_cleanup.sql",
+    "migration_git_blob_sha": "a53354ed3a4983ebfe1017d4df622ed5dc6a97d0",
+    "source_candidate_git_blob_sha": "ca8a824131120d912d0fe98687820c2b320e33f5",
+    "executable_body_byte_identical": true
+  },
+  "cleanup_remote_apply": {
+    "name": "stage35_alert_delivery_controlled_proof_cleanup",
+    "remote_version": "20260823161543",
+    "applied_via": "Supabase.apply_migration",
+    "apply_count": 1,
+    "reapply_allowed": false,
+    "execute_sql_used_for_dml_or_ddl": false
+  },
+  "fresh_post_cleanup_remote_receipt": {
+    "source": "Supabase.list_migrations+Supabase.execute_sql+Supabase.list_edge_functions",
+    "observed_at_utc": "2026-08-23T16:15:55.264448Z",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "security_events": 0,
+    "security_signals": 0,
+    "alert_delivery_receipts": 0,
+    "network_buckets": 13,
+    "growth_events": 6,
+    "exact_controlled_proof_signals": 0,
+    "controlled_proof_receipts": 0,
+    "direct_target_rpc_anon_execute_count": 0,
+    "direct_target_rpc_authenticated_execute_count": 0,
+    "direct_target_rpc_service_role_execute_count": 5,
+    "issue_student_access_token_v2_authenticated_execute": true
+  },
+  "edge_inventory": {
+    "student_access_gateway": {
+      "status": "ACTIVE",
+      "version": 8,
+      "verify_jwt": false,
+      "bundle_sha256": "b57892b3f399b76f8127c9a39d3d8c021ffe639aa7bf92c7fa9a459d35721b82"
+    },
+    "student_access_alert_dispatcher": {
+      "status": "ACTIVE",
+      "version": 2,
+      "verify_jwt": false,
+      "source_git_blob_sha": "0aece761d707d8befb64a0fb89ce495fc50255a0",
+      "bundle_sha256": "56cfef7be1dc327ac21a8e1aaacd3b82d20a810cb8a4819da4061e1204d4a627"
+    }
+  },
+  "migration_reconciliation": {
+    "receipt_store_remote_version": "20260823092354",
+    "controlled_fixture_remote_version": "20260823145908",
+    "controlled_cleanup_remote_version": "20260823161543",
+    "stage35_repo_only_count": 0,
+    "historical_stage17_remote_only_count": 3,
+    "stage33_history_preserved": true,
+    "remote_mutation_performed_by_this_repository_reconciliation": false
+  },
+  "sequence_boundary": {
+    "may_rerun_successful_external_proof": false,
+    "may_reopen_pr117": false,
+    "may_merge_pr117_trigger": false,
+    "may_reapply_receipt_store": false,
+    "may_reapply_controlled_fixture": false,
+    "may_reapply_cleanup": false,
+    "may_execute_operations_sql_directly": false,
+    "may_use_execute_sql_for_dml_or_ddl": false,
+    "synthetic_cleanup_complete": true,
+    "final_stage35_remote_migration_reconciliation_complete_after_green_merge": true
+  },
+  "gates": {
+    "external_delivery_proof": "PASS_IMMUTABLE",
+    "synthetic_cleanup": "PASS_ZERO_RESIDUE",
+    "incident_response": "DENIED",
+    "production_deployment": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_stage": {
+    "name": "STAGE35_TECHNICAL_EXTERNAL_ALERT_PROOF_CLOSED_AWAIT_INDEPENDENT_PRODUCT_OR_OPERATIONAL_GATE_EVIDENCE",
+    "stage35_external_alert_sequence_complete": true,
+    "may_promote_launch_gates": false,
+    "may_spend_paid_media": false
+  }
+}
