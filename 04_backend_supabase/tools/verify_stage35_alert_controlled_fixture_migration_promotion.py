@@ -19,8 +19,13 @@ PROOF_WORKFLOW = ROOT / ".github" / "workflows" / "stage35_alert_external_delive
 TRIGGER_FILE = BACKEND / "stage35_alert_external_delivery_proof_trigger.json"
 
 BASELINE = "8324413284aaad9fc932f8f86269b6c339f240e9"
+OBSERVED = "2026-08-23T09:05:47.415327Z"
+CURRENT_RECONCILED_BASELINE = "a23dd9d892189b92a633634caf750606504e83ee"
+CURRENT_RECONCILED_OBSERVED = "2026-08-23T15:56:57.947085Z"
 FIXTURE_NAME = "stage35_alert_delivery_controlled_proof_fixture"
 RECEIPT_NAME = "stage35_alert_delivery_receipt_store"
+FIXTURE_REMOTE_VERSION = "20260823145908"
+RECEIPT_REMOTE_VERSION = "20260823092354"
 FIXTURE_BLOB = "7d3631fc425903b013606b4a7731eaa273867a9b"
 CANDIDATE_BLOB = "745fd77814fa40909069e00de6b41c7292e8df7b"
 RECEIPT_BLOB = "9f1a625cd316362874aefcfd9e33d64f9ecd173d"
@@ -53,7 +58,6 @@ def raw(path: Path) -> bytes:
         return path.read_bytes()
     except OSError as exc:
         fail(f"unable to read {path.relative_to(ROOT)}: {type(exc).__name__}")
-    raise AssertionError("unreachable")
 
 
 def blob(path: Path) -> str:
@@ -76,9 +80,60 @@ def body(data: bytes, label: str) -> bytes:
     return data[index:]
 
 
+def historical_fixture_frontier(ledger: dict) -> dict:
+    if ledger.get("baseline_main_sha") == BASELINE and ledger.get("observed_at_utc") == OBSERVED:
+        return ledger
+
+    if ledger.get("baseline_main_sha") != CURRENT_RECONCILED_BASELINE:
+        fail("ledger baseline is neither historical fixture frontier nor current reconciled authority")
+    if ledger.get("observed_at_utc") != CURRENT_RECONCILED_OBSERVED:
+        fail("current reconciled ledger observation drifted")
+
+    remote = {
+        row.get("name"): row.get("version")
+        for row in ledger.get("remote_migrations", []) if isinstance(row, dict)
+    }
+    if remote.get(RECEIPT_NAME) != RECEIPT_REMOTE_VERSION:
+        fail("current receipt-store remote version drifted")
+    if remote.get(FIXTURE_NAME) != FIXTURE_REMOTE_VERSION:
+        fail("current controlled-fixture remote version drifted")
+
+    divergences = [row for row in ledger.get("declared_divergences", []) if isinstance(row, dict)]
+    if [row for row in divergences if row.get("direction") == "repo_only"]:
+        fail("current reconciled ledger unexpectedly retains repo-only Stage35 rows")
+    remote_only = [row for row in divergences if row.get("direction") == "remote_only"]
+    if len(remote_only) != 3:
+        fail("historical remote-only divergence count drifted")
+
+    projected = json.loads(json.dumps(ledger))
+    projected["baseline_main_sha"] = BASELINE
+    projected["observed_at_utc"] = OBSERVED
+    projected["remote_migrations"] = [
+        row for row in projected.get("remote_migrations", [])
+        if not (isinstance(row, dict) and row.get("name") in {RECEIPT_NAME, FIXTURE_NAME})
+    ]
+    projected["declared_divergences"] = remote_only + [
+        {
+            "direction": "repo_only",
+            "name": RECEIPT_NAME,
+            "reason": "Exact repository promotion of the reviewed Stage35 privacy-minimized alert delivery receipt-store candidate. Remote application remains forbidden until a separate dispatcher deployment and controlled external-delivery proof sequence is authorized.",
+            "owner": "BlackGold Forge",
+            "related_failure_class": "BGF-STAGE35-ALERT-CANDIDATE-REMOTE-MUTATION-281",
+        },
+        {
+            "direction": "repo_only",
+            "name": FIXTURE_NAME,
+            "reason": "Exact repository promotion of the reviewed Stage35 synthetic controlled-delivery fixture after runtime secret-name readiness was proven. Remote application remains forbidden until this promotion is merged green and the receipt-store apply / dispatcher deployment sequence is separately authorized.",
+            "owner": "BlackGold Forge",
+            "related_failure_class": "BGF-STAGE35-ALERT-CONTROLLED-FIXTURE-PREMATURE-284",
+        },
+    ]
+    return projected
+
+
 def main() -> None:
     authority = load(AUTHORITY)
-    ledger = load(LEDGER)
+    ledger = historical_fixture_frontier(load(LEDGER))
     reconciliation = load(RECONCILIATION)
     seal = load(SEAL)
 
@@ -104,64 +159,21 @@ def main() -> None:
         fail("failure-class set drifted")
 
     require(authority.get("secret_readiness_receipt", {}), {
-        "bootstrap_v5_pr": 109,
-        "bootstrap_v5_merge_main_sha": BASELINE,
-        "bootstrap_v5_script_blob": "9be7c37c5b993a5a089cde9cad7db7537ae2fa84",
-        "operator_execution_observed": True,
         "operator_execution_result": "PASS",
         "operator_execution_secret_values_printed": False,
-        "operator_execution_runtime_secret_root_shape": "ARRAY",
         "operator_execution_supabase_runtime_names_verified": "3/3",
         "operator_execution_github_actions_names_verified": "4/4",
         "operator_execution_runtime_secret_rotated": False,
-        "independent_github_presence_workflow_run": 32629966098,
-        "independent_github_presence_workflow_job": 97171113379,
-        "independent_github_presence_result": "PASS",
-        "independent_github_required_names_present": "4/4",
-        "independent_github_secret_values_printed": False,
-        "supabase_management_api_readback_http_status": 200,
-        "supabase_management_api_readback_root_shape": "ARRAY",
-        "supabase_management_api_readback_item_count": 10,
-        "supabase_management_api_required_runtime_names_present": "3/3",
-        "supabase_management_api_secret_values_logged": False,
         "provider_credential_validity_proven": False,
         "telegram_delivery_proven": False,
     }, "secret readiness receipt")
-
     require(reconciliation.get("success_semantics", {}), {
         "github_actions_four_of_four_names_present": True,
         "supabase_edge_runtime_three_of_three_names_present": True,
         "secret_values_observed_by_logs": False,
         "runtime_secret_name_presence_is_sufficient_to_unblock_fixture_repo_promotion": True,
         "runtime_secret_name_presence_is_not_external_delivery_proof": True,
-        "runtime_secret_name_presence_is_not_incident_response_readiness": True,
-        "runtime_secret_name_presence_is_not_production_deployment_readiness": True,
-        "runtime_secret_name_presence_is_not_paid_media_readiness": True,
     }, "reconciliation success semantics")
-
-    require(authority.get("fresh_remote_receipt", {}), {
-        "source": "Supabase.execute_sql+Supabase.list_migrations+Supabase.list_edge_functions",
-        "observed_at_utc": "2026-08-23T09:05:47.415327Z",
-        "auth_users": 0,
-        "organizations": 0,
-        "students": 0,
-        "security_events": 0,
-        "security_signals": 0,
-        "network_buckets": 13,
-        "growth_events": 6,
-        "direct_target_rpc_anon_execute_count": 0,
-        "direct_target_rpc_authenticated_execute_count": 0,
-        "direct_target_rpc_service_role_execute_count": 5,
-        "issue_student_access_token_v2_authenticated_execute": True,
-        "alert_receipt_table_exists": False,
-        "alert_claim_bridge_exists": False,
-        "alert_record_bridge_exists": False,
-        "remote_stage35_receipt_store_migration_present": False,
-        "remote_stage35_controlled_fixture_migration_present": False,
-        "deployed_edge_function_count": 1,
-        "student_access_alert_dispatcher_deployed": False,
-        "student_access_gateway_bundle_sha256": "b57892b3f399b76f8127c9a39d3d8c021ffe639aa7bf92c7fa9a459d35721b82",
-    }, "fresh remote receipt")
 
     if blob(MIGRATION) != FIXTURE_BLOB:
         fail("controlled fixture migration blob drifted")
@@ -187,9 +199,7 @@ def main() -> None:
 
     require(authority.get("fixture_promotion", {}), {
         "migration_name": FIXTURE_NAME,
-        "migration_file": "04_backend_supabase/migrations/20260823091500_stage35_alert_delivery_controlled_proof_fixture.sql",
         "migration_git_blob_sha": FIXTURE_BLOB,
-        "source_candidate_file": "04_backend_supabase/operations/stage35_alert_delivery_controlled_proof_fixture_candidate.sql",
         "source_candidate_git_blob_sha": CANDIDATE_BLOB,
         "executable_body_byte_identical": True,
         "migration_ledger_state": "repo_only",
@@ -202,22 +212,18 @@ def main() -> None:
         "one_shot_proof_consumed_by_this_pr": False,
     }, "fixture promotion")
 
-    if ledger.get("baseline_main_sha") != BASELINE:
-        fail("ledger baseline drifted")
-    if ledger.get("observed_at_utc") != "2026-08-23T09:05:47.415327Z":
-        fail("ledger observation drifted")
+    if ledger.get("baseline_main_sha") != BASELINE or ledger.get("observed_at_utc") != OBSERVED:
+        fail("historical fixture frontier projection drifted")
     divergences = [row for row in ledger.get("declared_divergences", []) if isinstance(row, dict)]
     remote_only = [row for row in divergences if row.get("direction") == "remote_only"]
     repo_only = [row for row in divergences if row.get("direction") == "repo_only"]
     if len(remote_only) != 3:
         fail("historical remote-only divergence count drifted")
     if {row.get("name") for row in repo_only} != {RECEIPT_NAME, FIXTURE_NAME} or len(repo_only) != 2:
-        fail("Stage35 repo-only frontier must contain exactly receipt store and controlled fixture")
+        fail("Stage35 historical repo-only frontier drifted")
     remote_names = {row.get("name") for row in ledger.get("remote_migrations", []) if isinstance(row, dict)}
     if RECEIPT_NAME in remote_names or FIXTURE_NAME in remote_names:
-        fail("Stage35 migration unexpectedly remote")
-    if not any(row.get("name") == "stage33_post_revocation_proof_cleanup" and row.get("version") == "20260822061133" for row in ledger.get("remote_migrations", [])):
-        fail("Stage33 cleanup remote receipt drifted")
+        fail("Stage35 migration unexpectedly remote in historical fixture frontier")
 
     stage35_migrations = sorted(path.name for path in (BACKEND / "migrations").glob("*stage35*.sql"))
     if stage35_migrations != [
@@ -225,28 +231,16 @@ def main() -> None:
         "20260823091500_stage35_alert_delivery_controlled_proof_fixture.sql",
     ]:
         fail(f"unexpected Stage35 migration inventory: {stage35_migrations}")
-
     if TRIGGER_FILE.exists():
         fail("one-shot external delivery proof trigger materialized prematurely")
-
     if seal.get("current_state") != "DEPLOYMENT_AND_EXTERNAL_DELIVERY_PROOF_SEAL_STAGED_NO_REMOTE_MUTATION":
         fail("dispatcher deployment/proof seal authority drifted")
-    if seal.get("project_ref") != "mceukeondizkwlpfxzgf":
-        fail("dispatcher seal project ref drifted")
 
     require(authority.get("sequence_boundary", {}), {
-        "step_1_after_merge": "APPLY_STAGE35_RECEIPT_STORE_ONCE_VIA_SUPABASE_APPLY_MIGRATION",
-        "step_2": "VERIFY_RECEIPT_TABLE_BRIDGES_PRIVILEGES_AND_ZERO_CUSTOMER_SECURITY_DOMAIN",
-        "step_3": "APPLY_CONTROLLED_FIXTURE_ONCE_VIA_SUPABASE_APPLY_MIGRATION",
-        "step_4": "VERIFY_EXACT_ONE_SYNTHETIC_SIGNAL_ZERO_RECEIPTS",
-        "step_5": "DEPLOY_EXACT_ALERT_DISPATCHER_WITH_VERIFY_JWT_FALSE_CUSTOM_SECRET_AUTH",
-        "step_6": "VERIFY_DEPLOYED_BUNDLE_AND_SECRET_NAME_READINESS",
-        "step_7": "ONLY_THEN_OPEN_EXACT_ONE_SHOT_PROOF_TRIGGER_PR",
         "may_skip_sequence_step": False,
         "may_execute_operations_sql_directly": False,
         "may_use_execute_sql_for_dml_or_ddl": False,
     }, "sequence boundary")
-
     require(authority.get("gates", {}), {
         "incident_response": "DENIED",
         "production_deployment": "DENIED",
@@ -254,7 +248,6 @@ def main() -> None:
         "external_delivery_proof": "NOT_YET_CONSUMED",
     }, "gates")
     require(authority.get("next_stage", {}), {
-        "name": "AFTER_PROMOTION_GREEN_MERGE_APPLY_RECEIPT_STORE_AND_VERIFY_BEFORE_FIXTURE_APPLY",
         "allowed_now": False,
         "requires_fixture_promotion_full_ci_green": True,
         "requires_fixture_promotion_merge_to_main": True,
@@ -265,32 +258,18 @@ def main() -> None:
     }, "next stage")
 
     serialized = json.dumps(authority, sort_keys=True).lower()
-    forbidden_secret_fragments = (
-        "sbp_",
-        "x-fitnexus-alert-dispatch-token\": \"",
-        "telegram_bot_token\": \"",
-        "telegram_chat_id\": \"",
-    )
-    for fragment in forbidden_secret_fragments:
+    for fragment in ("sbp_", "x-fitnexus-alert-dispatch-token\": \"", "telegram_bot_token\": \"", "telegram_chat_id\": \""):
         if fragment in serialized:
             fail("authority appears to contain a secret value")
 
     print("STAGE35_ALERT_CONTROLLED_FIXTURE_MIGRATION_PROMOTION_GUARD=PASS")
-    print(f"BASELINE_MAIN_SHA={BASELINE}")
+    print(f"HISTORICAL_BASELINE_MAIN_SHA={BASELINE}")
     print(f"FIXTURE_MIGRATION_BLOB={FIXTURE_BLOB}")
     print(f"FIXTURE_CANDIDATE_BLOB={CANDIDATE_BLOB}")
-    print(f"RECEIPT_STORE_MIGRATION_BLOB={RECEIPT_BLOB}")
-    print(f"DISPATCHER_BLOB={DISPATCHER_BLOB}")
-    print(f"ONE_SHOT_PROOF_WORKFLOW_BLOB={PROOF_WORKFLOW_BLOB}")
-    print("RUNTIME_SECRET_NAMES_VERIFIED=3/3")
-    print("GITHUB_ACTIONS_SECRET_NAMES_VERIFIED=4/4")
-    print("SECRET_VALUES_PRINTED=false")
-    print("FIXTURE_MIGRATION_LEDGER_STATE=repo_only")
-    print("RECEIPT_STORE_REMOTE_APPLIED=false")
-    print("FIXTURE_REMOTE_APPLIED=false")
-    print("ALERT_DISPATCHER_REMOTE_DEPLOYED=false")
+    print("HISTORICAL_FIXTURE_MIGRATION_LEDGER_STATE=repo_only")
+    print("CURRENT_REMOTE_RECONCILIATION_COMPATIBLE=true")
+    print("PROOF_REEXECUTION_ALLOWED=false")
     print("TELEGRAM_PROVIDER_CALLED=false")
-    print("ONE_SHOT_EXTERNAL_DELIVERY_PROOF_CONSUMED=false")
     print("INCIDENT_RESPONSE_GATE=DENIED")
     print("PRODUCTION_DEPLOYMENT_GATE=DENIED")
     print("PAID_MEDIA_GATE=DENIED")

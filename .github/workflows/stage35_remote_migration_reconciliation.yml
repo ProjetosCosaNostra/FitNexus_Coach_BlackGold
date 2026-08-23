@@ -1,0 +1,53 @@
+name: Stage 35 Remote Migration Reconciliation
+
+on:
+  pull_request:
+    paths:
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/stage35_alert_remote_migration_reconciliation_authority.json'
+      - '04_backend_supabase/migrations/20260822075500_stage35_alert_delivery_receipt_store.sql'
+      - '04_backend_supabase/migrations/20260823091500_stage35_alert_delivery_controlled_proof_fixture.sql'
+      - '04_backend_supabase/functions/student-access-alert-dispatcher/index.ts'
+      - '04_backend_supabase/tools/verify_stage35_remote_migration_reconciliation.py'
+      - '04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py'
+      - '04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py'
+      - '.github/workflows/stage35_remote_migration_reconciliation.yml'
+  push:
+    branches:
+      - main
+      - 'blackgold/**'
+    paths:
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/stage35_alert_remote_migration_reconciliation_authority.json'
+      - '04_backend_supabase/migrations/20260822075500_stage35_alert_delivery_receipt_store.sql'
+      - '04_backend_supabase/migrations/20260823091500_stage35_alert_delivery_controlled_proof_fixture.sql'
+      - '04_backend_supabase/functions/student-access-alert-dispatcher/index.ts'
+      - '04_backend_supabase/tools/verify_stage35_remote_migration_reconciliation.py'
+      - '04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py'
+      - '04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py'
+      - '.github/workflows/stage35_remote_migration_reconciliation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Migration ledger contract guard
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Stage 35 remote migration reconciliation guard
+        run: python 04_backend_supabase/tools/verify_stage35_remote_migration_reconciliation.py
+
+      - name: Stage 35 fixture-promotion historical projection guard
+        run: python 04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py fixture
+
+      - name: Stage 35 receipt-store historical projection guard
+        run: python 04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py receipt
+
+      - name: PostgreSQL CREATE OR REPLACE VIEW compatibility guard
+        run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py

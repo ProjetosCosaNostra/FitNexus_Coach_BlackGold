@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE35_ALERT_REMOTE_MIGRATION_RECONCILIATION",
+  "baseline_main_sha": "a23dd9d892189b92a633634caf750606504e83ee",
+  "current_state": "RECEIPT_STORE_AND_CONTROLLED_FIXTURE_REMOTE_APPLY_RECONCILED_EXTERNAL_DELIVERY_PROOF_UNCONSUMED",
+  "failure_classes": [
+    "BGF-REMOTE-REPO-MIGRATION-DIVERGENCE-142",
+    "BGF-STAGE35-ALERT-CANDIDATE-REMOTE-MUTATION-281",
+    "BGF-STAGE35-ALERT-CONTROLLED-FIXTURE-PREMATURE-284",
+    "BGF-STAGE35-ALERT-CONTROLLED-FIXTURE-DRIFT-285",
+    "BGF-STAGE35-ALERT-PROOF-WORKFLOW-REPLAY-290",
+    "BGF-STAGE35-ALERT-REMOTE-LEDGER-RECONCILIATION-311"
+  ],
+  "remote_migration_receipt": {
+    "source": "Supabase.list_migrations+Supabase.execute_sql+Supabase.list_edge_functions",
+    "observed_at_utc": "2026-08-23T15:56:57.947085Z",
+    "receipt_store": {
+      "name": "stage35_alert_delivery_receipt_store",
+      "repository_file": "04_backend_supabase/migrations/20260822075500_stage35_alert_delivery_receipt_store.sql",
+      "repository_git_blob_sha": "9f1a625cd316362874aefcfd9e33d64f9ecd173d",
+      "remote_version": "20260823092354",
+      "applied_once": true,
+      "reapply_allowed": false
+    },
+    "controlled_fixture": {
+      "name": "stage35_alert_delivery_controlled_proof_fixture",
+      "repository_file": "04_backend_supabase/migrations/20260823091500_stage35_alert_delivery_controlled_proof_fixture.sql",
+      "repository_git_blob_sha": "7d3631fc425903b013606b4a7731eaa273867a9b",
+      "candidate_executable_body_git_blob_sha": "745fd77814fa40909069e00de6b41c7292e8df7b",
+      "remote_version": "20260823145908",
+      "applied_once": true,
+      "reapply_allowed": false
+    }
+  },
+  "fresh_remote_receipt": {
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "security_events": 0,
+    "security_signals": 1,
+    "alert_delivery_receipts": 0,
+    "network_buckets": 13,
+    "growth_events": 6,
+    "exact_controlled_proof_signals": 1,
+    "controlled_proof_receipts": 0,
+    "proof_signal": {
+      "signal_type": "network_rate_limit_burst",
+      "severity": "high",
+      "subject_key": "proof:fitnexus-stage34-alert-delivery-proof-v1",
+      "operation": "get_workout",
+      "link_id_is_null": true,
+      "organization_id_is_null": true,
+      "student_id_is_null": true
+    },
+    "direct_target_rpc_anon_execute_count": 0,
+    "direct_target_rpc_authenticated_execute_count": 0,
+    "direct_target_rpc_service_role_execute_count": 5,
+    "issue_student_access_token_v2_authenticated_execute": true
+  },
+  "edge_inventory": {
+    "student_access_gateway": {
+      "active": true,
+      "version": 8,
+      "verify_jwt": false,
+      "bundle_sha256": "b57892b3f399b76f8127c9a39d3d8c021ffe639aa7bf92c7fa9a459d35721b82"
+    },
+    "student_access_alert_dispatcher": {
+      "active": true,
+      "version": 2,
+      "verify_jwt": false,
+      "source_git_blob_sha": "0aece761d707d8befb64a0fb89ce495fc50255a0",
+      "bundle_sha256": "56cfef7be1dc327ac21a8e1aaacd3b82d20a810cb8a4819da4061e1204d4a627"
+    }
+  },
+  "immutable_external_proof_history": {
+    "failed_trigger_pr": 112,
+    "failed_workflow_run_id": 32647288419,
+    "failed_workflow_job_id": 97213360238,
+    "failed_result": "HTTP_401_BEFORE_PROVIDER",
+    "failed_pr_closed_unmerged": true,
+    "failed_head_may_reexecute": false,
+    "provider_free_parity_pr": 114,
+    "provider_free_parity_workflow_run_id": 32648015715,
+    "provider_free_parity_workflow_job_id": 97215180531,
+    "provider_free_parity_result": "PASS_EXPECTED_HTTP_400_BODY_FORBIDDEN_AFTER_CUSTOM_AUTH",
+    "provider_free_pr_closed_unmerged": true,
+    "telegram_provider_delivery_consumed": false,
+    "durable_provider_receipt_exists": false,
+    "controlled_signal_still_unclaimed": true
+  },
+  "repository_reconciliation": {
+    "migration_ledger_file": "04_backend_supabase/migration_ledger_authority.json",
+    "receipt_store_moved_from_repo_only_to_remote_migrations": true,
+    "controlled_fixture_moved_from_repo_only_to_remote_migrations": true,
+    "historical_stage17_remote_only_count_preserved": 3,
+    "historical_stage33_remote_versions_preserved": true,
+    "remote_mutation_performed_by_this_repository_reconciliation": false,
+    "execute_sql_used_for_dml_or_ddl": false,
+    "proof_reexecution_performed": false,
+    "provider_called_by_this_reconciliation": false
+  },
+  "sequence_boundary": {
+    "may_reapply_receipt_store": false,
+    "may_reapply_controlled_fixture": false,
+    "may_reexecute_failed_pr_112": false,
+    "may_reopen_provider_free_pr_114": false,
+    "fresh_external_delivery_trigger_allowed_after_this_reconciliation_merges_green": true,
+    "fresh_trigger_must_use_current_main_as_seal": true,
+    "fresh_trigger_diff_must_contain_only_trigger_json": true,
+    "fresh_trigger_must_be_pull_request_opened_attempt_1": true,
+    "second_dispatch_must_return_no_eligible_signal_without_provider_replay": true,
+    "cleanup_required_after_success": true
+  },
+  "gates": {
+    "incident_response": "DENIED",
+    "production_deployment": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED",
+    "external_delivery_proof": "NOT_YET_CONSUMED"
+  },
+  "next_stage": {
+    "name": "AFTER_RECONCILIATION_GREEN_MERGE_REFRESH_REMOTE_PREFLIGHT_AND_PREPARE_FRESH_ONE_SHOT_EXTERNAL_DELIVERY_TRIGGER",
+    "allowed_now": false,
+    "requires_this_reconciliation_full_ci_green": true,
+    "requires_this_reconciliation_merge_to_main": true,
+    "requires_exact_one_controlled_signal": true,
+    "requires_zero_alert_delivery_receipts": true,
+    "requires_network_baseline": 13,
+    "requires_growth_baseline": 6,
+    "requires_direct_rpc_grants": "0/0/5",
+    "requires_issue_token_authenticated_execute": true,
+    "requires_dispatcher_active": true,
+    "requires_provider_delivery_unconsumed": true,
+    "may_promote_launch_gates": false
+  }
+}
