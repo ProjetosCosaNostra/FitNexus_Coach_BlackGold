@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "stage": "STAGE35_ALERT_EXTERNAL_DELIVERY_PROOF_TRIGGER",
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "seal_main_sha": "8b9216260aa26933aea18db84d4a641e6914d301",
+  "proof_marker": "fitnexus-stage34-alert-delivery-proof-v1",
+  "proof_reexecution_allowed": false,
+  "real_customer_data_allowed": false,
+  "launch_gate_promotion": false
+}
