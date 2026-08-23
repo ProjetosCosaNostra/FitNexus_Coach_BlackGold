@@ -1,0 +1,51 @@
+name: Stage 37 Billing External Authority Preparation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/stage37_billing_external_authority_preparation.json'
+      - '04_backend_supabase/tools/verify_stage37_billing_external_authority_preparation.py'
+      - '04_backend_supabase/tools/verify_billing_provider_contract.py'
+      - '04_backend_supabase/stage36_controlled_launch_external_gate_assessment_authority.json'
+      - '04_backend_supabase/external_gate_evidence_placeholders.json'
+      - '04_backend_supabase/migrations/20260818225500_stage16_billing_provider_gate.sql'
+      - '04_backend_supabase/migrations/20260818230000_stage16_billing_authority_hardening.sql'
+      - '04_backend_supabase/migrations/20260819051500_stage17_checkout_authority_private_bridge.sql'
+      - '04_backend_supabase/migrations/20260819062000_stage20_controlled_launch_admission.sql'
+      - '.github/workflows/stage37_billing_external_authority_preparation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-stage37-billing-preparation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Compile Stage37 guard
+        run: python -m py_compile 04_backend_supabase/tools/verify_stage37_billing_external_authority_preparation.py
+
+      - name: Migration ledger contract guard
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Billing provider contract guard
+        run: python 04_backend_supabase/tools/verify_billing_provider_contract.py
+
+      - name: Controlled launch admission contract guard
+        run: python 04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+
+      - name: External gate placeholder guard
+        run: python 04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py
+
+      - name: Stage36 external gate assessment guard
+        run: python 04_backend_supabase/tools/verify_stage36_controlled_launch_external_gate_assessment.py
+
+      - name: Stage37 billing external-authority preparation guard
+        run: python 04_backend_supabase/tools/verify_stage37_billing_external_authority_preparation.py
+
+      - name: PostgreSQL CREATE OR REPLACE VIEW compatibility guard
+        run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py
