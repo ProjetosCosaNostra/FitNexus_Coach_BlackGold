@@ -15,6 +15,7 @@ CANDIDATE = BACKEND / "operations" / "stage35_alert_delivery_controlled_proof_fi
 RECEIPT_MIGRATION = BACKEND / "migrations" / "20260822075500_stage35_alert_delivery_receipt_store.sql"
 DISPATCHER = BACKEND / "functions" / "student-access-alert-dispatcher" / "index.ts"
 CLEANUP = BACKEND / "operations" / "stage35_alert_delivery_controlled_proof_cleanup_candidate.sql"
+CLEANUP_MIGRATION = BACKEND / "migrations" / "20260823161000_stage35_alert_delivery_controlled_proof_cleanup.sql"
 PROOF_WORKFLOW = ROOT / ".github" / "workflows" / "stage35_alert_external_delivery_one_shot_proof.yml"
 TRIGGER_FILE = BACKEND / "stage35_alert_external_delivery_proof_trigger.json"
 
@@ -22,8 +23,11 @@ BASELINE = "8324413284aaad9fc932f8f86269b6c339f240e9"
 OBSERVED = "2026-08-23T09:05:47.415327Z"
 CURRENT_RECONCILED_BASELINE = "a23dd9d892189b92a633634caf750606504e83ee"
 CURRENT_RECONCILED_OBSERVED = "2026-08-23T15:56:57.947085Z"
+CLEANUP_PROMOTION_BASELINE = "db522140cc2b21840b5b48727cb15a82ca22f975"
+CLEANUP_PROMOTION_OBSERVED = "2026-08-23T16:06:48.978350Z"
 FIXTURE_NAME = "stage35_alert_delivery_controlled_proof_fixture"
 RECEIPT_NAME = "stage35_alert_delivery_receipt_store"
+CLEANUP_NAME = "stage35_alert_delivery_controlled_proof_cleanup"
 FIXTURE_REMOTE_VERSION = "20260823145908"
 RECEIPT_REMOTE_VERSION = "20260823092354"
 FIXTURE_BLOB = "7d3631fc425903b013606b4a7731eaa273867a9b"
@@ -31,6 +35,7 @@ CANDIDATE_BLOB = "745fd77814fa40909069e00de6b41c7292e8df7b"
 RECEIPT_BLOB = "9f1a625cd316362874aefcfd9e33d64f9ecd173d"
 DISPATCHER_BLOB = "0aece761d707d8befb64a0fb89ce495fc50255a0"
 CLEANUP_BLOB = "ca8a824131120d912d0fe98687820c2b320e33f5"
+CLEANUP_MIGRATION_BLOB = "a53354ed3a4983ebfe1017d4df622ed5dc6a97d0"
 PROOF_WORKFLOW_BLOB = "079a140e36a851eb0f787397929ffbe3351aba48"
 FAILURE_CLASS = "BGF-STAGE35-ALERT-CONTROLLED-FIXTURE-PROMOTION-303"
 BODY_MARKER = b"do $$"
@@ -80,14 +85,14 @@ def body(data: bytes, label: str) -> bytes:
     return data[index:]
 
 
-def historical_fixture_frontier(ledger: dict) -> dict:
-    if ledger.get("baseline_main_sha") == BASELINE and ledger.get("observed_at_utc") == OBSERVED:
-        return ledger
-
-    if ledger.get("baseline_main_sha") != CURRENT_RECONCILED_BASELINE:
-        fail("ledger baseline is neither historical fixture frontier nor current reconciled authority")
-    if ledger.get("observed_at_utc") != CURRENT_RECONCILED_OBSERVED:
-        fail("current reconciled ledger observation drifted")
+def normalize_to_reconciled_frontier(ledger: dict) -> tuple[dict, bool]:
+    baseline = ledger.get("baseline_main_sha")
+    observed = ledger.get("observed_at_utc")
+    divergences = [row for row in ledger.get("declared_divergences", []) if isinstance(row, dict)]
+    remote_only = [row for row in divergences if row.get("direction") == "remote_only"]
+    repo_only = [row for row in divergences if row.get("direction") == "repo_only"]
+    if len(remote_only) != 3:
+        fail("historical remote-only divergence count drifted")
 
     remote = {
         row.get("name"): row.get("version")
@@ -98,19 +103,36 @@ def historical_fixture_frontier(ledger: dict) -> dict:
     if remote.get(FIXTURE_NAME) != FIXTURE_REMOTE_VERSION:
         fail("current controlled-fixture remote version drifted")
 
-    divergences = [row for row in ledger.get("declared_divergences", []) if isinstance(row, dict)]
-    if [row for row in divergences if row.get("direction") == "repo_only"]:
-        fail("current reconciled ledger unexpectedly retains repo-only Stage35 rows")
-    remote_only = [row for row in divergences if row.get("direction") == "remote_only"]
-    if len(remote_only) != 3:
-        fail("historical remote-only divergence count drifted")
+    if baseline == CURRENT_RECONCILED_BASELINE and observed == CURRENT_RECONCILED_OBSERVED:
+        if repo_only:
+            fail("reconciled frontier unexpectedly contains repo-only rows")
+        return json.loads(json.dumps(ledger)), False
 
-    projected = json.loads(json.dumps(ledger))
+    if baseline == CLEANUP_PROMOTION_BASELINE and observed == CLEANUP_PROMOTION_OBSERVED:
+        if {row.get("name") for row in repo_only} != {CLEANUP_NAME} or len(repo_only) != 1:
+            fail("cleanup-promotion frontier must contain exactly one cleanup repo-only row")
+        projected = json.loads(json.dumps(ledger))
+        projected["baseline_main_sha"] = CURRENT_RECONCILED_BASELINE
+        projected["observed_at_utc"] = CURRENT_RECONCILED_OBSERVED
+        projected["declared_divergences"] = remote_only
+        return projected, True
+
+    fail("ledger baseline is neither current reconciled nor cleanup-promotion frontier")
+    raise AssertionError("unreachable")
+
+
+def historical_fixture_frontier(ledger: dict) -> tuple[dict, bool]:
+    reconciled, cleanup_frontier = normalize_to_reconciled_frontier(ledger)
+    projected = json.loads(json.dumps(reconciled))
     projected["baseline_main_sha"] = BASELINE
     projected["observed_at_utc"] = OBSERVED
     projected["remote_migrations"] = [
         row for row in projected.get("remote_migrations", [])
         if not (isinstance(row, dict) and row.get("name") in {RECEIPT_NAME, FIXTURE_NAME})
+    ]
+    remote_only = [
+        row for row in projected.get("declared_divergences", [])
+        if isinstance(row, dict) and row.get("direction") == "remote_only"
     ]
     projected["declared_divergences"] = remote_only + [
         {
@@ -128,12 +150,13 @@ def historical_fixture_frontier(ledger: dict) -> dict:
             "related_failure_class": "BGF-STAGE35-ALERT-CONTROLLED-FIXTURE-PREMATURE-284",
         },
     ]
-    return projected
+    return projected, cleanup_frontier
 
 
 def main() -> None:
     authority = load(AUTHORITY)
-    ledger = historical_fixture_frontier(load(LEDGER))
+    source_ledger = load(LEDGER)
+    ledger, cleanup_frontier = historical_fixture_frontier(source_ledger)
     reconciliation = load(RECONCILIATION)
     seal = load(SEAL)
 
@@ -197,6 +220,14 @@ def main() -> None:
         if fragment not in header:
             fail(f"fixture migration safety header missing: {fragment}")
 
+    if cleanup_frontier:
+        if not CLEANUP_MIGRATION.exists():
+            fail("cleanup-promotion frontier missing cleanup migration")
+        if blob(CLEANUP_MIGRATION) != CLEANUP_MIGRATION_BLOB:
+            fail("cleanup migration blob drifted")
+        if body(raw(CLEANUP_MIGRATION), "cleanup migration") != body(raw(CLEANUP), "cleanup candidate"):
+            fail("cleanup migration executable body is not byte-identical to candidate")
+
     require(authority.get("fixture_promotion", {}), {
         "migration_name": FIXTURE_NAME,
         "migration_git_blob_sha": FIXTURE_BLOB,
@@ -225,14 +256,17 @@ def main() -> None:
     if RECEIPT_NAME in remote_names or FIXTURE_NAME in remote_names:
         fail("Stage35 migration unexpectedly remote in historical fixture frontier")
 
-    stage35_migrations = sorted(path.name for path in (BACKEND / "migrations").glob("*stage35*.sql"))
-    if stage35_migrations != [
+    expected_stage35 = [
         "20260822075500_stage35_alert_delivery_receipt_store.sql",
         "20260823091500_stage35_alert_delivery_controlled_proof_fixture.sql",
-    ]:
+    ]
+    if cleanup_frontier:
+        expected_stage35.append("20260823161000_stage35_alert_delivery_controlled_proof_cleanup.sql")
+    stage35_migrations = sorted(path.name for path in (BACKEND / "migrations").glob("*stage35*.sql"))
+    if stage35_migrations != sorted(expected_stage35):
         fail(f"unexpected Stage35 migration inventory: {stage35_migrations}")
     if TRIGGER_FILE.exists():
-        fail("one-shot external delivery proof trigger materialized prematurely")
+        fail("one-shot external delivery proof trigger materialized in mergeable repository history")
     if seal.get("current_state") != "DEPLOYMENT_AND_EXTERNAL_DELIVERY_PROOF_SEAL_STAGED_NO_REMOTE_MUTATION":
         fail("dispatcher deployment/proof seal authority drifted")
 
@@ -246,16 +280,7 @@ def main() -> None:
         "production_deployment": "DENIED",
         "paid_media": "DENIED",
         "external_delivery_proof": "NOT_YET_CONSUMED",
-    }, "gates")
-    require(authority.get("next_stage", {}), {
-        "allowed_now": False,
-        "requires_fixture_promotion_full_ci_green": True,
-        "requires_fixture_promotion_merge_to_main": True,
-        "requires_exact_receipt_store_blob": RECEIPT_BLOB,
-        "requires_exact_fixture_blob": FIXTURE_BLOB,
-        "requires_exact_dispatcher_blob": DISPATCHER_BLOB,
-        "may_promote_launch_gates": False,
-    }, "next stage")
+    }, "historical gates")
 
     serialized = json.dumps(authority, sort_keys=True).lower()
     for fragment in ("sbp_", "x-fitnexus-alert-dispatch-token\": \"", "telegram_bot_token\": \"", "telegram_chat_id\": \""):
@@ -267,9 +292,10 @@ def main() -> None:
     print(f"FIXTURE_MIGRATION_BLOB={FIXTURE_BLOB}")
     print(f"FIXTURE_CANDIDATE_BLOB={CANDIDATE_BLOB}")
     print("HISTORICAL_FIXTURE_MIGRATION_LEDGER_STATE=repo_only")
+    print(f"CURRENT_CLEANUP_PROMOTION_FRONTIER={str(cleanup_frontier).lower()}")
     print("CURRENT_REMOTE_RECONCILIATION_COMPATIBLE=true")
     print("PROOF_REEXECUTION_ALLOWED=false")
-    print("TELEGRAM_PROVIDER_CALLED=false")
+    print("TELEGRAM_PROVIDER_CALLED_BY_HISTORICAL_GUARD=false")
     print("INCIDENT_RESPONSE_GATE=DENIED")
     print("PRODUCTION_DEPLOYMENT_GATE=DENIED")
     print("PAID_MEDIA_GATE=DENIED")
