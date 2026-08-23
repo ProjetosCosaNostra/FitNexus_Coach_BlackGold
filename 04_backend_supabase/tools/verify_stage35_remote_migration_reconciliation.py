@@ -4,6 +4,8 @@ import hashlib
 import json
 from pathlib import Path
 
+from stage35_migration_frontier import state as frontier_state, to_reconciled
+
 ROOT = Path(__file__).resolve().parents[2]
 BACKEND = ROOT / "04_backend_supabase"
 LEDGER = BACKEND / "migration_ledger_authority.json"
@@ -14,11 +16,8 @@ DISPATCHER = BACKEND / "functions" / "student-access-alert-dispatcher" / "index.
 
 BASELINE = "a23dd9d892189b92a633634caf750606504e83ee"
 OBSERVED = "2026-08-23T15:56:57.947085Z"
-CLEANUP_PROMOTION_BASELINE = "db522140cc2b21840b5b48727cb15a82ca22f975"
-CLEANUP_PROMOTION_OBSERVED = "2026-08-23T16:06:48.978350Z"
 RECEIPT_NAME = "stage35_alert_delivery_receipt_store"
 FIXTURE_NAME = "stage35_alert_delivery_controlled_proof_fixture"
-CLEANUP_NAME = "stage35_alert_delivery_controlled_proof_cleanup"
 RECEIPT_VERSION = "20260823092354"
 FIXTURE_VERSION = "20260823145908"
 RECEIPT_BLOB = "9f1a625cd316362874aefcfd9e33d64f9ecd173d"
@@ -60,36 +59,13 @@ def require(mapping: dict, expected: dict, label: str) -> None:
             fail(f"{label} drift: {key}")
 
 
-def project_historical_reconciliation_ledger(current: dict) -> tuple[dict, bool]:
-    baseline = current.get("baseline_main_sha")
-    observed = current.get("observed_at_utc")
-    divergences = [row for row in current.get("declared_divergences", []) if isinstance(row, dict)]
-    remote_only = [row for row in divergences if row.get("direction") == "remote_only"]
-    repo_only = [row for row in divergences if row.get("direction") == "repo_only"]
-    if len(remote_only) != 3:
-        fail("historical Stage17 remote-only divergence count drifted")
-
-    if baseline == BASELINE and observed == OBSERVED:
-        if repo_only:
-            fail("historical reconciliation ledger unexpectedly contains repo-only rows")
-        return current, False
-
-    if baseline == CLEANUP_PROMOTION_BASELINE and observed == CLEANUP_PROMOTION_OBSERVED:
-        if {row.get("name") for row in repo_only} != {CLEANUP_NAME} or len(repo_only) != 1:
-            fail("cleanup-promotion frontier must contain exactly one cleanup repo-only row")
-        projected = json.loads(json.dumps(current))
-        projected["baseline_main_sha"] = BASELINE
-        projected["observed_at_utc"] = OBSERVED
-        projected["declared_divergences"] = remote_only
-        return projected, True
-
-    fail("ledger is neither historical reconciliation nor cleanup-promotion frontier")
-    raise AssertionError("unreachable")
-
-
 def main() -> None:
     current_ledger = load(LEDGER)
-    ledger, cleanup_frontier = project_historical_reconciliation_ledger(current_ledger)
+    try:
+        current_frontier = frontier_state(current_ledger)
+        ledger = to_reconciled(current_ledger)
+    except ValueError as exc:
+        fail(f"Stage35 frontier projection failed: {exc}")
     authority = load(AUTHORITY)
 
     require(ledger, {
@@ -216,7 +192,7 @@ def main() -> None:
     print("STAGE35_REMOTE_MIGRATION_RECONCILIATION_GUARD=PASS")
     print(f"HISTORICAL_BASELINE_MAIN_SHA={BASELINE}")
     print(f"HISTORICAL_OBSERVED_AT_UTC={OBSERVED}")
-    print(f"CURRENT_CLEANUP_PROMOTION_FRONTIER={str(cleanup_frontier).lower()}")
+    print(f"CURRENT_STAGE35_FRONTIER={current_frontier}")
     print(f"RECEIPT_STORE_REMOTE_VERSION={RECEIPT_VERSION}")
     print(f"CONTROLLED_FIXTURE_REMOTE_VERSION={FIXTURE_VERSION}")
     print("HISTORICAL_REPO_ONLY_STAGE35_COUNT=0")

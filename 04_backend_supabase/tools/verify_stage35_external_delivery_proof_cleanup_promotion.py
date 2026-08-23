@@ -4,6 +4,8 @@ import hashlib
 import json
 from pathlib import Path
 
+from stage35_migration_frontier import state as frontier_state, to_cleanup_promotion
+
 ROOT = Path(__file__).resolve().parents[2]
 BACKEND = ROOT / "04_backend_supabase"
 AUTHORITY = BACKEND / "stage35_alert_external_delivery_proof_receipt_cleanup_promotion_authority.json"
@@ -75,7 +77,12 @@ def require(mapping: dict, expected: dict, label: str) -> None:
 
 def main() -> None:
     authority = load(AUTHORITY)
-    ledger = load(LEDGER)
+    current_ledger = load(LEDGER)
+    try:
+        current_frontier = frontier_state(current_ledger)
+        ledger = to_cleanup_promotion(current_ledger)
+    except ValueError as exc:
+        fail(f"Stage35 cleanup-promotion projection failed: {exc}")
 
     require(authority, {
         "schema_version": 1,
@@ -183,7 +190,7 @@ def main() -> None:
     if remote.get("stage35_alert_delivery_controlled_proof_fixture") != "20260823145908":
         fail("controlled-fixture remote version drifted")
     if CLEANUP_NAME in remote:
-        fail("cleanup migration unexpectedly remote before green merge/apply")
+        fail("cleanup migration unexpectedly remote in projected promotion frontier")
 
     if blob(CLEANUP_MIGRATION) != CLEANUP_MIGRATION_BLOB:
         fail("cleanup migration blob drifted")
@@ -261,7 +268,7 @@ def main() -> None:
         "launch": "DENIED",
         "external_delivery_proof": "PASS_IMMUTABLE",
         "cleanup_remote_apply": "PENDING_GREEN_MERGE",
-    }, "gates")
+    }, "historical gates")
 
     serialized = json.dumps(authority, sort_keys=True).lower()
     for forbidden in (
@@ -277,7 +284,8 @@ def main() -> None:
             fail("authority appears to contain forbidden secret/provider identifier material")
 
     print("STAGE35_EXTERNAL_DELIVERY_PROOF_CLEANUP_PROMOTION_GUARD=PASS")
-    print(f"BASELINE_MAIN_SHA={BASELINE}")
+    print(f"HISTORICAL_BASELINE_MAIN_SHA={BASELINE}")
+    print(f"CURRENT_STAGE35_FRONTIER={current_frontier}")
     print("EXTERNAL_DELIVERY_PROOF=PASS_IMMUTABLE")
     print("PROOF_RUN=32650555123")
     print("PROOF_JOB=97221340290")
@@ -287,8 +295,7 @@ def main() -> None:
     print(f"CLEANUP_MIGRATION_BLOB={CLEANUP_MIGRATION_BLOB}")
     print(f"CLEANUP_CANDIDATE_BLOB={CLEANUP_CANDIDATE_BLOB}")
     print("CLEANUP_EXECUTABLE_BODY_BYTE_IDENTICAL=true")
-    print("CLEANUP_LEDGER_STATE=repo_only")
-    print("CLEANUP_REMOTE_APPLIED=false")
+    print("HISTORICAL_CLEANUP_LEDGER_STATE=repo_only")
     print("PROOF_REEXECUTION_ALLOWED=false")
     print("LAUNCH_GATE_PROMOTION=DENIED")
 
