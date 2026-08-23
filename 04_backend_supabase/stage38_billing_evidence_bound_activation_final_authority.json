@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE38_BILLING_EVIDENCE_BOUND_ACTIVATION_FINAL_RECONCILIATION",
+  "baseline_main_sha": "42f39ec219983726e6fd1bc1715f90f95f4e3f42",
+  "current_state": "HARDENING_REMOTE_APPLIED_ZERO_EXTERNAL_EVIDENCE_PROVIDER_STILL_PENDING_BILLING_GATE_BLOCKED",
+  "failure_classes": [
+    "BGF-STAGE37-BILLING-PREMATURE-ACTIVATION-319",
+    "BGF-STAGE37-BILLING-EVIDENCE-BINDING-GAP-320",
+    "BGF-STAGE38-BILLING-RUNTIME-SELF-ATTESTATION-333",
+    "BGF-STAGE38-BILLING-ACTIVATION-BEFORE-CREDENTIAL-EVIDENCE-334",
+    "BGF-STAGE38-BILLING-LAUNCH-BEFORE-PROOF-COMPLETE-335",
+    "BGF-STAGE38-BILLING-EVIDENCE-SECRET-LEAK-336",
+    "BGF-STAGE38-BILLING-REMOTE-RECONCILIATION-348"
+  ],
+  "repository_promotion": {
+    "pull_request": 122,
+    "head_sha": "be4c5d41ca52fc91eb6560624a57fa49fefcf73c",
+    "merge_main_sha": "42f39ec219983726e6fd1bc1715f90f95f4e3f42",
+    "migration_file": "04_backend_supabase/migrations/20260823174500_stage38_billing_evidence_bound_activation.sql",
+    "migration_git_blob_sha": "a09aa83eb6eb24739ad0a73b7c08db3185eb4f63",
+    "stage38_workflow_run": 32656021412,
+    "stage38_workflow_result": "SUCCESS",
+    "flutter_quality_gate_run": 32656021453,
+    "flutter_quality_gate_result": "SUCCESS",
+    "postgres_compatibility_run": 32656021444,
+    "postgres_compatibility_result": "SUCCESS",
+    "historical_stage34_stage35_checks_green": true,
+    "consumed_live_proofs_reexecuted": false
+  },
+  "remote_apply": {
+    "migration_name": "stage38_billing_evidence_bound_activation",
+    "remote_version": "20260823175158",
+    "applied_via": "Supabase.apply_migration",
+    "apply_count": 1,
+    "reapply_allowed": false,
+    "execute_sql_used_for_dml_or_ddl": false,
+    "provider_activation_performed": false,
+    "provider_called": false,
+    "external_evidence_attested": false,
+    "customer_data_used": false
+  },
+  "fresh_post_apply_remote_receipt": {
+    "source": "Supabase.list_migrations+Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-23T17:52:43.344298+00:00",
+    "stage38_table_exists": true,
+    "evidence_rows": 0,
+    "selection": {
+      "scope": "BR_V1",
+      "provider_code": "asaas",
+      "state": "selected_pending_credentials",
+      "evidence_version": "2026-08-18-official-docs-v1",
+      "activated_at": null
+    },
+    "checkout_intents": 0,
+    "webhook_receipts": 0,
+    "active_brl_prices": 6,
+    "auth_users": 0,
+    "organizations": 0,
+    "billing_launch_predicate_ready": false,
+    "activation_interlock_present": true,
+    "readiness_proof_complete_interlock_present": true,
+    "activation_execute": {
+      "anon": false,
+      "authenticated": false,
+      "service_role": true
+    },
+    "external_evidence_table_privileges": {
+      "anon": {"select": false, "insert": false, "update": false, "delete": false},
+      "authenticated": {"select": false, "insert": false, "update": false, "delete": false},
+      "service_role": {"select": false, "insert": false, "update": false, "delete": false}
+    }
+  },
+  "migration_reconciliation": {
+    "ledger_baseline_main_sha": "42f39ec219983726e6fd1bc1715f90f95f4e3f42",
+    "ledger_observed_at_utc": "2026-08-23T17:52:43.344298Z",
+    "stage38_remote_version": "20260823175158",
+    "stage38_repo_only_count": 0,
+    "historical_stage17_remote_only_count": 3,
+    "stage35_history_preserved": true,
+    "remote_mutation_performed_by_reconciliation_pr": false
+  },
+  "security_invariants": {
+    "runtime_can_self_attest_external_evidence": false,
+    "service_role_can_directly_dml_external_evidence": false,
+    "provider_activation_requires_external_credential_evidence": true,
+    "billing_launch_readiness_requires_proof_complete": true,
+    "activation_alone_can_promote_billing_launch_gate": false,
+    "secret_values_stored_in_repository": false
+  },
+  "sequence_boundary": {
+    "may_reapply_stage38": false,
+    "may_activate_asaas_without_real_credential_evidence": false,
+    "may_insert_credentials_verified_without_real_evidence": false,
+    "may_call_provider_before_credential_authority": false,
+    "may_promote_billing_gate_without_proof_complete": false,
+    "may_use_customer_data_for_controlled_proof": false,
+    "may_use_execute_sql_for_dml_or_ddl": false,
+    "stage35_proof_reexecution_allowed": false
+  },
+  "gates": {
+    "stage38_hardening": "PASS_REMOTE_RECONCILED",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_EXTERNAL_CREDENTIAL_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_stage": {
+    "name": "STAGE39_BILLING_CREDENTIAL_AUTHORITY_EXTERNAL_EVIDENCE",
+    "objective": "Obtain and bind real non-secret Asaas credential authorization evidence before any provider activation or provider call.",
+    "provider_activation_allowed_now": false,
+    "provider_call_allowed_now": false,
+    "billing_gate_promotion_allowed_now": false
+  }
+}
