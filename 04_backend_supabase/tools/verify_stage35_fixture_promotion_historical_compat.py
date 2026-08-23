@@ -18,7 +18,7 @@ RECEIPT_OBSERVED = "2026-08-22T07:54:12.776139Z"
 RECEIPT_NAME = "stage35_alert_delivery_receipt_store"
 FIXTURE_NAME = "stage35_alert_delivery_controlled_proof_fixture"
 MODES = {
-    "receipt",
+    "receipt", "deployment_seal",
     "current_cleanup",
     "cleanup", "current_rearm", "r0_seal", "r1_recovery", "stage31",
     "rate_limit", "valid_route", "smoke", "rollback", "rollback_prep", "rollback_seal",
@@ -91,6 +91,8 @@ def run(mode: str) -> None:
 
     receipt_guard = importlib.import_module("verify_stage35_alert_receipt_store_migration_promotion")
     receipt_history = importlib.import_module("verify_stage35_receipt_store_historical_compat")
+    seal_guard = importlib.import_module("verify_stage35_alert_dispatcher_deployment_proof_seal")
+    seal_lifecycle = importlib.import_module("verify_stage35_alert_dispatcher_deployment_proof_seal_lifecycle")
 
     migration_bytes = FIXTURE_MIGRATION.read_bytes()
     with tempfile.TemporaryDirectory(prefix="fitnexus-stage35-fixture-history-") as tmp:
@@ -100,18 +102,23 @@ def run(mode: str) -> None:
 
         old_receipt_ledger = receipt_guard.LEDGER
         old_history_ledger = receipt_history.LEDGER
+        old_seal_ledger = seal_guard.LEDGER
         try:
             hidden_migration.write_bytes(migration_bytes)
             FIXTURE_MIGRATION.unlink()
             receipt_guard.LEDGER = temp_ledger
             receipt_history.LEDGER = temp_ledger
+            seal_guard.LEDGER = temp_ledger
             if mode == "receipt":
                 receipt_guard.main()
+            elif mode == "deployment_seal":
+                seal_lifecycle.main()
             else:
                 receipt_history.run(mode)
         finally:
             receipt_guard.LEDGER = old_receipt_ledger
             receipt_history.LEDGER = old_history_ledger
+            seal_guard.LEDGER = old_seal_ledger
             if not FIXTURE_MIGRATION.exists():
                 FIXTURE_MIGRATION.write_bytes(hidden_migration.read_bytes() if hidden_migration.exists() else migration_bytes)
 
@@ -134,7 +141,7 @@ def main() -> None:
     if len(sys.argv) != 2:
         fail(
             "usage: verify_stage35_fixture_promotion_historical_compat.py "
-            "<receipt|current_cleanup|assessment|preparation|promotion|seal|cleanup|current_rearm|r0_seal|r1_recovery|stage31|rate_limit|valid_route|smoke|rollback|rollback_prep|rollback_seal>"
+            "<receipt|deployment_seal|current_cleanup|assessment|preparation|promotion|seal|cleanup|current_rearm|r0_seal|r1_recovery|stage31|rate_limit|valid_route|smoke|rollback|rollback_prep|rollback_seal>"
         )
     run(sys.argv[1])
 
