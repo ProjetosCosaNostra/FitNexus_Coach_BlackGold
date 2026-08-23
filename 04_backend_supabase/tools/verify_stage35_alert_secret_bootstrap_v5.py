@@ -3,26 +3,37 @@ from pathlib import Path
 root = Path(__file__).resolve().parents[2]
 ps = root / '04_backend_supabase/tools/Invoke-Stage35AlertSecretBootstrapV5.ps1'
 text = ps.read_text(encoding='utf-8')
+lower = text.lower()
+
 required = [
-    "Invoke-WebRequest -Method Get -Uri \"https://api.supabase.com/v1/projects/$ProjectRef/secrets\"",
-    "if (-not ($decoded -is [array]))",
-    "$items = @($decoded)",
-    "STUDENT_ACCESS_ALERT_DISPATCH_TOKEN",
-    "STUDENT_ACCESS_ALERT_TELEGRAM_BOT_TOKEN",
-    "STUDENT_ACCESS_ALERT_TELEGRAM_CHAT_ID",
-    "secret set $Name --repo $Repository",
-    "RUNTIME_SECRET_ROTATED=false",
-    "TELEGRAM_PROVIDER_CALLED=false",
-    "ONE_SHOT_EXTERNAL_DELIVERY_PROOF_CONSUMED=false",
+    'stage35_alert_secret_bootstrap_v5=disabled',
+    'bgf-stage35-alert-management-secret-readback-plaintext-assumption-303',
+    'do_not_execute_v5=true',
+    'run 32647288419',
+    'http 401',
+    'secret_values_read=false',
+    'secret_values_written=false',
+    'telegram_provider_called=false',
+    'stage35-dispatch-secret-parity-recovery',
+    'exit 1',
 ]
-missing = [s for s in required if s not in text]
-assert not missing, f'missing required V5 invariants: {missing}'
+missing = [fragment for fragment in required if fragment not in lower]
+assert not missing, f'missing V5 fail-closed deprecation invariants: {missing}'
+
 for forbidden in [
-    'Invoke-RestMethod -Method Post -Uri "https://api.supabase.com/v1/projects/$ProjectRef/secrets"',
+    'invoke-webrequest',
+    'invoke-restmethod',
+    'read-host',
+    'secret set',
+    'api.supabase.com',
     'supabase secrets set',
     'functions deploy',
     'apply_migration',
     'api.telegram.org/bot',
 ]:
-    assert forbidden not in text, f'forbidden mutating/provider path in V5: {forbidden}'
+    assert forbidden not in lower, f'deprecated V5 still contains secret/provider mutation path: {forbidden}'
+
 print('STAGE35_ALERT_SECRET_BOOTSTRAP_V5_GUARD=PASS')
+print('V5_DEPRECATED_FAIL_CLOSED=PASS')
+print('V5_SECRET_IO_SURFACE_PRESENT=false')
+print('V5_EXECUTION_ALLOWED=false')
