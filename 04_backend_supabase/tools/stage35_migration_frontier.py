@@ -14,6 +14,7 @@ CLEANUP_VERSION = "20260823161543"
 
 FINAL_BASELINE = "0b8081aad409b48df22085da003e595578e0c5bb"
 FINAL_OBSERVED = "2026-08-23T16:15:55.264448Z"
+FINAL_SOURCE = "Supabase.list_migrations+Supabase.execute_sql+Supabase.list_edge_functions"
 CLEANUP_BASELINE = "db522140cc2b21840b5b48727cb15a82ca22f975"
 CLEANUP_OBSERVED = "2026-08-23T16:06:48.978350Z"
 RECONCILED_BASELINE = "a23dd9d892189b92a633634caf750606504e83ee"
@@ -79,6 +80,24 @@ def assert_common(ledger: dict) -> None:
         raise ValueError("Stage33 cleanup history drift")
 
 
+def _stage35_repo_only_names(ledger: dict) -> set[str]:
+    _, repo_only = divergences(ledger)
+    return {
+        str(row.get("name"))
+        for row in repo_only
+        if row.get("name") in {RECEIPT_NAME, FIXTURE_NAME, CLEANUP_NAME}
+    }
+
+
+def _stage35_remote_is_final(ledger: dict) -> bool:
+    remote = remote_map(ledger)
+    return (
+        remote.get(RECEIPT_NAME) == RECEIPT_VERSION
+        and remote.get(FIXTURE_NAME) == FIXTURE_VERSION
+        and remote.get(CLEANUP_NAME) == CLEANUP_VERSION
+    )
+
+
 def state(ledger: dict) -> str:
     assert_common(ledger)
     baseline = ledger.get("baseline_main_sha")
@@ -88,7 +107,7 @@ def state(ledger: dict) -> str:
     repo_names = {row.get("name") for row in repo_only}
 
     if baseline == FINAL_BASELINE and observed == FINAL_OBSERVED:
-        if repo_only or remote.get(RECEIPT_NAME) != RECEIPT_VERSION or remote.get(FIXTURE_NAME) != FIXTURE_VERSION or remote.get(CLEANUP_NAME) != CLEANUP_VERSION:
+        if repo_only or not _stage35_remote_is_final(ledger):
             raise ValueError("final Stage35 frontier drift")
         return "final"
     if baseline == CLEANUP_BASELINE and observed == CLEANUP_OBSERVED:
@@ -107,6 +126,15 @@ def state(ledger: dict) -> str:
         if repo_names != {RECEIPT_NAME} or len(repo_only) != 1 or RECEIPT_NAME in remote or FIXTURE_NAME in remote or CLEANUP_NAME in remote:
             raise ValueError("receipt-promotion frontier drift")
         return "receipt"
+
+    # Later stages are allowed to advance the global migration ledger. Stage35
+    # historical guards must project such a ledger back to the sealed Stage35
+    # frontier instead of pinning the whole repository forever. Only Stage35's
+    # own three migration states are authoritative here; unrelated later
+    # repo-only/remote migrations are intentionally ignored by the projection.
+    if _stage35_remote_is_final(ledger) and not _stage35_repo_only_names(ledger):
+        return "post_final"
+
     raise ValueError("unknown Stage35 migration frontier")
 
 
@@ -121,8 +149,32 @@ def _remote_only(ledger: dict) -> list[dict]:
     return clone({"rows": divergences(ledger)[0]})["rows"]
 
 
+def to_final(ledger: dict) -> dict:
+    kind = state(ledger)
+    if kind == "final":
+        return clone(ledger)
+    if kind != "post_final":
+        raise ValueError(f"cannot project {kind} to final")
+
+    projected = clone(ledger)
+    projected["baseline_main_sha"] = FINAL_BASELINE
+    projected["observed_at_utc"] = FINAL_OBSERVED
+    projected["source"] = FINAL_SOURCE
+    projected["remote_migrations"] = [
+        row
+        for row in projected.get("remote_migrations", [])
+        if isinstance(row, dict) and str(row.get("version", "")) <= CLEANUP_VERSION
+    ]
+    projected["declared_divergences"] = _remote_only(ledger)
+    state(projected)
+    return projected
+
+
 def to_cleanup_promotion(ledger: dict) -> dict:
     kind = state(ledger)
+    if kind == "post_final":
+        ledger = to_final(ledger)
+        kind = "final"
     if kind == "cleanup_promotion":
         return clone(ledger)
     if kind != "final":
@@ -138,6 +190,9 @@ def to_cleanup_promotion(ledger: dict) -> dict:
 
 def to_reconciled(ledger: dict) -> dict:
     kind = state(ledger)
+    if kind == "post_final":
+        ledger = to_final(ledger)
+        kind = "final"
     if kind == "reconciled":
         return clone(ledger)
     if kind == "final":
@@ -155,6 +210,9 @@ def to_reconciled(ledger: dict) -> dict:
 
 def to_fixture(ledger: dict) -> dict:
     kind = state(ledger)
+    if kind == "post_final":
+        ledger = to_final(ledger)
+        kind = "final"
     if kind == "fixture":
         return clone(ledger)
     if kind in {"final", "cleanup_promotion"}:
@@ -173,6 +231,9 @@ def to_fixture(ledger: dict) -> dict:
 
 def to_receipt(ledger: dict) -> dict:
     kind = state(ledger)
+    if kind == "post_final":
+        ledger = to_final(ledger)
+        kind = "final"
     if kind == "receipt":
         return clone(ledger)
     if kind != "fixture":

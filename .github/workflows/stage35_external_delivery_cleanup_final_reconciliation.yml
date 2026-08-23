@@ -11,6 +11,7 @@ on:
       - '04_backend_supabase/operations/stage35_alert_delivery_controlled_proof_cleanup_candidate.sql'
       - '04_backend_supabase/tools/stage35_migration_frontier.py'
       - '04_backend_supabase/tools/verify_stage35_external_delivery_cleanup_final_reconciliation.py'
+      - '04_backend_supabase/tools/verify_stage35_final_reconciliation_historical_compat.py'
       - '04_backend_supabase/tools/verify_stage35_remote_migration_reconciliation.py'
       - '04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py'
       - '04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py'
@@ -31,12 +32,13 @@ jobs:
           python -m py_compile
           04_backend_supabase/tools/stage35_migration_frontier.py
           04_backend_supabase/tools/verify_stage35_external_delivery_cleanup_final_reconciliation.py
+          04_backend_supabase/tools/verify_stage35_final_reconciliation_historical_compat.py
           04_backend_supabase/tools/verify_stage35_remote_migration_reconciliation.py
           04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py
           04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py
 
-      - name: Final Stage35 cleanup reconciliation guard
-        run: python 04_backend_supabase/tools/verify_stage35_external_delivery_cleanup_final_reconciliation.py
+      - name: Final Stage35 cleanup reconciliation guard under sealed frontier projection
+        run: python 04_backend_supabase/tools/verify_stage35_final_reconciliation_historical_compat.py
 
       - name: Historical remote reconciliation projection guard
         run: python 04_backend_supabase/tools/verify_stage35_remote_migration_reconciliation.py

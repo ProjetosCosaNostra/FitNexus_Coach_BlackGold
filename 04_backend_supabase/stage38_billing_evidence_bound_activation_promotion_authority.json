@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE38_BILLING_EVIDENCE_BOUND_ACTIVATION_PROMOTION",
+  "baseline_main_sha": "5ba7caa8dde7d5154b8d20da11c18274e83f41a8",
+  "current_state": "REPO_ONLY_HARDENING_CANDIDATE_NO_PROVIDER_ACTIVATION_NO_EXTERNAL_EVIDENCE_ATTESTED",
+  "failure_classes": [
+    "BGF-STAGE37-BILLING-PREMATURE-ACTIVATION-319",
+    "BGF-STAGE37-BILLING-EVIDENCE-BINDING-GAP-320",
+    "BGF-STAGE38-BILLING-RUNTIME-SELF-ATTESTATION-333",
+    "BGF-STAGE38-BILLING-ACTIVATION-BEFORE-CREDENTIAL-EVIDENCE-334",
+    "BGF-STAGE38-BILLING-LAUNCH-BEFORE-PROOF-COMPLETE-335",
+    "BGF-STAGE38-BILLING-EVIDENCE-SECRET-LEAK-336"
+  ],
+  "migration": {
+    "name": "stage38_billing_evidence_bound_activation",
+    "file": "04_backend_supabase/migrations/20260823174500_stage38_billing_evidence_bound_activation.sql",
+    "git_blob_sha": "a09aa83eb6eb24739ad0a73b7c08db3185eb4f63",
+    "repo_only": true,
+    "remote_apply_count": 0,
+    "apply_allowed_before_green_merge": false,
+    "apply_method_after_green_merge": "Supabase.apply_migration",
+    "execute_sql_for_dml_or_ddl_allowed": false
+  },
+  "fresh_remote_preflight": {
+    "source": "Supabase.list_migrations+Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-23T17:40:52.809092+00:00",
+    "stage38_remote_migration_present": false,
+    "stage38_table_exists": false,
+    "selection": {
+      "scope": "BR_V1",
+      "provider_code": "asaas",
+      "state": "selected_pending_credentials",
+      "evidence_version": "2026-08-18-official-docs-v1",
+      "activated_at": null
+    },
+    "checkout_intents": 0,
+    "webhook_receipts": 0,
+    "active_brl_prices": 6,
+    "auth_users": 0,
+    "organizations": 0,
+    "remote_mutation_performed": false,
+    "provider_called": false,
+    "customer_data_used": false
+  },
+  "evidence_authority_design": {
+    "table": "private.billing_provider_external_evidence",
+    "runtime_dml_authority": "DENIED_ALL_RUNTIME_ROLES",
+    "evidence_write_authority": "DEDICATED_VERSIONED_MIGRATION_ONLY",
+    "secret_values_allowed": false,
+    "stored_evidence": "NON_SECRET_SHA256_DIGESTS_AND_NON_SECRET_ENVIRONMENT_IDENTIFIER",
+    "states": ["credentials_verified", "proof_complete"],
+    "credential_phase_required_fields": [
+      "provider_account_owner_authorization_digest",
+      "credential_activation_digest",
+      "provider_environment_id",
+      "credentials_verified_at"
+    ],
+    "proof_complete_additional_required_fields": [
+      "webhook_auth_test_receipt_digest",
+      "webhook_replay_receipt_digest",
+      "checkout_end_to_end_receipt_digest",
+      "proof_completed_at"
+    ]
+  },
+  "activation_contract": {
+    "command": "public.activate_billing_provider_selection(text,text,text)",
+    "caller": "service_role_only",
+    "selected_provider_match_required": true,
+    "internal_evidence_version_match_required": true,
+    "external_evidence_row_required": true,
+    "external_evidence_exact_scope_provider_version_match_required": true,
+    "credentials_verified_or_proof_complete_required": true,
+    "missing_external_evidence_failure": "BILLING_PROVIDER_EXTERNAL_CREDENTIAL_EVIDENCE_REQUIRED",
+    "activation_itself_promotes_launch_gate": false
+  },
+  "controlled_launch_contract": {
+    "billing_provider": "asaas",
+    "scope": "BR_V1",
+    "selection_active_required": true,
+    "activated_at_required": true,
+    "external_evidence_state_required": "proof_complete",
+    "credential_digests_required": true,
+    "webhook_auth_receipt_digest_required": true,
+    "webhook_replay_receipt_digest_required": true,
+    "checkout_end_to_end_receipt_digest_required": true,
+    "proof_completed_at_required": true,
+    "paid_ads_auto_launch": false
+  },
+  "two_phase_external_sequence": [
+    {
+      "phase": 1,
+      "name": "CREDENTIAL_AUTHORITY",
+      "prerequisites": [
+        "provider account owner authorization",
+        "credentials configured in approved secret boundary",
+        "non-secret provider environment identifier"
+      ],
+      "attestation": "dedicated versioned evidence migration inserts credentials_verified row with non-secret digests",
+      "then_allowed": "service-role activation command may move BR_V1 selection to active",
+      "launch_gate_after_phase": "STILL_BLOCKED"
+    },
+    {
+      "phase": 2,
+      "name": "OPERATIONAL_PROVIDER_PROOF",
+      "prerequisites": [
+        "active provider selection backed by credential evidence",
+        "controlled synthetic proof data only"
+      ],
+      "required_proofs": [
+        "webhook authentication positive test",
+        "webhook provider-event replay/idempotency",
+        "checkout end-to-end provider proof"
+      ],
+      "attestation": "dedicated versioned evidence migration upgrades exact row to proof_complete with receipt digests",
+      "launch_gate_after_phase": "MAY_BECOME_READY_ONLY_IF_ALL_OTHER_STAGE20_GATES_ARE_READY"
+    }
+  ],
+  "promotion_boundaries": {
+    "provider_activation_performed": false,
+    "provider_call_performed": false,
+    "external_evidence_row_inserted": false,
+    "external_evidence_row_updated": false,
+    "customer_data_used": false,
+    "credential_secret_recorded": false,
+    "billing_gate_promoted": false,
+    "launch_gate_promoted": false,
+    "paid_media_allowed": false,
+    "stage35_proof_reexecution_allowed": false
+  },
+  "gates": {
+    "stage38_repository_promotion": "PENDING_CI",
+    "stage38_remote_apply": "DENIED_UNTIL_GREEN_MERGE",
+    "billing_provider_credentials": "DENIED",
+    "controlled_launch": "DENIED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green_merge": {
+    "action": "APPLY_EXACT_STAGE38_MIGRATION_ONCE_AND_RECONCILE_LEDGER",
+    "provider_activation_allowed": false,
+    "provider_call_allowed": false,
+    "external_evidence_attestation_allowed_without_real_evidence": false
+  }
+}
