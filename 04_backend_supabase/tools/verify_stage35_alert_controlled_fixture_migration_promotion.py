@@ -93,7 +93,7 @@ def main() -> None:
     authority = load(AUTHORITY)
     source_ledger = load(LEDGER)
     ledger, current_frontier = historical_fixture_frontier(source_ledger)
-    cleanup_migration_expected = current_frontier in {"cleanup_promotion", "final"}
+    cleanup_migration_expected = current_frontier in {"cleanup_promotion", "final", "post_final"}
     reconciliation = load(RECONCILIATION)
     seal = load(SEAL)
 
@@ -231,7 +231,7 @@ def main() -> None:
     print("HISTORICAL_FIXTURE_MIGRATION_LEDGER_STATE=repo_only")
     print(f"CURRENT_STAGE35_FRONTIER={current_frontier}")
     print(f"CURRENT_CLEANUP_PROMOTION_FRONTIER={str(current_frontier == 'cleanup_promotion').lower()}")
-    print(f"CURRENT_FINAL_FRONTIER={str(current_frontier == 'final').lower()}")
+    print(f"CURRENT_FINAL_FRONTIER={str(current_frontier in {'final', 'post_final'}).lower()}")
     print("CURRENT_REMOTE_RECONCILIATION_COMPATIBLE=true")
     print("PROOF_REEXECUTION_ALLOWED=false")
     print("TELEGRAM_PROVIDER_CALLED_BY_HISTORICAL_GUARD=false")
