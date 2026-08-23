@@ -1,0 +1,63 @@
+name: Stage 35 External Delivery Proof Receipt and Cleanup Promotion
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/stage35_alert_external_delivery_proof_receipt_cleanup_promotion_authority.json'
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/operations/stage35_alert_delivery_controlled_proof_cleanup_candidate.sql'
+      - '04_backend_supabase/migrations/20260823161000_stage35_alert_delivery_controlled_proof_cleanup.sql'
+      - '04_backend_supabase/tools/verify_stage35_external_delivery_proof_cleanup_promotion.py'
+      - '04_backend_supabase/tools/verify_stage35_remote_migration_reconciliation.py'
+      - '04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py'
+      - '04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py'
+      - '.github/workflows/stage35_external_delivery_proof_cleanup_promotion.yml'
+  push:
+    branches:
+      - 'blackgold/stage35-external-proof-receipt-cleanup-promotion'
+    paths:
+      - '04_backend_supabase/stage35_alert_external_delivery_proof_receipt_cleanup_promotion_authority.json'
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/operations/stage35_alert_delivery_controlled_proof_cleanup_candidate.sql'
+      - '04_backend_supabase/migrations/20260823161000_stage35_alert_delivery_controlled_proof_cleanup.sql'
+      - '04_backend_supabase/tools/verify_stage35_external_delivery_proof_cleanup_promotion.py'
+      - '04_backend_supabase/tools/verify_stage35_remote_migration_reconciliation.py'
+      - '04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py'
+      - '04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py'
+      - '.github/workflows/stage35_external_delivery_proof_cleanup_promotion.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-proof-and-cleanup-promotion:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Migration ledger contract guard
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Immutable external-delivery proof and cleanup-promotion guard
+        run: python 04_backend_supabase/tools/verify_stage35_external_delivery_proof_cleanup_promotion.py
+
+      - name: Stage 35 remote-reconciliation historical guard
+        run: python 04_backend_supabase/tools/verify_stage35_remote_migration_reconciliation.py
+
+      - name: Stage 35 controlled-fixture historical guard
+        run: python 04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py
+
+      - name: Stage 35 receipt-store historical projection
+        run: python 04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py receipt
+
+      - name: Stage 33 cleanup historical projection
+        run: python 04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py current_cleanup
+
+      - name: Stage 35 deployment-seal historical projection
+        run: python 04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py deployment_seal
+
+      - name: PostgreSQL CREATE OR REPLACE VIEW compatibility guard
+        run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py
