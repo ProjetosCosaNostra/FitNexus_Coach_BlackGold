@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE36_CONTROLLED_LAUNCH_EXTERNAL_GATE_ASSESSMENT",
+  "baseline_main_sha": "5d38f307c6bd597acedbfcee371e8f365918f3f4",
+  "current_state": "ASSESSMENT_ONLY_TWO_AUTOMATIC_READY_SEVEN_EXTERNAL_OR_EVIDENCE_GATES_BLOCKED_NO_PROMOTION",
+  "failure_classes": [
+    "BGF-STAGE36-LAUNCH-GATE-CODE-315",
+    "BGF-STAGE36-LAUNCH-EVIDENCE-SELF-ATTESTATION-316",
+    "BGF-STAGE36-STAGE35-CROSS-PROMOTION-317",
+    "BGF-STAGE36-BILLING-AUTHORITY-318"
+  ],
+  "repo_authority": {
+    "stage20_migration_file": "04_backend_supabase/migrations/20260819062000_stage20_controlled_launch_admission.sql",
+    "stage20_migration_git_blob_sha": "e26dd18eff1f4dbf099ad721963b06d6362bc3b9",
+    "stage20_remote_name": "stage20_controlled_launch_admission",
+    "stage20_remote_version": "20260819085840",
+    "external_evidence_placeholder_file": "04_backend_supabase/external_gate_evidence_placeholders.json",
+    "external_evidence_placeholder_git_blob_sha": "07e6eb3330076f3e576ed2dd2a2e385f5fa3b2db",
+    "stage35_final_authority_file": "04_backend_supabase/stage35_alert_external_delivery_cleanup_final_reconciliation_authority.json",
+    "stage35_final_authority_git_blob_sha": "f495f0c01bb16b049b5383f46db9868724b798e8"
+  },
+  "fresh_remote_assessment": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-23T17:24:41.050833+00:00",
+    "pricing_decisions": 1,
+    "active_plan_prices": 6,
+    "pricing_experiment_ready": true,
+    "tracking_core_rows": 2,
+    "active_asaas": 0,
+    "mandatory_gate_count": 9,
+    "effective_ready_gate_count": 2,
+    "effective_blocking_gate_count": 7,
+    "evidence_migration_gate_count": 6,
+    "external_authorization_gate_count": 1,
+    "remote_mutation_performed": false,
+    "provider_called": false,
+    "customer_data_used": false
+  },
+  "mandatory_gate_matrix": [
+    {
+      "gate_code": "billing_provider_credentials",
+      "category": "commercial",
+      "authority_mode": "external_authorization",
+      "mandatory": true,
+      "effective_state": "blocked",
+      "evidence_state": null,
+      "has_evidence_ref": false,
+      "has_evidence_digest": false,
+      "assessment": "BLOCKED_NO_ACTIVE_ASAAS_EXTERNAL_AUTHORITY"
+    },
+    {
+      "gate_code": "pricing_experiment",
+      "category": "commercial",
+      "authority_mode": "automatic",
+      "mandatory": true,
+      "effective_state": "ready",
+      "evidence_state": null,
+      "has_evidence_ref": false,
+      "has_evidence_digest": false,
+      "assessment": "AUTOMATIC_READINESS_PASS"
+    },
+    {
+      "gate_code": "production_deployment",
+      "category": "deployment",
+      "authority_mode": "evidence_migration",
+      "mandatory": true,
+      "effective_state": "blocked",
+      "evidence_state": "blocked",
+      "has_evidence_ref": false,
+      "has_evidence_digest": false,
+      "assessment": "BLOCKED_NO_EXTERNAL_EVIDENCE"
+    },
+    {
+      "gate_code": "legal_terms_of_use",
+      "category": "legal",
+      "authority_mode": "evidence_migration",
+      "mandatory": true,
+      "effective_state": "blocked",
+      "evidence_state": "blocked",
+      "has_evidence_ref": false,
+      "has_evidence_digest": false,
+      "assessment": "BLOCKED_NO_EXTERNAL_EVIDENCE"
+    },
+    {
+      "gate_code": "data_subject_request_channel",
+      "category": "privacy",
+      "authority_mode": "evidence_migration",
+      "mandatory": true,
+      "effective_state": "blocked",
+      "evidence_state": "blocked",
+      "has_evidence_ref": false,
+      "has_evidence_digest": false,
+      "assessment": "BLOCKED_NO_EXTERNAL_EVIDENCE"
+    },
+    {
+      "gate_code": "legal_privacy_notice",
+      "category": "privacy",
+      "authority_mode": "evidence_migration",
+      "mandatory": true,
+      "effective_state": "blocked",
+      "evidence_state": "blocked",
+      "has_evidence_ref": false,
+      "has_evidence_digest": false,
+      "assessment": "BLOCKED_NO_EXTERNAL_EVIDENCE"
+    },
+    {
+      "gate_code": "legal_role_mapping",
+      "category": "privacy",
+      "authority_mode": "evidence_migration",
+      "mandatory": true,
+      "effective_state": "blocked",
+      "evidence_state": "blocked",
+      "has_evidence_ref": false,
+      "has_evidence_digest": false,
+      "assessment": "BLOCKED_NO_EXTERNAL_EVIDENCE"
+    },
+    {
+      "gate_code": "incident_response",
+      "category": "security",
+      "authority_mode": "evidence_migration",
+      "mandatory": true,
+      "effective_state": "blocked",
+      "evidence_state": "blocked",
+      "has_evidence_ref": false,
+      "has_evidence_digest": false,
+      "assessment": "BLOCKED_NO_OPERATIONAL_EVIDENCE"
+    },
+    {
+      "gate_code": "tracking_core",
+      "category": "tracking",
+      "authority_mode": "automatic",
+      "mandatory": true,
+      "effective_state": "ready",
+      "evidence_state": null,
+      "has_evidence_ref": false,
+      "has_evidence_digest": false,
+      "assessment": "AUTOMATIC_READINESS_PASS"
+    }
+  ],
+  "authority_boundaries": {
+    "automatic_readiness_is_gate_promotion": false,
+    "stage35_alert_proof_is_production_deployment_evidence_by_itself": false,
+    "stage35_alert_proof_is_incident_response_evidence_by_itself": false,
+    "placeholder_file_can_attest_external_evidence": false,
+    "runtime_self_attestation_allowed": false,
+    "stage36_evidence_migration_allowed": false,
+    "stage36_remote_mutation_allowed": false,
+    "stage36_provider_call_allowed": false,
+    "stage36_customer_data_allowed": false,
+    "paid_ads_auto_launch_allowed": false
+  },
+  "stage35_immutable_boundary": {
+    "external_delivery_proof": "PASS_IMMUTABLE",
+    "synthetic_cleanup": "PASS_ZERO_RESIDUE",
+    "proof_reexecution_allowed": false,
+    "pr117_reopen_allowed": false,
+    "stage35_remote_reapply_allowed": false
+  },
+  "gates": {
+    "controlled_launch": "DENIED_7_OF_9_MANDATORY_GATES_BLOCKING",
+    "billing_provider_credentials": "DENIED",
+    "incident_response": "DENIED",
+    "production_deployment": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_evidence_sequence": [
+    {
+      "gate_code": "billing_provider_credentials",
+      "requirement": "real authorized provider credential activation and checkout/webhook evidence; assessment must not activate provider authority"
+    },
+    {
+      "gate_code": "legal_terms_of_use",
+      "requirement": "independent legal review and stable published/versioned terms evidence"
+    },
+    {
+      "gate_code": "legal_privacy_notice",
+      "requirement": "independent legal/privacy review and stable published/versioned privacy evidence"
+    },
+    {
+      "gate_code": "legal_role_mapping",
+      "requirement": "reviewed controller/operator and lawful-basis processing-role evidence"
+    },
+    {
+      "gate_code": "data_subject_request_channel",
+      "requirement": "tested operational data-subject request channel evidence"
+    },
+    {
+      "gate_code": "incident_response",
+      "requirement": "independent operational tabletop/drill evidence"
+    },
+    {
+      "gate_code": "production_deployment",
+      "requirement": "full production domain/TLS/release/smoke/rollback/monitoring/backup evidence; Stage35 alerting covers only one subcomponent"
+    }
+  ]
+}
