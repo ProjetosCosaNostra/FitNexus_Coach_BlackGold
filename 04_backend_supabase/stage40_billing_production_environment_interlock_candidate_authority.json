@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE40_BILLING_PRODUCTION_ENVIRONMENT_INTERLOCK_CANDIDATE",
+  "baseline_main_sha": "f1de13ea29265326f00fd51a29b7f710b0a892ac",
+  "current_state": "REPO_ONLY_CANDIDATE_SANDBOX_CANNOT_PROMOTE_BR_V1_PRODUCTION_BINDING_NOT_YET_REMOTE",
+  "failure_classes": [
+    "BGF-STAGE40-BILLING-SANDBOX-EVIDENCE-CROSS-ENV-ACTIVATION-357",
+    "BGF-STAGE40-BILLING-LAUNCH-ENVIRONMENT-MISMATCH-358",
+    "BGF-STAGE40-BILLING-ENVIRONMENT-IDENTITY-DOWNGRADE-359",
+    "BGF-STAGE40-BILLING-CANDIDATE-DIRECT-APPLY-360"
+  ],
+  "upstream_authority": {
+    "stage38_final_authority": "04_backend_supabase/stage38_billing_evidence_bound_activation_final_authority.json",
+    "stage39_preparation_authority": "04_backend_supabase/stage39_billing_credential_authority_external_evidence_preparation.json",
+    "stage38_remote_version": "20260823175158",
+    "stage38_may_reapply": false,
+    "stage39_operator_evidence_receipt_present_in_repository": false,
+    "provider_activation_requires_external_credential_evidence": true,
+    "billing_launch_readiness_requires_proof_complete": true
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-24T00:16:15.565213+00:00",
+    "selection": {
+      "scope": "BR_V1",
+      "provider_code": "asaas",
+      "state": "selected_pending_credentials",
+      "evidence_version": "2026-08-18-official-docs-v1",
+      "activated_at": null
+    },
+    "external_evidence_rows": 0,
+    "checkout_intents": 0,
+    "webhook_receipts": 0,
+    "auth_users": 0,
+    "organizations": 0,
+    "billing_launch_predicate_ready": false,
+    "activation_function_contains_external_evidence_interlock": true,
+    "activation_function_contains_production_environment_interlock": false,
+    "remote_mutation_performed": false,
+    "provider_called": false,
+    "customer_data_used": false
+  },
+  "gap_assessment": {
+    "provider_documentation_says_sandbox_and_production_are_independent": true,
+    "stage39_collector_distinguishes_sandbox_and_production": true,
+    "stage38_external_evidence_schema_stores_provider_environment_id": true,
+    "stage38_activation_requires_external_evidence": true,
+    "stage38_activation_requires_exact_production_environment": false,
+    "stage38_controlled_launch_requires_exact_production_environment": false,
+    "risk": "A future migration-owned credentials_verified or proof_complete row carrying asaas-sandbox could satisfy the Stage38 environment shape while the BR_V1 selection represents production billing authority.",
+    "decision": "FAIL_CLOSED_UNTIL_BR_V1_ASAAS_ACTIVATION_AND_LAUNCH_READINESS_REQUIRE_ASAAS_PRODUCTION"
+  },
+  "candidate": {
+    "file": "04_backend_supabase/operations/stage40_billing_production_environment_interlock_candidate.sql",
+    "location_class": "OPERATIONS_CANDIDATE_NOT_MIGRATION",
+    "remote_apply_allowed": false,
+    "direct_apply_allowed": false,
+    "promotion_requires_separate_versioned_migration_pr": true,
+    "activation_change": {
+      "scope": "BR_V1",
+      "provider_code": "asaas",
+      "required_provider_environment_id": "asaas-production",
+      "failure_message": "BILLING_PROVIDER_PRODUCTION_ENVIRONMENT_EVIDENCE_REQUIRED",
+      "preserves_external_credential_evidence_interlock": true
+    },
+    "controlled_launch_change": {
+      "required_provider_environment_id": "asaas-production",
+      "preserves_proof_complete_requirement": true,
+      "adds_guardrail": "production_billing_environment_required"
+    }
+  },
+  "receipt_review_contract": {
+    "reviewer": "04_backend_supabase/tools/review_stage39_billing_credential_evidence_receipt.py",
+    "review_only": true,
+    "provider_call_allowed": false,
+    "supabase_mutation_allowed": false,
+    "migration_generation_allowed": false,
+    "evidence_attestation_allowed": false,
+    "billing_gate_promotion_allowed": false,
+    "br_v1_eligible_environment": "asaas-production",
+    "sandbox_failure": "STAGE39_RECEIPT_ENVIRONMENT_NOT_ELIGIBLE_FOR_BR_V1_PRODUCTION_ACTIVATION"
+  },
+  "promotion_sequence": [
+    {
+      "step": 1,
+      "name": "MERGE_REPO_ONLY_CANDIDATE_AFTER_GREEN_CI",
+      "rule": "This stage may merge only the candidate, reviewer, guard and workflow. No remote mutation."
+    },
+    {
+      "step": 2,
+      "name": "PROMOTE_EXACT_CANDIDATE_TO_VERSIONED_MIGRATION_IN_NEW_PR",
+      "rule": "A later PR must copy the exact executable candidate body into a migration, declare its repo-only ledger divergence and preserve historical guard projections."
+    },
+    {
+      "step": 3,
+      "name": "MERGE_GREEN_THEN_APPLY_EXACT_MIGRATION_ONCE",
+      "rule": "Only after the migration PR merges green may the exact merged migration be applied once through Supabase.apply_migration."
+    },
+    {
+      "step": 4,
+      "name": "REAL_PRODUCTION_OPERATOR_EVIDENCE_REMAINS_REQUIRED",
+      "rule": "Hardening alone does not authorize Asaas activation. A valid independently reviewed asaas-production Stage39 receipt remains required before credentials_verified evidence may be proposed."
+    }
+  ],
+  "boundaries": {
+    "repo_only": true,
+    "migration_added": false,
+    "supabase_mutation_performed": false,
+    "provider_call_performed": false,
+    "provider_activation_performed": false,
+    "external_evidence_attested": false,
+    "customer_data_used": false,
+    "credential_secret_recorded": false,
+    "billing_gate_promoted": false,
+    "launch_gate_promoted": false,
+    "production_deployment_allowed": false,
+    "incident_response_promotion_allowed": false,
+    "paid_media_allowed": false,
+    "stage35_proof_reexecution_allowed": false
+  },
+  "gates": {
+    "stage40_candidate": "REPO_ONLY_PENDING_CI",
+    "stage40_remote_apply": "DENIED",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "provider_activation": "DENIED",
+    "provider_call": "DENIED",
+    "controlled_launch": "DENIED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
