@@ -13,6 +13,7 @@ on:
       - '04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_promotion.py'
       - '04_backend_supabase/tools/verify_stage40_promotion_historical_compat.py'
       - '04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_final_reconciliation.py'
+      - '04_backend_supabase/tools/verify_stage40_final_historical_compat.py'
       - '.github/workflows/stage40_billing_production_environment_interlock_promotion.yml'
       - '.github/workflows/stage40_billing_production_environment_interlock_final_reconciliation.yml'
 
@@ -33,12 +34,13 @@ jobs:
           04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_promotion.py
           04_backend_supabase/tools/verify_stage40_promotion_historical_compat.py
           04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_final_reconciliation.py
+          04_backend_supabase/tools/verify_stage40_final_historical_compat.py
 
       - name: Migration ledger contract guard
         run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
 
-      - name: Stage40 final remote reconciliation guard
-        run: python 04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_final_reconciliation.py
+      - name: Stage40 final remote reconciliation historical projection guard
+        run: python 04_backend_supabase/tools/verify_stage40_final_historical_compat.py
 
       - name: Stage40 historical promotion projection guard
         run: python 04_backend_supabase/tools/verify_stage40_promotion_historical_compat.py
