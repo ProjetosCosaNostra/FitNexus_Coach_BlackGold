@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE46_PRODUCTION_DEPLOYMENT_EXTERNAL_EVIDENCE_PREPARATION",
+  "baseline_main_sha": "c6cb7ef60b814fe5f8d43d49f656681b08d3b0d4",
+  "current_state": "PREPARED_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE_REQUIRED_NO_DEPLOYMENT_NO_ATTESTATION_NO_GATE_PROMOTION",
+  "failure_classes": [
+    "BGF-STAGE46-PRODUCTION-DEPLOYMENT-SELF-ATTESTATION-420",
+    "BGF-STAGE46-PRODUCTION-DOMAIN-PLACEHOLDER-421",
+    "BGF-STAGE46-TLS-EVIDENCE-OMISSION-422",
+    "BGF-STAGE46-ENV-CONFIG-SECRET-CROSSOVER-423",
+    "BGF-STAGE46-RELEASE-SHA-DRIFT-424",
+    "BGF-STAGE46-PRODUCTION-SMOKE-OMISSION-425",
+    "BGF-STAGE46-ROLLBACK-PROOF-OMISSION-426",
+    "BGF-STAGE46-MONITORING-ALERTING-PARTIAL-PROOF-427",
+    "BGF-STAGE46-BACKUP-RESTORE-OMISSION-428",
+    "BGF-STAGE46-RELEASE-EVIDENCE-DIGEST-OMISSION-429",
+    "BGF-STAGE46-PREMATURE-EVIDENCE-MIGRATION-430"
+  ],
+  "upstream_authority": {
+    "stage45_incident_response_preparation": "04_backend_supabase/stage45_incident_response_external_evidence_preparation_authority.json",
+    "stage45_incident_response_preparation_blob": "d5d32990e8ef7a3c4f13dc63e2088ea28e471f12",
+    "incident_response_gate_state": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "controlled_launch": "DENIED"
+  },
+  "source_contracts": {
+    "external_gate_placeholders_file": "04_backend_supabase/external_gate_evidence_placeholders.json",
+    "external_gate_placeholders_blob": "07e6eb3330076f3e576ed2dd2a2e385f5fa3b2db",
+    "stage20_migration_file": "04_backend_supabase/migrations/20260819062000_stage20_controlled_launch_admission.sql",
+    "stage20_migration_blob": "e26dd18eff1f4dbf099ad721963b06d6362bc3b9"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-24T07:59:41.047277+00:00",
+    "gate_code": "production_deployment",
+    "category": "deployment",
+    "authority_mode": "evidence_migration",
+    "mandatory": true,
+    "state": "blocked",
+    "evidence_ref": null,
+    "evidence_digest": null,
+    "ready_evidence_migration_count": 0,
+    "remote_mutation_performed": false
+  },
+  "required_real_evidence": {
+    "stable_production_domain": {
+      "required": true,
+      "rule": "Must be the real stable HTTPS production domain. Localhost, example, preview, staging, test and development domains are rejected."
+    },
+    "tls_evidence_artifact": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "Real TLS evidence for the stable production domain must exist; this collector does not perform or substitute a live TLS probe."
+    },
+    "environment_configuration_receipt_without_secrets": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A production environment configuration receipt must prove required configuration names/readiness without containing secret values."
+    },
+    "release_commit_sha": {
+      "required": true,
+      "format": "git_sha1_40_lower_hex",
+      "rule": "The exact production release commit must be independently identified and bound to the remaining evidence."
+    },
+    "production_smoke_test_receipt": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A real production smoke-test receipt must exist for the exact release. Preparation cannot manufacture or replay a production proof."
+    },
+    "rollback_test_receipt": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A real rollback test receipt must prove rollback readiness for the production release."
+    },
+    "monitoring_alerting_readiness_receipt": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A full monitoring/alerting readiness receipt must exist. Stage35 alert delivery proof alone is insufficient for this production gate."
+    },
+    "backup_restore_readiness_reference_artifact": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A reviewed backup/restore readiness reference must exist and be bound to the release context."
+    },
+    "release_evidence_manifest_artifact": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A final release evidence manifest must bind the domain, TLS, configuration, release SHA, smoke, rollback, monitoring/alerting and backup/restore evidence."
+    }
+  },
+  "collector_contract": {
+    "script": "04_backend_supabase/tools/collect_stage46_production_deployment_evidence.ps1",
+    "output_kind": "DIGEST_ONLY_PRODUCTION_DEPLOYMENT_EVIDENCE_INTAKE_CANDIDATE",
+    "network_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "deployment_action_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "operations_self_attestation_allowed": false,
+    "raw_artifact_content_copied_to_receipt": false,
+    "artifact_path_or_filename_copied_to_receipt": false,
+    "secret_values_allowed": false,
+    "stage35_alert_proof_alone_can_satisfy_monitoring_alerting": false,
+    "receipt_can_mark_gate_ready": false,
+    "receipt_can_promote_controlled_launch": false
+  },
+  "independent_review_boundary": {
+    "receipt_is_candidate_only": true,
+    "reviewer_must_confirm_stable_production_domain": true,
+    "reviewer_must_confirm_tls_evidence_matches_domain": true,
+    "reviewer_must_confirm_environment_receipt_contains_no_secrets": true,
+    "reviewer_must_confirm_release_sha_matches_deployed_release": true,
+    "reviewer_must_confirm_production_smoke_receipt": true,
+    "reviewer_must_confirm_rollback_receipt": true,
+    "reviewer_must_confirm_monitoring_alerting_is_complete_not_stage35_only": true,
+    "reviewer_must_confirm_backup_restore_readiness": true,
+    "reviewer_must_confirm_release_evidence_manifest_binding": true,
+    "dedicated_evidence_migration_allowed_only_after_real_review": true,
+    "gate_ready_state_before_real_review": false
+  },
+  "next_sequence_after_valid_real_evidence": [
+    {
+      "step": 1,
+      "name": "COLLECT_DIGEST_ONLY_RECEIPT",
+      "rule": "Hash real production release/operations artifacts and record only non-sensitive metadata. No network, deployment or database mutation."
+    },
+    {
+      "step": 2,
+      "name": "INDEPENDENTLY_REVIEW_RECEIPT_AND_SOURCE_ARTIFACTS",
+      "rule": "Confirm domain/TLS binding, secret-free environment receipt, exact release SHA, smoke, rollback, monitoring/alerting, backup/restore and release manifest."
+    },
+    {
+      "step": 3,
+      "name": "PROMOTE_DEDICATED_EVIDENCE_MIGRATION",
+      "rule": "Only after real independent review, create a separate versioned migration updating exactly production_deployment with evidence_ref and evidence_digest."
+    },
+    {
+      "step": 4,
+      "name": "MERGE_GREEN_THEN_APPLY_ONCE",
+      "rule": "Apply the exact merged evidence migration through Supabase.apply_migration only; execute_sql remains SELECT-only."
+    }
+  ],
+  "gates": {
+    "stage46_preparation": "REPO_ONLY_PENDING_CI",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
