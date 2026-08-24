@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE50_EVIDENCE_PROMOTION_ADVERSARIAL_REGRESSION",
+  "baseline_main_sha": "8c4d1effc758ea2ff551eadc95506b5151446531",
+  "current_state": "ADVERSARIAL_REGRESSION_PREPARED_NO_EXTERNAL_EVIDENCE_NO_PROMOTION_NO_REMOTE_MUTATION",
+  "stage49_pins": {
+    "authority": {
+      "path": "04_backend_supabase/stage49_evidence_migration_promotion_boundary_authority.json",
+      "git_blob_sha": "6378fdc6435123ce1809c235b9d1c5342357e4d3"
+    },
+    "contract": {
+      "path": "04_backend_supabase/tools/stage49_evidence_promotion_contract.py",
+      "git_blob_sha": "cdf83a123e4f13209590eda7987bcd42013622db"
+    },
+    "guard": {
+      "path": "04_backend_supabase/tools/verify_stage49_evidence_migration_promotion_boundary.py",
+      "git_blob_sha": "2437596934d7fc3e0834c0173d02148a27009957"
+    },
+    "candidate_builder": {
+      "path": "04_backend_supabase/tools/build_stage49_evidence_promotion_candidate.py",
+      "git_blob_sha": "7292b40b3ad90e26c61a6966cd2dd36c311f4396"
+    }
+  },
+  "fresh_remote_read_only_receipt": {
+    "observed_at_utc": "2026-08-24T18:29:37.215667+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "billing_provider_state": "selected_pending_credentials",
+    "billing_provider_activated_at": null,
+    "external_billing_evidence_rows": 0,
+    "evidence_migration_rows": 6,
+    "evidence_migration_ready_rows": 0,
+    "evidence_migration_blocked_rows": 6,
+    "non_null_evidence_refs": 0,
+    "non_null_evidence_digests": 0,
+    "anon_write_privileges": false,
+    "authenticated_write_privileges": false,
+    "service_role_write_privileges": false,
+    "stage40_activation_production_environment_interlock": true,
+    "stage40_readiness_production_environment_interlock": true,
+    "remote_mutation_performed": false
+  },
+  "adversarial_matrix": [
+    "SYNTHETIC_REVIEW_AUTHORITY_REJECTED",
+    "STAGE47_AGGREGATE_SUBSTITUTION_REJECTED",
+    "STAGE48_REGRESSION_SUBSTITUTION_REJECTED",
+    "SOURCE_AND_REVIEW_RECEIPT_DIGEST_COLLISION_REJECTED",
+    "CANONICAL_SOURCE_STAGE_MISMATCH_REJECTED",
+    "EVIDENCE_REF_MISMATCH_REJECTED",
+    "EVIDENCE_DIGEST_MISMATCH_REJECTED",
+    "UNREGISTERED_PROMOTION_MIGRATION_REJECTED",
+    "MULTI_GATE_PROMOTION_BODY_REJECTED",
+    "REGISTERED_PROMOTION_BODY_DRIFT_REJECTED",
+    "CANDIDATE_MIGRATION_MASQUERADE_REJECTED"
+  ],
+  "fixture_contract": {
+    "fixtures_are_in_memory_or_temporary": true,
+    "fixtures_are_external_evidence": false,
+    "fixtures_are_independent_review": false,
+    "fixtures_can_create_persistent_migration": false,
+    "fixtures_can_promote_gate": false,
+    "fixtures_can_authorize_remote_apply": false,
+    "real_customer_data_used": false,
+    "raw_secret_used": false,
+    "provider_call_performed": false,
+    "network_call_performed": false,
+    "supabase_mutation_performed": false,
+    "deployment_action_performed": false
+  },
+  "failure_classes": [
+    "BGF-STAGE50-SYNTHETIC-REVIEW-FALSE-AUTHORITY-462",
+    "BGF-STAGE50-STAGE47-AGGREGATE-SUBSTITUTION-463",
+    "BGF-STAGE50-STAGE48-REGRESSION-SUBSTITUTION-464",
+    "BGF-STAGE50-SOURCE-REVIEW-DIGEST-COLLISION-465",
+    "BGF-STAGE50-CANONICAL-SOURCE-STAGE-SPOOF-466",
+    "BGF-STAGE50-EVIDENCE-REF-REBIND-467",
+    "BGF-STAGE50-EVIDENCE-DIGEST-REBIND-468",
+    "BGF-STAGE50-UNREGISTERED-PROMOTION-MIGRATION-469",
+    "BGF-STAGE50-MULTI-GATE-PROMOTION-BODY-470",
+    "BGF-STAGE50-REGISTERED-PROMOTION-BODY-DRIFT-471",
+    "BGF-STAGE50-CANDIDATE-MIGRATION-MASQUERADE-472",
+    "BGF-STAGE50-ADVERSARIAL-REGRESSION-GUARD-473"
+  ],
+  "gates": {
+    "billing_provider_credentials": "DENIED",
+    "legal_privacy_notice": "DENIED",
+    "legal_terms_of_use": "DENIED",
+    "legal_role_mapping": "DENIED",
+    "data_subject_request_channel": "DENIED",
+    "incident_response": "DENIED",
+    "production_deployment": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
