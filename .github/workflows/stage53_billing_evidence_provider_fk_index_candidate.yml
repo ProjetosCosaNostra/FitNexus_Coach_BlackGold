@@ -1,0 +1,56 @@
+name: Stage53 Billing Evidence Provider FK Index Candidate
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/stage53_billing_evidence_provider_fk_index_candidate_authority.json'
+      - '04_backend_supabase/operations/stage53_billing_evidence_provider_fk_index_candidate.sql'
+      - '04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_candidate.py'
+      - '.github/workflows/stage53_billing_evidence_provider_fk_index_candidate.yml'
+  push:
+    branches:
+      - 'blackgold/stage53-*'
+    paths:
+      - '04_backend_supabase/stage53_billing_evidence_provider_fk_index_candidate_authority.json'
+      - '04_backend_supabase/operations/stage53_billing_evidence_provider_fk_index_candidate.sql'
+      - '04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_candidate.py'
+      - '.github/workflows/stage53_billing_evidence_provider_fk_index_candidate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stage53-billing-evidence-provider-fk-index-candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Compile Stage53 guard
+        run: python -m py_compile 04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_candidate.py
+
+      - name: Verify Stage53 candidate
+        run: python 04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_candidate.py
+
+      - name: Verify migration ledger authority
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify Stage52 final remote reconciliation
+        run: python 04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_final_reconciliation.py
+
+      - name: Verify Stage40 final historical compatibility
+        run: python 04_backend_supabase/tools/verify_stage40_final_historical_compat.py
+
+      - name: Verify billing provider contract
+        run: python 04_backend_supabase/tools/verify_billing_provider_contract.py
+
+      - name: Verify controlled launch contract
+        run: python 04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+
+      - name: Verify external evidence placeholders
+        run: python 04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py
+
+      - name: Verify PostgreSQL view replacement compatibility
+        run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py
