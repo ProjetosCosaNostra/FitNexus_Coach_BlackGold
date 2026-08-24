@@ -7,10 +7,13 @@ on:
       - '04_backend_supabase/migration_ledger_authority.json'
       - '04_backend_supabase/stage52_student_issuance_target_privacy_candidate_authority.json'
       - '04_backend_supabase/stage52_student_issuance_target_privacy_promotion_authority.json'
+      - '04_backend_supabase/stage52_student_issuance_target_privacy_final_authority.json'
       - '04_backend_supabase/operations/stage52_student_issuance_target_privacy_candidate.sql'
+      - '04_backend_supabase/tools/stage52_student_issuance_migration_frontier.py'
       - '04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_candidate.py'
       - '04_backend_supabase/tools/verify_stage52_candidate_historical_compat.py'
       - '04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_promotion.py'
+      - '04_backend_supabase/tools/verify_stage52_promotion_historical_compat.py'
       - '04_backend_supabase/stage51_security_definer_advisor_reconciliation_authority.json'
       - '04_backend_supabase/tools/verify_stage51_security_definer_advisor_reconciliation.py'
       - '04_backend_supabase/security_definer_exposure_authority.json'
@@ -25,8 +28,11 @@ on:
       - '04_backend_supabase/migrations/20260824203000_stage52_student_issuance_target_privacy_hardening.sql'
       - '04_backend_supabase/migration_ledger_authority.json'
       - '04_backend_supabase/stage52_student_issuance_target_privacy_promotion_authority.json'
+      - '04_backend_supabase/stage52_student_issuance_target_privacy_final_authority.json'
+      - '04_backend_supabase/tools/stage52_student_issuance_migration_frontier.py'
       - '04_backend_supabase/tools/verify_stage52_candidate_historical_compat.py'
       - '04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_promotion.py'
+      - '04_backend_supabase/tools/verify_stage52_promotion_historical_compat.py'
       - '.github/workflows/stage52_student_issuance_target_privacy_promotion.yml'
 
 permissions:
@@ -41,12 +47,14 @@ jobs:
 
       - name: Compile Stage52 promotion surfaces
         run: |
+          python -m py_compile 04_backend_supabase/tools/stage52_student_issuance_migration_frontier.py
           python -m py_compile 04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_candidate.py
           python -m py_compile 04_backend_supabase/tools/verify_stage52_candidate_historical_compat.py
           python -m py_compile 04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_promotion.py
+          python -m py_compile 04_backend_supabase/tools/verify_stage52_promotion_historical_compat.py
 
-      - name: Verify Stage52 exact candidate migration promotion
-        run: python 04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_promotion.py
+      - name: Verify Stage52 exact candidate migration promotion under historical projection
+        run: python 04_backend_supabase/tools/verify_stage52_promotion_historical_compat.py
 
       - name: Verify sealed Stage52 candidate under historical projection
         run: python 04_backend_supabase/tools/verify_stage52_candidate_historical_compat.py
