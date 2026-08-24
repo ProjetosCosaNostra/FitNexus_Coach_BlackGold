@@ -12,15 +12,46 @@ HEX64 = re.compile(r"^[0-9a-f]{64}$")
 MIGRATION_NAME = re.compile(
     r"^(?P<version>\d{14})_external_evidence_promotion_(?P<gate>[a-z0-9_]+)\.sql$"
 )
-ELIGIBLE_GATES = {
-    "legal_privacy_notice",
-    "legal_terms_of_use",
-    "legal_role_mapping",
-    "data_subject_request_channel",
-    "incident_response",
-    "production_deployment",
+SOURCE_STAGE_BY_GATE = {
+    "legal_terms_of_use": "STAGE41_LEGAL_TERMS_EXTERNAL_EVIDENCE_PREPARATION",
+    "legal_privacy_notice": "STAGE42_PRIVACY_NOTICE_EXTERNAL_EVIDENCE_PREPARATION",
+    "legal_role_mapping": "STAGE43_LEGAL_ROLE_MAPPING_EXTERNAL_EVIDENCE_PREPARATION",
+    "data_subject_request_channel": "STAGE44_DATA_SUBJECT_REQUEST_EXTERNAL_EVIDENCE_PREPARATION",
+    "incident_response": "STAGE45_INCIDENT_RESPONSE_EXTERNAL_EVIDENCE_PREPARATION",
+    "production_deployment": "STAGE46_PRODUCTION_DEPLOYMENT_EXTERNAL_EVIDENCE_PREPARATION",
 }
+ELIGIBLE_GATES = set(SOURCE_STAGE_BY_GATE)
 
+EXPECTED_KEYS = {
+    "schema_version",
+    "protocol",
+    "project_ref",
+    "gate_code",
+    "source_receipt_stage",
+    "promotion_state",
+    "independent_review_decision",
+    "source_receipt_sha256",
+    "independent_review_receipt_sha256",
+    "source_artifact_review_digest",
+    "review_bundle_digest",
+    "reviewer_reference_digest",
+    "reviewer_independence_attested",
+    "source_artifacts_reviewed_out_of_band_attested",
+    "script_verifies_reviewer_independence",
+    "synthetic_test_fixture",
+    "stage47_aggregate_used_as_external_review_authority",
+    "stage48_regression_used_as_external_review_authority",
+    "stage35_alert_proof_alone_used_for_production_deployment",
+    "gate_ready_attested_by_tool",
+    "remote_apply_performed",
+    "controlled_launch_promoted",
+    "paid_media_promoted",
+    "launch_promoted",
+    "independent_review_completed_at_utc",
+    "evidence_ref",
+    "evidence_digest",
+    "migration_filename",
+}
 REQUIRED_BOOLEAN_TRUE = {
     "reviewer_independence_attested",
     "source_artifacts_reviewed_out_of_band_attested",
@@ -72,6 +103,10 @@ def validate_timestamp(value: Any, field: str) -> None:
 
 
 def validate_authority(authority: dict[str, Any], *, require_migration: bool) -> None:
+    if set(authority) != EXPECTED_KEYS:
+        missing = sorted(EXPECTED_KEYS - set(authority))
+        extra = sorted(set(authority) - EXPECTED_KEYS)
+        fail(f"promotion authority key set drift; missing={missing}; extra={extra}")
     if authority.get("schema_version") != 1:
         fail("schema_version must be 1")
     if authority.get("protocol") != PROTOCOL:
@@ -82,6 +117,10 @@ def validate_authority(authority: dict[str, Any], *, require_migration: bool) ->
     gate = authority.get("gate_code")
     if gate not in ELIGIBLE_GATES:
         fail("gate_code is not eligible for evidence_migration promotion")
+    if authority.get("source_receipt_stage") != SOURCE_STAGE_BY_GATE[gate]:
+        fail("source receipt stage is not canonical for gate")
+    if authority.get("independent_review_decision") != "APPROVED_FOR_EVIDENCE_MIGRATION_DRAFT":
+        fail("independent review decision does not authorize migration drafting")
 
     state = authority.get("promotion_state")
     allowed_states = {
@@ -100,6 +139,8 @@ def validate_authority(authority: dict[str, Any], *, require_migration: bool) ->
     for field in REQUIRED_DIGESTS:
         if not HEX64.fullmatch(str(authority.get(field, ""))):
             fail(f"invalid SHA-256 digest: {field}")
+    if authority["source_receipt_sha256"] == authority["independent_review_receipt_sha256"]:
+        fail("source receipt and independent review receipt must be distinct artifacts")
 
     for field in REQUIRED_BOOLEAN_TRUE:
         if authority.get(field) is not True:
@@ -184,6 +225,7 @@ def render_candidate_sql(authority: dict[str, Any]) -> str:
         "-- STAGE49 OPERATIONS CANDIDATE ONLY — DO NOT APPLY DIRECTLY",
         f"-- EXTERNAL_EVIDENCE_PROMOTION_PROTOCOL={PROTOCOL}",
         f"-- GATE_CODE={authority['gate_code']}",
+        f"-- SOURCE_RECEIPT_STAGE={authority['source_receipt_stage']}",
         f"-- SOURCE_RECEIPT_SHA256={authority['source_receipt_sha256']}",
         f"-- INDEPENDENT_REVIEW_RECEIPT_SHA256={authority['independent_review_receipt_sha256']}",
         f"-- SOURCE_ARTIFACT_REVIEW_DIGEST={authority['source_artifact_review_digest']}",
