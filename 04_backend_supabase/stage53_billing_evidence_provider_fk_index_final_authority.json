@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE53_BILLING_EVIDENCE_PROVIDER_FK_INDEX_FINAL_RECONCILIATION",
+  "baseline_main_sha": "00d670d207a88c4fc299f32bff90f80d2b72023c",
+  "current_state": "PROVIDER_FK_INDEX_REMOTE_APPLIED_UNINDEXED_FK_LINT_CLEARED_ZERO_CUSTOMER_DATA_PROVIDER_STILL_PENDING",
+  "failure_classes": [
+    "BGF-STAGE53-UNINDEXED-BILLING-EVIDENCE-PROVIDER-FK-494",
+    "BGF-STAGE53-UNUSED-INDEX-ZERO-TRAFFIC-FALSE-POSITIVE-495",
+    "BGF-STAGE53-INDEX-DROP-WITHOUT-WORKLOAD-EVIDENCE-496",
+    "BGF-STAGE53-CANDIDATE-DIRECT-APPLY-497",
+    "BGF-STAGE53-BILLING-EVIDENCE-FK-INDEX-GUARD-498",
+    "BGF-STAGE53-STAGE52-FINAL-HISTORICAL-GUARD-FUTURE-LEDGER-PINNING-499",
+    "BGF-STAGE53-PROMOTION-BODY-DRIFT-500",
+    "BGF-STAGE53-HISTORICAL-GUARD-FUTURE-MIGRATION-PINNING-501",
+    "BGF-STAGE53-PREMATURE-REMOTE-APPLY-502",
+    "BGF-STAGE53-PROMOTION-GUARD-503",
+    "BGF-STAGE53-STAGE52-PROMOTION-PROJECTION-FUTURE-REPO-ONLY-504",
+    "BGF-STAGE53-FINAL-REMOTE-RECONCILIATION-GUARD-505"
+  ],
+  "candidate": {
+    "file": "04_backend_supabase/operations/stage53_billing_evidence_provider_fk_index_candidate.sql",
+    "git_blob_sha": "af05593cbb3dc35e692c35700d9f44e2b65c8875",
+    "merged_by_pr": 142,
+    "merged_main_sha": "21eead9f99236f2bb1711b3d3356cfc1d79751c2"
+  },
+  "promotion": {
+    "pull_request": 143,
+    "head_sha": "a38c47696ced49365f917c2e176eaa751d093ea4",
+    "merge_main_sha": "00d670d207a88c4fc299f32bff90f80d2b72023c",
+    "migration_file": "04_backend_supabase/migrations/20260824211500_stage53_billing_evidence_provider_fk_index_hardening.sql",
+    "migration_git_blob_sha": "af05593cbb3dc35e692c35700d9f44e2b65c8875",
+    "candidate_git_blob_sha": "af05593cbb3dc35e692c35700d9f44e2b65c8875",
+    "exact_candidate_blob_reused": true,
+    "first_promotion_run": 32779066227,
+    "first_promotion_result": "FAIL_STAGE52_PROMOTION_HISTORICAL_PROJECTION_RETAINED_FUTURE_REPO_ONLY",
+    "corrected_promotion_run": 32779184039,
+    "corrected_promotion_result": "SUCCESS",
+    "flutter_quality_gate_run": 32779184019,
+    "flutter_quality_gate_result": "SUCCESS",
+    "stage52_promotion_future_frontier_guard_repaired": true,
+    "consumed_live_proofs_reexecuted": false
+  },
+  "remote_apply": {
+    "migration_name": "stage53_billing_evidence_provider_fk_index_hardening",
+    "remote_version": "20260824212635",
+    "applied_via": "Supabase.apply_migration",
+    "apply_count": 1,
+    "reapply_allowed": false,
+    "execute_sql_used_for_dml_or_ddl": false,
+    "index_drop_performed": false,
+    "provider_activation_performed": false,
+    "provider_called": false,
+    "customer_data_used": false
+  },
+  "fresh_post_apply_remote_receipt": {
+    "source": "Supabase.list_migrations+Supabase.execute_sql_read_only+Supabase.get_advisors(performance)",
+    "observed_at_utc": "2026-08-24T21:28:44.870436+00:00",
+    "billing_evidence_rows": 0,
+    "auth_users": 0,
+    "organizations": 0,
+    "runtime_role_table_grant_count": 0,
+    "provider_code_index_present": true,
+    "provider_code_index_definition": "CREATE INDEX billing_provider_external_evidence_provider_code_idx ON private.billing_provider_external_evidence USING btree (provider_code)",
+    "unindexed_foreign_key_lint_present": false,
+    "new_index_reported_unused": true,
+    "unused_index_is_drop_authority": false,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "stage52_target_privacy_preserved": true,
+    "remote_mutation_after_apply": false
+  },
+  "migration_ledger": {
+    "comparison_key": "migration_name",
+    "baseline_main_sha": "00d670d207a88c4fc299f32bff90f80d2b72023c",
+    "observed_at_utc": "2026-08-24T21:27:00.913268Z",
+    "stage53_remote_version": "20260824212635",
+    "stage53_repo_only_count": 0,
+    "historical_stage17_remote_only_count": 3,
+    "other_repo_only_count": 0,
+    "undeclared_divergence_allowed": false
+  },
+  "performance_policy": {
+    "unindexed_foreign_key_fixed": true,
+    "covering_index_added": true,
+    "existing_indexes_removed": false,
+    "unused_index_lints_removed": false,
+    "reason_unused_indexes_preserved": "The assessed system still has effectively zero customer workload. An unused-index counter without representative traffic is not sufficient authority to remove indexes that may be required by foreign keys, operational queries, or future load.",
+    "future_index_removal_requires_representative_workload_evidence": true
+  },
+  "security_and_product_invariants": {
+    "foreign_key_definition_changed": false,
+    "billing_evidence_rows_changed": false,
+    "runtime_grants_changed": false,
+    "billing_provider_state_changed": false,
+    "stage52_student_target_privacy_changed": false,
+    "security_definer_authenticated_manager_boundary_changed": false,
+    "billing_provider_credentials_ready": false,
+    "provider_activation_performed": false,
+    "provider_call_performed": false
+  },
+  "gates": {
+    "stage53_hardening": "PASS_REMOTE_RECONCILED",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "provider_activation": "DENIED",
+    "provider_call": "DENIED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
