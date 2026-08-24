@@ -8,7 +8,9 @@ on:
       - '04_backend_supabase/migration_ledger_authority.json'
       - '04_backend_supabase/migrations/20260824003000_stage40_billing_production_environment_interlock.sql'
       - '04_backend_supabase/stage40_billing_production_environment_interlock_promotion_authority.json'
+      - '04_backend_supabase/tools/stage40_billing_migration_frontier.py'
       - '04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_promotion.py'
+      - '04_backend_supabase/tools/verify_stage40_promotion_historical_compat.py'
       - '.github/workflows/stage40_billing_production_environment_interlock_promotion.yml'
 
 permissions:
@@ -21,14 +23,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Compile Stage40 promotion guard
-        run: python -m py_compile 04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_promotion.py
+      - name: Compile Stage40 promotion guards
+        run: >-
+          python -m py_compile
+          04_backend_supabase/tools/stage40_billing_migration_frontier.py
+          04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_promotion.py
+          04_backend_supabase/tools/verify_stage40_promotion_historical_compat.py
 
       - name: Migration ledger contract guard
         run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
 
-      - name: Stage40 exact migration promotion guard
-        run: python 04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_promotion.py
+      - name: Stage40 exact migration promotion guard under historical projection
+        run: python 04_backend_supabase/tools/verify_stage40_promotion_historical_compat.py
 
       - name: Billing provider historical contract guard
         run: python 04_backend_supabase/tools/verify_billing_provider_contract.py
