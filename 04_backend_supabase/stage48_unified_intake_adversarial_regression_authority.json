@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE48_UNIFIED_INTAKE_ADVERSARIAL_REGRESSION",
+  "baseline_main_sha": "1394df63f850cae43cb0a6d43e29e31f7718689b",
+  "current_state": "ADVERSARIAL_REGRESSION_PREPARED_FAIL_CLOSED_NO_EXTERNAL_EVIDENCE_NO_REMOTE_MUTATION",
+  "stage47_pins": {
+    "authority_path": "04_backend_supabase/stage47_unified_external_evidence_intake_orchestration_authority.json",
+    "authority_git_blob_sha": "9a8d504d3462a926014ced34508cdf42babbff46",
+    "orchestrator_path": "04_backend_supabase/tools/review_stage47_external_evidence_bundle.py",
+    "orchestrator_git_blob_sha": "73a3e184bf9128ffec8645d6f5629a03e3c791a3"
+  },
+  "fresh_remote_read_only_receipt": {
+    "observed_at_utc": "2026-08-24T17:43:27.273595+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "billing_provider_state": "selected_pending_credentials",
+    "billing_provider_activated_at": null,
+    "external_billing_evidence_rows": 0,
+    "ready_evidence_migration_count": 0,
+    "blocked_evidence_migration_gate_count": 6,
+    "stage40_activation_production_environment_interlock": true,
+    "stage40_readiness_production_environment_interlock": true,
+    "remote_mutation_performed": false
+  },
+  "adversarial_matrix": [
+    {
+      "case": "EMPTY_INVENTORY",
+      "expected_exit_code": 0,
+      "expected_state": "INCOMPLETE_MISSING_EXTERNAL_EVIDENCE",
+      "expected_missing": 7
+    },
+    {
+      "case": "EMPTY_COMPLETE_MODE",
+      "expected_exit_code": 3,
+      "expected_state": "INCOMPLETE_MISSING_EXTERNAL_EVIDENCE",
+      "expected_missing": 7
+    },
+    {
+      "case": "STAGE35_RECEIPT_MASQUERADE",
+      "expected_exit_code": 2,
+      "expected_state": "INVALID_EXTERNAL_EVIDENCE_CANDIDATE_PRESENT",
+      "expected_unknown": 1
+    },
+    {
+      "case": "DUPLICATE_CANONICAL_SOURCE_STAGE",
+      "expected_exit_code": 2,
+      "expected_state": "INVALID_EXTERNAL_EVIDENCE_CANDIDATE_PRESENT",
+      "expected_duplicate": 1
+    },
+    {
+      "case": "CANONICAL_REVIEWER_REJECTS_MALFORMED_RECEIPT",
+      "expected_exit_code": 2,
+      "expected_state": "INVALID_EXTERNAL_EVIDENCE_CANDIDATE_PRESENT",
+      "expected_reviewer_status": "INVALID_BY_CANONICAL_REVIEWER"
+    },
+    {
+      "case": "OUTPUT_SELF_INGESTION",
+      "expected_second_exit_code": 0,
+      "expected_state": "INCOMPLETE_MISSING_EXTERNAL_EVIDENCE",
+      "expected_unknown": 0
+    }
+  ],
+  "non_evidence_fixture_contract": {
+    "fixtures_are_intentionally_malformed": true,
+    "fixtures_are_external_evidence": false,
+    "fixtures_can_promote_gate": false,
+    "fixtures_can_create_evidence_migration": false,
+    "fixtures_can_trigger_provider_call": false,
+    "fixtures_can_trigger_deployment": false,
+    "real_customer_data_used": false,
+    "raw_secret_used": false,
+    "network_call_performed": false,
+    "supabase_mutation_performed": false
+  },
+  "failure_classes": [
+    "BGF-STAGE48-STAGE35-RECEIPT-MASQUERADE-443",
+    "BGF-STAGE48-DUPLICATE-ROUTE-AMBIGUITY-444",
+    "BGF-STAGE48-COMPLETE-MODE-MISSING-FALSE-GREEN-445",
+    "BGF-STAGE48-CANONICAL-REVIEWER-FAILURE-SWALLOW-446",
+    "BGF-STAGE48-AGGREGATE-SOURCE-PATH-LEAKAGE-447",
+    "BGF-STAGE48-OUTPUT-SELF-INGESTION-448",
+    "BGF-STAGE48-ADVERSARIAL-REGRESSION-GUARD-449"
+  ],
+  "gates": {
+    "billing_provider_credentials": "DENIED",
+    "legal_terms_of_use": "DENIED",
+    "legal_privacy_notice": "DENIED",
+    "legal_role_mapping": "DENIED",
+    "data_subject_request_channel": "DENIED",
+    "incident_response": "DENIED",
+    "production_deployment": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
