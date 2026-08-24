@@ -1,0 +1,92 @@
+name: Stage47 Unified External Evidence Intake Orchestration
+
+on:
+  pull_request:
+    paths:
+      - "04_backend_supabase/stage47_unified_external_evidence_intake_orchestration_authority.json"
+      - "04_backend_supabase/tools/review_stage47_external_evidence_bundle.py"
+      - "04_backend_supabase/tools/verify_stage47_unified_external_evidence_intake_orchestration.py"
+      - ".github/workflows/stage47_unified_external_evidence_intake_orchestration.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stage47-unified-intake:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Compile Stage47 Python surfaces
+        run: |
+          python -m py_compile \
+            04_backend_supabase/tools/review_stage47_external_evidence_bundle.py \
+            04_backend_supabase/tools/verify_stage47_unified_external_evidence_intake_orchestration.py
+
+      - name: Verify Stage47 orchestration contract
+        run: python 04_backend_supabase/tools/verify_stage47_unified_external_evidence_intake_orchestration.py
+
+      - name: Prove empty inventory remains incomplete and non-authoritative
+        run: |
+          mkdir -p "$RUNNER_TEMP/stage47-empty"
+          python 04_backend_supabase/tools/review_stage47_external_evidence_bundle.py \
+            --bundle-dir "$RUNNER_TEMP/stage47-empty" \
+            --output "$RUNNER_TEMP/stage47-aggregate.json" \
+            --mode inventory
+          AGGREGATE="$RUNNER_TEMP/stage47-aggregate.json" python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          data = json.loads(Path(os.environ["AGGREGATE"]).read_text(encoding="utf-8"))
+          assert data["overall_state"] == "INCOMPLETE_MISSING_EXTERNAL_EVIDENCE"
+          assert data["expected_receipt_count"] == 7
+          assert data["valid_structural_candidate_count"] == 0
+          assert data["missing_receipt_count"] == 7
+          assert data["duplicate_source_stage_count"] == 0
+          assert data["unknown_or_unreadable_json_receipt_count"] == 0
+          assert data["invalid_candidate_count"] == 0
+          assert len(data["entries"]) == 7
+          assert all(item["status"] == "MISSING" for item in data["entries"])
+          flags = data["authority_flags"]
+          assert flags and all(value is False for value in flags.values())
+          print("STAGE47_EMPTY_INVENTORY_FAIL_CLOSED=PASS")
+          PY
+
+      - name: Verify migration ledger authority
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify Stage40 final remote reconciliation
+        run: python 04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_final_reconciliation.py
+
+      - name: Verify Stage39 billing credential preparation
+        run: python 04_backend_supabase/tools/verify_stage39_billing_credential_authority_preparation.py
+
+      - name: Verify Stage41 legal terms preparation
+        run: python 04_backend_supabase/tools/verify_stage41_legal_terms_external_evidence_preparation.py
+
+      - name: Verify Stage42 privacy notice preparation
+        run: python 04_backend_supabase/tools/verify_stage42_privacy_notice_external_evidence_preparation.py
+
+      - name: Verify Stage43 legal role mapping preparation
+        run: python 04_backend_supabase/tools/verify_stage43_legal_role_mapping_external_evidence_preparation.py
+
+      - name: Verify Stage44 data subject request preparation
+        run: python 04_backend_supabase/tools/verify_stage44_data_subject_request_external_evidence_preparation.py
+
+      - name: Verify Stage45 incident response preparation
+        run: python 04_backend_supabase/tools/verify_stage45_incident_response_external_evidence_preparation.py
+
+      - name: Verify Stage46 production deployment preparation
+        run: python 04_backend_supabase/tools/verify_stage46_production_deployment_external_evidence_preparation.py
+
+      - name: Verify controlled-launch admission contract
+        run: python 04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+
+      - name: Verify external evidence placeholders contract
+        run: python 04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py
+
+      - name: Verify PostgreSQL view replacement compatibility
+        run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py
