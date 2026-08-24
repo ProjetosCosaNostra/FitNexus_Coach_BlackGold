@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE51_SECURITY_DEFINER_ADVISOR_RECONCILIATION",
+  "baseline_main_sha": "b0e750cbac2dc5f519400e5dbfab7fd5893cf497",
+  "current_state": "ADVISOR_WARNING_RECONCILED_AS_INTENTIONAL_MANAGER_BOUNDARY_NO_PRIVILEGE_CHANGE_NO_REMOTE_MUTATION",
+  "advisor_snapshot": {
+    "security_warning_count": 1,
+    "lint_name": "authenticated_security_definer_function_executable",
+    "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+    "level": "WARN",
+    "facing": "EXTERNAL",
+    "function": "public.issue_student_access_token_v2(p_student_id uuid)",
+    "remediation_url": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+    "classification": "EXPECTED_INTENTIONAL_AUTHENTICATED_MANAGER_WRAPPER",
+    "warning_suppressed_or_removed": false
+  },
+  "sealed_repository_authority": {
+    "security_definer_exposure_authority": {
+      "path": "04_backend_supabase/security_definer_exposure_authority.json",
+      "git_blob_sha": "e00fa2577f2a06eee6a0ef430f3aba79aa4f358e",
+      "approved_exposure": "issue_student_access_token_v2(uuid) authenticated-only professor_manager_authority"
+    },
+    "security_definer_exposure_guard": {
+      "path": "04_backend_supabase/tools/verify_security_definer_exposure_authority.py",
+      "git_blob_sha": "3081f3f94da6af9a1b00494b46ff159d302e0e2e"
+    },
+    "issuance_authority_migration": {
+      "path": "04_backend_supabase/migrations/20260819105200_stage21_student_access_issuance_authority_hardening.sql",
+      "git_blob_sha": "7a15f40b936c137c86735783179b1df4b6bc663d"
+    },
+    "issuance_authority_guard": {
+      "path": "04_backend_supabase/tools/verify_student_access_issuance_authority.py",
+      "git_blob_sha": "d62324c474c524bb380978400585b8511495b8c1"
+    }
+  },
+  "fresh_remote_read_only_receipt": {
+    "observed_at_utc": "2026-08-24T18:36:24.191541+00:00",
+    "v2_owner": "postgres",
+    "v2_security_definer": true,
+    "v2_anon_execute": false,
+    "v2_authenticated_execute": true,
+    "v2_service_role_execute": true,
+    "v2_auth_required_marker": true,
+    "v2_student_org_lookup_marker": true,
+    "v2_manager_check_marker": true,
+    "v2_rotation_lookup_marker": true,
+    "v2_v1_call_marker": true,
+    "v2_auth_before_manager": true,
+    "v2_manager_before_rotation_lookup": true,
+    "v2_rotation_before_v1_call": true,
+    "manager_security_definer": true,
+    "manager_auth_uid_marker": true,
+    "manager_owner_admin_marker": true,
+    "v1_security_definer": true,
+    "v1_anon_execute": false,
+    "v1_authenticated_execute": false,
+    "v1_service_role_execute": true,
+    "v1_manager_check_marker": true,
+    "remote_mutation_performed": false
+  },
+  "decision": {
+    "authenticated_v2_execute_is_intentional": true,
+    "authenticated_v2_execute_is_explicitly_allowlisted": true,
+    "anonymous_v2_execute_must_remain_denied": true,
+    "v2_security_definer_is_required_by_current_architecture": true,
+    "v2_must_check_auth_uid_before_student_or_rotation_authority": true,
+    "v2_must_check_org_manager_before_rotation_state_lookup": true,
+    "v2_must_call_mature_v1_only_after_v2_authority_checks": true,
+    "v1_direct_authenticated_execute_must_remain_denied": true,
+    "service_role_v1_execute_must_remain_available": true,
+    "advisor_warning_is_equivalent_to_vulnerability": false,
+    "automatic_revoke_execute_allowed": false,
+    "automatic_switch_to_security_invoker_allowed": false,
+    "automatic_move_out_of_public_schema_allowed": false,
+    "privilege_change_required_now": false,
+    "ddl_change_required_now": false,
+    "remote_mutation_required_now": false,
+    "future_drift_requires_fail_closed_review": true
+  },
+  "future_fail_closed_conditions": [
+    "issue_student_access_token_v2 gains anon EXECUTE",
+    "issue_student_access_token_v2 loses explicit authenticated-only allowlist authority without reviewed replacement",
+    "auth.uid() guard disappears or moves after sensitive rotation-state inspection",
+    "private.is_org_manager guard disappears or moves after rotation-state inspection",
+    "issue_student_access_token_v2 calls v1 before v2 authority checks",
+    "public.issue_student_access_token(uuid) gains anon or authenticated EXECUTE",
+    "repository SECURITY DEFINER exposure set gains a new unallowlisted external role/function",
+    "Supabase Security Advisor reports an additional SECURITY DEFINER exposure not present in the explicit repository allowlist"
+  ],
+  "failure_classes": [
+    "BGF-STAGE51-ADVISOR-WARNING-UNRECONCILED-474",
+    "BGF-STAGE51-ISSUANCE-ALLOWLIST-DRIFT-475",
+    "BGF-STAGE51-ANON-ISSUANCE-EXPOSURE-476",
+    "BGF-STAGE51-MANAGER-AUTHORITY-ORDER-DRIFT-477",
+    "BGF-STAGE51-V1-DIRECT-AUTHENTICATED-EXPOSURE-478",
+    "BGF-STAGE51-ADVISOR-AUTO-REMEDIATION-479",
+    "BGF-STAGE51-SECURITY-DEFINER-ADVISOR-RECONCILIATION-GUARD-480"
+  ],
+  "gates": {
+    "security_advisor_reconciliation": "PASS_INTENTIONAL_EXPOSURE_REVIEWED_NO_CHANGE",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
