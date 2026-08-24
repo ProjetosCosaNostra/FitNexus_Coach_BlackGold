@@ -96,10 +96,11 @@ def to_promotion(ledger: dict) -> dict:
         row for row in projected.get("remote_migrations", [])
         if not (isinstance(row, dict) and row.get("name") == NAME)
     ]
-    remote_only, repo_only = divergences(projected)
-    projected["declared_divergences"] = remote_only + [
-        row for row in repo_only if row.get("name") != NAME
-    ] + [clone(PROMOTION_REPO_ONLY)]
+    remote_only, _repo_only = divergences(projected)
+    # Historical projection must never carry later-stage repo-only declarations
+    # backward into the sealed Stage38 promotion frontier. The exact historical
+    # frontier had only the Stage38 repo-only declaration.
+    projected["declared_divergences"] = remote_only + [clone(PROMOTION_REPO_ONLY)]
     state(projected)
     return projected
 
