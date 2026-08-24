@@ -1,0 +1,52 @@
+name: Stage 40 Billing Production Environment Interlock Candidate
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/operations/stage40_billing_production_environment_interlock_candidate.sql'
+      - '04_backend_supabase/stage40_billing_production_environment_interlock_candidate_authority.json'
+      - '04_backend_supabase/tools/review_stage39_billing_credential_evidence_receipt.py'
+      - '04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_candidate.py'
+      - '.github/workflows/stage40_billing_production_environment_interlock_candidate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-stage40-candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Compile Stage40 guard and Stage39 receipt reviewer
+        run: >-
+          python -m py_compile
+          04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_candidate.py
+          04_backend_supabase/tools/review_stage39_billing_credential_evidence_receipt.py
+
+      - name: Migration ledger contract remains green
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Stage38 final reconciliation remains green
+        run: python 04_backend_supabase/tools/verify_stage38_billing_evidence_bound_activation_final_reconciliation.py
+
+      - name: Stage39 preparation remains green
+        run: python 04_backend_supabase/tools/verify_stage39_billing_credential_authority_preparation.py
+
+      - name: Stage40 production environment interlock candidate guard
+        run: python 04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_candidate.py
+
+      - name: Billing provider historical contract remains green
+        run: python 04_backend_supabase/tools/verify_billing_provider_contract.py
+
+      - name: Controlled launch historical contract remains green
+        run: python 04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+
+      - name: External gate placeholders remain non-attestation
+        run: python 04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py
+
+      - name: PostgreSQL CREATE OR REPLACE VIEW compatibility guard
+        run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py
