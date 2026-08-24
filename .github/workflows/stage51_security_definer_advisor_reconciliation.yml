@@ -1,0 +1,46 @@
+name: Stage51 Security Definer Advisor Reconciliation
+
+on:
+  pull_request:
+    paths:
+      - "04_backend_supabase/stage51_security_definer_advisor_reconciliation_authority.json"
+      - "04_backend_supabase/tools/verify_stage51_security_definer_advisor_reconciliation.py"
+      - ".github/workflows/stage51_security_definer_advisor_reconciliation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stage51-advisor-reconciliation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Compile Stage51 guard
+        run: python -m py_compile 04_backend_supabase/tools/verify_stage51_security_definer_advisor_reconciliation.py
+
+      - name: Verify Stage51 advisor reconciliation
+        run: python 04_backend_supabase/tools/verify_stage51_security_definer_advisor_reconciliation.py
+
+      - name: Verify SECURITY DEFINER exposure authority
+        run: python 04_backend_supabase/tools/verify_security_definer_exposure_authority.py
+
+      - name: Verify student access issuance authority
+        run: python 04_backend_supabase/tools/verify_student_access_issuance_authority.py
+
+      - name: Verify student access security contract
+        run: python 04_backend_supabase/tools/verify_student_access_security_contract.py
+
+      - name: Verify Stage49 promotion boundary
+        run: python 04_backend_supabase/tools/verify_stage49_evidence_migration_promotion_boundary.py
+
+      - name: Verify Stage50 evidence-promotion adversarial regression
+        run: python 04_backend_supabase/tools/verify_stage50_evidence_promotion_adversarial_regression.py
+
+      - name: Verify migration ledger authority
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify PostgreSQL view replacement compatibility
+        run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py
