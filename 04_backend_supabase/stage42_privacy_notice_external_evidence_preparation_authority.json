@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE42_PRIVACY_NOTICE_EXTERNAL_EVIDENCE_PREPARATION",
+  "baseline_main_sha": "007e0dc6470792eb2ac53e1285e40c190bdba8c5",
+  "current_state": "PREPARED_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE_REQUIRED_NO_ATTESTATION_NO_GATE_PROMOTION",
+  "failure_classes": [
+    "BGF-STAGE42-PRIVACY-NOTICE-SELF-ATTESTATION-377",
+    "BGF-STAGE42-PRIVACY-NOTICE-UNSTABLE-PUBLICATION-REFERENCE-378",
+    "BGF-STAGE42-PRIVACY-NOTICE-PROCESSOR-INVENTORY-OMISSION-379",
+    "BGF-STAGE42-PRIVACY-NOTICE-RETENTION-MATRIX-OMISSION-380",
+    "BGF-STAGE42-PRIVACY-NOTICE-TRANSFER-REVIEW-OMISSION-381",
+    "BGF-STAGE42-PRIVACY-NOTICE-ENCARREGADO-REVIEW-OMISSION-382",
+    "BGF-STAGE42-PRIVACY-NOTICE-PREMATURE-EVIDENCE-MIGRATION-383"
+  ],
+  "upstream_authority": {
+    "stage41_terms_preparation": "04_backend_supabase/stage41_legal_terms_external_evidence_preparation_authority.json",
+    "stage41_terms_preparation_blob": "41479a4f422c1f7ce5ef6e86fb72bde4881dc40d",
+    "legal_terms_gate_state": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "controlled_launch": "DENIED"
+  },
+  "source_contracts": {
+    "external_gate_placeholders_file": "04_backend_supabase/external_gate_evidence_placeholders.json",
+    "external_gate_placeholders_blob": "07e6eb3330076f3e576ed2dd2a2e385f5fa3b2db",
+    "stage20_migration_file": "04_backend_supabase/migrations/20260819062000_stage20_controlled_launch_admission.sql",
+    "stage20_migration_blob": "e26dd18eff1f4dbf099ad721963b06d6362bc3b9"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-24T00:47:54.646843+00:00",
+    "gate_code": "legal_privacy_notice",
+    "category": "privacy",
+    "authority_mode": "evidence_migration",
+    "mandatory": true,
+    "state": "blocked",
+    "evidence_ref": null,
+    "evidence_digest": null,
+    "ready_evidence_migration_count": 0,
+    "remote_mutation_performed": false
+  },
+  "required_real_evidence": {
+    "legal_reviewer_reference": {"required": true, "rule": "Must identify a real independent legal/privacy review authority; preparation cannot self-attest it."},
+    "approved_privacy_notice_document": {"required": true, "digest": "sha256", "rule": "Real approved privacy notice artifact; receipt stores only SHA-256."},
+    "approved_privacy_notice_version": {"required": true, "rule": "Explicit reviewed version bound to publication."},
+    "stable_published_privacy_url": {"required": true, "scheme": "https", "rule": "Stable public production privacy route; placeholder, local, staging and preview routes rejected."},
+    "effective_date": {"required": true, "rule": "Explicit reviewed effective date; collector never infers it."},
+    "processor_subprocessor_inventory_artifact": {"required": true, "digest": "sha256", "rule": "Reviewed processor/subprocessor inventory reference artifact."},
+    "retention_matrix_artifact": {"required": true, "digest": "sha256", "rule": "Reviewed retention matrix reference artifact."},
+    "international_transfer_review_artifact": {"required": true, "digest": "sha256", "rule": "Reviewed transfer analysis must exist even when the conclusion is not-applicable."},
+    "international_transfer_applicability": {"required": true, "allowed_values": ["APPLICABLE", "NOT_APPLICABLE_REVIEWED"], "rule": "Applicability must come from reviewed evidence, never inference by the collector."},
+    "encarregado_or_exemption_contact_review_artifact": {"required": true, "digest": "sha256", "rule": "Reviewed encarregado, lawful exemption and/or contact-channel determination artifact."}
+  },
+  "collector_contract": {
+    "script": "04_backend_supabase/tools/collect_stage42_privacy_notice_evidence.ps1",
+    "output_kind": "DIGEST_ONLY_PRIVACY_NOTICE_EVIDENCE_INTAKE_CANDIDATE",
+    "network_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "privacy_or_legal_review_self_attestation_allowed": false,
+    "raw_artifact_content_copied_to_receipt": false,
+    "artifact_path_or_filename_copied_to_receipt": false,
+    "personal_or_secret_material_allowed": false,
+    "receipt_can_mark_gate_ready": false,
+    "receipt_can_promote_controlled_launch": false
+  },
+  "independent_review_boundary": {
+    "receipt_is_candidate_only": true,
+    "reviewer_must_confirm_real_legal_privacy_authority": true,
+    "reviewer_must_confirm_published_url_matches_reviewed_version": true,
+    "reviewer_must_confirm_processor_subprocessor_inventory": true,
+    "reviewer_must_confirm_retention_matrix": true,
+    "reviewer_must_confirm_transfer_applicability_conclusion": true,
+    "reviewer_must_confirm_encarregado_or_exemption_contact_determination": true,
+    "dedicated_evidence_migration_allowed_only_after_real_review": true,
+    "gate_ready_state_before_real_review": false
+  },
+  "next_sequence_after_valid_real_evidence": [
+    {"step": 1, "name": "COLLECT_DIGEST_ONLY_RECEIPT", "rule": "Hash real reviewed artifacts and record only non-sensitive metadata; no network/database mutation."},
+    {"step": 2, "name": "INDEPENDENTLY_REVIEW_RECEIPT_AND_SOURCE_ARTIFACTS", "rule": "Confirm review authority, publication/version, inventory, retention, transfer and encarregado/contact evidence."},
+    {"step": 3, "name": "PROMOTE_DEDICATED_EVIDENCE_MIGRATION", "rule": "Only after real review, create a separate versioned migration updating exactly legal_privacy_notice with evidence_ref and evidence_digest."},
+    {"step": 4, "name": "MERGE_GREEN_THEN_APPLY_ONCE", "rule": "Apply exact merged evidence migration via Supabase.apply_migration only; execute_sql remains SELECT-only."}
+  ],
+  "gates": {
+    "stage42_preparation": "REPO_ONLY_PENDING_CI",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
