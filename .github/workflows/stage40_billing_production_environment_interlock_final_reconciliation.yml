@@ -1,0 +1,62 @@
+name: Stage 40 Billing Production Environment Interlock Final Reconciliation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/migrations/20260824003000_stage40_billing_production_environment_interlock.sql'
+      - '04_backend_supabase/stage40_billing_production_environment_interlock_promotion_authority.json'
+      - '04_backend_supabase/stage40_billing_production_environment_interlock_final_authority.json'
+      - '04_backend_supabase/tools/stage40_billing_migration_frontier.py'
+      - '04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_promotion.py'
+      - '04_backend_supabase/tools/verify_stage40_promotion_historical_compat.py'
+      - '04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_final_reconciliation.py'
+      - '.github/workflows/stage40_billing_production_environment_interlock_promotion.yml'
+      - '.github/workflows/stage40_billing_production_environment_interlock_final_reconciliation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-stage40-final-reconciliation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Compile Stage40 frontier and guards
+        run: >-
+          python -m py_compile
+          04_backend_supabase/tools/stage40_billing_migration_frontier.py
+          04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_promotion.py
+          04_backend_supabase/tools/verify_stage40_promotion_historical_compat.py
+          04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_final_reconciliation.py
+
+      - name: Migration ledger contract guard
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Stage40 final remote reconciliation guard
+        run: python 04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_final_reconciliation.py
+
+      - name: Stage40 historical promotion projection guard
+        run: python 04_backend_supabase/tools/verify_stage40_promotion_historical_compat.py
+
+      - name: Stage38 final historical projection guard
+        run: python 04_backend_supabase/tools/verify_stage38_final_historical_compat.py
+
+      - name: Stage35 final reconciliation historical projection guard
+        run: python 04_backend_supabase/tools/verify_stage35_final_reconciliation_historical_compat.py
+
+      - name: Billing provider historical contract guard
+        run: python 04_backend_supabase/tools/verify_billing_provider_contract.py
+
+      - name: Controlled launch historical contract guard
+        run: python 04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+
+      - name: External gate placeholder guard
+        run: python 04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py
+
+      - name: PostgreSQL CREATE OR REPLACE VIEW compatibility guard
+        run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py
