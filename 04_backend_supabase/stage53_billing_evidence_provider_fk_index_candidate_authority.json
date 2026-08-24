@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE53_BILLING_EVIDENCE_PROVIDER_FK_INDEX_CANDIDATE",
+  "baseline_main_sha": "64d9ddbbb010a0f11895a99b998fce479db2fb0c",
+  "current_state": "REPO_ONLY_INDEX_CANDIDATE_PERFORMANCE_LINT_CONFIRMED_NO_REMOTE_APPLY",
+  "failure_classes": [
+    "BGF-STAGE53-UNINDEXED-BILLING-EVIDENCE-PROVIDER-FK-494",
+    "BGF-STAGE53-UNUSED-INDEX-ZERO-TRAFFIC-FALSE-POSITIVE-495",
+    "BGF-STAGE53-INDEX-DROP-WITHOUT-WORKLOAD-EVIDENCE-496",
+    "BGF-STAGE53-CANDIDATE-DIRECT-APPLY-497",
+    "BGF-STAGE53-BILLING-EVIDENCE-FK-INDEX-GUARD-498"
+  ],
+  "upstream_pins": {
+    "stage38_migration": {
+      "file": "04_backend_supabase/migrations/20260823174500_stage38_billing_evidence_bound_activation.sql",
+      "git_blob_sha": "a09aa83eb6eb24739ad0a73b7c08db3185eb4f63"
+    },
+    "stage52_final_authority": {
+      "file": "04_backend_supabase/stage52_student_issuance_target_privacy_final_authority.json",
+      "git_blob_sha": "075824c55ce463a0863211e4bffecdd8b111a4e9",
+      "state": "TARGET_PRIVACY_HARDENING_REMOTE_APPLIED_ZERO_CUSTOMER_DATA_PRIVILEGES_PRESERVED"
+    }
+  },
+  "candidate": {
+    "file": "04_backend_supabase/operations/stage53_billing_evidence_provider_fk_index_candidate.sql",
+    "git_blob_sha": "af05593cbb3dc35e692c35700d9f44e2b65c8875",
+    "index_name": "billing_provider_external_evidence_provider_code_idx",
+    "schema": "private",
+    "table": "billing_provider_external_evidence",
+    "columns": ["provider_code"],
+    "method": "btree",
+    "if_not_exists": true,
+    "migration_created": false,
+    "remote_apply_allowed": false
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.get_advisors(performance)+Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-24T21:05:37.446284+00:00",
+    "unindexed_foreign_key_lint": {
+      "lint_name": "unindexed_foreign_keys",
+      "schema": "private",
+      "table": "billing_provider_external_evidence",
+      "constraint": "billing_provider_external_evidence_provider_code_fkey",
+      "column": "provider_code",
+      "present": true
+    },
+    "provider_code_fk_definition": "FOREIGN KEY (provider_code) REFERENCES billing_provider_registry(provider_code) ON UPDATE RESTRICT ON DELETE RESTRICT",
+    "existing_indexes": [
+      "billing_provider_external_evidence_pkey(scope,provider_code,evidence_version)"
+    ],
+    "provider_code_leading_index_present": false,
+    "table_row_count": 0,
+    "runtime_role_table_grants": [],
+    "asaas_scope": "BR_V1",
+    "asaas_provider": "asaas",
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "remote_mutation_performed": false
+  },
+  "advisor_policy": {
+    "fix_unindexed_foreign_key": true,
+    "drop_unused_indexes_in_same_stage": false,
+    "reason_unused_index_not_removed": "The project currently has zero customer rows/users in the assessed domain, so unused-index counters do not establish safe removal authority. Removal requires workload evidence after meaningful traffic.",
+    "unused_index_findings_are_removal_authority": false
+  },
+  "hardening_contract": {
+    "dedicated_provider_code_leading_index_required": true,
+    "primary_key_is_not_provider_code_leading": true,
+    "foreign_key_definition_unchanged": true,
+    "table_data_unchanged": true,
+    "table_grants_unchanged": true,
+    "billing_provider_state_unchanged": true,
+    "billing_external_evidence_state_unchanged": true,
+    "provider_activation_performed": false,
+    "provider_call_performed": false,
+    "controlled_launch_promoted": false,
+    "production_deployment_promoted": false,
+    "paid_media_promoted": false,
+    "launch_promoted": false
+  },
+  "gates": {
+    "stage53_candidate": "PENDING_CI",
+    "stage53_migration_promotion": "DENIED_UNTIL_CANDIDATE_GREEN_MERGED",
+    "stage53_remote_apply": "DENIED_UNTIL_VERSIONED_MIGRATION_GREEN_MERGED",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
