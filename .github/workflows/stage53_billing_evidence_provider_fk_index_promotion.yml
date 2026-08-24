@@ -1,0 +1,78 @@
+name: Stage53 Billing Evidence Provider FK Index Promotion
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/migrations/20260824211500_stage53_billing_evidence_provider_fk_index_hardening.sql'
+      - '04_backend_supabase/operations/stage53_billing_evidence_provider_fk_index_candidate.sql'
+      - '04_backend_supabase/stage53_billing_evidence_provider_fk_index_candidate_authority.json'
+      - '04_backend_supabase/stage53_billing_evidence_provider_fk_index_promotion_authority.json'
+      - '04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_candidate.py'
+      - '04_backend_supabase/tools/verify_stage53_candidate_historical_compat.py'
+      - '04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_promotion.py'
+      - '04_backend_supabase/tools/verify_stage52_final_historical_compat.py'
+      - '.github/workflows/stage53_billing_evidence_provider_fk_index_promotion.yml'
+  push:
+    branches:
+      - 'blackgold/stage53-*'
+    paths:
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/migrations/20260824211500_stage53_billing_evidence_provider_fk_index_hardening.sql'
+      - '04_backend_supabase/stage53_billing_evidence_provider_fk_index_promotion_authority.json'
+      - '04_backend_supabase/tools/verify_stage53_candidate_historical_compat.py'
+      - '04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_promotion.py'
+      - '04_backend_supabase/tools/verify_stage52_final_historical_compat.py'
+      - '.github/workflows/stage53_billing_evidence_provider_fk_index_promotion.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stage53-billing-evidence-provider-fk-index-promotion:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Compile Stage53 promotion surfaces
+        run: |
+          python -m py_compile 04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_candidate.py
+          python -m py_compile 04_backend_supabase/tools/verify_stage53_candidate_historical_compat.py
+          python -m py_compile 04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_promotion.py
+          python -m py_compile 04_backend_supabase/tools/verify_stage52_final_historical_compat.py
+
+      - name: Verify Stage53 exact candidate migration promotion
+        run: python 04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_promotion.py
+
+      - name: Verify sealed Stage53 candidate under historical projection
+        run: python 04_backend_supabase/tools/verify_stage53_candidate_historical_compat.py
+
+      - name: Verify migration ledger authority
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify Stage52 final reconciliation under historical projection
+        run: python 04_backend_supabase/tools/verify_stage52_final_historical_compat.py
+
+      - name: Verify Stage52 promotion historical compatibility
+        run: python 04_backend_supabase/tools/verify_stage52_promotion_historical_compat.py
+
+      - name: Verify Stage40 final historical compatibility
+        run: python 04_backend_supabase/tools/verify_stage40_final_historical_compat.py
+
+      - name: Verify Stage40 promotion historical compatibility
+        run: python 04_backend_supabase/tools/verify_stage40_promotion_historical_compat.py
+
+      - name: Verify billing provider contract
+        run: python 04_backend_supabase/tools/verify_billing_provider_contract.py
+
+      - name: Verify controlled launch contract
+        run: python 04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+
+      - name: Verify external evidence placeholders
+        run: python 04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py
+
+      - name: Verify PostgreSQL view replacement compatibility
+        run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py
