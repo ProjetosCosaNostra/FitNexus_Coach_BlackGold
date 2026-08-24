@@ -5,7 +5,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-from stage52_student_issuance_migration_frontier import json_dump, state, to_promotion
+from stage52_student_issuance_migration_frontier import (
+    PROMOTION_REPO_ONLY,
+    clone,
+    divergences,
+    json_dump,
+    state,
+    to_promotion,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 LEDGER = ROOT / "04_backend_supabase" / "migration_ledger_authority.json"
@@ -30,11 +37,15 @@ def main() -> None:
             fail("migration ledger must be object")
         current_kind = state(value)
         projected = to_promotion(value)
+        remote_only, _repo_only = divergences(projected)
+        projected["declared_divergences"] = remote_only + [clone(PROMOTION_REPO_ONLY)]
+        if state(projected) != "promotion":
+            fail("projected ledger is not exact Stage52 promotion frontier")
         LEDGER.write_text(json_dump(projected), encoding="utf-8")
         result = subprocess.run([sys.executable, str(PROMOTION_GUARD)], cwd=ROOT, check=False)
         if result.returncode != 0:
             fail(f"sealed Stage52 promotion guard failed under historical projection: exit={result.returncode}")
-    except ValueError as exc:
+    except (ValueError, json.JSONDecodeError) as exc:
         fail(str(exc))
     finally:
         LEDGER.write_bytes(original)
@@ -42,6 +53,7 @@ def main() -> None:
     print("STAGE52_PROMOTION_HISTORICAL_COMPAT=PASS")
     print(f"ACTUAL_STAGE52_FRONTIER={current_kind}")
     print("PROJECTED_PROMOTION_FRONTIER=true")
+    print("FUTURE_REPO_ONLY_DECLARATIONS_DROPPED_IN_PROJECTION=true")
     print("CURRENT_LEDGER_MUTATED_PERSISTENTLY=false")
     print("REMOTE_MUTATION=NOT_PERFORMED_BY_GUARD")
 

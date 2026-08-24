@@ -13,6 +13,7 @@ on:
       - '04_backend_supabase/tools/verify_stage52_promotion_historical_compat.py'
       - '04_backend_supabase/tools/verify_stage52_candidate_historical_compat.py'
       - '04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_final_reconciliation.py'
+      - '04_backend_supabase/tools/verify_stage52_final_historical_compat.py'
       - '04_backend_supabase/tools/verify_stage40_final_historical_compat.py'
       - '04_backend_supabase/tools/verify_stage40_promotion_historical_compat.py'
       - '.github/workflows/stage52_student_issuance_target_privacy_final_reconciliation.yml'
@@ -34,12 +35,13 @@ jobs:
           python -m py_compile 04_backend_supabase/tools/verify_stage52_promotion_historical_compat.py
           python -m py_compile 04_backend_supabase/tools/verify_stage52_candidate_historical_compat.py
           python -m py_compile 04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_final_reconciliation.py
+          python -m py_compile 04_backend_supabase/tools/verify_stage52_final_historical_compat.py
 
       - name: Verify migration ledger authority
         run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
 
-      - name: Verify Stage52 final remote reconciliation
-        run: python 04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_final_reconciliation.py
+      - name: Verify Stage52 final remote reconciliation under historical projection
+        run: python 04_backend_supabase/tools/verify_stage52_final_historical_compat.py
 
       - name: Verify Stage52 promotion historical compatibility
         run: python 04_backend_supabase/tools/verify_stage52_promotion_historical_compat.py
