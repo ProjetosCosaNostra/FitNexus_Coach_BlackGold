@@ -6,6 +6,7 @@ on:
       - '04_backend_supabase/stage52_student_issuance_target_privacy_candidate_authority.json'
       - '04_backend_supabase/operations/stage52_student_issuance_target_privacy_candidate.sql'
       - '04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_candidate.py'
+      - '04_backend_supabase/tools/verify_stage52_candidate_historical_compat.py'
       - '04_backend_supabase/stage51_security_definer_advisor_reconciliation_authority.json'
       - '04_backend_supabase/tools/verify_stage51_security_definer_advisor_reconciliation.py'
       - '04_backend_supabase/migrations/**'
@@ -23,6 +24,7 @@ on:
       - '04_backend_supabase/stage52_student_issuance_target_privacy_candidate_authority.json'
       - '04_backend_supabase/operations/stage52_student_issuance_target_privacy_candidate.sql'
       - '04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_candidate.py'
+      - '04_backend_supabase/tools/verify_stage52_candidate_historical_compat.py'
       - '.github/workflows/stage52_student_issuance_target_privacy_candidate.yml'
 
 permissions:
@@ -35,11 +37,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Compile Stage52 guard
-        run: python -m py_compile 04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_candidate.py
+      - name: Compile Stage52 guards
+        run: |
+          python -m py_compile 04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_candidate.py
+          python -m py_compile 04_backend_supabase/tools/verify_stage52_candidate_historical_compat.py
 
-      - name: Verify Stage52 target privacy candidate
-        run: python 04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_candidate.py
+      - name: Verify Stage52 target privacy candidate historical contract
+        run: python 04_backend_supabase/tools/verify_stage52_candidate_historical_compat.py
 
       - name: Verify Stage51 advisor reconciliation
         run: python 04_backend_supabase/tools/verify_stage51_security_definer_advisor_reconciliation.py
