@@ -1,0 +1,75 @@
+name: Stage49 Evidence Migration Promotion Boundary
+
+on:
+  pull_request:
+    paths:
+      - "04_backend_supabase/stage49_evidence_migration_promotion_boundary_authority.json"
+      - "04_backend_supabase/evidence_promotions/**"
+      - "04_backend_supabase/migrations/**"
+      - "04_backend_supabase/tools/stage49_evidence_promotion_contract.py"
+      - "04_backend_supabase/tools/build_stage49_evidence_promotion_candidate.py"
+      - "04_backend_supabase/tools/verify_stage49_evidence_migration_promotion_boundary.py"
+      - ".github/workflows/stage49_evidence_migration_promotion_boundary.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stage49-promotion-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Compile Stage49 Python surfaces
+        run: |
+          python -m py_compile \
+            04_backend_supabase/tools/stage49_evidence_promotion_contract.py \
+            04_backend_supabase/tools/build_stage49_evidence_promotion_candidate.py \
+            04_backend_supabase/tools/verify_stage49_evidence_migration_promotion_boundary.py
+
+      - name: Verify Stage49 evidence migration promotion boundary
+        run: python 04_backend_supabase/tools/verify_stage49_evidence_migration_promotion_boundary.py
+
+      - name: Verify sealed Stage47 unified intake
+        run: python 04_backend_supabase/tools/verify_stage47_unified_external_evidence_intake_orchestration.py
+
+      - name: Verify sealed Stage48 adversarial regression
+        run: python 04_backend_supabase/tools/verify_stage48_unified_intake_adversarial_regression.py
+
+      - name: Verify migration ledger authority
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify Stage40 final remote reconciliation
+        run: python 04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_final_reconciliation.py
+
+      - name: Verify Stage39 billing credential preparation
+        run: python 04_backend_supabase/tools/verify_stage39_billing_credential_authority_preparation.py
+
+      - name: Verify Stage41 legal terms preparation
+        run: python 04_backend_supabase/tools/verify_stage41_legal_terms_external_evidence_preparation.py
+
+      - name: Verify Stage42 privacy notice preparation
+        run: python 04_backend_supabase/tools/verify_stage42_privacy_notice_external_evidence_preparation.py
+
+      - name: Verify Stage43 legal role mapping preparation
+        run: python 04_backend_supabase/tools/verify_stage43_legal_role_mapping_external_evidence_preparation.py
+
+      - name: Verify Stage44 data subject request preparation
+        run: python 04_backend_supabase/tools/verify_stage44_data_subject_request_external_evidence_preparation.py
+
+      - name: Verify Stage45 incident response preparation
+        run: python 04_backend_supabase/tools/verify_stage45_incident_response_external_evidence_preparation.py
+
+      - name: Verify Stage46 production deployment preparation
+        run: python 04_backend_supabase/tools/verify_stage46_production_deployment_external_evidence_preparation.py
+
+      - name: Verify controlled-launch admission contract
+        run: python 04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+
+      - name: Verify external evidence placeholders contract
+        run: python 04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py
+
+      - name: Verify PostgreSQL view replacement compatibility
+        run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py
