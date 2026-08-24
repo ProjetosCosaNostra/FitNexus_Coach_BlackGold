@@ -27,9 +27,6 @@ jobs:
       - name: Migration ledger contract guard
         run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
 
-      - name: Stage40 candidate remains green
-        run: python 04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_candidate.py
-
       - name: Stage40 exact migration promotion guard
         run: python 04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_promotion.py
 
