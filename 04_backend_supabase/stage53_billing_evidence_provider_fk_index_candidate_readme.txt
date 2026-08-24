@@ -1,0 +1,1 @@
+Stage53 candidate scope: add only a provider_code-leading btree index for the private.billing_provider_external_evidence foreign key. No migration, no remote apply, no data/grant/provider/launch mutation. Unused-index advisor findings are deliberately not treated as drop authority while workload traffic is effectively zero.
