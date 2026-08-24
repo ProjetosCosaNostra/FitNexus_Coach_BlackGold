@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE44_DATA_SUBJECT_REQUEST_EXTERNAL_EVIDENCE_PREPARATION",
+  "baseline_main_sha": "77ce09a7e8dad6253edfc2f7728a17e70ca5943a",
+  "current_state": "PREPARED_REAL_DATA_SUBJECT_REQUEST_CHANNEL_AND_CONTROLLED_OPERATIONAL_EVIDENCE_REQUIRED_NO_ATTESTATION_NO_GATE_PROMOTION",
+  "failure_classes": [
+    "BGF-STAGE44-DSR-CHANNEL-SELF-ATTESTATION-396",
+    "BGF-STAGE44-DSR-UNSTABLE-CONTACT-ROUTE-397",
+    "BGF-STAGE44-DSR-OWNER-BACKUP-OMISSION-398",
+    "BGF-STAGE44-DSR-IDENTITY-VERIFICATION-OMISSION-399",
+    "BGF-STAGE44-DSR-TENANT-SCOPE-TEST-OMISSION-400",
+    "BGF-STAGE44-DSR-RETENTION-HOLD-SEMANTICS-OMISSION-401",
+    "BGF-STAGE44-DSR-CONTROLLER-OPERATOR-HANDOFF-OMISSION-402",
+    "BGF-STAGE44-DSR-RESPONSE-TIME-POLICY-OMISSION-403",
+    "BGF-STAGE44-DSR-REAL-CUSTOMER-PROOF-DATA-404",
+    "BGF-STAGE44-DSR-PREMATURE-EVIDENCE-MIGRATION-405"
+  ],
+  "upstream_authority": {
+    "stage43_role_mapping_preparation": "04_backend_supabase/stage43_legal_role_mapping_external_evidence_preparation_authority.json",
+    "stage43_role_mapping_preparation_blob": "310ec3a72129d978362471a4608704b556972f9b",
+    "legal_role_mapping_gate_state": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "controlled_launch": "DENIED"
+  },
+  "source_contracts": {
+    "external_gate_placeholders_file": "04_backend_supabase/external_gate_evidence_placeholders.json",
+    "external_gate_placeholders_blob": "07e6eb3330076f3e576ed2dd2a2e385f5fa3b2db",
+    "stage20_migration_file": "04_backend_supabase/migrations/20260819062000_stage20_controlled_launch_admission.sql",
+    "stage20_migration_blob": "e26dd18eff1f4dbf099ad721963b06d6362bc3b9"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-24T07:47:36.529109+00:00",
+    "gate_code": "data_subject_request_channel",
+    "category": "privacy",
+    "authority_mode": "evidence_migration",
+    "mandatory": true,
+    "state": "blocked",
+    "evidence_ref": null,
+    "evidence_digest": null,
+    "ready_evidence_migration_count": 0,
+    "remote_mutation_performed": false
+  },
+  "required_real_evidence": {
+    "stable_published_titular_contact_route": {
+      "required": true,
+      "rule": "A stable public production route for data-subject requests must exist. Preview, staging, localhost and placeholder routes are not evidence."
+    },
+    "owner_and_backup_owner_assignment_artifact": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "Named operational owner and backup-owner assignment must be independently reviewable."
+    },
+    "identity_verification_procedure_artifact": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A reviewed identity-verification procedure must exist and must avoid disclosing data before verification."
+    },
+    "tenant_scoped_access_export_test_receipt": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A controlled synthetic/non-customer receipt must prove tenant-scoped access/export behavior."
+    },
+    "correction_workflow_test_receipt": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A controlled synthetic/non-customer receipt must prove the correction workflow."
+    },
+    "deletion_anonymization_blocking_retention_hold_test_receipt": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A controlled synthetic/non-customer receipt must distinguish deletion, anonymization or blocking from legally required retention holds."
+    },
+    "controller_operator_handoff_procedure_artifact": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A reviewed procedure must define controller/operator handoff and ownership for requests."
+    },
+    "reviewed_response_time_policy_artifact": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A reviewed response-time policy must exist; the collector cannot invent statutory or operational deadlines."
+    },
+    "tabletop_request_receipt": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A tabletop request receipt must exercise intake, verification, routing, decision, response and evidence retention without real customer data."
+    }
+  },
+  "collector_contract": {
+    "script": "04_backend_supabase/tools/collect_stage44_data_subject_request_evidence.ps1",
+    "output_kind": "DIGEST_ONLY_DATA_SUBJECT_REQUEST_EVIDENCE_INTAKE_CANDIDATE",
+    "network_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "operational_or_legal_self_attestation_allowed": false,
+    "raw_artifact_content_copied_to_receipt": false,
+    "artifact_path_or_filename_copied_to_receipt": false,
+    "personal_or_secret_material_allowed": false,
+    "real_customer_data_allowed_in_test_receipts": false,
+    "receipt_can_mark_gate_ready": false,
+    "receipt_can_promote_controlled_launch": false
+  },
+  "independent_review_boundary": {
+    "receipt_is_candidate_only": true,
+    "reviewer_must_confirm_published_route_is_real_and_stable": true,
+    "reviewer_must_confirm_owner_and_backup_assignment": true,
+    "reviewer_must_confirm_identity_verification_procedure": true,
+    "reviewer_must_confirm_access_export_is_tenant_scoped": true,
+    "reviewer_must_confirm_correction_workflow": true,
+    "reviewer_must_confirm_deletion_anonymization_blocking_and_retention_hold_semantics": true,
+    "reviewer_must_confirm_controller_operator_handoff": true,
+    "reviewer_must_confirm_response_time_policy": true,
+    "reviewer_must_confirm_tabletop_receipt_and_non_customer_fixtures": true,
+    "dedicated_evidence_migration_allowed_only_after_real_review": true,
+    "gate_ready_state_before_real_review": false
+  },
+  "next_sequence_after_valid_real_evidence": [
+    {
+      "step": 1,
+      "name": "COLLECT_DIGEST_ONLY_RECEIPT",
+      "rule": "Hash real reviewed procedures and controlled synthetic proof receipts; record only non-sensitive metadata."
+    },
+    {
+      "step": 2,
+      "name": "INDEPENDENTLY_REVIEW_RECEIPT_AND_SOURCE_ARTIFACTS",
+      "rule": "Confirm route stability, ownership, identity verification, tenant scope, lifecycle semantics, handoff, response policy and tabletop proof."
+    },
+    {
+      "step": 3,
+      "name": "PROMOTE_DEDICATED_EVIDENCE_MIGRATION",
+      "rule": "Only after real review, create a separate versioned migration updating exactly data_subject_request_channel with evidence_ref and evidence_digest."
+    },
+    {
+      "step": 4,
+      "name": "MERGE_GREEN_THEN_APPLY_ONCE",
+      "rule": "Apply the exact merged evidence migration through Supabase.apply_migration only; execute_sql remains SELECT-only."
+    }
+  ],
+  "gates": {
+    "stage44_preparation": "REPO_ONLY_PENDING_CI",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
