@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE47_UNIFIED_EXTERNAL_EVIDENCE_INTAKE_ORCHESTRATION",
+  "baseline_main_sha": "652848909e5e0eb1cee3ee5b85a25020b6ca9485",
+  "current_state": "PREPARED_UNIFIED_LOCAL_RECEIPT_REVIEW_ORCHESTRATION_NO_EVIDENCE_INGESTION_NO_GATE_PROMOTION_NO_REMOTE_MUTATION",
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-24T17:34:35.757678+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "billing_provider_state": "selected_pending_credentials",
+    "billing_provider_activated_at": null,
+    "external_billing_evidence_rows": 0,
+    "ready_evidence_migration_count": 0,
+    "blocked_evidence_migration_gate_count": 6,
+    "stage40_activation_production_environment_interlock": true,
+    "stage40_readiness_production_environment_interlock": true,
+    "remote_mutation_performed": false
+  },
+  "canonical_reviewers": [
+    {
+      "gate_code": "billing_provider_credentials",
+      "source_stage": "STAGE39_BILLING_CREDENTIAL_AUTHORITY_EXTERNAL_EVIDENCE",
+      "reviewer": "04_backend_supabase/tools/review_stage39_billing_credential_evidence_receipt.py",
+      "git_blob_sha": "9caf186172eff35ea3f216b86565a3a98387a5cd"
+    },
+    {
+      "gate_code": "legal_terms_of_use",
+      "source_stage": "STAGE41_LEGAL_TERMS_EXTERNAL_EVIDENCE_PREPARATION",
+      "reviewer": "04_backend_supabase/tools/review_stage41_legal_terms_evidence_receipt.py",
+      "git_blob_sha": "f846a334b29e8a221789dfba46f2d9fee2fbbb92"
+    },
+    {
+      "gate_code": "legal_privacy_notice",
+      "source_stage": "STAGE42_PRIVACY_NOTICE_EXTERNAL_EVIDENCE_PREPARATION",
+      "reviewer": "04_backend_supabase/tools/review_stage42_privacy_notice_evidence_receipt.py",
+      "git_blob_sha": "f07ab6154ca83badb2093dff84a3b67b4324b3ef"
+    },
+    {
+      "gate_code": "legal_role_mapping",
+      "source_stage": "STAGE43_LEGAL_ROLE_MAPPING_EXTERNAL_EVIDENCE_PREPARATION",
+      "reviewer": "04_backend_supabase/tools/review_stage43_legal_role_mapping_evidence_receipt.py",
+      "git_blob_sha": "6718d2376fdacfc92158504b87177c2ad6935394"
+    },
+    {
+      "gate_code": "data_subject_request_channel",
+      "source_stage": "STAGE44_DATA_SUBJECT_REQUEST_EXTERNAL_EVIDENCE_PREPARATION",
+      "reviewer": "04_backend_supabase/tools/review_stage44_data_subject_request_evidence_receipt.py",
+      "git_blob_sha": "caec56a1e00f6d2c32e90ab2c6a42bd7a28f62c1"
+    },
+    {
+      "gate_code": "incident_response",
+      "source_stage": "STAGE45_INCIDENT_RESPONSE_EXTERNAL_EVIDENCE_PREPARATION",
+      "reviewer": "04_backend_supabase/tools/review_stage45_incident_response_evidence_receipt.py",
+      "git_blob_sha": "8ac25b8d8c89242b9ae357630a66b820e1801c68"
+    },
+    {
+      "gate_code": "production_deployment",
+      "source_stage": "STAGE46_PRODUCTION_DEPLOYMENT_EXTERNAL_EVIDENCE_PREPARATION",
+      "reviewer": "04_backend_supabase/tools/review_stage46_production_deployment_evidence_receipt.py",
+      "git_blob_sha": "80ec9db645a58950b956898dd227a6b1c9f0b2ab"
+    }
+  ],
+  "orchestration_contract": {
+    "mode_default": "inventory",
+    "complete_mode_requires_all_seven_receipts": true,
+    "unknown_json_receipt_is_error": true,
+    "duplicate_source_stage_is_error": true,
+    "canonical_reviewer_bypass_allowed": false,
+    "canonical_reviewer_stdout_or_stderr_copied_to_aggregate": false,
+    "raw_receipt_content_copied_to_aggregate": false,
+    "receipt_path_or_filename_copied_to_aggregate": false,
+    "network_calls_allowed": false,
+    "provider_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "deployment_action_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "gate_promotion_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "stage35_alert_proof_alone_can_satisfy_production_deployment": false
+  },
+  "aggregate_states": [
+    "INVALID_EXTERNAL_EVIDENCE_CANDIDATE_PRESENT",
+    "INCOMPLETE_MISSING_EXTERNAL_EVIDENCE",
+    "COMPLETE_STRUCTURAL_CANDIDATES_AWAITING_INDEPENDENT_REVIEW"
+  ],
+  "failure_classes": [
+    "BGF-STAGE47-AGGREGATE-SELF-ATTESTATION-433",
+    "BGF-STAGE47-CANONICAL-REVIEWER-BYPASS-434",
+    "BGF-STAGE47-DUPLICATE-RECEIPT-AMBIGUITY-435",
+    "BGF-STAGE47-UNRECOGNIZED-RECEIPT-MASQUERADE-436",
+    "BGF-STAGE47-AGGREGATE-GATE-PROMOTION-437",
+    "BGF-STAGE47-RAW-RECEIPT-DATA-LEAKAGE-438",
+    "BGF-STAGE47-NETWORK-OR-REMOTE-MUTATION-439",
+    "BGF-STAGE47-STAGE35-PRODUCTION-SUBSTITUTION-440",
+    "BGF-STAGE47-INCOMPLETE-BUNDLE-FALSE-GREEN-441",
+    "BGF-STAGE47-UNIFIED-EXTERNAL-EVIDENCE-INTAKE-GUARD-442"
+  ],
+  "gates": {
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
