@@ -32,7 +32,6 @@ REQUIRED_BOOLEAN_FALSE = {
     "stage48_regression_used_as_external_review_authority",
     "stage35_alert_proof_alone_used_for_production_deployment",
     "gate_ready_attested_by_tool",
-    "remote_apply_performed",
     "controlled_launch_promoted",
     "paid_media_promoted",
     "launch_promoted",
@@ -133,8 +132,12 @@ def validate_authority(authority: dict[str, Any], *, require_migration: bool) ->
         if match.group("gate") != gate:
             fail("migration_filename gate does not match authority gate")
 
-    if state != "REMOTE_APPLIED_RECONCILED" and authority.get("remote_apply_performed") is not False:
-        fail("repo-only states cannot attest remote apply")
+    remote_apply = authority.get("remote_apply_performed")
+    if state == "REMOTE_APPLIED_RECONCILED":
+        if remote_apply is not True:
+            fail("remote reconciled state requires remote_apply_performed=true")
+    elif remote_apply is not False:
+        fail("repo-only states require remote_apply_performed=false")
 
 
 def sql_literal(value: str) -> str:
