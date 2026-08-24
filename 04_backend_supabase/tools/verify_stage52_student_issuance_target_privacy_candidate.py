@@ -245,19 +245,18 @@ def verify_client_compatibility() -> None:
 def verify_repo_only_boundary() -> None:
     if list(MIGRATIONS.glob("*stage52*.sql")):
         fail("Stage52 candidate stage must not create a versioned migration")
-    guard_text = Path(__file__).read_text(encoding="utf-8").lower()
+    candidate_text = CANDIDATE.read_text(encoding="utf-8").lower()
     for marker in (
-        "supabase.apply_migration",
-        "supabase.execute_sql",
-        "requests.",
-        "urllib.request",
-        "urlopen(",
-        "psycopg",
-        "subprocess.run",
-        "shell=true",
+        "http://",
+        "https://",
+        "curl ",
+        "wget ",
+        "copy program",
+        "dblink",
+        "postgres_fdw",
     ):
-        if marker in guard_text:
-            fail(f"Stage52 guard contains forbidden remote/execution surface: {marker}")
+        if marker in candidate_text:
+            fail(f"Stage52 candidate contains forbidden external execution surface: {marker}")
 
 
 def main() -> None:
