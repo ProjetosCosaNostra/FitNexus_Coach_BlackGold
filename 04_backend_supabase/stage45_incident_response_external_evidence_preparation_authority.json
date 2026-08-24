@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE45_INCIDENT_RESPONSE_EXTERNAL_EVIDENCE_PREPARATION",
+  "baseline_main_sha": "7b3fb946de8eb2f1356d795d2cc4031c95b7ec9a",
+  "current_state": "PREPARED_REAL_INCIDENT_RESPONSE_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE_REQUIRED_NO_ATTESTATION_NO_GATE_PROMOTION",
+  "failure_classes": [
+    "BGF-STAGE45-INCIDENT-RESPONSE-SELF-ATTESTATION-408",
+    "BGF-STAGE45-INCIDENT-OWNER-ASSIGNMENT-OMISSION-409",
+    "BGF-STAGE45-INCIDENT-RISK-CLASSIFICATION-OMISSION-410",
+    "BGF-STAGE45-INCIDENT-CONTROLLER-HANDOFF-OMISSION-411",
+    "BGF-STAGE45-INCIDENT-COMMUNICATION-DECISION-OMISSION-412",
+    "BGF-STAGE45-INCIDENT-REGISTRY-RETENTION-OMISSION-413",
+    "BGF-STAGE45-INCIDENT-TABLETOP-COVERAGE-OMISSION-414",
+    "BGF-STAGE45-INCIDENT-REAL-CUSTOMER-PROOF-DATA-415",
+    "BGF-STAGE45-INCIDENT-DRILL-POSTMORTEM-OMISSION-416",
+    "BGF-STAGE45-INCIDENT-PREMATURE-EVIDENCE-MIGRATION-417"
+  ],
+  "upstream_authority": {
+    "stage44_dsr_preparation": "04_backend_supabase/stage44_data_subject_request_external_evidence_preparation_authority.json",
+    "stage44_dsr_preparation_blob": "53321a9af19ba3423fca44191bf000815eb617d5",
+    "data_subject_request_gate_state": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "controlled_launch": "DENIED"
+  },
+  "source_contracts": {
+    "external_gate_placeholders_file": "04_backend_supabase/external_gate_evidence_placeholders.json",
+    "external_gate_placeholders_blob": "07e6eb3330076f3e576ed2dd2a2e385f5fa3b2db",
+    "stage20_migration_file": "04_backend_supabase/migrations/20260819062000_stage20_controlled_launch_admission.sql",
+    "stage20_migration_blob": "e26dd18eff1f4dbf099ad721963b06d6362bc3b9"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-24T07:53:52.531479+00:00",
+    "gate_code": "incident_response",
+    "category": "security",
+    "authority_mode": "evidence_migration",
+    "mandatory": true,
+    "state": "blocked",
+    "evidence_ref": null,
+    "evidence_digest": null,
+    "ready_evidence_migration_count": 0,
+    "remote_mutation_performed": false
+  },
+  "required_real_evidence": {
+    "incident_commander_privacy_owner_technical_owner_assignment_artifact": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "Operational ownership for incident commander, privacy owner and technical owner must be explicitly assigned and independently reviewable."
+    },
+    "risk_classification_matrix_artifact": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A reviewed incident risk classification matrix must exist; the collector cannot infer severity or notification obligations."
+    },
+    "operator_to_controller_handoff_procedure_artifact": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A reviewed operator-to-controller handoff procedure must define ownership, timing, evidence transfer and escalation."
+    },
+    "anpd_data_subject_communication_decision_procedure_artifact": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A reviewed procedure must govern ANPD/data-subject communication decisions. Scripts cannot make or attest legal notification conclusions."
+    },
+    "incident_registry_retention_control_artifact": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A reviewed incident-registry retention control must define evidence preservation and access governance."
+    },
+    "cross_tenant_exposure_tabletop_receipt": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A controlled tabletop using synthetic/non-customer fixtures must exercise suspected cross-tenant exposure response."
+    },
+    "credential_compromise_tabletop_receipt": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A controlled tabletop using synthetic/non-customer fixtures must exercise credential compromise response, containment and evidence handling."
+    },
+    "potentially_sensitive_student_data_tabletop_receipt": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A controlled tabletop using synthetic/non-customer fixtures must exercise potentially sensitive student-data incident handling."
+    },
+    "final_drill_postmortem_artifact": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A final drill/postmortem artifact must bind findings, remediation owners and follow-up evidence."
+    }
+  },
+  "collector_contract": {
+    "script": "04_backend_supabase/tools/collect_stage45_incident_response_evidence.ps1",
+    "output_kind": "DIGEST_ONLY_INCIDENT_RESPONSE_EVIDENCE_INTAKE_CANDIDATE",
+    "network_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "operational_or_legal_self_attestation_allowed": false,
+    "raw_artifact_content_copied_to_receipt": false,
+    "artifact_path_or_filename_copied_to_receipt": false,
+    "personal_or_secret_material_allowed": false,
+    "real_customer_data_allowed_in_tabletop_receipts": false,
+    "live_incident_required_for_preparation": false,
+    "receipt_can_mark_gate_ready": false,
+    "receipt_can_promote_controlled_launch": false
+  },
+  "independent_review_boundary": {
+    "receipt_is_candidate_only": true,
+    "reviewer_must_confirm_owner_assignments": true,
+    "reviewer_must_confirm_risk_classification_matrix": true,
+    "reviewer_must_confirm_operator_controller_handoff": true,
+    "reviewer_must_confirm_anpd_data_subject_decision_procedure": true,
+    "reviewer_must_confirm_incident_registry_retention_control": true,
+    "reviewer_must_confirm_three_required_tabletops": true,
+    "reviewer_must_confirm_tabletops_use_synthetic_or_non_customer_fixtures": true,
+    "reviewer_must_confirm_final_drill_postmortem": true,
+    "dedicated_evidence_migration_allowed_only_after_real_review": true,
+    "gate_ready_state_before_real_review": false
+  },
+  "next_sequence_after_valid_real_evidence": [
+    {
+      "step": 1,
+      "name": "COLLECT_DIGEST_ONLY_RECEIPT",
+      "rule": "Hash real reviewed governance artifacts and controlled tabletop receipts; record only non-sensitive metadata."
+    },
+    {
+      "step": 2,
+      "name": "INDEPENDENTLY_REVIEW_RECEIPT_AND_SOURCE_ARTIFACTS",
+      "rule": "Confirm ownership, risk classification, handoff, notification decision procedure, retention, three tabletop scenarios and final drill/postmortem."
+    },
+    {
+      "step": 3,
+      "name": "PROMOTE_DEDICATED_EVIDENCE_MIGRATION",
+      "rule": "Only after real review, create a separate versioned migration updating exactly incident_response with evidence_ref and evidence_digest."
+    },
+    {
+      "step": 4,
+      "name": "MERGE_GREEN_THEN_APPLY_ONCE",
+      "rule": "Apply the exact merged evidence migration through Supabase.apply_migration only; execute_sql remains SELECT-only."
+    }
+  ],
+  "gates": {
+    "stage45_preparation": "REPO_ONLY_PENDING_CI",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "production_deployment": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
