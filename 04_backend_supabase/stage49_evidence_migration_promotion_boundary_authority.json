@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE49_EVIDENCE_MIGRATION_PROMOTION_BOUNDARY",
+  "baseline_main_sha": "8be14d0d157f6372af662ee62bcd0f430774cd76",
+  "current_state": "PROMOTION_BOUNDARY_PREPARED_NO_EXTERNAL_REVIEW_NO_EVIDENCE_MIGRATION_NO_REMOTE_MUTATION",
+  "problem_statement": {
+    "runtime_behavior": "The controlled-launch readiness authority counts any evidence_migration row whose state is ready.",
+    "write_surface": "anon, authenticated, and service_role have no INSERT/UPDATE/DELETE privilege on private.controlled_launch_gate_evidence; versioned migrations are therefore the intended promotion surface.",
+    "remaining_governance_gap": "Without a repository promotion boundary, a future migration could mark a gate ready using arbitrary non-null evidence_ref/evidence_digest values without being cryptographically bound to a canonical source receipt and independent-review receipt.",
+    "stage47_aggregate_is_launch_authority": false,
+    "stage48_adversarial_pass_is_external_evidence": false
+  },
+  "fresh_remote_read_only_receipt": {
+    "observed_at_utc": "2026-08-24T18:19:08.437154+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "billing_provider_state": "selected_pending_credentials",
+    "billing_provider_activated_at": null,
+    "external_billing_evidence_rows": 0,
+    "evidence_migration_rows": 6,
+    "evidence_migration_ready_rows": 0,
+    "evidence_migration_blocked_rows": 6,
+    "non_null_evidence_refs": 0,
+    "non_null_evidence_digests": 0,
+    "anon_write_privileges": false,
+    "authenticated_write_privileges": false,
+    "service_role_write_privileges": false,
+    "readiness_function_accepts_ready_rows": true,
+    "stage40_activation_production_environment_interlock": true,
+    "stage40_readiness_production_environment_interlock": true,
+    "remote_mutation_performed": false
+  },
+  "sealed_inputs": {
+    "stage20_controlled_launch_migration": {
+      "path": "04_backend_supabase/migrations/20260819062000_stage20_controlled_launch_admission.sql",
+      "git_blob_sha": "e26dd18eff1f4dbf099ad721963b06d6362bc3b9"
+    },
+    "external_gate_evidence_placeholders": {
+      "path": "04_backend_supabase/external_gate_evidence_placeholders.json",
+      "git_blob_sha": "07e6eb3330076f3e576ed2dd2a2e385f5fa3b2db"
+    },
+    "stage47_authority": {
+      "path": "04_backend_supabase/stage47_unified_external_evidence_intake_orchestration_authority.json",
+      "git_blob_sha": "9a8d504d3462a926014ced34508cdf42babbff46"
+    },
+    "stage48_authority": {
+      "path": "04_backend_supabase/stage48_unified_intake_adversarial_regression_authority.json",
+      "git_blob_sha": "486b9b75913c912282e0f9b128d5861d3a54e9d8"
+    }
+  },
+  "promotion_protocol": {
+    "protocol_id": "STAGE49_V1",
+    "eligible_authority_mode": "evidence_migration",
+    "eligible_gate_codes": [
+      "legal_privacy_notice",
+      "legal_terms_of_use",
+      "legal_role_mapping",
+      "data_subject_request_channel",
+      "incident_response",
+      "production_deployment"
+    ],
+    "billing_provider_credentials_uses_this_protocol": false,
+    "one_gate_per_migration": true,
+    "historical_stage20_bootstrap_is_allowlisted": true,
+    "future_unregistered_gate_ready_migration_allowed": false,
+    "companion_authority_directory": "04_backend_supabase/evidence_promotions",
+    "companion_authority_required_for_future_promotion_migration": true,
+    "canonical_source_receipt_sha256_required": true,
+    "independent_review_receipt_sha256_required": true,
+    "source_artifact_review_digest_required": true,
+    "review_bundle_digest_required": true,
+    "reviewer_reference_digest_required": true,
+    "reviewer_independence_attestation_required": true,
+    "source_artifacts_reviewed_out_of_band_attestation_required": true,
+    "script_can_verify_reviewer_independence": false,
+    "synthetic_fixture_can_satisfy_promotion": false,
+    "stage47_aggregate_can_satisfy_promotion": false,
+    "stage48_regression_can_satisfy_promotion": false,
+    "stage35_alert_proof_alone_can_satisfy_production_deployment": false,
+    "candidate_generation_is_remote_apply_authority": false,
+    "versioned_migration_presence_is_remote_apply_authority": false,
+    "remote_apply_requires_separate_preapply_authority_reread": true,
+    "execute_sql_dml_or_ddl_allowed": false
+  },
+  "current_registry": {
+    "registered_external_evidence_promotions": 0,
+    "versioned_external_evidence_promotion_migrations": 0,
+    "remote_external_evidence_promotions": 0
+  },
+  "failure_classes": [
+    "BGF-STAGE49-MIGRATION-SELF-ATTESTATION-450",
+    "BGF-STAGE49-STAGE47-AGGREGATE-AS-PROMOTION-AUTHORITY-451",
+    "BGF-STAGE49-UNREGISTERED-EVIDENCE-PROMOTION-MIGRATION-452",
+    "BGF-STAGE49-MULTI-GATE-PROMOTION-MIGRATION-453",
+    "BGF-STAGE49-REVIEW-RECEIPT-DIGEST-UNBOUND-454",
+    "BGF-STAGE49-SOURCE-RECEIPT-DIGEST-UNBOUND-455",
+    "BGF-STAGE49-SYNTHETIC-REVIEW-AS-EXTERNAL-AUTHORITY-456",
+    "BGF-STAGE49-REVIEWER-INDEPENDENCE-SELF-VERIFICATION-457",
+    "BGF-STAGE49-EVIDENCE-REF-DIGEST-MISMATCH-458",
+    "BGF-STAGE49-CANDIDATE-DIRECT-APPLY-459",
+    "BGF-STAGE49-EXECUTE-SQL-EVIDENCE-DML-460",
+    "BGF-STAGE49-PROMOTION-BOUNDARY-GUARD-461"
+  ],
+  "gates": {
+    "billing_provider_credentials": "DENIED_SEPARATE_EXTERNAL_AUTHORIZATION_PROTOCOL",
+    "legal_privacy_notice": "DENIED_NO_INDEPENDENT_REVIEW_AUTHORITY",
+    "legal_terms_of_use": "DENIED_NO_INDEPENDENT_REVIEW_AUTHORITY",
+    "legal_role_mapping": "DENIED_NO_INDEPENDENT_REVIEW_AUTHORITY",
+    "data_subject_request_channel": "DENIED_NO_INDEPENDENT_REVIEW_AUTHORITY",
+    "incident_response": "DENIED_NO_INDEPENDENT_REVIEW_AUTHORITY",
+    "production_deployment": "DENIED_NO_INDEPENDENT_REVIEW_AUTHORITY",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
