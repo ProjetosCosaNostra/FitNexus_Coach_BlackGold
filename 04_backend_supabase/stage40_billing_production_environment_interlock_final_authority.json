@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE40_BILLING_PRODUCTION_ENVIRONMENT_INTERLOCK_FINAL_RECONCILIATION",
+  "baseline_main_sha": "e208f98bce763c71e7edb8b066a8c97b45a12904",
+  "current_state": "PRODUCTION_ENVIRONMENT_INTERLOCK_REMOTE_APPLIED_PROVIDER_STILL_PENDING_ZERO_EXTERNAL_EVIDENCE_BILLING_GATE_BLOCKED",
+  "failure_classes": [
+    "BGF-STAGE40-BILLING-SANDBOX-EVIDENCE-CROSS-ENV-ACTIVATION-357",
+    "BGF-STAGE40-BILLING-LAUNCH-ENVIRONMENT-MISMATCH-358",
+    "BGF-STAGE40-BILLING-ENVIRONMENT-IDENTITY-DOWNGRADE-359",
+    "BGF-STAGE40-BILLING-CANDIDATE-DIRECT-APPLY-360",
+    "BGF-STAGE40-BILLING-PROMOTION-BODY-DRIFT-362",
+    "BGF-STAGE40-BILLING-PREMATURE-REMOTE-APPLY-363",
+    "BGF-STAGE40-BILLING-REMOTE-RECONCILIATION-367"
+  ],
+  "repository_promotion": {
+    "pull_request": 126,
+    "head_sha": "63369595bac880d98c5c145cde45a13609c77214",
+    "merge_main_sha": "e208f98bce763c71e7edb8b066a8c97b45a12904",
+    "migration_git_blob_sha": "9900408bec1b7d60f40c39f4e97e5e8c0c1c96cf",
+    "candidate_git_blob_sha": "9900408bec1b7d60f40c39f4e97e5e8c0c1c96cf",
+    "exact_candidate_blob_reused": true,
+    "stage40_workflow_run": 32676993407,
+    "stage40_workflow_result": "SUCCESS",
+    "flutter_quality_gate_run": 32676993377,
+    "flutter_quality_gate_result": "SUCCESS",
+    "stage38_promotion_historical_run": 32676993382,
+    "stage38_promotion_historical_result": "SUCCESS",
+    "stage38_final_historical_run": 32676993413,
+    "stage38_final_historical_result": "SUCCESS",
+    "consumed_live_proofs_reexecuted": false
+  },
+  "remote_apply": {
+    "migration_name": "stage40_billing_production_environment_interlock",
+    "remote_version": "20260824003612",
+    "applied_via": "Supabase.apply_migration",
+    "apply_count": 1,
+    "reapply_allowed": false,
+    "execute_sql_used_for_dml_or_ddl": false,
+    "provider_activation_performed": false,
+    "provider_called": false,
+    "external_evidence_attested": false,
+    "customer_data_used": false
+  },
+  "fresh_post_apply_remote_receipt": {
+    "source": "Supabase.list_migrations+Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-24T00:37:12.870108+00:00",
+    "selection": {
+      "scope": "BR_V1",
+      "provider_code": "asaas",
+      "state": "selected_pending_credentials",
+      "evidence_version": "2026-08-18-official-docs-v1",
+      "activated_at": null
+    },
+    "external_evidence_rows": 0,
+    "auth_users": 0,
+    "organizations": 0,
+    "activation_external_evidence_interlock": true,
+    "activation_production_interlock": true,
+    "readiness_production_interlock": true,
+    "activation_execute": {"anon": false, "authenticated": false, "service_role": true},
+    "readiness_authority_execute": {"anon": false, "authenticated": false, "service_role": true},
+    "tracking_core_ready": true,
+    "pricing_experiment_ready": true,
+    "billing_provider_credentials_ready": false,
+    "manual_evidence_ready": 0,
+    "manual_evidence_total": 6,
+    "mandatory_gate_total": 9,
+    "ready_mandatory_gate_total": 2,
+    "blocking_gate_total": 7
+  },
+  "migration_reconciliation": {
+    "ledger_baseline_main_sha": "e208f98bce763c71e7edb8b066a8c97b45a12904",
+    "ledger_observed_at_utc": "2026-08-24T00:37:12.870108Z",
+    "stage40_remote_version": "20260824003612",
+    "stage40_repo_only_count": 0,
+    "historical_stage17_remote_only_count": 3,
+    "stage38_history_preserved": true,
+    "stage35_history_preserved": true,
+    "remote_mutation_performed_by_reconciliation_pr": false
+  },
+  "security_invariants": {
+    "sandbox_evidence_can_activate_br_v1": false,
+    "br_v1_asaas_activation_requires_asaas_production": true,
+    "activation_still_requires_external_credential_evidence": true,
+    "billing_launch_readiness_requires_proof_complete": true,
+    "billing_launch_readiness_requires_asaas_production": true,
+    "activation_execute_service_role_only": true,
+    "readiness_authority_execute_service_role_only": true,
+    "activation_alone_can_promote_billing_launch_gate": false,
+    "secret_values_stored_in_repository": false
+  },
+  "sequence_boundary": {
+    "may_reapply_stage40": false,
+    "may_activate_asaas_without_real_production_credential_evidence": false,
+    "may_insert_credentials_verified_without_real_evidence": false,
+    "may_call_provider_before_credential_authority": false,
+    "may_promote_billing_gate_without_proof_complete": false,
+    "may_use_customer_data_for_controlled_proof": false,
+    "may_use_execute_sql_for_dml_or_ddl": false,
+    "stage35_proof_reexecution_allowed": false
+  },
+  "gates": {
+    "stage40_hardening": "PASS_REMOTE_RECONCILED",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "provider_activation": "DENIED",
+    "provider_call": "DENIED",
+    "controlled_launch": "DENIED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_stage": {
+    "name": "STAGE41_EXTERNAL_GATE_PREPARATION_OR_REAL_BILLING_OPERATOR_EVIDENCE",
+    "real_asaas_production_operator_evidence_required_for_billing_path": true,
+    "provider_activation_allowed_now": false,
+    "provider_call_allowed_now": false,
+    "billing_gate_promotion_allowed_now": false
+  }
+}
