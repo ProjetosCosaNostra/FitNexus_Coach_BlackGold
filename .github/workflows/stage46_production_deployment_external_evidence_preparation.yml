@@ -1,0 +1,60 @@
+name: Stage 46 Production Deployment External Evidence Preparation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/stage46_production_deployment_external_evidence_preparation_authority.json'
+      - '04_backend_supabase/tools/collect_stage46_production_deployment_evidence.ps1'
+      - '04_backend_supabase/tools/review_stage46_production_deployment_evidence_receipt.py'
+      - '04_backend_supabase/tools/verify_stage46_production_deployment_external_evidence_preparation.py'
+      - '.github/workflows/stage46_production_deployment_external_evidence_preparation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-stage46-preparation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Compile Stage46 Python guards
+        run: >-
+          python -m py_compile
+          04_backend_supabase/tools/review_stage46_production_deployment_evidence_receipt.py
+          04_backend_supabase/tools/verify_stage46_production_deployment_external_evidence_preparation.py
+      - name: Parse Stage46 PowerShell collector
+        shell: pwsh
+        run: |
+          $errors = $null
+          $tokens = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            '04_backend_supabase/tools/collect_stage46_production_deployment_evidence.ps1',
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) { $errors | ForEach-Object { Write-Error $_.Message }; exit 1 }
+      - name: Stage46 production deployment preparation guard
+        run: python 04_backend_supabase/tools/verify_stage46_production_deployment_external_evidence_preparation.py
+      - name: Migration ledger contract remains green
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+      - name: Stage40 final reconciliation remains green
+        run: python 04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_final_reconciliation.py
+      - name: Stage41 legal terms preparation remains green
+        run: python 04_backend_supabase/tools/verify_stage41_legal_terms_external_evidence_preparation.py
+      - name: Stage42 privacy notice preparation remains green
+        run: python 04_backend_supabase/tools/verify_stage42_privacy_notice_external_evidence_preparation.py
+      - name: Stage43 legal role mapping preparation remains green
+        run: python 04_backend_supabase/tools/verify_stage43_legal_role_mapping_external_evidence_preparation.py
+      - name: Stage44 data subject request preparation remains green
+        run: python 04_backend_supabase/tools/verify_stage44_data_subject_request_external_evidence_preparation.py
+      - name: Stage45 incident response preparation remains green
+        run: python 04_backend_supabase/tools/verify_stage45_incident_response_external_evidence_preparation.py
+      - name: Controlled launch historical contract remains green
+        run: python 04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+      - name: External evidence placeholders remain non-attestation
+        run: python 04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py
+      - name: PostgreSQL CREATE OR REPLACE VIEW compatibility guard
+        run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py
