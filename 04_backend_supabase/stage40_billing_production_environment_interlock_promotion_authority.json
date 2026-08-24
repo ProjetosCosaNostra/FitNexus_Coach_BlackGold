@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE40_BILLING_PRODUCTION_ENVIRONMENT_INTERLOCK_PROMOTION",
+  "baseline_main_sha": "f3288d465cf6f3457ce2403b470a2546b5672d0f",
+  "current_state": "REPO_ONLY_VERSIONED_MIGRATION_EXACT_CANDIDATE_NO_REMOTE_APPLY_NO_PROVIDER_ACTIVATION",
+  "failure_classes": [
+    "BGF-STAGE40-BILLING-SANDBOX-EVIDENCE-CROSS-ENV-ACTIVATION-357",
+    "BGF-STAGE40-BILLING-LAUNCH-ENVIRONMENT-MISMATCH-358",
+    "BGF-STAGE40-BILLING-ENVIRONMENT-IDENTITY-DOWNGRADE-359",
+    "BGF-STAGE40-BILLING-CANDIDATE-DIRECT-APPLY-360",
+    "BGF-STAGE40-BILLING-PROMOTION-BODY-DRIFT-362",
+    "BGF-STAGE40-BILLING-PREMATURE-REMOTE-APPLY-363"
+  ],
+  "candidate": {
+    "file": "04_backend_supabase/operations/stage40_billing_production_environment_interlock_candidate.sql",
+    "git_blob_sha": "9900408bec1b7d60f40c39f4e97e5e8c0c1c96cf",
+    "already_green_merged": true,
+    "merged_by_pr": 125,
+    "merged_main_sha": "f3288d465cf6f3457ce2403b470a2546b5672d0f"
+  },
+  "migration": {
+    "name": "stage40_billing_production_environment_interlock",
+    "file": "04_backend_supabase/migrations/20260824003000_stage40_billing_production_environment_interlock.sql",
+    "git_blob_sha": "9900408bec1b7d60f40c39f4e97e5e8c0c1c96cf",
+    "exact_candidate_blob_reused": true,
+    "repo_only": true,
+    "remote_apply_count": 0,
+    "apply_allowed_before_green_merge": false,
+    "apply_method_after_green_merge": "Supabase.apply_migration",
+    "execute_sql_for_dml_or_ddl_allowed": false
+  },
+  "fresh_remote_preflight": {
+    "source": "Supabase.list_migrations+Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-24T00:27:03.610215+00:00",
+    "stage40_remote_migration_present": false,
+    "selection": {
+      "scope": "BR_V1",
+      "provider_code": "asaas",
+      "state": "selected_pending_credentials",
+      "evidence_version": "2026-08-18-official-docs-v1",
+      "activated_at": null
+    },
+    "external_evidence_rows": 0,
+    "auth_users": 0,
+    "organizations": 0,
+    "activation_remote_contains_stage38_external_evidence_interlock": true,
+    "activation_remote_contains_production_environment_interlock": false,
+    "readiness_remote_contains_production_environment_interlock": false,
+    "remote_mutation_performed": false,
+    "provider_called": false,
+    "customer_data_used": false
+  },
+  "migration_ledger": {
+    "comparison_key": "migration_name",
+    "stage40_direction": "repo_only",
+    "stage40_remote_apply_count": 0,
+    "historical_stage17_remote_only_count": 3,
+    "undeclared_divergence_allowed": false
+  },
+  "hardening_contract": {
+    "br_v1_provider": "asaas",
+    "required_provider_environment_id": "asaas-production",
+    "sandbox_activation_failure": "BILLING_PROVIDER_PRODUCTION_ENVIRONMENT_EVIDENCE_REQUIRED",
+    "preserves_stage38_external_evidence_requirement": true,
+    "preserves_proof_complete_launch_requirement": true,
+    "activation_service_role_only": true,
+    "readiness_service_role_only": true,
+    "activation_alone_promotes_billing_gate": false,
+    "paid_ads_auto_launch": false
+  },
+  "promotion_boundaries": {
+    "supabase_mutation_performed": false,
+    "provider_call_performed": false,
+    "provider_activation_performed": false,
+    "external_evidence_attested": false,
+    "customer_data_used": false,
+    "credential_secret_recorded": false,
+    "billing_gate_promoted": false,
+    "controlled_launch_promoted": false,
+    "production_deployment_allowed": false,
+    "incident_response_promotion_allowed": false,
+    "paid_media_allowed": false,
+    "stage35_proof_reexecution_allowed": false
+  },
+  "gates": {
+    "stage40_migration_promotion": "PENDING_CI",
+    "stage40_remote_apply": "DENIED_UNTIL_GREEN_MERGE",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "provider_activation": "DENIED",
+    "provider_call": "DENIED",
+    "controlled_launch": "DENIED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green_merge": {
+    "action": "APPLY_EXACT_STAGE40_MIGRATION_ONCE_AND_RECONCILE_LEDGER",
+    "provider_activation_allowed": false,
+    "provider_call_allowed": false,
+    "external_evidence_attestation_allowed_without_real_evidence": false,
+    "real_asaas_production_operator_evidence_still_required": true
+  }
+}

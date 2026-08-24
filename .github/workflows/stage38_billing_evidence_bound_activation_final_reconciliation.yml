@@ -13,6 +13,7 @@ on:
       - '04_backend_supabase/tools/verify_stage38_billing_evidence_bound_activation_promotion.py'
       - '04_backend_supabase/tools/verify_stage38_promotion_historical_compat.py'
       - '04_backend_supabase/tools/verify_stage38_billing_evidence_bound_activation_final_reconciliation.py'
+      - '04_backend_supabase/tools/verify_stage38_final_historical_compat.py'
       - '.github/workflows/stage38_billing_evidence_bound_activation_promotion.yml'
       - '.github/workflows/stage38_billing_evidence_bound_activation_final_reconciliation.yml'
 
@@ -33,12 +34,13 @@ jobs:
           04_backend_supabase/tools/verify_stage38_billing_evidence_bound_activation_promotion.py
           04_backend_supabase/tools/verify_stage38_promotion_historical_compat.py
           04_backend_supabase/tools/verify_stage38_billing_evidence_bound_activation_final_reconciliation.py
+          04_backend_supabase/tools/verify_stage38_final_historical_compat.py
 
       - name: Migration ledger contract guard
         run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
 
-      - name: Stage38 final remote reconciliation guard
-        run: python 04_backend_supabase/tools/verify_stage38_billing_evidence_bound_activation_final_reconciliation.py
+      - name: Stage38 final remote reconciliation guard under historical projection
+        run: python 04_backend_supabase/tools/verify_stage38_final_historical_compat.py
 
       - name: Stage38 historical promotion projection guard
         run: python 04_backend_supabase/tools/verify_stage38_promotion_historical_compat.py
