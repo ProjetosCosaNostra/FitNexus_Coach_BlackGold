@@ -9,6 +9,7 @@ on:
       - "04_backend_supabase/tools/stage49_evidence_promotion_contract.py"
       - "04_backend_supabase/tools/build_stage49_evidence_promotion_candidate.py"
       - "04_backend_supabase/tools/verify_stage49_evidence_migration_promotion_boundary.py"
+      - "04_backend_supabase/tools/verify_stage40_final_historical_compat.py"
       - ".github/workflows/stage49_evidence_migration_promotion_boundary.yml"
   workflow_dispatch:
 
@@ -27,7 +28,8 @@ jobs:
           python -m py_compile \
             04_backend_supabase/tools/stage49_evidence_promotion_contract.py \
             04_backend_supabase/tools/build_stage49_evidence_promotion_candidate.py \
-            04_backend_supabase/tools/verify_stage49_evidence_migration_promotion_boundary.py
+            04_backend_supabase/tools/verify_stage49_evidence_migration_promotion_boundary.py \
+            04_backend_supabase/tools/verify_stage40_final_historical_compat.py
 
       - name: Verify Stage49 evidence migration promotion boundary
         run: python 04_backend_supabase/tools/verify_stage49_evidence_migration_promotion_boundary.py
@@ -41,8 +43,8 @@ jobs:
       - name: Verify migration ledger authority
         run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
 
-      - name: Verify Stage40 final remote reconciliation
-        run: python 04_backend_supabase/tools/verify_stage40_billing_production_environment_interlock_final_reconciliation.py
+      - name: Verify Stage40 final remote reconciliation under historical projection
+        run: python 04_backend_supabase/tools/verify_stage40_final_historical_compat.py
 
       - name: Verify Stage39 billing credential preparation
         run: python 04_backend_supabase/tools/verify_stage39_billing_credential_authority_preparation.py
