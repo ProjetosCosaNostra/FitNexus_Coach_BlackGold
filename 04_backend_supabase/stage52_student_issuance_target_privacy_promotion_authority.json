@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE52_STUDENT_ISSUANCE_TARGET_PRIVACY_PROMOTION",
+  "baseline_main_sha": "b5f466ef09dd027f10c88d3d13726f3d7c0281ba",
+  "current_state": "REPO_ONLY_VERSIONED_MIGRATION_EXACT_CANDIDATE_NO_REMOTE_APPLY",
+  "failure_classes": [
+    "BGF-STAGE52-AUTHENTICATED-STUDENT-ID-EXISTENCE-ORACLE-481",
+    "BGF-STAGE52-TARGET-LOOKUP-BEFORE-AUTHORITY-482",
+    "BGF-STAGE52-DISTINCT-UNAUTHORIZED-NOTFOUND-ERROR-483",
+    "BGF-STAGE52-ISSUANCE-AUTHORITY-REGRESSION-484",
+    "BGF-STAGE52-CANDIDATE-DIRECT-APPLY-485",
+    "BGF-STAGE52-CLIENT-ERROR-CONTRACT-DEPENDENCY-486",
+    "BGF-STAGE52-STUDENT-ISSUANCE-TARGET-PRIVACY-GUARD-487",
+    "BGF-STAGE52-PROMOTION-BODY-DRIFT-488",
+    "BGF-STAGE52-HISTORICAL-GUARD-FUTURE-MIGRATION-PINNING-489",
+    "BGF-STAGE52-PREMATURE-REMOTE-APPLY-490",
+    "BGF-STAGE52-PROMOTION-GUARD-491"
+  ],
+  "candidate": {
+    "file": "04_backend_supabase/operations/stage52_student_issuance_target_privacy_candidate.sql",
+    "git_blob_sha": "80529ec11b923d83d10e01bb846ed284d34442f6",
+    "already_green_merged": true,
+    "merged_by_pr": 139,
+    "merged_main_sha": "b5f466ef09dd027f10c88d3d13726f3d7c0281ba"
+  },
+  "candidate_authority": {
+    "file": "04_backend_supabase/stage52_student_issuance_target_privacy_candidate_authority.json",
+    "git_blob_sha": "bf4d008eb47e01ffece455f9bac3d6528bb4d74a",
+    "sealed_state": "REPO_ONLY_CANDIDATE_EXISTENCE_ORACLE_CLOSED_IN_SOURCE_NOT_REMOTE"
+  },
+  "migration": {
+    "name": "stage52_student_issuance_target_privacy_hardening",
+    "file": "04_backend_supabase/migrations/20260824203000_stage52_student_issuance_target_privacy_hardening.sql",
+    "git_blob_sha": "80529ec11b923d83d10e01bb846ed284d34442f6",
+    "exact_candidate_blob_reused": true,
+    "repo_only": true,
+    "remote_apply_count": 0,
+    "apply_allowed_before_green_merge": false,
+    "apply_method_after_green_merge": "Supabase.apply_migration",
+    "execute_sql_for_dml_or_ddl_allowed": false
+  },
+  "fresh_remote_preflight": {
+    "source": "Supabase.list_migrations+Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-24T20:27:07.829322+00:00",
+    "stage52_remote_migration_present": false,
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "v2_security_definer": true,
+    "v2_anon_execute": false,
+    "v2_authenticated_execute": true,
+    "v2_service_role_execute": true,
+    "v1_anon_execute": false,
+    "v1_authenticated_execute": false,
+    "v1_service_role_execute": true,
+    "remote_contains_student_not_found": true,
+    "remote_contains_org_manager_required": true,
+    "remote_contains_target_unavailable": false,
+    "remote_contains_combined_membership_join": false,
+    "remote_mutation_performed": false,
+    "customer_data_used": false
+  },
+  "migration_ledger": {
+    "comparison_key": "migration_name",
+    "stage52_direction": "repo_only",
+    "stage52_remote_apply_count": 0,
+    "historical_stage17_remote_only_count": 3,
+    "other_repo_only_count": 0,
+    "undeclared_divergence_allowed": false
+  },
+  "hardening_contract": {
+    "authenticated_execute_preserved": true,
+    "anonymous_execute_denied": true,
+    "security_definer_preserved": true,
+    "auth_required_before_target_resolution": true,
+    "target_resolution_requires_same_organization_membership": true,
+    "target_resolution_requires_owner_or_admin": true,
+    "unauthorized_and_nonexistent_targets_are_indistinguishable": true,
+    "single_target_error": "STUDENT_ACCESS_TARGET_UNAVAILABLE",
+    "student_not_found_removed": true,
+    "org_manager_required_removed": true,
+    "rotation_state_read_after_authorized_target_resolution": true,
+    "rotation_cooldown_preserved": true,
+    "mature_v1_call_after_authority_preserved": true,
+    "token_hash_lookup_preserved": true,
+    "thirty_day_expiry_preserved": true,
+    "previous_link_revocation_preserved": true,
+    "security_event_insert_preserved": true,
+    "flutter_specific_error_dependency": false
+  },
+  "promotion_boundaries": {
+    "supabase_mutation_performed": false,
+    "live_cross_tenant_exploit_performed": false,
+    "real_customer_data_used": false,
+    "privilege_change_performed": false,
+    "deployment_action_performed": false,
+    "production_deployment_promoted": false,
+    "incident_response_promoted": false,
+    "controlled_launch_promoted": false,
+    "paid_media_promoted": false,
+    "launch_promoted": false
+  },
+  "gates": {
+    "stage52_migration_promotion": "PENDING_CI",
+    "stage52_remote_apply": "DENIED_UNTIL_GREEN_EXACT_MERGE",
+    "security_advisor_reconciliation": "PASS_INTENTIONAL_AUTHENTICATED_MANAGER_WRAPPER",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green_merge": {
+    "action": "REREAD_EXACT_MERGED_MIGRATION_AND_REMOTE_FRONTIER_THEN_APPLY_ONCE",
+    "direct_operations_candidate_apply_allowed": false,
+    "execute_sql_dml_or_ddl_allowed": false,
+    "remote_apply_requires_fresh_preapply_read": true,
+    "post_apply_reconciliation_pr_required": true
+  }
+}
