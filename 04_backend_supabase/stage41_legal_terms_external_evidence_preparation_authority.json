@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE41_LEGAL_TERMS_EXTERNAL_EVIDENCE_PREPARATION",
+  "baseline_main_sha": "d390dcfdc18abb19248314b1b7c131d91b0a4a72",
+  "current_state": "PREPARED_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE_REQUIRED_NO_ATTESTATION_NO_GATE_PROMOTION",
+  "failure_classes": [
+    "BGF-STAGE41-LEGAL-TERMS-SELF-ATTESTATION-368",
+    "BGF-STAGE41-LEGAL-TERMS-UNSTABLE-PUBLICATION-REFERENCE-369",
+    "BGF-STAGE41-LEGAL-TERMS-DIGEST-WITHOUT-ARTIFACT-370",
+    "BGF-STAGE41-LEGAL-TERMS-BILLING-POLICY-REFERENCE-OMISSION-371",
+    "BGF-STAGE41-LEGAL-TERMS-ACCEPTANCE-VERSIONING-EVIDENCE-OMISSION-372",
+    "BGF-STAGE41-LEGAL-TERMS-PREMATURE-EVIDENCE-MIGRATION-373",
+    "BGF-STAGE41-LEGAL-TERMS-RECEIPT-PERSONAL-OR-SECRET-MATERIAL-CROSSOVER-374"
+  ],
+  "upstream_authority": {
+    "stage40_final_authority": "04_backend_supabase/stage40_billing_production_environment_interlock_final_authority.json",
+    "stage40_final_authority_blob": "46ccb3ae5cc23d741e60a128713361a9ad7b68da",
+    "stage40_state": "PASS_REMOTE_RECONCILED",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "controlled_launch": "DENIED"
+  },
+  "source_contracts": {
+    "external_gate_placeholders_file": "04_backend_supabase/external_gate_evidence_placeholders.json",
+    "external_gate_placeholders_blob": "07e6eb3330076f3e576ed2dd2a2e385f5fa3b2db",
+    "stage20_migration_file": "04_backend_supabase/migrations/20260819062000_stage20_controlled_launch_admission.sql",
+    "stage20_migration_blob": "e26dd18eff1f4dbf099ad721963b06d6362bc3b9"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-24T00:42:47.237278+00:00",
+    "gate_code": "legal_terms_of_use",
+    "category": "legal",
+    "authority_mode": "evidence_migration",
+    "mandatory": true,
+    "state": "blocked",
+    "evidence_ref": null,
+    "evidence_digest": null,
+    "ready_evidence_migration_count": 0,
+    "remote_mutation_performed": false
+  },
+  "required_real_evidence": {
+    "legal_reviewer_reference": {
+      "required": true,
+      "rule": "Must identify a real independent legal review authority/reference. This preparation cannot create or substitute that review."
+    },
+    "approved_terms_document": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A real approved Terms of Use artifact must exist. Only its SHA-256 is copied to the candidate receipt."
+    },
+    "approved_terms_version": {
+      "required": true,
+      "rule": "Version must be explicit and stable enough to bind later acceptance evidence to the reviewed document."
+    },
+    "stable_published_terms_url": {
+      "required": true,
+      "scheme": "https",
+      "rule": "Must be the stable public production route for the reviewed terms; localhost, example/test placeholders and ephemeral preview URLs are rejected."
+    },
+    "effective_date": {
+      "required": true,
+      "rule": "Must be explicitly supplied from the reviewed terms authority; collector does not infer it."
+    },
+    "billing_cancellation_refund_policy_artifact": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "A reviewed artifact/reference covering billing, cancellation and refund policy must exist; receipt stores only SHA-256."
+    },
+    "contract_acceptance_versioning_artifact": {
+      "required": true,
+      "digest": "sha256",
+      "rule": "Evidence must describe how acceptance is bound to terms version; receipt stores only SHA-256."
+    }
+  },
+  "collector_contract": {
+    "script": "04_backend_supabase/tools/collect_stage41_legal_terms_evidence.ps1",
+    "output_kind": "DIGEST_ONLY_LEGAL_TERMS_EVIDENCE_INTAKE_CANDIDATE",
+    "network_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "legal_review_self_attestation_allowed": false,
+    "raw_artifact_content_copied_to_receipt": false,
+    "artifact_path_or_filename_copied_to_receipt": false,
+    "personal_or_secret_material_allowed": false,
+    "receipt_can_mark_gate_ready": false,
+    "receipt_can_promote_controlled_launch": false
+  },
+  "independent_review_boundary": {
+    "receipt_is_candidate_only": true,
+    "reviewer_must_confirm_real_legal_authority": true,
+    "reviewer_must_confirm_published_url_matches_reviewed_version": true,
+    "reviewer_must_confirm_billing_policy_scope": true,
+    "reviewer_must_confirm_acceptance_versioning_scope": true,
+    "dedicated_evidence_migration_allowed_only_after_real_review": true,
+    "gate_ready_state_before_real_review": false
+  },
+  "next_sequence_after_valid_real_evidence": [
+    {
+      "step": 1,
+      "name": "COLLECT_DIGEST_ONLY_RECEIPT",
+      "rule": "Collect hashes and non-sensitive metadata from the real reviewed artifacts; no network or database mutation."
+    },
+    {
+      "step": 2,
+      "name": "INDEPENDENTLY_REVIEW_RECEIPT_AND_SOURCE_ARTIFACTS",
+      "rule": "Verify that the legal review is real, published URL/version match, and billing/cancellation/refund plus acceptance/versioning evidence are actually covered."
+    },
+    {
+      "step": 3,
+      "name": "PROMOTE_DEDICATED_EVIDENCE_MIGRATION",
+      "rule": "Only after real review, create a separate versioned migration that updates exactly legal_terms_of_use with evidence_ref and evidence_digest."
+    },
+    {
+      "step": 4,
+      "name": "MERGE_GREEN_THEN_APPLY_ONCE",
+      "rule": "Apply exact merged evidence migration through Supabase.apply_migration only. execute_sql remains SELECT-only."
+    }
+  ],
+  "gates": {
+    "stage41_preparation": "REPO_ONLY_PENDING_CI",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
