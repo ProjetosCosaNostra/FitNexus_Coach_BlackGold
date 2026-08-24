@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE52_STUDENT_ISSUANCE_TARGET_PRIVACY_CANDIDATE",
+  "baseline_main_sha": "9cbb05aed21e14ce1ff1b25efd2ceea14094a0ea",
+  "current_state": "REPO_ONLY_CANDIDATE_EXISTENCE_ORACLE_CLOSED_IN_SOURCE_NOT_REMOTE",
+  "problem_statement": {
+    "surface": "public.issue_student_access_token_v2(p_student_id uuid)",
+    "caller_role": "authenticated",
+    "historical_behavior": "The Stage21/remote wrapper first resolves public.students.organization_id, raises STUDENT_NOT_FOUND when no student row exists, then separately calls private.is_org_manager and raises ORG_MANAGER_REQUIRED for an existing student outside the caller's managed organizations.",
+    "privacy_risk": "An authenticated caller can distinguish a nonexistent UUID from an existing cross-tenant student UUID by RPC error semantics, creating a student-identifier existence oracle even though token issuance itself remains manager-authorized.",
+    "token_issuance_authorization_bypass_proven": false,
+    "student_record_contents_exposed": false,
+    "student_identifier_existence_oracle_structurally_proven": true,
+    "live_cross_tenant_exploit_performed": false,
+    "real_customer_data_used": false
+  },
+  "sealed_inputs": {
+    "stage21_issuance_authority_migration": {
+      "path": "04_backend_supabase/migrations/20260819105200_stage21_student_access_issuance_authority_hardening.sql",
+      "git_blob_sha": "7a15f40b936c137c86735783179b1df4b6bc663d"
+    },
+    "stage51_advisor_reconciliation_authority": {
+      "path": "04_backend_supabase/stage51_security_definer_advisor_reconciliation_authority.json",
+      "git_blob_sha": "e2d90eb485d0e6eea68dee05533ff9b762f9f982"
+    },
+    "stage51_advisor_reconciliation_guard": {
+      "path": "04_backend_supabase/tools/verify_stage51_security_definer_advisor_reconciliation.py",
+      "git_blob_sha": "117459b8311168db417368c431097b56c4ec2710"
+    },
+    "candidate_sql": {
+      "path": "04_backend_supabase/operations/stage52_student_issuance_target_privacy_candidate.sql",
+      "git_blob_sha": "80529ec11b923d83d10e01bb846ed284d34442f6"
+    }
+  },
+  "fresh_remote_read_only_receipt": {
+    "observed_at_utc": "2026-08-24T20:16:14.137748+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "v2_security_definer": true,
+    "v2_anon_execute": false,
+    "v2_authenticated_execute": true,
+    "v2_service_role_execute": true,
+    "remote_student_lookup_precedes_manager_check": true,
+    "remote_student_not_found_marker": true,
+    "remote_org_manager_required_marker": true,
+    "remote_distinct_target_errors_present": true,
+    "manager_helper_uses_auth_uid": true,
+    "manager_helper_requires_owner_or_admin": true,
+    "remote_mutation_performed": false
+  },
+  "candidate_contract": {
+    "candidate_is_operations_sql_only": true,
+    "candidate_is_versioned_migration": false,
+    "candidate_is_remote_apply_authority": false,
+    "authenticated_execute_preserved": true,
+    "anon_execute_denied": true,
+    "security_definer_preserved": true,
+    "auth_uid_required_before_target_lookup": true,
+    "student_lookup_and_manager_authority_coalesced": true,
+    "manager_roles": ["owner", "admin"],
+    "unauthorized_and_nonexistent_target_share_single_error": true,
+    "single_target_error": "STUDENT_ACCESS_TARGET_UNAVAILABLE",
+    "historical_student_not_found_error_removed_from_candidate": true,
+    "historical_org_manager_required_error_removed_from_candidate": true,
+    "rotation_state_read_after_authorized_target_resolution": true,
+    "rotation_cooldown_preserved": true,
+    "mature_v1_call_after_authority_preserved": true,
+    "token_hash_lookup_preserved": true,
+    "thirty_day_expiry_preserved": true,
+    "previous_link_revocation_preserved": true,
+    "security_event_insert_preserved": true,
+    "raw_token_storage_added": false,
+    "flutter_client_specific_error_dependency_found": false
+  },
+  "promotion_protocol": {
+    "next_step_if_candidate_green": "SEPARATE_VERSIONED_MIGRATION_PROMOTION_PR",
+    "direct_operations_candidate_apply_allowed": false,
+    "execute_sql_dml_or_ddl_allowed": false,
+    "remote_apply_before_versioned_migration_green_merge_allowed": false,
+    "live_cross_tenant_test_with_real_customer_data_allowed": false,
+    "synthetic_or_isolated_test_required_before_remote_promotion_when_practicable": true
+  },
+  "failure_classes": [
+    "BGF-STAGE52-AUTHENTICATED-STUDENT-ID-EXISTENCE-ORACLE-481",
+    "BGF-STAGE52-TARGET-LOOKUP-BEFORE-AUTHORITY-482",
+    "BGF-STAGE52-DISTINCT-UNAUTHORIZED-NOTFOUND-ERROR-483",
+    "BGF-STAGE52-ISSUANCE-AUTHORITY-REGRESSION-484",
+    "BGF-STAGE52-CANDIDATE-DIRECT-APPLY-485",
+    "BGF-STAGE52-CLIENT-ERROR-CONTRACT-DEPENDENCY-486",
+    "BGF-STAGE52-STUDENT-ISSUANCE-TARGET-PRIVACY-GUARD-487"
+  ],
+  "gates": {
+    "stage52_candidate": "REPO_ONLY_GREEN_REQUIRED_BEFORE_MIGRATION_PROMOTION",
+    "security_advisor_reconciliation": "PASS_INTENTIONAL_EXPOSURE_STILL_ALLOWLISTED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
