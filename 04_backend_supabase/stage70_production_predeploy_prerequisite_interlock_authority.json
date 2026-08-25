@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE70_PRODUCTION_PREDEPLOY_PREREQUISITE_INTERLOCK",
+  "baseline_main_sha": "2f74ed0f282e32cec81e706e013ff18d9337ac65",
+  "current_state": "EXACT_RELEASE_CANDIDATE_PREDEPLOY_PREREQUISITE_BINDING_PREPARED_NO_DEPLOYMENT_NO_PRODUCTION_EVIDENCE_NO_GATE_PROMOTION",
+  "upstream_authority": {
+    "stage46_production_deployment_preparation": "04_backend_supabase/stage46_production_deployment_external_evidence_preparation_authority.json",
+    "stage46_production_deployment_preparation_blob": "bec2751cbeaa5e0fc8c97dc0eb65dbbb7db65134",
+    "stage66_release_candidate_pipeline": "04_backend_supabase/stage66_production_release_candidate_evidence_pipeline_authority.json",
+    "stage66_release_candidate_pipeline_blob": "8f3be15da1027d9a5bed6e7d1f43cefebcf6a9eb"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-25T17:57:01.715964+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "ready_evidence_migration_count": 0,
+    "remote_mutation_performed": false
+  },
+  "predeploy_contract": {
+    "prerequisite_input_template": "10_compliance/deployment/STAGE70_PRODUCTION_PREDEPLOY_PREREQUISITE_INPUT_TEMPLATE.json",
+    "binder": "04_backend_supabase/tools/bind_stage70_production_predeploy_prerequisites.py",
+    "guard": "04_backend_supabase/tools/verify_stage70_production_predeploy_prerequisite_interlock.py",
+    "workflow": ".github/workflows/stage70_production_predeploy_prerequisite_interlock.yml",
+    "exact_release_candidate_manifest_required": true,
+    "release_candidate_source_sha_must_match_requested_source_sha": true,
+    "stable_production_domain_required": true,
+    "tls_baseline_artifact_required": true,
+    "secret_free_environment_readiness_artifact_required": true,
+    "rollback_readiness_artifact_required": true,
+    "monitoring_alerting_readiness_artifact_required": true,
+    "backup_restore_readiness_artifact_required": true,
+    "deployment_destination_control_artifact_required": true,
+    "real_operator_acknowledgment_required": true,
+    "placeholder_prerequisite_input_must_fail": true,
+    "test_fixture_prerequisite_input_must_fail": true,
+    "artifact_paths_copied_to_output": false,
+    "artifact_contents_copied_to_output": false,
+    "artifact_sha256_only_in_output": true,
+    "secret_values_allowed": false,
+    "deployment_action_allowed": false,
+    "gh_pages_write_allowed": false,
+    "network_probe_allowed": false,
+    "supabase_mutation_allowed": false,
+    "provider_call_allowed": false,
+    "production_smoke_claim_allowed_before_deploy": false,
+    "production_evidence_claim_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "production_deployment_gate_promotion_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "stage46_split_boundary": {
+    "predeploy_bindable_now_if_real_external_artifacts_exist": [
+      "stable production domain",
+      "TLS baseline evidence",
+      "environment configuration readiness without secrets",
+      "rollback readiness",
+      "monitoring/alerting readiness",
+      "backup/restore readiness",
+      "deployment destination control"
+    ],
+    "postdeploy_only_and_must_not_be_fabricated": [
+      "exact deployed release binding",
+      "production smoke-test receipt",
+      "post-deploy rollback exercise receipt",
+      "final production release evidence manifest"
+    ]
+  },
+  "progress_semantics": {
+    "what_stage70_proves": "The repository can bind an exact release candidate to independently supplied pre-deploy operational prerequisites without copying secrets or performing a deployment.",
+    "what_stage70_does_not_prove": "It does not prove that the target domain currently serves the candidate, does not perform TLS or smoke probes, does not deploy, and does not satisfy the production_deployment gate.",
+    "why_ci_uses_placeholder_input": "CI must prove a repository placeholder cannot be mistaken for real operational readiness."
+  },
+  "failure_classes": [
+    "BGF-STAGE70-PLACEHOLDER-PREDEPLOY-FALSE-GREEN-666",
+    "BGF-STAGE70-CI-FIXTURE-AS-PRODUCTION-PREREQUISITE-667",
+    "BGF-STAGE70-RELEASE-CANDIDATE-SHA-MISMATCH-668",
+    "BGF-STAGE70-PREDEPLOY-SECRET-LEAKAGE-669",
+    "BGF-STAGE70-PREDEPLOY-ARTIFACT-PATH-LEAKAGE-670",
+    "BGF-STAGE70-MISSING-ROLLBACK-READINESS-671",
+    "BGF-STAGE70-MISSING-MONITORING-BACKUP-READINESS-672",
+    "BGF-STAGE70-PREDEPLOY-AS-PRODUCTION-EVIDENCE-673",
+    "BGF-STAGE70-UNAUTHORIZED-DEPLOYMENT-ACTION-674",
+    "BGF-STAGE70-PREDEPLOY-INTERLOCK-GUARD-675"
+  ],
+  "gates": {
+    "stage70_predeploy_interlock": "REPO_ONLY_PENDING_CI",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Prepare a post-deploy evidence collector contract that can consume the predeploy binding plus an exact deployed release identifier and real smoke/rollback receipts, but still cannot deploy or promote the gate automatically.",
+    "real_external_predeploy_artifacts_required_before_binding_candidate": true,
+    "deployment_authorization_not_granted": true,
+    "evidence_migration_allowed": false
+  }
+}
