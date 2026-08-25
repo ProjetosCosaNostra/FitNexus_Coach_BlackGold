@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE58_BILLING_CONTROLLED_PROOF_INTAKE_PREPARATION",
+  "baseline_main_sha": "a291556a26937ba117921b90ee9c61ad4e61ba99",
+  "current_state": "CONTROLLED_PROOF_RECEIPT_INTAKE_PREPARED_NO_LIVE_PROOF_NO_PROVIDER_CALL_NO_ACTIVATION_NO_FIXTURE_MUTATION",
+  "fresh_remote_read_only_snapshot": {
+    "observed_at_utc": "2026-08-25T01:45:34.110756+00:00",
+    "selection_state": "selected_pending_credentials",
+    "selection_activated_at": null,
+    "credentials_verified_rows": 0,
+    "proof_complete_rows": 0,
+    "checkout_intents": 0,
+    "webhook_receipts": 0,
+    "remote_mutation_performed": false,
+    "functions": {
+      "activate_billing_provider_selection": {
+        "identity_args": "p_scope text, p_provider_code text, p_evidence_version text",
+        "security_definer": true,
+        "service_role_execute": true,
+        "authenticated_execute": false,
+        "anon_execute": false,
+        "definition_sha256": "d1ce2db8809c6b4fa66a7018b54baa05725ee97b14508080a5f52f0894400e7c"
+      },
+      "create_billing_checkout_intent": {
+        "identity_args": "p_organization_id uuid, p_plan_code text, p_billing_interval text, p_idempotency_key uuid",
+        "security_definer": false,
+        "service_role_execute": false,
+        "authenticated_execute": true,
+        "anon_execute": false,
+        "definition_sha256": "341a9fee068212dae3212b953615674b9a018f8254516ec50baee4816152c80d"
+      },
+      "attach_billing_provider_checkout": {
+        "identity_args": "p_checkout_intent_id uuid, p_provider_checkout_ref text, p_checkout_url text, p_expires_at timestamp with time zone",
+        "security_definer": true,
+        "service_role_execute": true,
+        "authenticated_execute": false,
+        "anon_execute": false,
+        "definition_sha256": "30a45ec42e2e50570fb75609f4e4fd2be67619e8b9d12edbda71c5b25a72d88c"
+      },
+      "record_billing_webhook_receipt": {
+        "identity_args": "p_provider_code text, p_provider_event_id text, p_event_type text, p_payload_sha256 text, p_auth_verified boolean, p_organization_id uuid, p_provider_subscription_ref text",
+        "security_definer": true,
+        "service_role_execute": true,
+        "authenticated_execute": false,
+        "anon_execute": false,
+        "definition_sha256": "2a609c89e954c8bc334219e52e1f197bca00228bccdbaf1ce4115e4a34374e44"
+      },
+      "mark_billing_webhook_receipt": {
+        "identity_args": "p_provider_code text, p_provider_event_id text, p_processing_status text, p_organization_id uuid, p_provider_subscription_ref text",
+        "security_definer": true,
+        "service_role_execute": true,
+        "authenticated_execute": false,
+        "anon_execute": false,
+        "definition_sha256": "07fad48fd549366cf95aa206fdb3e83f98cab3e0b3038a42703b6259dfbf2e9f"
+      }
+    }
+  },
+  "sealed_inputs": {
+    "stage56_authority": {
+      "path": "04_backend_supabase/stage56_billing_proof_complete_promotion_boundary_authority.json",
+      "git_blob_sha": "4822ad8f32aa7154c851b15a79804698388c8311"
+    },
+    "stage56_verifier": {
+      "path": "04_backend_supabase/tools/verify_stage56_billing_proof_complete_promotion_boundary.py",
+      "git_blob_sha": "6560d29765cbf793f304bffab45642ae29b3add5"
+    },
+    "stage57_final_reconciliation": {
+      "path": "04_backend_supabase/stage57_stage56_final_reconciliation_authority.json",
+      "git_blob_sha": "87f86d2685aea4ca8499a7345906e5ee6c04a8dc"
+    },
+    "billing_provider_contract_guard": {
+      "path": "04_backend_supabase/tools/verify_billing_provider_contract.py",
+      "git_blob_sha": "aafc61f9844476f35a86487e736db87e826068a2"
+    }
+  },
+  "intake_contract": {
+    "contract_id": "STAGE58_V1",
+    "required_receipt_types": [
+      "SYNTHETIC_FIXTURE_MANIFEST",
+      "PROVIDER_SELECTION_ACTIVATION",
+      "WEBHOOK_AUTH",
+      "WEBHOOK_REPLAY",
+      "CHECKOUT_END_TO_END",
+      "SYNTHETIC_FIXTURE_CLEANUP"
+    ],
+    "exactly_one_receipt_per_type": true,
+    "canonical_receipt_sha256_is_stage56_proof_digest": true,
+    "proof_bundle_digest_is_canonical_digest_map_sha256": true,
+    "receipt_path_or_filename_copied_to_bundle": false,
+    "raw_receipt_body_copied_to_bundle": false,
+    "unknown_receipt_type_allowed": false,
+    "duplicate_receipt_type_allowed": false,
+    "customer_data_allowed": false,
+    "raw_secret_allowed_in_receipt": false,
+    "real_financial_charge_required": false,
+    "paid_subscription_creation_required": false,
+    "stage58_tooling_provider_call_allowed": false,
+    "stage58_tooling_provider_activation_allowed": false,
+    "stage58_tooling_supabase_mutation_allowed": false,
+    "stage58_tooling_network_allowed": false,
+    "receipt_structural_pass_is_independent_review": false,
+    "receipt_bundle_complete_is_proof_complete_authority": false,
+    "receipt_bundle_complete_is_remote_apply_authority": false,
+    "receipt_bundle_complete_is_launch_authority": false,
+    "future_live_proof_requires_separate_explicit_authorization": true,
+    "future_live_proof_requires_real_stage54_credentials_verified_authority": true,
+    "future_live_proof_must_use_synthetic_non_customer_fixtures": true,
+    "future_live_proof_requires_cleanup_before_independent_review": true
+  },
+  "stage56_digest_mapping": {
+    "PROVIDER_SELECTION_ACTIVATION": "provider_activation_receipt_sha256",
+    "WEBHOOK_AUTH": "webhook_auth_test_receipt_digest",
+    "WEBHOOK_REPLAY": "webhook_replay_receipt_digest",
+    "CHECKOUT_END_TO_END": "checkout_end_to_end_receipt_digest",
+    "SYNTHETIC_FIXTURE_MANIFEST": "synthetic_fixture_manifest_sha256",
+    "SYNTHETIC_FIXTURE_CLEANUP": "synthetic_fixture_cleanup_receipt_sha256"
+  },
+  "receipt_semantics": {
+    "SYNTHETIC_FIXTURE_MANIFEST": "Digest-only manifest proving the future controlled proof is scoped to synthetic non-customer identities and records the cleanup obligation.",
+    "PROVIDER_SELECTION_ACTIVATION": "Digest-only receipt proving the already credential-evidence-bound BR_V1 Asaas selection transitioned from pending to active under the canonical service-role activation command, without a provider network call.",
+    "WEBHOOK_AUTH": "Digest-only receipt proving valid controlled authentication was accepted while invalid and missing authentication were rejected fail-closed, without exposing the webhook secret.",
+    "WEBHOOK_REPLAY": "Digest-only receipt proving replay of the same provider event identity does not create a duplicate durable receipt or duplicate subscription transition.",
+    "CHECKOUT_END_TO_END": "Digest-only receipt proving server-authoritative price/provider binding, idempotent replay, conflicting-key rejection, HTTPS checkout URL and durable provider checkout reference using synthetic fixtures; any provider network call requires separate authorization.",
+    "SYNTHETIC_FIXTURE_CLEANUP": "Digest-only receipt proving fixture-scoped residue is zero after successful proof collection and customer rows were not touched."
+  },
+  "aggregate_states": [
+    "INVALID_RECEIPT_PRESENT",
+    "INCOMPLETE_MISSING_RECEIPTS",
+    "STRUCTURALLY_COMPLETE_AWAITING_INDEPENDENT_REVIEW"
+  ],
+  "failure_classes": [
+    "BGF-STAGE58-LIVE-PROOF-DURING-INTAKE-PREPARATION-550",
+    "BGF-STAGE58-MISSING-STAGE54-CREDENTIAL-AUTHORITY-BYPASS-551",
+    "BGF-STAGE58-RECEIPT-TYPE-MASQUERADE-552",
+    "BGF-STAGE58-DUPLICATE-RECEIPT-TYPE-553",
+    "BGF-STAGE58-RAW-SECRET-IN-RECEIPT-554",
+    "BGF-STAGE58-CUSTOMER-DATA-IN-PROOF-555",
+    "BGF-STAGE58-FINANCIAL-CHARGE-FALSE-REQUIREMENT-556",
+    "BGF-STAGE58-RECEIPT-STRUCTURE-AS-INDEPENDENT-REVIEW-557",
+    "BGF-STAGE58-BUNDLE-AS-PROOF-COMPLETE-AUTHORITY-558",
+    "BGF-STAGE58-RECEIPT-PATH-LEAKAGE-559",
+    "BGF-STAGE58-FUNCTION-AUTHORITY-DRIFT-560",
+    "BGF-STAGE58-CLEANUP-OMISSION-561",
+    "BGF-STAGE58-CONTROLLED-PROOF-INTAKE-GUARD-562"
+  ],
+  "gates": {
+    "stage58_intake": "REPO_ONLY_PENDING_CI",
+    "credentials_verified": "DENIED_AWAITING_REAL_STAGE54_EXTERNAL_EVIDENCE_PROMOTION",
+    "provider_activation": "DENIED",
+    "provider_call": "DENIED",
+    "controlled_proof_execution": "DENIED_AWAITING_SEPARATE_EXPLICIT_AUTHORIZATION_AND_REAL_CREDENTIAL_EVIDENCE",
+    "proof_complete": "DENIED",
+    "billing_provider_credentials": "DENIED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
