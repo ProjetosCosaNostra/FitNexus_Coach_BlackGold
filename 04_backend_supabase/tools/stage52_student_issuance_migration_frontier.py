@@ -41,6 +41,20 @@ def divergences(ledger: dict) -> tuple[list[dict], list[dict]]:
     )
 
 
+def _version_before_or_equal_stage52(row: object) -> bool:
+    if not isinstance(row, dict):
+        return False
+    version = str(row.get("version", ""))
+    return version.isdigit() and len(version) == 14 and version <= REMOTE_VERSION
+
+
+def _version_before_stage52(row: object) -> bool:
+    if not isinstance(row, dict):
+        return False
+    version = str(row.get("version", ""))
+    return version.isdigit() and len(version) == 14 and version < REMOTE_VERSION
+
+
 def state(ledger: dict) -> str:
     if ledger.get("schema_version") != 1 or ledger.get("project_ref") != "mceukeondizkwlpfxzgf":
         raise ValueError("common ledger identity drift")
@@ -73,12 +87,11 @@ def to_promotion(ledger: dict) -> dict:
     projected["source"] = PROMOTION_SOURCE
     projected["remote_migrations"] = [
         row for row in projected.get("remote_migrations", [])
-        if not (isinstance(row, dict) and row.get("name") == NAME)
+        if _version_before_stage52(row)
+        and not (isinstance(row, dict) and row.get("name") == NAME)
     ]
-    remote_only, repo_only = divergences(projected)
-    projected["declared_divergences"] = remote_only + [
-        row for row in repo_only if row.get("name") != NAME
-    ] + [clone(PROMOTION_REPO_ONLY)]
+    remote_only, _repo_only = divergences(projected)
+    projected["declared_divergences"] = remote_only + [clone(PROMOTION_REPO_ONLY)]
     state(projected)
     return projected
 
@@ -93,10 +106,12 @@ def to_final(ledger: dict) -> dict:
     projected["baseline_main_sha"] = FINAL_BASELINE
     projected["observed_at_utc"] = FINAL_OBSERVED
     projected["source"] = FINAL_SOURCE
-    remote_only, repo_only = divergences(projected)
-    projected["declared_divergences"] = remote_only + [
-        row for row in repo_only if row.get("name") != NAME
+    projected["remote_migrations"] = [
+        row for row in projected.get("remote_migrations", [])
+        if _version_before_or_equal_stage52(row)
     ]
+    remote_only, _repo_only = divergences(projected)
+    projected["declared_divergences"] = remote_only
     state(projected)
     return projected
 
