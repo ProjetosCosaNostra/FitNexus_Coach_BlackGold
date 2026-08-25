@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "input_kind": "REAL_POSTDEPLOY_EVIDENCE_INPUT",
+  "status": "PLACEHOLDER_TEMPLATE_NOT_PRODUCTION_EVIDENCE",
+  "test_fixture": true,
+  "contains_placeholders": true,
+  "operator_acknowledged": false,
+  "deployed_release_sha": "<EXACT_40_HEX_DEPLOYED_RELEASE_SHA_REQUIRED>",
+  "stable_production_domain": "<REAL_STABLE_HTTPS_DOMAIN_REQUIRED>",
+  "artifacts": {
+    "live_tls_receipt": "<REAL_NONEMPTY_ARTIFACT_PATH_REQUIRED>",
+    "production_smoke_receipt": "<REAL_NONEMPTY_ARTIFACT_PATH_REQUIRED>",
+    "postdeploy_rollback_receipt": "<REAL_NONEMPTY_ARTIFACT_PATH_REQUIRED>",
+    "monitoring_alerting_live_receipt": "<REAL_NONEMPTY_ARTIFACT_PATH_REQUIRED>",
+    "final_release_evidence_manifest": "<REAL_NONEMPTY_ARTIFACT_PATH_REQUIRED>"
+  },
+  "instructions": "Use only after an independently authorized real deployment. Copy this template outside the repository, replace all placeholders with real receipts, set test_fixture=false, contains_placeholders=false and operator_acknowledged=true. Never commit the completed production-evidence input.",
+  "boundary": {
+    "collector_performs_deployment": false,
+    "collector_performs_network_probe": false,
+    "collector_marks_gate_ready": false,
+    "collector_creates_evidence_migration": false,
+    "completed_input_must_not_be_committed": true
+  }
+}
