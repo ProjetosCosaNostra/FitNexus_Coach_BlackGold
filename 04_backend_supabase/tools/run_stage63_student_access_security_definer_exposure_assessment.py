@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 
 import verify_stage63_student_access_security_definer_exposure_assessment as guard
@@ -48,25 +49,32 @@ def sealed_stage52_source_check() -> None:
         fail("Stage52 hardened function body reintroduced distinguishable target errors")
 
 
-def self_match_safe_side_effect_check() -> None:
+def ast_side_effect_check() -> None:
     if any("stage63" in path.name.lower() for path in MIGRATIONS.glob("*.sql")):
         fail("Stage63 assessment must not introduce a migration")
 
-    source = GUARD_SOURCE.read_text(encoding="utf-8").lower()
-    forbidden = (
-        "req" + "uests.",
-        "url" + "lib.request",
-        "sub" + "process.",
-        "supa" + "base.",
-        "apply_" + "migration(",
-        "execute_" + "sql(",
-    )
-    for marker in forbidden:
-        if marker in source:
-            fail(f"Stage63 guard contains forbidden execution surface: {marker}")
+    tree = ast.parse(GUARD_SOURCE.read_text(encoding="utf-8"), filename=str(GUARD_SOURCE))
+    forbidden_modules = {"requests", "subprocess", "supabase"}
+    forbidden_calls = {"apply_migration", "execute_sql", "urlopen"}
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.split(".", 1)[0] in forbidden_modules:
+                    fail(f"Stage63 guard imports forbidden execution module: {alias.name}")
+        elif isinstance(node, ast.ImportFrom):
+            module = (node.module or "").split(".", 1)[0]
+            if module in forbidden_modules or (node.module or "").startswith("urllib.request"):
+                fail(f"Stage63 guard imports forbidden execution module: {node.module}")
+        elif isinstance(node, ast.Call):
+            target = node.func
+            if isinstance(target, ast.Name) and target.id in forbidden_calls:
+                fail(f"Stage63 guard calls forbidden execution function: {target.id}")
+            if isinstance(target, ast.Attribute) and target.attr in forbidden_calls:
+                fail(f"Stage63 guard calls forbidden execution method: {target.attr}")
 
 
 if __name__ == "__main__":
     guard.verify_stage52_source = sealed_stage52_source_check
-    guard.verify_no_stage63_migration_or_side_effect_tooling = self_match_safe_side_effect_check
+    guard.verify_no_stage63_migration_or_side_effect_tooling = ast_side_effect_check
     guard.main()
