@@ -1,0 +1,59 @@
+name: Stage71 Postdeploy Evidence Intake Contract
+
+on:
+  pull_request:
+    paths:
+      - '04_backend_supabase/stage71_postdeploy_evidence_intake_contract_authority.json'
+      - '04_backend_supabase/tools/collect_stage71_postdeploy_evidence_candidate.py'
+      - '04_backend_supabase/tools/verify_stage71_postdeploy_evidence_intake_contract.py'
+      - '10_compliance/deployment/STAGE71_POSTDEPLOY_EVIDENCE_INPUT_TEMPLATE.json'
+      - '.github/workflows/stage71_postdeploy_evidence_intake_contract.yml'
+  push:
+    branches:
+      - main
+      - 'blackgold/**'
+    paths:
+      - '04_backend_supabase/stage71_postdeploy_evidence_intake_contract_authority.json'
+      - '04_backend_supabase/tools/collect_stage71_postdeploy_evidence_candidate.py'
+      - '04_backend_supabase/tools/verify_stage71_postdeploy_evidence_intake_contract.py'
+      - '10_compliance/deployment/STAGE71_POSTDEPLOY_EVIDENCE_INPUT_TEMPLATE.json'
+      - '.github/workflows/stage71_postdeploy_evidence_intake_contract.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-postdeploy-intake-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify Stage71 postdeploy contract
+        run: python 04_backend_supabase/tools/verify_stage71_postdeploy_evidence_intake_contract.py
+
+      - name: Prove committed placeholder postdeploy input is refused before evidence collection
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f /tmp/stage71_postdeploy.json
+          if python 04_backend_supabase/tools/collect_stage71_postdeploy_evidence_candidate.py \
+            --predeploy-binding /tmp/nonexistent_stage70_binding.json \
+            --postdeploy-input 10_compliance/deployment/STAGE71_POSTDEPLOY_EVIDENCE_INPUT_TEMPLATE.json \
+            --output /tmp/stage71_postdeploy.json; then
+            echo "PLACEHOLDER_POSTDEPLOY_FALSE_GREEN=FAIL"
+            exit 1
+          fi
+          test ! -e /tmp/stage71_postdeploy.json
+          echo "PLACEHOLDER_POSTDEPLOY_INPUT_REFUSED=PASS"
+
+      - name: Preserve postdeploy evidence denial boundary
+        run: |
+          echo "DEPLOYMENT_ACTION=false"
+          echo "NETWORK_CALL=false"
+          echo "PRODUCTION_GATE_READY=false"
+          echo "EVIDENCE_MIGRATION=false"
+          echo "REMOTE_MUTATION=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
