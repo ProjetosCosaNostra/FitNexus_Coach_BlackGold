@@ -1,0 +1,81 @@
+name: Stage59 Billing Proof Independent Review Preparation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/stage59_billing_proof_independent_review_preparation_authority.json'
+      - '04_backend_supabase/tools/stage59_billing_proof_independent_review_contract.py'
+      - '04_backend_supabase/tools/build_stage59_stage56_proof_promotion_authority.py'
+      - '04_backend_supabase/tools/verify_stage59_billing_proof_independent_review_preparation.py'
+      - '.github/workflows/stage59_billing_proof_independent_review_preparation.yml'
+  push:
+    branches:
+      - 'blackgold/stage59-billing-proof-independent-review-preparation'
+    paths:
+      - '04_backend_supabase/stage59_billing_proof_independent_review_preparation_authority.json'
+      - '04_backend_supabase/tools/stage59_billing_proof_independent_review_contract.py'
+      - '04_backend_supabase/tools/build_stage59_stage56_proof_promotion_authority.py'
+      - '04_backend_supabase/tools/verify_stage59_billing_proof_independent_review_preparation.py'
+      - '.github/workflows/stage59_billing_proof_independent_review_preparation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stage59-independent-review-preparation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Compile Stage59 surfaces
+        run: |
+          python -m py_compile 04_backend_supabase/tools/stage59_billing_proof_independent_review_contract.py
+          python -m py_compile 04_backend_supabase/tools/build_stage59_stage56_proof_promotion_authority.py
+          python -m py_compile 04_backend_supabase/tools/verify_stage59_billing_proof_independent_review_preparation.py
+
+      - name: Verify Stage59 independent review preparation
+        run: python 04_backend_supabase/tools/verify_stage59_billing_proof_independent_review_preparation.py
+
+      - name: Prove Stage59 cannot build without real reviewed inputs
+        run: |
+          mkdir -p "$RUNNER_TEMP/stage59-empty"
+          set +e
+          python 04_backend_supabase/tools/build_stage59_stage56_proof_promotion_authority.py \
+            --stage58-aggregate "$RUNNER_TEMP/stage59-empty/missing-stage58.json" \
+            --independent-review-receipt "$RUNNER_TEMP/stage59-empty/missing-review.json" \
+            --output "$RUNNER_TEMP/stage59-empty/candidate.json"
+          rc=$?
+          set -e
+          test "$rc" -ne 0
+          test ! -e "$RUNNER_TEMP/stage59-empty/candidate.json"
+          echo "STAGE59_MISSING_REAL_REVIEW_INPUTS_FAIL_CLOSED=PASS"
+
+      - name: Verify Stage58 controlled proof intake preparation
+        run: python 04_backend_supabase/tools/verify_stage58_billing_controlled_proof_intake_preparation.py
+
+      - name: Verify Stage57 final reconciliation
+        run: python 04_backend_supabase/tools/verify_stage57_stage56_final_reconciliation.py
+
+      - name: Verify Stage56 proof-complete promotion boundary
+        run: python 04_backend_supabase/tools/verify_stage56_billing_proof_complete_promotion_boundary.py
+
+      - name: Verify Stage55 final reconciliation
+        run: python 04_backend_supabase/tools/verify_stage55_stage54_final_reconciliation.py
+
+      - name: Verify Stage54 credentials evidence promotion boundary
+        run: python 04_backend_supabase/tools/verify_stage54_billing_external_evidence_promotion_boundary.py
+
+      - name: Verify migration ledger authority
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify billing provider contract
+        run: python 04_backend_supabase/tools/verify_billing_provider_contract.py
+
+      - name: Verify controlled launch admission contract
+        run: python 04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+
+      - name: Verify external gate evidence placeholders
+        run: python 04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py
