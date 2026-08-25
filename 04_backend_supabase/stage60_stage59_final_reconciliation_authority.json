@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE60_STAGE59_FINAL_RECONCILIATION",
+  "baseline_main_sha": "ec939ea19c20d74c689d7193cf645d4b2fe2c20a",
+  "stage59_pr": {
+    "number": 150,
+    "head_sha": "61527ad9ee2a03ca7766e113746e2169b1770705",
+    "merge_sha": "ec939ea19c20d74c689d7193cf645d4b2fe2c20a",
+    "mergeable_before_merge": true,
+    "exact_head_merge_enforced": true
+  },
+  "stage59_ci": {
+    "stage59_run_id": 32831867830,
+    "stage59_conclusion": "success",
+    "flutter_run_id": 32831867904,
+    "flutter_conclusion": "success",
+    "consumed_live_proof_workflows_replayed": false
+  },
+  "sealed_stage59_inputs": {
+    "authority": {
+      "path": "04_backend_supabase/stage59_billing_proof_independent_review_preparation_authority.json",
+      "git_blob_sha": "7da5bc11b15d0813f77a00b2fd5e19f7a72ee4ca"
+    },
+    "verifier": {
+      "path": "04_backend_supabase/tools/verify_stage59_billing_proof_independent_review_preparation.py",
+      "git_blob_sha": "33da0da1c8483304161045703463856da99609ee"
+    }
+  },
+  "postmerge_remote_read_only_snapshot": {
+    "observed_at_utc": "2026-08-25T09:28:14.063689+00:00",
+    "read_only": true,
+    "remote_mutation_performed": false,
+    "billing_selection": {
+      "scope": "BR_V1",
+      "provider_code": "asaas",
+      "state": "selected_pending_credentials",
+      "evidence_version": "2026-08-18-official-docs-v1",
+      "activated_at": null
+    },
+    "billing_external_evidence_total": 0,
+    "credentials_verified_rows": 0,
+    "proof_complete_rows": 0,
+    "checkout_intents": 0,
+    "webhook_receipts": 0,
+    "evidence_migration_ready_rows": 0
+  },
+  "final_state": "STAGE59_MERGED_GREEN_REMOTE_UNCHANGED_REAL_PROOF_AND_INDEPENDENT_REVIEW_STILL_MISSING",
+  "governance": {
+    "stage59_boundary": "PASS_MERGED_REPO_ONLY",
+    "stage59_remote_apply_required": false,
+    "stage59_remote_apply_authorized": false,
+    "real_stage58_complete_bundle": "DENIED_NOT_SUPPLIED",
+    "independent_review": "DENIED_NOT_SUPPLIED",
+    "stage56_reviewed_candidate": "DENIED",
+    "proof_complete": "DENIED",
+    "billing_provider_credentials": "DENIED",
+    "provider_activation": "DENIED",
+    "provider_call": "DENIED",
+    "incident_response": "DENIED",
+    "production_deployment": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED",
+    "execute_sql_dml_or_ddl_allowed": false,
+    "evidence_fabrication_allowed": false
+  },
+  "failure_classes": [
+    "BGF-STAGE60-STAGE59-SEALED-INPUT-DRIFT-577",
+    "BGF-STAGE60-POSTMERGE-REMOTE-STATE-DRIFT-578",
+    "BGF-STAGE60-CI-RECEIPT-DRIFT-579",
+    "BGF-STAGE60-FALSE-INDEPENDENT-REVIEW-READY-580",
+    "BGF-STAGE60-REMOTE-MUTATION-DURING-RECONCILIATION-581",
+    "BGF-STAGE60-FINAL-RECONCILIATION-GUARD-582"
+  ]
+}
