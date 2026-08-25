@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE71_POSTDEPLOY_EVIDENCE_INTAKE_CONTRACT",
+  "baseline_main_sha": "be1e6026095c48d322428ffd84e2994c9a683f8f",
+  "current_state": "POSTDEPLOY_DIGEST_ONLY_EVIDENCE_INTAKE_CONTRACT_PREPARED_NO_DEPLOYMENT_NO_GATE_PROMOTION",
+  "upstream_authority": {
+    "stage46_production_deployment_preparation": "04_backend_supabase/stage46_production_deployment_external_evidence_preparation_authority.json",
+    "stage46_production_deployment_preparation_blob": "bec2751cbeaa5e0fc8c97dc0eb65dbbb7db65134",
+    "stage70_predeploy_interlock": "04_backend_supabase/stage70_production_predeploy_prerequisite_interlock_authority.json",
+    "stage70_predeploy_interlock_blob": "f62630cb17ffa0e6e92f5a7f9d78f9a9cff17660"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-25T18:02:36.623308+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "ready_evidence_migration_count": 0,
+    "remote_mutation_performed": false
+  },
+  "postdeploy_contract": {
+    "input_template": "10_compliance/deployment/STAGE71_POSTDEPLOY_EVIDENCE_INPUT_TEMPLATE.json",
+    "collector": "04_backend_supabase/tools/collect_stage71_postdeploy_evidence_candidate.py",
+    "guard": "04_backend_supabase/tools/verify_stage71_postdeploy_evidence_intake_contract.py",
+    "workflow": ".github/workflows/stage71_postdeploy_evidence_intake_contract.yml",
+    "predeploy_binding_required": true,
+    "exact_deployed_release_sha_required": true,
+    "stable_domain_must_match_predeploy_binding": true,
+    "live_tls_receipt_required": true,
+    "production_smoke_receipt_required": true,
+    "postdeploy_rollback_receipt_required": true,
+    "monitoring_alerting_live_receipt_required": true,
+    "final_release_evidence_manifest_required": true,
+    "operator_acknowledgment_required": true,
+    "placeholder_input_must_fail": true,
+    "test_fixture_input_must_fail": true,
+    "artifact_paths_copied_to_output": false,
+    "artifact_contents_copied_to_output": false,
+    "artifact_sha256_only_in_output": true,
+    "network_calls_allowed": false,
+    "deployment_action_allowed": false,
+    "gh_pages_write_allowed": false,
+    "supabase_mutation_allowed": false,
+    "provider_calls_allowed": false,
+    "production_gate_ready_attestation_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "progress_semantics": {
+    "what_stage71_proves": "The project has a digest-only post-deploy intake contract ready to bind real deployment receipts to an exact deployed release after an independently authorized deployment occurs.",
+    "what_stage71_does_not_prove": "No deployment has occurred, no production probe is performed, no smoke or rollback receipt exists yet, and the production_deployment gate remains blocked.",
+    "review_boundary": "Collector output is a candidate only and requires independent review before any evidence migration can be authored."
+  },
+  "failure_classes": [
+    "BGF-STAGE71-PLACEHOLDER-POSTDEPLOY-FALSE-GREEN-676",
+    "BGF-STAGE71-CI-FIXTURE-AS-POSTDEPLOY-EVIDENCE-677",
+    "BGF-STAGE71-DEPLOYED-RELEASE-SHA-MISMATCH-678",
+    "BGF-STAGE71-DOMAIN-BINDING-MISMATCH-679",
+    "BGF-STAGE71-MISSING-LIVE-TLS-SMOKE-ROLLBACK-680",
+    "BGF-STAGE71-MISSING-LIVE-MONITORING-681",
+    "BGF-STAGE71-POSTDEPLOY-ARTIFACT-PATH-LEAKAGE-682",
+    "BGF-STAGE71-CANDIDATE-AS-PRODUCTION-GATE-EVIDENCE-683",
+    "BGF-STAGE71-PREMATURE-EVIDENCE-MIGRATION-684",
+    "BGF-STAGE71-POSTDEPLOY-INTAKE-GUARD-685"
+  ],
+  "gates": {
+    "stage71_postdeploy_intake": "REPO_ONLY_PENDING_CI",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Build a single external-readiness dashboard that shows which real inputs are still missing across billing, legal/privacy, DSR/incident and production deployment without treating any candidate artifact as evidence.",
+    "deployment_authorization_not_granted": true,
+    "real_postdeploy_receipts_required_before_collection": true,
+    "evidence_migration_allowed": false
+  }
+}
