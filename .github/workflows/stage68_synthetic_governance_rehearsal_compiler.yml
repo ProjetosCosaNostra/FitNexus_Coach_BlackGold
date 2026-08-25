@@ -1,0 +1,84 @@
+name: Stage68 Synthetic Governance Rehearsal Compiler
+
+on:
+  pull_request:
+    paths:
+      - '10_compliance/rehearsals/**'
+      - '10_compliance/drafts/DATA_SUBJECT_REQUEST_RUNBOOK_CANDIDATE.md'
+      - '10_compliance/drafts/INCIDENT_RESPONSE_RUNBOOK_CANDIDATE.md'
+      - '10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json'
+      - '04_backend_supabase/stage44_data_subject_request_external_evidence_preparation_authority.json'
+      - '04_backend_supabase/stage45_incident_response_external_evidence_preparation_authority.json'
+      - '04_backend_supabase/stage67_compliance_operations_candidate_pack_authority.json'
+      - '04_backend_supabase/stage68_synthetic_governance_rehearsal_compiler_authority.json'
+      - '04_backend_supabase/tools/build_stage68_synthetic_governance_rehearsal_bundle.py'
+      - '04_backend_supabase/tools/verify_stage68_synthetic_governance_rehearsal_compiler.py'
+      - '.github/workflows/stage68_synthetic_governance_rehearsal_compiler.yml'
+  push:
+    branches:
+      - 'blackgold/stage68-synthetic-governance-rehearsal-compiler'
+    paths:
+      - '10_compliance/rehearsals/**'
+      - '10_compliance/drafts/DATA_SUBJECT_REQUEST_RUNBOOK_CANDIDATE.md'
+      - '10_compliance/drafts/INCIDENT_RESPONSE_RUNBOOK_CANDIDATE.md'
+      - '10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json'
+      - '04_backend_supabase/stage44_data_subject_request_external_evidence_preparation_authority.json'
+      - '04_backend_supabase/stage45_incident_response_external_evidence_preparation_authority.json'
+      - '04_backend_supabase/stage67_compliance_operations_candidate_pack_authority.json'
+      - '04_backend_supabase/stage68_synthetic_governance_rehearsal_compiler_authority.json'
+      - '04_backend_supabase/tools/build_stage68_synthetic_governance_rehearsal_bundle.py'
+      - '04_backend_supabase/tools/verify_stage68_synthetic_governance_rehearsal_compiler.py'
+      - '.github/workflows/stage68_synthetic_governance_rehearsal_compiler.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  compile-rehearsal-packets:
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+
+      - name: Verify Stage68 compiler boundary
+        run: python 04_backend_supabase/tools/verify_stage68_synthetic_governance_rehearsal_compiler.py
+
+      - name: Compile deterministic rehearsal bundles twice
+        run: |
+          runner_temp="$RUNNER_TEMP"
+          mkdir -p "$runner_temp/stage68"
+          python 04_backend_supabase/tools/build_stage68_synthetic_governance_rehearsal_bundle.py --source-sha "$SOURCE_SHA" --output "$runner_temp/stage68/bundle_a.json"
+          python 04_backend_supabase/tools/build_stage68_synthetic_governance_rehearsal_bundle.py --source-sha "$SOURCE_SHA" --output "$runner_temp/stage68/bundle_b.json"
+          cmp "$runner_temp/stage68/bundle_a.json" "$runner_temp/stage68/bundle_b.json"
+          mv "$runner_temp/stage68/bundle_a.json" "$runner_temp/stage68/synthetic_governance_rehearsal_bundle.json"
+          rm "$runner_temp/stage68/bundle_b.json"
+
+      - name: Upload non-attesting rehearsal bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage68-synthetic-governance-rehearsal-${{ env.SOURCE_SHA }}
+          path: ${{ runner.temp }}/stage68/synthetic_governance_rehearsal_bundle.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Preserve blocked governance boundaries
+        run: |
+          echo 'STAGE68_SYNTHETIC_GOVERNANCE_REHEARSAL_COMPILER=PASS_COMPILED_ONLY'
+          echo 'ACTUAL_TABLETOP_EXECUTION=false'
+          echo 'REAL_CUSTOMER_DATA=false'
+          echo 'NETWORK_CALL=false'
+          echo 'SUPABASE_MUTATION=false'
+          echo 'PROVIDER_CALL=false'
+          echo 'LEGAL_REVIEW_ATTESTED=false'
+          echo 'OPERATIONAL_REVIEW_ATTESTED=false'
+          echo 'EVIDENCE_MIGRATION=false'
+          echo 'DSR_GATE_READY=false'
+          echo 'INCIDENT_RESPONSE_GATE_READY=false'
+          echo 'CONTROLLED_LAUNCH=DENIED'
+          echo 'PAID_MEDIA=DENIED'

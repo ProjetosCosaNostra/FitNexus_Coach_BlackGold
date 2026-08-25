@@ -1,0 +1,276 @@
+{
+  "schema_version": 1,
+  "stage": "STAGE68_SYNTHETIC_GOVERNANCE_REHEARSAL_COMPILER",
+  "status": "SYNTHETIC_REHEARSAL_DEFINITIONS_ONLY_NOT_OPERATIONAL_EVIDENCE",
+  "fixture_policy": {
+    "real_customer_data_allowed": false,
+    "network_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "provider_calls_allowed": false,
+    "secrets_allowed": false,
+    "real_access_tokens_allowed": false,
+    "production_identifiers_allowed": false,
+    "gate_promotion_allowed": false
+  },
+  "dsr_scenarios": [
+    {
+      "scenario_id": "DSR_ACCESS_EXPORT_SAME_TENANT",
+      "purpose": "Rehearse a verified coach/account-owner request for access/export while proving tenant scope and secret exclusion.",
+      "synthetic_fixture": {
+        "tenant": "synthetic-org-alpha",
+        "requester": "synthetic-coach-alpha",
+        "subject": "synthetic-student-alpha",
+        "other_tenant": "synthetic-org-beta"
+      },
+      "preconditions": [
+        "requester identity is marked VERIFIED_SYNTHETIC",
+        "requester belongs only to synthetic-org-alpha",
+        "subject belongs only to synthetic-org-alpha"
+      ],
+      "exercise_steps": [
+        "intake request without copying secrets",
+        "verify synthetic identity state before disclosure",
+        "resolve tenant scope",
+        "construct an export inventory for the subject",
+        "assert no synthetic-org-beta records are included",
+        "assert credentials/security secrets are excluded",
+        "record decision trace and candidate response"
+      ],
+      "required_assertions": [
+        "IDENTITY_VERIFIED_BEFORE_DISCLOSURE",
+        "TENANT_SCOPE_ALPHA_ONLY",
+        "OTHER_TENANT_DATA_ABSENT",
+        "SECRETS_ABSENT",
+        "NON_CUSTOMER_FIXTURE_ONLY"
+      ],
+      "stage44_requirement_alignment": [
+        "tenant_scoped_access_export_test_receipt",
+        "tabletop_request_receipt"
+      ]
+    },
+    {
+      "scenario_id": "DSR_CROSS_TENANT_REQUEST_FAIL_CLOSED",
+      "purpose": "Rehearse a requester attempting to obtain a subject from another tenant without leaking existence or data.",
+      "synthetic_fixture": {
+        "requester_tenant": "synthetic-org-alpha",
+        "target_tenant": "synthetic-org-beta",
+        "target_subject": "synthetic-student-beta"
+      },
+      "preconditions": [
+        "requester is verified only for synthetic-org-alpha",
+        "target subject is scoped only to synthetic-org-beta"
+      ],
+      "exercise_steps": [
+        "intake request",
+        "verify requester identity",
+        "resolve requester tenant authority",
+        "reject cross-tenant disclosure",
+        "use a non-enumerating response",
+        "record denied decision without target data"
+      ],
+      "required_assertions": [
+        "CROSS_TENANT_DISCLOSURE_DENIED",
+        "TARGET_EXISTENCE_NOT_DISCLOSED",
+        "TARGET_DATA_NOT_EMITTED",
+        "NON_CUSTOMER_FIXTURE_ONLY"
+      ],
+      "stage44_requirement_alignment": [
+        "tenant_scoped_access_export_test_receipt",
+        "identity_verification_procedure_artifact",
+        "tabletop_request_receipt"
+      ]
+    },
+    {
+      "scenario_id": "DSR_CORRECTION_AUDITED",
+      "purpose": "Rehearse a correction request with before/after trace and preserved tenant isolation.",
+      "synthetic_fixture": {
+        "tenant": "synthetic-org-alpha",
+        "subject": "synthetic-student-alpha",
+        "field": "synthetic_profile_note",
+        "before": "synthetic-old-value",
+        "after": "synthetic-corrected-value"
+      },
+      "preconditions": [
+        "identity and authority are VERIFIED_SYNTHETIC",
+        "field is classified editable in the rehearsal"
+      ],
+      "exercise_steps": [
+        "capture synthetic before state",
+        "validate requested correction scope",
+        "apply correction to in-memory rehearsal state only",
+        "capture synthetic after state",
+        "assert no cross-tenant change",
+        "record candidate response and audit trace"
+      ],
+      "required_assertions": [
+        "BEFORE_AFTER_TRACE_PRESENT",
+        "ONLY_REQUESTED_FIELD_CHANGED",
+        "NO_CROSS_TENANT_CHANGE",
+        "NO_REMOTE_MUTATION",
+        "NON_CUSTOMER_FIXTURE_ONLY"
+      ],
+      "stage44_requirement_alignment": [
+        "correction_workflow_test_receipt",
+        "tabletop_request_receipt"
+      ]
+    },
+    {
+      "scenario_id": "DSR_DELETION_WITH_RETENTION_HOLD",
+      "purpose": "Rehearse a deletion request where one synthetic record category is eligible for deletion and another is placed under a hypothetical retention hold requiring review.",
+      "synthetic_fixture": {
+        "tenant": "synthetic-org-alpha",
+        "subject": "synthetic-student-alpha",
+        "deletable_record": "synthetic-profile-record",
+        "held_record": "synthetic-security-event",
+        "hold_basis": "HYPOTHETICAL_REVIEW_REQUIRED_NOT_LEGAL_CONCLUSION"
+      },
+      "preconditions": [
+        "identity and tenant scope are VERIFIED_SYNTHETIC",
+        "no real retention deadline or legal basis is asserted"
+      ],
+      "exercise_steps": [
+        "classify synthetic records by candidate lifecycle action",
+        "mark deletable record deleted in in-memory state",
+        "mark held record REVIEW_REQUIRED without deleting it",
+        "assert no invented legal deadline",
+        "record partial-action candidate response"
+      ],
+      "required_assertions": [
+        "DELETE_AND_HOLD_SEMANTICS_DISTINGUISHED",
+        "HOLD_IS_HYPOTHETICAL_NOT_LEGAL_ATTESTATION",
+        "NO_LEGAL_DEADLINE_INVENTED",
+        "NO_REMOTE_MUTATION",
+        "NON_CUSTOMER_FIXTURE_ONLY"
+      ],
+      "stage44_requirement_alignment": [
+        "deletion_anonymization_blocking_retention_hold_test_receipt",
+        "reviewed_response_time_policy_artifact",
+        "tabletop_request_receipt"
+      ]
+    },
+    {
+      "scenario_id": "DSR_INSUFFICIENT_IDENTITY_PAUSE",
+      "purpose": "Rehearse a request with insufficient identity evidence and prove that processing pauses before disclosure or destructive action.",
+      "synthetic_fixture": {
+        "requester": "synthetic-unknown-requester",
+        "claimed_subject": "synthetic-student-alpha",
+        "identity_state": "INSUFFICIENT_SYNTHETIC"
+      },
+      "preconditions": [
+        "no authenticated account binding exists in the rehearsal"
+      ],
+      "exercise_steps": [
+        "intake minimal request metadata",
+        "detect insufficient identity evidence",
+        "pause request processing",
+        "emit only a request-for-verification candidate response",
+        "assert no subject existence or data is disclosed"
+      ],
+      "required_assertions": [
+        "PROCESSING_PAUSED",
+        "NO_DISCLOSURE_BEFORE_VERIFICATION",
+        "SUBJECT_EXISTENCE_NOT_CONFIRMED",
+        "NO_DESTRUCTIVE_ACTION",
+        "NON_CUSTOMER_FIXTURE_ONLY"
+      ],
+      "stage44_requirement_alignment": [
+        "identity_verification_procedure_artifact",
+        "tabletop_request_receipt"
+      ]
+    }
+  ],
+  "incident_scenarios": [
+    {
+      "scenario_id": "INCIDENT_CROSS_TENANT_EXPOSURE",
+      "purpose": "Rehearse suspected cross-tenant exposure response using only synthetic identifiers and no remote reads or writes.",
+      "synthetic_fixture": {
+        "source_tenant": "synthetic-org-alpha",
+        "suspected_target_tenant": "synthetic-org-beta",
+        "signal": "synthetic-tenant-boundary-alert"
+      },
+      "exercise_steps": [
+        "open synthetic incident record",
+        "separate confirmed facts from hypotheses",
+        "classify blast-radius uncertainty",
+        "select containment candidates without executing them",
+        "exercise controller/operator handoff branch",
+        "exercise privacy/legal decision-review branch without deciding notification",
+        "record recovery validation plan and postmortem prompts"
+      ],
+      "required_assertions": [
+        "FACTS_AND_HYPOTHESES_SEPARATED",
+        "NO_CROSS_TENANT_DATA_READ",
+        "CONTAINMENT_NOT_EXECUTED",
+        "LEGAL_NOTIFICATION_NOT_AUTO_DECIDED",
+        "NON_CUSTOMER_FIXTURE_ONLY"
+      ],
+      "stage45_requirement_alignment": [
+        "cross_tenant_exposure_tabletop_receipt",
+        "operator_to_controller_handoff_procedure_artifact",
+        "anpd_data_subject_communication_decision_procedure_artifact",
+        "final_drill_postmortem_artifact"
+      ]
+    },
+    {
+      "scenario_id": "INCIDENT_CREDENTIAL_COMPROMISE",
+      "purpose": "Rehearse credential-compromise handling without using any real credential, provider call or secret value.",
+      "synthetic_fixture": {
+        "credential_reference": "synthetic-credential-ref-only",
+        "affected_component": "synthetic-provider-adapter",
+        "secret_value_present": false
+      },
+      "exercise_steps": [
+        "open synthetic incident record",
+        "identify affected dependency references",
+        "plan revocation/rotation steps without executing them",
+        "identify rollback and recovery validation",
+        "assert evidence contains no secret value",
+        "record prevention actions for secret leakage and stale credential use"
+      ],
+      "required_assertions": [
+        "REAL_SECRET_ABSENT",
+        "ROTATION_NOT_EXECUTED",
+        "PROVIDER_CALL_ABSENT",
+        "RECOVERY_PLAN_PRESENT",
+        "NON_CUSTOMER_FIXTURE_ONLY"
+      ],
+      "stage45_requirement_alignment": [
+        "credential_compromise_tabletop_receipt",
+        "incident_registry_retention_control_artifact",
+        "final_drill_postmortem_artifact"
+      ]
+    },
+    {
+      "scenario_id": "INCIDENT_POTENTIALLY_SENSITIVE_STUDENT_DATA",
+      "purpose": "Rehearse handling of a synthetic student-data incident that could involve health-related or otherwise sensitive content.",
+      "synthetic_fixture": {
+        "tenant": "synthetic-org-alpha",
+        "subject": "synthetic-student-alpha",
+        "data_category": "synthetic-potentially-sensitive-training-feedback",
+        "raw_sensitive_value_present": false
+      },
+      "exercise_steps": [
+        "open synthetic incident record with category only",
+        "minimize copied content",
+        "exercise controller/operator handoff",
+        "assess risk dimensions without inventing regulatory conclusion",
+        "route communication decision to privacy/legal review",
+        "record candidate containment and recovery plan",
+        "record postmortem prompts"
+      ],
+      "required_assertions": [
+        "RAW_SENSITIVE_VALUE_ABSENT",
+        "DATA_MINIMIZATION_PRESERVED",
+        "CONTROLLER_OPERATOR_HANDOFF_EXERCISED",
+        "LEGAL_NOTIFICATION_NOT_AUTO_DECIDED",
+        "NON_CUSTOMER_FIXTURE_ONLY"
+      ],
+      "stage45_requirement_alignment": [
+        "potentially_sensitive_student_data_tabletop_receipt",
+        "operator_to_controller_handoff_procedure_artifact",
+        "anpd_data_subject_communication_decision_procedure_artifact",
+        "final_drill_postmortem_artifact"
+      ]
+    }
+  ]
+}
