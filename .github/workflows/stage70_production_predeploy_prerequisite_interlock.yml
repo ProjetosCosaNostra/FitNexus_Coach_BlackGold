@@ -1,0 +1,87 @@
+name: Stage70 Production Predeploy Prerequisite Interlock
+
+on:
+  pull_request:
+    paths:
+      - '04_backend_supabase/stage70_production_predeploy_prerequisite_interlock_authority.json'
+      - '04_backend_supabase/tools/bind_stage70_production_predeploy_prerequisites.py'
+      - '04_backend_supabase/tools/verify_stage70_production_predeploy_prerequisite_interlock.py'
+      - '10_compliance/deployment/STAGE70_PRODUCTION_PREDEPLOY_PREREQUISITE_INPUT_TEMPLATE.json'
+      - '.github/workflows/stage70_production_predeploy_prerequisite_interlock.yml'
+  push:
+    branches:
+      - main
+      - 'blackgold/**'
+    paths:
+      - '04_backend_supabase/stage70_production_predeploy_prerequisite_interlock_authority.json'
+      - '04_backend_supabase/tools/bind_stage70_production_predeploy_prerequisites.py'
+      - '04_backend_supabase/tools/verify_stage70_production_predeploy_prerequisite_interlock.py'
+      - '10_compliance/deployment/STAGE70_PRODUCTION_PREDEPLOY_PREREQUISITE_INPUT_TEMPLATE.json'
+      - '.github/workflows/stage70_production_predeploy_prerequisite_interlock.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-predeploy-interlock:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify Stage70 interlock contract
+        run: python 04_backend_supabase/tools/verify_stage70_production_predeploy_prerequisite_interlock.py
+
+      - name: Verify current web release contract
+        run: python 04_backend_supabase/tools/verify_web_release_contract.py
+
+      - name: Set up Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve Flutter dependencies
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter pub get
+
+      - name: Build exact web release candidate without deployment
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter build web --release --base-href /FitNexus_Coach_BlackGold/
+
+      - name: Build exact Stage66 candidate manifest
+        run: |
+          python 04_backend_supabase/tools/build_stage66_production_release_candidate_manifest.py \
+            --source-sha "${{ github.event.pull_request.head.sha || github.sha }}" \
+            --output /tmp/stage66_candidate_manifest.json
+
+      - name: Prove committed placeholder predeploy input is refused
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f /tmp/stage70_predeploy.json
+          if python 04_backend_supabase/tools/bind_stage70_production_predeploy_prerequisites.py \
+            --source-sha "${{ github.event.pull_request.head.sha || github.sha }}" \
+            --candidate-manifest /tmp/stage66_candidate_manifest.json \
+            --prerequisite-input 10_compliance/deployment/STAGE70_PRODUCTION_PREDEPLOY_PREREQUISITE_INPUT_TEMPLATE.json \
+            --output /tmp/stage70_predeploy.json; then
+            echo "PLACEHOLDER_PREDEPLOY_FALSE_GREEN=FAIL"
+            exit 1
+          fi
+          test ! -e /tmp/stage70_predeploy.json
+          echo "PLACEHOLDER_PREDEPLOY_INPUT_REFUSED=PASS"
+
+      - name: Preserve deployment denial boundary
+        run: |
+          echo "DEPLOYMENT_ACTION=false"
+          echo "NETWORK_PROBE=false"
+          echo "PRODUCTION_SMOKE=false"
+          echo "PRODUCTION_EVIDENCE=false"
+          echo "PRODUCTION_DEPLOYMENT_GATE=BLOCKED"
+          echo "REMOTE_MUTATION=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
