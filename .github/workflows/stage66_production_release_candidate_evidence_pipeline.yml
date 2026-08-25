@@ -1,0 +1,96 @@
+name: Stage66 Production Release Candidate Evidence Pipeline
+
+on:
+  pull_request:
+    paths:
+      - '03_app_flutter/fitnexus_app/**'
+      - '04_backend_supabase/stage46_production_deployment_external_evidence_preparation_authority.json'
+      - '04_backend_supabase/stage65_stage64_final_reconciliation_authority.json'
+      - '04_backend_supabase/stage66_production_release_candidate_evidence_pipeline_authority.json'
+      - '04_backend_supabase/tools/build_stage66_production_release_candidate_manifest.py'
+      - '04_backend_supabase/tools/verify_stage66_production_release_candidate_evidence_pipeline.py'
+      - '.github/workflows/stage66_production_release_candidate_evidence_pipeline.yml'
+  push:
+    branches:
+      - 'blackgold/stage66-production-release-candidate-evidence-pipeline'
+    paths:
+      - '03_app_flutter/fitnexus_app/**'
+      - '04_backend_supabase/stage46_production_deployment_external_evidence_preparation_authority.json'
+      - '04_backend_supabase/stage65_stage64_final_reconciliation_authority.json'
+      - '04_backend_supabase/stage66_production_release_candidate_evidence_pipeline_authority.json'
+      - '04_backend_supabase/tools/build_stage66_production_release_candidate_manifest.py'
+      - '04_backend_supabase/tools/verify_stage66_production_release_candidate_evidence_pipeline.py'
+      - '.github/workflows/stage66_production_release_candidate_evidence_pipeline.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-candidate-without-deploy:
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+
+      - name: Stage66 pipeline contract guard
+        run: python 04_backend_supabase/tools/verify_stage66_production_release_candidate_evidence_pipeline.py
+
+      - name: Current web release contract guard
+        run: python 04_backend_supabase/tools/verify_web_release_contract.py
+
+      - name: Set up Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve Flutter dependencies
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter pub get
+
+      - name: Flutter analyze
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter analyze
+
+      - name: Flutter test
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter test
+
+      - name: Build exact web release candidate without deployment
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter build web --release --base-href /FitNexus_Coach_BlackGold/
+
+      - name: Build deterministic candidate manifests twice
+        run: |
+          mkdir -p "$RUNNER_TEMP/stage66"
+          python 04_backend_supabase/tools/build_stage66_production_release_candidate_manifest.py --source-sha "$SOURCE_SHA" --output "$RUNNER_TEMP/stage66/manifest_a.json"
+          python 04_backend_supabase/tools/build_stage66_production_release_candidate_manifest.py --source-sha "$SOURCE_SHA" --output "$RUNNER_TEMP/stage66/manifest_b.json"
+          cmp "$RUNNER_TEMP/stage66/manifest_a.json" "$RUNNER_TEMP/stage66/manifest_b.json"
+          mv "$RUNNER_TEMP/stage66/manifest_a.json" "$RUNNER_TEMP/stage66/production_release_candidate_manifest.json"
+          rm "$RUNNER_TEMP/stage66/manifest_b.json"
+
+      - name: Upload non-attesting release candidate artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage66-production-release-candidate-${{ env.SOURCE_SHA }}
+          path: |
+            03_app_flutter/fitnexus_app/build/web
+            ${{ runner.temp }}/stage66/production_release_candidate_manifest.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Preserve fail-closed deployment boundary
+        run: |
+          echo 'STAGE66_RELEASE_CANDIDATE_PIPELINE=PASS_CANDIDATE_ONLY'
+          echo "SOURCE_SHA=$SOURCE_SHA"
+          echo 'DEPLOYMENT_PERFORMED=false'
+          echo 'GH_PAGES_WRITTEN=false'
+          echo 'SUPABASE_MUTATION=false'
+          echo 'PRODUCTION_DEPLOYMENT_GATE_READY=false'
+          echo 'CONTROLLED_LAUNCH=DENIED'

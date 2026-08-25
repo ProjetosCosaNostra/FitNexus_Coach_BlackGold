@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE66_PRODUCTION_RELEASE_CANDIDATE_EVIDENCE_PIPELINE",
+  "baseline_main_sha": "4a52b0323eed780db80050e5bbba5fd5dc37dd51",
+  "current_state": "PUBLIC_GH_PAGES_SURFACE_STALE_VS_CURRENT_MAIN_RELEASE_CANDIDATE_PIPELINE_PREPARED_NO_DEPLOYMENT_NO_GATE_PROMOTION",
+  "upstream_authority": {
+    "stage65_final_reconciliation": "04_backend_supabase/stage65_stage64_final_reconciliation_authority.json",
+    "stage65_final_reconciliation_blob": "0bd298c14d51f079c18d7f74dc8931bec4819396",
+    "stage46_production_deployment_preparation": "04_backend_supabase/stage46_production_deployment_external_evidence_preparation_authority.json",
+    "stage46_production_deployment_preparation_blob": "bec2751cbeaa5e0fc8c97dc0eb65dbbb7db65134",
+    "production_deployment_gate_state": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE"
+  },
+  "fresh_public_surface_read_only_assessment": {
+    "official_route": "https://projetoscosanostra.github.io/FitNexus_Coach_BlackGold/",
+    "https_reachable": true,
+    "observed_document_title": "fitnexus_app",
+    "gh_pages_branch": "gh-pages",
+    "gh_pages_head_sha": "ad8069aa5d47910fdcc54fc333de8185841a218f",
+    "gh_pages_head_committed_at_utc": "2026-06-28T13:34:00Z",
+    "gh_pages_head_message": "deploy: publica pagina premium do ecossistema",
+    "current_main_sha": "4a52b0323eed780db80050e5bbba5fd5dc37dd51",
+    "current_main_committed_at_utc": "2026-08-25T13:35:13Z",
+    "current_repo_web_contract_requires_title": "FitNexus Coach BlackGold",
+    "current_repo_web_contract_rejects_title": "fitnexus_app",
+    "public_surface_bound_to_current_main": false,
+    "public_surface_can_satisfy_stage46_production_release_binding": false,
+    "remote_mutation_performed": false
+  },
+  "problem_statement": {
+    "finding": "HTTPS reachability alone is insufficient production evidence. The current public gh-pages head predates the current main by nearly two months and serves the legacy Flutter default title rejected by the current repository web-release contract.",
+    "risk": "Treating the existing public route as the current production release would create a false-green production_deployment receipt and bind smoke/TLS evidence to the wrong code.",
+    "required_prevention": "Every future production candidate must be generated from an exact source SHA with a deterministic build manifest before any deployment is considered."
+  },
+  "pipeline_contract": {
+    "builder": "04_backend_supabase/tools/build_stage66_production_release_candidate_manifest.py",
+    "guard": "04_backend_supabase/tools/verify_stage66_production_release_candidate_evidence_pipeline.py",
+    "workflow": ".github/workflows/stage66_production_release_candidate_evidence_pipeline.yml",
+    "build_command": "flutter build web --release --base-href /FitNexus_Coach_BlackGold/",
+    "exact_source_sha_required": true,
+    "flutter_analyze_required": true,
+    "flutter_tests_required": true,
+    "web_release_contract_guard_required": true,
+    "manifest_records_file_sha256_and_size": true,
+    "manifest_records_aggregate_sha256": true,
+    "candidate_artifact_uploaded_to_ci": true,
+    "candidate_artifact_is_production_evidence": false,
+    "candidate_artifact_is_deployment_authority": false,
+    "production_network_probe_allowed": false,
+    "deployment_action_allowed": false,
+    "gh_pages_write_allowed": false,
+    "supabase_mutation_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "production_deployment_gate_promotion_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "stage46_evidence_impact": {
+    "stable_production_domain": "STILL_REQUIRES_REAL_CURRENT_RELEASE_BINDING",
+    "tls_evidence_artifact": "STILL_REQUIRES_REAL_LIVE_TLS_EVIDENCE_FOR_DEPLOYED_RELEASE",
+    "environment_configuration_receipt_without_secrets": "STILL_REQUIRED",
+    "release_commit_sha": "PIPELINE_PREPARES_EXACT_CANDIDATE_SHA_BUT_DOES_NOT_ATTEST_DEPLOYMENT",
+    "production_smoke_test_receipt": "STILL_REQUIRED_AFTER_REAL_DEPLOYMENT",
+    "rollback_test_receipt": "STILL_REQUIRED_FOR_REAL_DEPLOYMENT",
+    "monitoring_alerting_readiness_receipt": "STILL_REQUIRED_STAGE35_ALONE_INSUFFICIENT",
+    "backup_restore_readiness_reference_artifact": "STILL_REQUIRED",
+    "release_evidence_manifest_artifact": "STILL_REQUIRED_AFTER_ALL_REAL_EVIDENCE_EXISTS"
+  },
+  "failure_classes": [
+    "BGF-STAGE66-PUBLIC-SURFACE-STALE-BUILD-627",
+    "BGF-STAGE66-HTTPS-REACHABILITY-FALSE-PRODUCTION-GREEN-628",
+    "BGF-STAGE66-RELEASE-CANDIDATE-SOURCE-SHA-AMBIGUITY-629",
+    "BGF-STAGE66-BUILD-MANIFEST-NONDETERMINISM-630",
+    "BGF-STAGE66-BUILD-ARTIFACT-DIGEST-OMISSION-631",
+    "BGF-STAGE66-CANDIDATE-AS-PRODUCTION-EVIDENCE-632",
+    "BGF-STAGE66-UNAUTHORIZED-GH-PAGES-DEPLOYMENT-633",
+    "BGF-STAGE66-PREMATURE-PRODUCTION-GATE-PROMOTION-634",
+    "BGF-STAGE66-PRODUCTION-CANDIDATE-PIPELINE-GUARD-635"
+  ],
+  "gates": {
+    "stage66_release_candidate_pipeline": "REPO_ONLY_PENDING_CI",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "decision": "DO_NOT_DEPLOY_AUTOMATICALLY",
+    "safe_next_internal_work": "Prepare a controlled production-deployment execution contract that consumes the exact Stage66 candidate manifest and refuses any publish unless Stage46 prerequisites for environment, monitoring, backup/restore and rollback are independently bound.",
+    "external_action_required_before_gate_close": true
+  }
+}
