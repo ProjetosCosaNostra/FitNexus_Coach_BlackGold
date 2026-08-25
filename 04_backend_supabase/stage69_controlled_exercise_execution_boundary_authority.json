@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE69_CONTROLLED_EXERCISE_EXECUTION_BOUNDARY",
+  "baseline_main_sha": "06e912fbb12be5bdc61b3aeb1119ff64a7b7c185",
+  "current_state": "REAL_OWNER_ASSIGNMENT_GATED_EXERCISE_SESSION_PREPARATION_BOUNDARY_NO_EXECUTION_NO_EVIDENCE_NO_GATE_PROMOTION",
+  "upstream_authority": {
+    "stage68_rehearsal_compiler": "04_backend_supabase/stage68_synthetic_governance_rehearsal_compiler_authority.json",
+    "stage68_rehearsal_compiler_blob": "45459541f7e8516258f3cabcba4dd46cd45d256f",
+    "stage68_state": "DETERMINISTIC_SYNTHETIC_DSR_AND_INCIDENT_REHEARSAL_PACKETS_PREPARED_NOT_EXECUTED_NOT_EVIDENCE_NO_GATE_PROMOTION"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-25T17:51:22.747635+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "ready_evidence_migration_count": 0,
+    "remote_mutation_performed": false
+  },
+  "execution_boundary_contract": {
+    "owner_input_template": "10_compliance/rehearsals/STAGE69_REAL_OWNER_ASSIGNMENT_INPUT_TEMPLATE.json",
+    "session_preparer": "04_backend_supabase/tools/prepare_stage69_controlled_exercise_session.py",
+    "guard": "04_backend_supabase/tools/verify_stage69_controlled_exercise_execution_boundary.py",
+    "workflow": ".github/workflows/stage69_controlled_exercise_execution_boundary.yml",
+    "required_real_roles": [
+      "dsr_primary_owner",
+      "dsr_backup_owner",
+      "incident_commander",
+      "privacy_owner",
+      "technical_owner",
+      "exercise_facilitator"
+    ],
+    "owner_input_must_be_external_not_committed": true,
+    "placeholder_owner_input_must_fail": true,
+    "test_fixture_owner_input_must_fail": true,
+    "real_assignment_artifact_required_per_role": true,
+    "assignment_artifact_sha256_only_in_output": true,
+    "owner_name_copied_to_output": false,
+    "owner_artifact_path_copied_to_output": false,
+    "stage68_bundle_required": true,
+    "stage68_packet_count_required": 8,
+    "exercise_execution_performed_by_preparer": false,
+    "candidate_receipt_is_operational_evidence": false,
+    "candidate_receipt_is_stage44_evidence": false,
+    "candidate_receipt_is_stage45_evidence": false,
+    "network_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "provider_calls_allowed": false,
+    "real_customer_data_allowed": false,
+    "secret_values_allowed": false,
+    "production_identifiers_allowed": false,
+    "legal_review_attestation_allowed": false,
+    "operational_sufficiency_attestation_allowed": false,
+    "evidence_ref_creation_allowed": false,
+    "evidence_digest_promotion_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "gate_promotion_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "progress_semantics": {
+    "what_stage69_proves": "The project has a fail-closed boundary that can prepare a hash-only controlled-exercise session candidate only after real named role assignments and non-empty assignment artifacts are supplied externally.",
+    "what_stage69_does_not_prove": "It does not execute a DSR exercise or incident tabletop, validate legal sufficiency, verify the truth of owner assignments, publish a contact route, create Stage44/45 evidence, or make any gate ready.",
+    "why_placeholder_ci_is_expected": "Repository CI intentionally uses a committed placeholder template and must prove the preparer refuses it; real owner identity and assignment artifacts must never be invented merely to turn CI green."
+  },
+  "failure_classes": [
+    "BGF-STAGE69-PLACEHOLDER-OWNER-FALSE-GREEN-656",
+    "BGF-STAGE69-CI-FIXTURE-AS-REAL-OWNER-657",
+    "BGF-STAGE69-OWNER-NAME-LEAKAGE-658",
+    "BGF-STAGE69-OWNER-ARTIFACT-PATH-LEAKAGE-659",
+    "BGF-STAGE69-MISSING-ASSIGNMENT-ARTIFACT-660",
+    "BGF-STAGE69-STAGE68-BUNDLE-DRIFT-661",
+    "BGF-STAGE69-SESSION-PREPARATION-AS-EXECUTED-TABLETOP-662",
+    "BGF-STAGE69-CANDIDATE-AS-STAGE44-45-EVIDENCE-663",
+    "BGF-STAGE69-PREMATURE-EVIDENCE-PROMOTION-664",
+    "BGF-STAGE69-CONTROLLED-EXERCISE-BOUNDARY-GUARD-665"
+  ],
+  "gates": {
+    "stage69_execution_boundary": "REPO_ONLY_PENDING_CI",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Prepare an independent-review intake contract for completed human exercise records so future DSR/incident exercise outcomes can be hashed and structurally reviewed without leaking owner identity or promoting gates automatically.",
+    "external_real_owner_assignments_required_before_session_candidate": true,
+    "human_controlled_exercise_required_before_exercise_receipt": true,
+    "evidence_migration_allowed": false
+  }
+}

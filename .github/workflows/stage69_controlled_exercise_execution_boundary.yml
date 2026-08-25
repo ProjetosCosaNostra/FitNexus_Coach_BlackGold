@@ -1,0 +1,67 @@
+name: Stage69 Controlled Exercise Execution Boundary
+
+on:
+  pull_request:
+    paths:
+      - '04_backend_supabase/stage69_controlled_exercise_execution_boundary_authority.json'
+      - '04_backend_supabase/tools/prepare_stage69_controlled_exercise_session.py'
+      - '04_backend_supabase/tools/verify_stage69_controlled_exercise_execution_boundary.py'
+      - '10_compliance/rehearsals/STAGE69_REAL_OWNER_ASSIGNMENT_INPUT_TEMPLATE.json'
+      - '.github/workflows/stage69_controlled_exercise_execution_boundary.yml'
+  push:
+    branches:
+      - main
+      - 'blackgold/**'
+    paths:
+      - '04_backend_supabase/stage69_controlled_exercise_execution_boundary_authority.json'
+      - '04_backend_supabase/tools/prepare_stage69_controlled_exercise_session.py'
+      - '04_backend_supabase/tools/verify_stage69_controlled_exercise_execution_boundary.py'
+      - '10_compliance/rehearsals/STAGE69_REAL_OWNER_ASSIGNMENT_INPUT_TEMPLATE.json'
+      - '.github/workflows/stage69_controlled_exercise_execution_boundary.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-fail-closed-owner-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify Stage69 execution boundary contract
+        run: python 04_backend_supabase/tools/verify_stage69_controlled_exercise_execution_boundary.py
+
+      - name: Build Stage68 bundle for exact candidate SHA
+        run: |
+          python 04_backend_supabase/tools/build_stage68_synthetic_governance_rehearsal_bundle.py \
+            --source-sha "${{ github.event.pull_request.head.sha || github.sha }}" \
+            --output /tmp/stage68_bundle.json
+
+      - name: Prove committed placeholder owner input is refused
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f /tmp/stage69_session.json
+          if python 04_backend_supabase/tools/prepare_stage69_controlled_exercise_session.py \
+            --source-sha "${{ github.event.pull_request.head.sha || github.sha }}" \
+            --stage68-bundle /tmp/stage68_bundle.json \
+            --owner-input 10_compliance/rehearsals/STAGE69_REAL_OWNER_ASSIGNMENT_INPUT_TEMPLATE.json \
+            --output /tmp/stage69_session.json; then
+            echo "PLACEHOLDER_OWNER_INPUT_FALSE_GREEN=FAIL"
+            exit 1
+          fi
+          test ! -e /tmp/stage69_session.json
+          echo "PLACEHOLDER_OWNER_INPUT_REFUSED=PASS"
+
+      - name: Preserve non-attesting boundary
+        run: |
+          echo "REAL_OWNER_ASSIGNMENT_REQUIRED=true"
+          echo "OWNER_IDENTITIES_COPIED=false"
+          echo "EXERCISE_EXECUTED=false"
+          echo "STAGE44_EVIDENCE=false"
+          echo "STAGE45_EVIDENCE=false"
+          echo "REMOTE_MUTATION=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
