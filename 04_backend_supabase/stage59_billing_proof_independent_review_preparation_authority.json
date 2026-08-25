@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE59_BILLING_PROOF_INDEPENDENT_REVIEW_PREPARATION",
+  "baseline_main_sha": "f62d5e4f2b8e3f3005b2fcd7ba87b1b5012c715d",
+  "current_state": "INDEPENDENT_REVIEW_CONTRACT_PREPARED_NO_PROOF_RECEIPTS_NO_REVIEW_RECEIPT_NO_PROMOTION_AUTHORITY_NO_REMOTE_MUTATION",
+  "fresh_remote_read_only_snapshot": {
+    "observed_at_utc": "2026-08-25T01:52:27.619775+00:00",
+    "selection_state": "selected_pending_credentials",
+    "selection_activated_at": null,
+    "evidence_version": "2026-08-18-official-docs-v1",
+    "billing_external_evidence_total": 0,
+    "credentials_verified_rows": 0,
+    "proof_complete_rows": 0,
+    "checkout_intents": 0,
+    "webhook_receipts": 0,
+    "evidence_migration_ready_rows": 0,
+    "remote_mutation_performed": false
+  },
+  "sealed_inputs": {
+    "stage56_proof_promotion_contract": {
+      "path": "04_backend_supabase/tools/stage56_billing_proof_promotion_contract.py",
+      "git_blob_sha": "149efb9f83e3448031ed0b4940cb5f88ab0e792c"
+    },
+    "stage58_intake_authority": {
+      "path": "04_backend_supabase/stage58_billing_controlled_proof_intake_preparation_authority.json",
+      "git_blob_sha": "0990c03db4f60f0f7252c74527d064442822c7e3"
+    },
+    "stage58_receipt_contract": {
+      "path": "04_backend_supabase/tools/stage58_billing_controlled_proof_receipt_contract.py",
+      "git_blob_sha": "5c5f66b3bbcbb415c47e9912c1547c95d31baf06"
+    },
+    "stage58_bundle_reviewer": {
+      "path": "04_backend_supabase/tools/review_stage58_billing_controlled_proof_bundle.py",
+      "git_blob_sha": "6a871385a074b9b1a505708cff6f45b95b8392f4"
+    }
+  },
+  "review_contract": {
+    "contract_id": "STAGE59_V1",
+    "eligible_scope": "BR_V1",
+    "eligible_provider_code": "asaas",
+    "eligible_evidence_version": "2026-08-18-official-docs-v1",
+    "eligible_provider_environment_id": "asaas-production",
+    "required_stage58_overall_state": "STRUCTURALLY_COMPLETE_AWAITING_INDEPENDENT_REVIEW",
+    "required_stage58_receipt_count": 6,
+    "stage58_aggregate_sha256_required": true,
+    "stage58_proof_bundle_digest_required": true,
+    "all_six_stage56_digest_mapping_fields_required": true,
+    "reviewed_source_artifact_set_digest_required": true,
+    "reviewer_reference_digest_required": true,
+    "reviewer_independence_attestation_required": true,
+    "source_artifacts_reviewed_out_of_band_attestation_required": true,
+    "synthetic_non_customer_fixture_attestation_required": true,
+    "cleanup_zero_residue_attestation_required": true,
+    "stage54_credentials_evidence_fields_required": true,
+    "provider_selection_activation_timestamp_required": true,
+    "proof_completion_timestamp_required": true,
+    "approval_decision_required_for_stage56_candidate": true,
+    "rejection_decision_must_block_stage56_candidate": true,
+    "structural_validator_can_verify_reviewer_independence": false,
+    "structural_validator_can_verify_source_artifact_truth": false,
+    "stage58_structural_bundle_can_self_approve": false,
+    "stage59_tooling_can_create_review_receipt": false,
+    "stage59_tooling_can_invent_missing_evidence": false,
+    "stage59_tooling_can_call_provider": false,
+    "stage59_tooling_can_activate_provider": false,
+    "stage59_tooling_can_mutate_supabase": false,
+    "stage59_tooling_can_create_stage56_migration": false,
+    "stage59_tooling_can_apply_stage56_migration": false,
+    "approved_review_can_only_create_reviewed_candidate_no_migration": true,
+    "reviewed_candidate_is_remote_apply_authority": false,
+    "reviewed_candidate_is_proof_complete_authority": false,
+    "reviewed_candidate_is_launch_authority": false
+  },
+  "stage56_candidate_output_contract": {
+    "promotion_state": "REVIEWED_CANDIDATE_NO_MIGRATION",
+    "migration_filename": null,
+    "remote_apply_performed": false,
+    "provider_call_performed_by_tooling": false,
+    "provider_activation_performed_by_tooling": false,
+    "controlled_launch_promoted": false,
+    "paid_media_promoted": false,
+    "launch_promoted": false,
+    "independent_review_receipt_sha256_is_actual_review_file_sha256": true,
+    "proof_bundle_digest_must_equal_stage58_aggregate": true,
+    "six_stage56_receipt_digests_must_equal_stage58_aggregate": true
+  },
+  "current_registry": {
+    "complete_stage58_bundles_supplied": 0,
+    "independent_review_receipts_supplied": 0,
+    "stage56_reviewed_candidates_generated": 0,
+    "proof_complete_rows_remote": 0
+  },
+  "failure_classes": [
+    "BGF-STAGE59-STRUCTURAL-BUNDLE-SELF-APPROVAL-563",
+    "BGF-STAGE59-INDEPENDENT-REVIEW-RECEIPT-FABRICATION-564",
+    "BGF-STAGE59-STAGE58-AGGREGATE-DIGEST-MISMATCH-565",
+    "BGF-STAGE59-PROOF-BUNDLE-DIGEST-MISMATCH-566",
+    "BGF-STAGE59-STAGE56-DIGEST-MAPPING-MISMATCH-567",
+    "BGF-STAGE59-REVIEWER-INDEPENDENCE-NOT-ATTESTED-568",
+    "BGF-STAGE59-SOURCE-ARTIFACTS-NOT-REVIEWED-569",
+    "BGF-STAGE59-CLEANUP-NOT-INDEPENDENTLY-VERIFIED-570",
+    "BGF-STAGE59-CREDENTIAL-EVIDENCE-REBIND-571",
+    "BGF-STAGE59-TIMESTAMP-ORDER-VIOLATION-572",
+    "BGF-STAGE59-REJECTED-REVIEW-CANDIDATE-GENERATION-573",
+    "BGF-STAGE59-CANDIDATE-AS-REMOTE-AUTHORITY-574",
+    "BGF-STAGE59-PROVIDER-SIDE-EFFECT-DURING-REVIEW-575",
+    "BGF-STAGE59-INDEPENDENT-REVIEW-PREPARATION-GUARD-576"
+  ],
+  "gates": {
+    "stage59_review_contract": "REPO_ONLY_PENDING_CI",
+    "independent_review": "DENIED_AWAITING_REAL_STAGE58_COMPLETE_BUNDLE_AND_REAL_INDEPENDENT_REVIEW",
+    "stage56_reviewed_candidate": "DENIED",
+    "proof_complete": "DENIED",
+    "billing_provider_credentials": "DENIED",
+    "provider_activation": "DENIED",
+    "provider_call": "DENIED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
