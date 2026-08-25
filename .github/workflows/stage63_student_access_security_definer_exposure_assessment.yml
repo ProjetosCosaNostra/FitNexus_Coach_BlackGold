@@ -39,7 +39,7 @@ jobs:
             04_backend_supabase/tools/verify_tenant_isolation_contract.py \
             04_backend_supabase/tools/verify_stage51_security_definer_advisor_reconciliation.py \
             04_backend_supabase/tools/verify_stage62_stage61_final_reconciliation.py \
-            04_backend_supabase/tools/verify_migration_ledger.py
+            04_backend_supabase/tools/verify_migration_ledger_contract.py
 
       - name: Verify Stage63 SECURITY DEFINER assessment
         run: python 04_backend_supabase/tools/run_stage63_student_access_security_definer_exposure_assessment.py
@@ -63,7 +63,7 @@ jobs:
         run: python 04_backend_supabase/tools/verify_stage62_stage61_final_reconciliation.py
 
       - name: Verify migration ledger authority
-        run: python 04_backend_supabase/tools/verify_migration_ledger.py
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
 
       - name: Assert Stage63 is assessment-only
         shell: bash
