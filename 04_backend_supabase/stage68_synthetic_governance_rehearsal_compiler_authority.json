@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE68_SYNTHETIC_GOVERNANCE_REHEARSAL_COMPILER",
+  "baseline_main_sha": "8f2868f13a75c115cb70ad78964d740572bb0668",
+  "current_state": "DETERMINISTIC_SYNTHETIC_DSR_AND_INCIDENT_REHEARSAL_PACKETS_PREPARED_NOT_EXECUTED_NOT_EVIDENCE_NO_GATE_PROMOTION",
+  "upstream_authority": {
+    "stage44_dsr_preparation": "04_backend_supabase/stage44_data_subject_request_external_evidence_preparation_authority.json",
+    "stage44_dsr_preparation_blob": "53321a9af19ba3423fca44191bf000815eb617d5",
+    "stage45_incident_preparation": "04_backend_supabase/stage45_incident_response_external_evidence_preparation_authority.json",
+    "stage45_incident_preparation_blob": "d5d32990e8ef7a3c4f13dc63e2088ea28e471f12",
+    "stage67_candidate_pack": "04_backend_supabase/stage67_compliance_operations_candidate_pack_authority.json",
+    "stage67_candidate_pack_blob": "f383f49a6b56afc39fb2de34c5f7b07cb177cefc"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-25T17:00:54.064109+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "data_subject_request_channel_state": "blocked",
+    "incident_response_state": "blocked",
+    "legal_privacy_notice_state": "blocked",
+    "legal_terms_of_use_state": "blocked",
+    "legal_role_mapping_state": "blocked",
+    "production_deployment_state": "blocked",
+    "evidence_refs_present": false,
+    "evidence_digests_present": false,
+    "remote_mutation_performed": false
+  },
+  "compiler_contract": {
+    "scenario_registry": "10_compliance/rehearsals/STAGE68_SYNTHETIC_REHEARSAL_SCENARIOS.json",
+    "compiler": "04_backend_supabase/tools/build_stage68_synthetic_governance_rehearsal_bundle.py",
+    "guard": "04_backend_supabase/tools/verify_stage68_synthetic_governance_rehearsal_compiler.py",
+    "workflow": ".github/workflows/stage68_synthetic_governance_rehearsal_compiler.yml",
+    "dsr_scenario_count": 5,
+    "incident_scenario_count": 3,
+    "compiler_output_kind": "NON_ATTESTING_SYNTHETIC_GOVERNANCE_REHEARSAL_BUNDLE",
+    "exact_source_sha_required": true,
+    "deterministic_double_compile_required": true,
+    "real_customer_data_allowed": false,
+    "network_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "provider_calls_allowed": false,
+    "secrets_allowed": false,
+    "production_identifiers_allowed": false,
+    "actual_tabletop_execution_allowed_in_ci": false,
+    "operational_owner_assignment_attestation_allowed": false,
+    "legal_review_attestation_allowed": false,
+    "stage44_receipt_claim_allowed": false,
+    "stage45_receipt_claim_allowed": false,
+    "evidence_ref_creation_allowed": false,
+    "evidence_digest_creation_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "gate_promotion_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "scenario_coverage": {
+    "dsr": [
+      "verified same-tenant access/export",
+      "cross-tenant request fail-closed without enumeration",
+      "audited correction",
+      "deletion versus hypothetical retention hold without inventing law/deadline",
+      "insufficient identity pauses before disclosure"
+    ],
+    "incident": [
+      "suspected cross-tenant exposure",
+      "credential compromise without real secrets/provider calls",
+      "potentially sensitive student data with minimization and legal decision handoff"
+    ]
+  },
+  "progress_semantics": {
+    "what_stage68_proves": "The project can deterministically compile complete synthetic rehearsal packets aligned to Stage44/45 requirements while preserving non-evidence boundaries.",
+    "what_stage68_does_not_prove": "It does not prove operational owner assignment, legal review, production contact-route publication, real DSR workflow execution, real incident tabletop execution, statutory deadlines, notification obligations or gate readiness.",
+    "next_real_boundary": "A controlled exercise with real assigned owners plus independent review of source artifacts and receipts is still required before Stage44/45 evidence promotion."
+  },
+  "failure_classes": [
+    "BGF-STAGE68-SYNTHETIC-PACKET-AS-OPERATIONAL-EVIDENCE-646",
+    "BGF-STAGE68-REAL-CUSTOMER-DATA-IN-REHEARSAL-647",
+    "BGF-STAGE68-REAL-SECRET-IN-CREDENTIAL-SCENARIO-648",
+    "BGF-STAGE68-CROSS-TENANT-REHEARSAL-DISCLOSURE-649",
+    "BGF-STAGE68-LEGAL-NOTIFICATION-AUTO-DECISION-650",
+    "BGF-STAGE68-RETENTION-LAW-DEADLINE-FABRICATION-651",
+    "BGF-STAGE68-REHEARSAL-NONDETERMINISM-652",
+    "BGF-STAGE68-STAGE44-45-RECEIPT-MASQUERADE-653",
+    "BGF-STAGE68-PREMATURE-EVIDENCE-MIGRATION-654",
+    "BGF-STAGE68-REHEARSAL-COMPILER-GUARD-655"
+  ],
+  "gates": {
+    "stage68_rehearsal_compiler": "REPO_ONLY_PENDING_CI",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Prepare a controlled-exercise execution boundary that requires explicit real owner assignments as inputs and emits only candidate receipts for independent review; it must refuse to run if owners remain placeholders.",
+    "external_evidence_still_required": true,
+    "evidence_migration_allowed": false
+  }
+}
