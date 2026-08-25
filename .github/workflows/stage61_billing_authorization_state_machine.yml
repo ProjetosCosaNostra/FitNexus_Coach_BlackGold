@@ -1,0 +1,155 @@
+name: Stage61 Billing Authorization State Machine
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/stage61_billing_authorization_state_machine_authority.json'
+      - '04_backend_supabase/tools/stage61_billing_authorization_state_machine.py'
+      - '04_backend_supabase/tools/verify_stage61_billing_authorization_state_machine.py'
+      - '.github/workflows/stage61_billing_authorization_state_machine.yml'
+  push:
+    branches:
+      - 'blackgold/stage61-billing-authorization-state-machine'
+    paths:
+      - '04_backend_supabase/stage61_billing_authorization_state_machine_authority.json'
+      - '04_backend_supabase/tools/stage61_billing_authorization_state_machine.py'
+      - '04_backend_supabase/tools/verify_stage61_billing_authorization_state_machine.py'
+      - '.github/workflows/stage61_billing_authorization_state_machine.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stage61-authorization-state-machine:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Compile Stage61 surfaces
+        run: |
+          python -m py_compile 04_backend_supabase/tools/stage61_billing_authorization_state_machine.py
+          python -m py_compile 04_backend_supabase/tools/verify_stage61_billing_authorization_state_machine.py
+
+      - name: Verify Stage61 authorization state machine
+        run: python 04_backend_supabase/tools/verify_stage61_billing_authorization_state_machine.py
+
+      - name: Prove empty inventory remains at first external boundary
+        run: |
+          python - <<'PY'
+          import json, os
+          claims = [
+            'operator_credentials_evidence_supplied',
+            'credentials_independent_review_passed',
+            'credentials_reviewed_candidate_exists',
+            'credentials_migration_draft_exists',
+            'credentials_remote_apply_authorized',
+            'credentials_remote_applied_confirmed',
+            'provider_activation_authorized',
+            'provider_active_confirmed',
+            'controlled_proof_execution_authorized',
+            'stage58_receipts_structurally_complete',
+            'synthetic_cleanup_zero_residue_confirmed',
+            'stage59_independent_review_passed',
+            'stage56_reviewed_candidate_exists',
+            'proof_complete_migration_draft_exists',
+            'proof_complete_remote_apply_authorized',
+            'proof_complete_remote_confirmed',
+          ]
+          path = os.path.join(os.environ['RUNNER_TEMP'], 'stage61-empty.json')
+          with open(path, 'w', encoding='utf-8') as f:
+              json.dump({'schema_version': 1, 'protocol': 'STAGE61_V1', 'claims': {k: False for k in claims}}, f)
+          PY
+          python 04_backend_supabase/tools/stage61_billing_authorization_state_machine.py \
+            --input "$RUNNER_TEMP/stage61-empty.json" \
+            --output "$RUNNER_TEMP/stage61-empty-result.json" \
+            --mode strict
+          python - <<'PY'
+          import json, os
+          with open(os.path.join(os.environ['RUNNER_TEMP'], 'stage61-empty-result.json'), encoding='utf-8') as f:
+              result = json.load(f)
+          assert result['structural_state'] == 'AWAITING_REAL_OPERATOR_CREDENTIAL_EVIDENCE'
+          assert result['truth_verified'] is False
+          assert not any(result['authority_flags'].values())
+          print('STAGE61_EMPTY_INVENTORY_FAIL_CLOSED=PASS')
+          PY
+
+      - name: Prove skipped prerequisite fails strict ordering
+        run: |
+          python - <<'PY'
+          import json, os
+          claims = [
+            'operator_credentials_evidence_supplied',
+            'credentials_independent_review_passed',
+            'credentials_reviewed_candidate_exists',
+            'credentials_migration_draft_exists',
+            'credentials_remote_apply_authorized',
+            'credentials_remote_applied_confirmed',
+            'provider_activation_authorized',
+            'provider_active_confirmed',
+            'controlled_proof_execution_authorized',
+            'stage58_receipts_structurally_complete',
+            'synthetic_cleanup_zero_residue_confirmed',
+            'stage59_independent_review_passed',
+            'stage56_reviewed_candidate_exists',
+            'proof_complete_migration_draft_exists',
+            'proof_complete_remote_apply_authorized',
+            'proof_complete_remote_confirmed',
+          ]
+          values = {k: False for k in claims}
+          values['provider_activation_authorized'] = True
+          path = os.path.join(os.environ['RUNNER_TEMP'], 'stage61-skipped.json')
+          with open(path, 'w', encoding='utf-8') as f:
+              json.dump({'schema_version': 1, 'protocol': 'STAGE61_V1', 'claims': values}, f)
+          PY
+          set +e
+          python 04_backend_supabase/tools/stage61_billing_authorization_state_machine.py \
+            --input "$RUNNER_TEMP/stage61-skipped.json" \
+            --output "$RUNNER_TEMP/stage61-skipped-result.json" \
+            --mode strict
+          rc=$?
+          set -e
+          test "$rc" -eq 3
+          python - <<'PY'
+          import json, os
+          with open(os.path.join(os.environ['RUNNER_TEMP'], 'stage61-skipped-result.json'), encoding='utf-8') as f:
+              result = json.load(f)
+          assert result['evaluation_state'] == 'INVALID_OUT_OF_ORDER_CLAIM'
+          assert not any(result['authority_flags'].values())
+          print('STAGE61_OUT_OF_ORDER_FAIL_CLOSED=PASS')
+          PY
+
+      - name: Verify Stage60 final reconciliation
+        run: python 04_backend_supabase/tools/verify_stage60_stage59_final_reconciliation.py
+
+      - name: Verify Stage59 independent review preparation
+        run: python 04_backend_supabase/tools/verify_stage59_billing_proof_independent_review_preparation.py
+
+      - name: Verify Stage58 controlled proof intake preparation
+        run: python 04_backend_supabase/tools/verify_stage58_billing_controlled_proof_intake_preparation.py
+
+      - name: Verify Stage57 final reconciliation
+        run: python 04_backend_supabase/tools/verify_stage57_stage56_final_reconciliation.py
+
+      - name: Verify Stage56 proof-complete promotion boundary
+        run: python 04_backend_supabase/tools/verify_stage56_billing_proof_complete_promotion_boundary.py
+
+      - name: Verify Stage55 final reconciliation
+        run: python 04_backend_supabase/tools/verify_stage55_stage54_final_reconciliation.py
+
+      - name: Verify Stage54 credentials evidence promotion boundary
+        run: python 04_backend_supabase/tools/verify_stage54_billing_external_evidence_promotion_boundary.py
+
+      - name: Verify migration ledger authority
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify billing provider contract
+        run: python 04_backend_supabase/tools/verify_billing_provider_contract.py
+
+      - name: Verify controlled launch admission contract
+        run: python 04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+
+      - name: Verify external gate evidence placeholders
+        run: python 04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py

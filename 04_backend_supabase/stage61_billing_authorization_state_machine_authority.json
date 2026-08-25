@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE61_BILLING_AUTHORIZATION_STATE_MACHINE",
+  "baseline_main_sha": "47fe740eb087c3e27a2269120f6801f3dc6a40e0",
+  "current_state": "AUTHORIZATION_STATE_MACHINE_PREPARED_REMOTE_UNCHANGED_NO_EXTERNAL_EVIDENCE",
+  "fresh_remote_read_only_snapshot": {
+    "observed_at_utc": "2026-08-25T09:35:31.698457+00:00",
+    "read_only": true,
+    "remote_mutation_performed": false,
+    "billing_selection": {
+      "scope": "BR_V1",
+      "provider_code": "asaas",
+      "state": "selected_pending_credentials",
+      "evidence_version": "2026-08-18-official-docs-v1",
+      "activated_at": null
+    },
+    "billing_external_evidence_total": 0,
+    "credentials_verified_rows": 0,
+    "proof_complete_rows": 0,
+    "checkout_intents": 0,
+    "webhook_receipts": 0,
+    "evidence_migration_ready_rows": 0
+  },
+  "fresh_runtime_function_boundary": {
+    "observed_at_utc": "2026-08-25T09:36:31.98135+00:00",
+    "read_only": true,
+    "functions": {
+      "activate_billing_provider_selection": {
+        "identity_args": "p_scope text, p_provider_code text, p_evidence_version text",
+        "security_definer": true,
+        "service_role_execute": true,
+        "authenticated_execute": false,
+        "anon_execute": false,
+        "definition_sha256": "d1ce2db8809c6b4fa66a7018b54baa05725ee97b14508080a5f52f0894400e7c"
+      },
+      "create_billing_checkout_intent": {
+        "identity_args": "p_organization_id uuid, p_plan_code text, p_billing_interval text, p_idempotency_key uuid",
+        "security_definer": false,
+        "service_role_execute": false,
+        "authenticated_execute": true,
+        "anon_execute": false,
+        "definition_sha256": "341a9fee068212dae3212b953615674b9a018f8254516ec50baee4816152c80d"
+      },
+      "attach_billing_provider_checkout": {
+        "identity_args": "p_checkout_intent_id uuid, p_provider_checkout_ref text, p_checkout_url text, p_expires_at timestamp with time zone",
+        "security_definer": true,
+        "service_role_execute": true,
+        "authenticated_execute": false,
+        "anon_execute": false,
+        "definition_sha256": "30a45ec42e2e50570fb75609f4e4fd2be67619e8b9d12edbda71c5b25a72d88c"
+      },
+      "record_billing_webhook_receipt": {
+        "identity_args": "p_provider_code text, p_provider_event_id text, p_event_type text, p_payload_sha256 text, p_auth_verified boolean, p_organization_id uuid, p_provider_subscription_ref text",
+        "security_definer": true,
+        "service_role_execute": true,
+        "authenticated_execute": false,
+        "anon_execute": false,
+        "definition_sha256": "2a609c89e954c8bc334219e52e1f197bca00228bccdbaf1ce4115e4a34374e44"
+      },
+      "mark_billing_webhook_receipt": {
+        "identity_args": "p_provider_code text, p_provider_event_id text, p_processing_status text, p_organization_id uuid, p_provider_subscription_ref text",
+        "security_definer": true,
+        "service_role_execute": true,
+        "authenticated_execute": false,
+        "anon_execute": false,
+        "definition_sha256": "07fad48fd549366cf95aa206fdb3e83f98cab3e0b3038a42703b6259dfbf2e9f"
+      }
+    }
+  },
+  "sealed_inputs": {
+    "stage54_credentials_evidence_promotion_boundary": {
+      "path": "04_backend_supabase/stage54_billing_external_evidence_promotion_boundary_authority.json",
+      "git_blob_sha": "05c99cdc785bcd8872b51773078a8c97b56675af"
+    },
+    "stage56_proof_complete_promotion_boundary": {
+      "path": "04_backend_supabase/stage56_billing_proof_complete_promotion_boundary_authority.json",
+      "git_blob_sha": "4822ad8f32aa7154c851b15a79804698388c8311"
+    },
+    "stage58_controlled_proof_intake": {
+      "path": "04_backend_supabase/stage58_billing_controlled_proof_intake_preparation_authority.json",
+      "git_blob_sha": "0990c03db4f60f0f7252c74527d064442822c7e3"
+    },
+    "stage59_independent_proof_review": {
+      "path": "04_backend_supabase/stage59_billing_proof_independent_review_preparation_authority.json",
+      "git_blob_sha": "7da5bc11b15d0813f77a00b2fd5e19f7a72ee4ca"
+    },
+    "stage60_final_reconciliation": {
+      "path": "04_backend_supabase/stage60_stage59_final_reconciliation_authority.json",
+      "git_blob_sha": "9a35ec73bdcfea91e51c4c4dcd68b4b8032ca159"
+    }
+  },
+  "state_machine": {
+    "protocol": "STAGE61_V1",
+    "scope": "BR_V1",
+    "provider_code": "asaas",
+    "evidence_version": "2026-08-18-official-docs-v1",
+    "provider_environment_id": "asaas-production",
+    "ordered_claims": [
+      "operator_credentials_evidence_supplied",
+      "credentials_independent_review_passed",
+      "credentials_reviewed_candidate_exists",
+      "credentials_migration_draft_exists",
+      "credentials_remote_apply_authorized",
+      "credentials_remote_applied_confirmed",
+      "provider_activation_authorized",
+      "provider_active_confirmed",
+      "controlled_proof_execution_authorized",
+      "stage58_receipts_structurally_complete",
+      "synthetic_cleanup_zero_residue_confirmed",
+      "stage59_independent_review_passed",
+      "stage56_reviewed_candidate_exists",
+      "proof_complete_migration_draft_exists",
+      "proof_complete_remote_apply_authorized",
+      "proof_complete_remote_confirmed"
+    ],
+    "states": [
+      {"index": 0, "code": "AWAITING_REAL_OPERATOR_CREDENTIAL_EVIDENCE"},
+      {"index": 1, "code": "AWAITING_INDEPENDENT_CREDENTIAL_REVIEW"},
+      {"index": 2, "code": "AWAITING_CREDENTIAL_REVIEWED_CANDIDATE"},
+      {"index": 3, "code": "AWAITING_CREDENTIAL_MIGRATION_DRAFT"},
+      {"index": 4, "code": "AWAITING_CREDENTIAL_REMOTE_APPLY_AUTHORIZATION"},
+      {"index": 5, "code": "AWAITING_CREDENTIAL_REMOTE_APPLY_CONFIRMATION"},
+      {"index": 6, "code": "AWAITING_PROVIDER_ACTIVATION_AUTHORIZATION"},
+      {"index": 7, "code": "AWAITING_PROVIDER_ACTIVE_CONFIRMATION"},
+      {"index": 8, "code": "AWAITING_CONTROLLED_PROOF_EXECUTION_AUTHORIZATION"},
+      {"index": 9, "code": "AWAITING_STAGE58_CONTROLLED_PROOF_RECEIPTS"},
+      {"index": 10, "code": "AWAITING_SYNTHETIC_CLEANUP_ZERO_RESIDUE"},
+      {"index": 11, "code": "AWAITING_STAGE59_INDEPENDENT_PROOF_REVIEW"},
+      {"index": 12, "code": "AWAITING_STAGE56_REVIEWED_PROOF_CANDIDATE"},
+      {"index": 13, "code": "AWAITING_PROOF_COMPLETE_MIGRATION_DRAFT"},
+      {"index": 14, "code": "AWAITING_PROOF_COMPLETE_REMOTE_APPLY_AUTHORIZATION"},
+      {"index": 15, "code": "AWAITING_PROOF_COMPLETE_REMOTE_CONFIRMATION"},
+      {"index": 16, "code": "PROOF_COMPLETE_REMOTE_CONFIRMED_BILLING_GATE_REASSESSMENT_REQUIRED"}
+    ],
+    "current_structural_index": 0,
+    "current_structural_state": "AWAITING_REAL_OPERATOR_CREDENTIAL_EVIDENCE",
+    "truth_validation_is_external_to_evaluator": true,
+    "state_evaluator_output_is_authorization": false,
+    "state_evaluator_output_is_remote_apply_authority": false,
+    "state_evaluator_output_is_provider_call_authority": false,
+    "state_evaluator_output_is_launch_authority": false,
+    "later_claim_without_all_prior_claims_is_invalid": true,
+    "one_chat_continuation_command_can_satisfy_external_authorization": false,
+    "single_action_may_collapse_multiple_remote_side_effect_transitions": false,
+    "credentials_evidence_apply_and_provider_activation_may_be_bundled": false,
+    "provider_activation_and_controlled_proof_may_be_bundled": false,
+    "controlled_proof_and_cleanup_may_be_treated_as_same_receipt": false,
+    "independent_review_and_proof_complete_apply_may_be_bundled": false,
+    "proof_complete_confirmation_is_controlled_launch_authority": false
+  },
+  "transition_authorities": {
+    "credentials_evidence": "STAGE54_SEPARATE_REAL_EVIDENCE_REVIEW_AND_SEPARATE_PREAPPLY_AUTHORITY_REQUIRED",
+    "provider_activation": "SEPARATE_EXPLICIT_EXTERNAL_PROVIDER_ACTIVATION_AUTHORIZATION_REQUIRED_AFTER_REMOTE_CREDENTIAL_EVIDENCE_CONFIRMATION",
+    "controlled_proof": "SEPARATE_EXPLICIT_CONTROLLED_PROOF_EXECUTION_AUTHORIZATION_REQUIRED_AFTER_PROVIDER_ACTIVE_CONFIRMATION",
+    "proof_receipt_intake": "STAGE58_STRUCTURAL_ONLY",
+    "proof_independent_review": "STAGE59_REAL_INDEPENDENT_REVIEW_REQUIRED",
+    "proof_complete_promotion": "STAGE56_SEPARATE_MIGRATION_PROMOTION_AND_SEPARATE_PREAPPLY_AUTHORITY_REQUIRED",
+    "controlled_launch": "STAGE20_ALL_NINE_MANDATORY_GATES_REASSESSMENT_REQUIRED"
+  },
+  "stage61_forbidden_actions": {
+    "provider_call": true,
+    "provider_activation": true,
+    "synthetic_fixture_creation": true,
+    "controlled_proof_execution": true,
+    "supabase_dml": true,
+    "supabase_ddl": true,
+    "migration_creation": true,
+    "migration_apply": true,
+    "evidence_receipt_fabrication": true,
+    "independent_review_self_attestation": true,
+    "proof_complete_promotion": true,
+    "billing_gate_promotion": true,
+    "controlled_launch_promotion": true,
+    "paid_media": true,
+    "launch": true
+  },
+  "failure_classes": [
+    "BGF-STAGE61-OUT-OF-ORDER-AUTHORIZATION-CLAIM-583",
+    "BGF-STAGE61-MULTI-TRANSITION-COLLAPSE-584",
+    "BGF-STAGE61-STRUCTURAL-STATE-AS-REMOTE-AUTHORITY-585",
+    "BGF-STAGE61-CONTINUATION-AS-PROVIDER-AUTHORIZATION-586",
+    "BGF-STAGE61-CREDENTIAL-APPLY-ACTIVATION-BUNDLE-587",
+    "BGF-STAGE61-ACTIVATION-PROOF-BUNDLE-588",
+    "BGF-STAGE61-PROOF-CLEANUP-CONFLATION-589",
+    "BGF-STAGE61-REVIEW-APPLY-BUNDLE-590",
+    "BGF-STAGE61-REMOTE-BOUNDARY-DRIFT-591",
+    "BGF-STAGE61-SEALED-AUTHORITY-DRIFT-592",
+    "BGF-STAGE61-FALSE-BILLING-READY-593",
+    "BGF-STAGE61-AUTHORIZATION-STATE-MACHINE-GUARD-594"
+  ],
+  "gates": {
+    "stage61_state_machine": "REPO_ONLY_PENDING_CI",
+    "operator_credentials_evidence": "DENIED_NOT_SUPPLIED",
+    "credentials_verified": "DENIED",
+    "provider_activation": "DENIED",
+    "provider_call": "DENIED",
+    "controlled_proof": "DENIED",
+    "stage58_complete_bundle": "DENIED_NOT_SUPPLIED",
+    "stage59_independent_review": "DENIED_NOT_SUPPLIED",
+    "stage56_reviewed_candidate": "DENIED",
+    "proof_complete": "DENIED",
+    "billing_provider_credentials": "DENIED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
