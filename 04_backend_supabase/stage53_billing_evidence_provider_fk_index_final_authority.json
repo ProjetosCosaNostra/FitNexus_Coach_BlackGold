@@ -17,7 +17,8 @@
     "BGF-STAGE53-PROMOTION-GUARD-503",
     "BGF-STAGE53-STAGE52-PROMOTION-PROJECTION-FUTURE-REPO-ONLY-504",
     "BGF-STAGE53-FINAL-REMOTE-RECONCILIATION-GUARD-505",
-    "BGF-STAGE53-STAGE52-PROMOTION-PROJECTION-FUTURE-REMOTE-MIGRATION-506"
+    "BGF-STAGE53-STAGE52-PROMOTION-PROJECTION-FUTURE-REMOTE-MIGRATION-506",
+    "BGF-STAGE53-PROMOTION-WORKFLOW-DIRECT-FINAL-FRONTIER-507"
   ],
   "candidate": {
     "file": "04_backend_supabase/operations/stage53_billing_evidence_provider_fk_index_candidate.sql",
@@ -92,8 +93,13 @@
   "historical_projection_hardening": {
     "first_final_reconciliation_run": 32792124823,
     "first_final_reconciliation_result": "FAIL_STAGE52_PROMOTION_PROJECTION_RETAINED_FUTURE_STAGE53_REMOTE_MIGRATION",
-    "failure_class": "BGF-STAGE53-STAGE52-PROMOTION-PROJECTION-FUTURE-REMOTE-MIGRATION-506",
-    "prevention": "Stage52 historical projections now remove remote migration rows whose remote version belongs to a later frontier, in addition to dropping future repo-only declarations. This keeps sealed historical guards exact without mutating the real current ledger.",
+    "first_future_frontier_promotion_workflow_run": 32792248915,
+    "first_future_frontier_promotion_workflow_result": "FAIL_DIRECT_PROMOTION_GUARD_ON_FINAL_FRONTIER",
+    "failure_classes": [
+      "BGF-STAGE53-STAGE52-PROMOTION-PROJECTION-FUTURE-REMOTE-MIGRATION-506",
+      "BGF-STAGE53-PROMOTION-WORKFLOW-DIRECT-FINAL-FRONTIER-507"
+    ],
+    "prevention": "Stage52 historical projections now remove remote migration rows whose remote version belongs to a later frontier, and the Stage53 promotion workflow validates the sealed promotion through its historical projection wrapper instead of running the direct promotion guard against a later final frontier.",
     "current_ledger_mutated_by_projection": false,
     "remote_mutation_performed_by_projection": false
   },
