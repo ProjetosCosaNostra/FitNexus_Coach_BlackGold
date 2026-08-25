@@ -1,0 +1,101 @@
+name: Stage58 Billing Controlled Proof Intake Preparation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/stage58_billing_controlled_proof_intake_preparation_authority.json'
+      - '04_backend_supabase/tools/stage58_billing_controlled_proof_receipt_contract.py'
+      - '04_backend_supabase/tools/review_stage58_billing_controlled_proof_bundle.py'
+      - '04_backend_supabase/tools/verify_stage58_billing_controlled_proof_intake_preparation.py'
+      - '.github/workflows/stage58_billing_controlled_proof_intake_preparation.yml'
+  push:
+    branches:
+      - 'blackgold/stage58-billing-controlled-proof-intake-preparation'
+    paths:
+      - '04_backend_supabase/stage58_billing_controlled_proof_intake_preparation_authority.json'
+      - '04_backend_supabase/tools/stage58_billing_controlled_proof_receipt_contract.py'
+      - '04_backend_supabase/tools/review_stage58_billing_controlled_proof_bundle.py'
+      - '04_backend_supabase/tools/verify_stage58_billing_controlled_proof_intake_preparation.py'
+      - '.github/workflows/stage58_billing_controlled_proof_intake_preparation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stage58-controlled-proof-intake:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Compile Stage58 surfaces
+        run: |
+          python -m py_compile 04_backend_supabase/tools/stage58_billing_controlled_proof_receipt_contract.py
+          python -m py_compile 04_backend_supabase/tools/review_stage58_billing_controlled_proof_bundle.py
+          python -m py_compile 04_backend_supabase/tools/verify_stage58_billing_controlled_proof_intake_preparation.py
+
+      - name: Verify Stage58 controlled proof intake preparation
+        run: python 04_backend_supabase/tools/verify_stage58_billing_controlled_proof_intake_preparation.py
+
+      - name: Prove empty inventory remains incomplete and non-authoritative
+        run: |
+          mkdir -p "$RUNNER_TEMP/stage58-empty"
+          python 04_backend_supabase/tools/review_stage58_billing_controlled_proof_bundle.py \
+            --bundle-dir "$RUNNER_TEMP/stage58-empty" \
+            --output "$RUNNER_TEMP/stage58-aggregate.json" \
+            --mode inventory
+          AGGREGATE="$RUNNER_TEMP/stage58-aggregate.json" python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          data = json.loads(Path(os.environ["AGGREGATE"]).read_text(encoding="utf-8"))
+          assert data["overall_state"] == "INCOMPLETE_MISSING_RECEIPTS"
+          assert data["expected_receipt_count"] == 6
+          assert data["valid_structural_receipt_count"] == 0
+          assert data["missing_receipt_count"] == 6
+          assert data["invalid_receipt_count"] == 0
+          assert data["stage56_candidate_digest_mapping"] is None
+          assert data["proof_bundle_digest"] is None
+          assert all(value is False for value in data["authority_flags"].values())
+          print("STAGE58_EMPTY_INVENTORY_FAIL_CLOSED=PASS")
+          PY
+
+      - name: Prove complete mode rejects missing real receipts
+        run: |
+          mkdir -p "$RUNNER_TEMP/stage58-complete-empty"
+          set +e
+          python 04_backend_supabase/tools/review_stage58_billing_controlled_proof_bundle.py \
+            --bundle-dir "$RUNNER_TEMP/stage58-complete-empty" \
+            --output "$RUNNER_TEMP/stage58-complete-aggregate.json" \
+            --mode complete
+          rc=$?
+          set -e
+          test "$rc" -eq 3
+          echo "STAGE58_COMPLETE_MODE_MISSING_REAL_RECEIPTS=PASS"
+
+      - name: Verify Stage57 final reconciliation
+        run: python 04_backend_supabase/tools/verify_stage57_stage56_final_reconciliation.py
+
+      - name: Verify Stage56 proof-complete promotion boundary
+        run: python 04_backend_supabase/tools/verify_stage56_billing_proof_complete_promotion_boundary.py
+
+      - name: Verify Stage55 final reconciliation
+        run: python 04_backend_supabase/tools/verify_stage55_stage54_final_reconciliation.py
+
+      - name: Verify Stage54 credentials evidence promotion boundary
+        run: python 04_backend_supabase/tools/verify_stage54_billing_external_evidence_promotion_boundary.py
+
+      - name: Verify migration ledger authority
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify billing provider contract
+        run: python 04_backend_supabase/tools/verify_billing_provider_contract.py
+
+      - name: Verify controlled launch admission contract
+        run: python 04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+
+      - name: Verify external gate evidence placeholders
+        run: python 04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py
