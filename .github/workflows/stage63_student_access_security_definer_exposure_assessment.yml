@@ -1,0 +1,78 @@
+name: Stage63 Student Access SECURITY DEFINER Exposure Assessment
+
+on:
+  pull_request:
+    paths:
+      - "04_backend_supabase/stage63_student_access_security_definer_exposure_assessment_authority.json"
+      - "04_backend_supabase/tools/verify_stage63_student_access_security_definer_exposure_assessment.py"
+      - "04_backend_supabase/tools/run_stage63_student_access_security_definer_exposure_assessment.py"
+      - "04_backend_supabase/security_definer_exposure_authority.json"
+      - "04_backend_supabase/stage51_security_definer_advisor_reconciliation_authority.json"
+      - "04_backend_supabase/stage52_student_issuance_target_privacy_final_authority.json"
+      - "04_backend_supabase/migrations/**"
+      - ".github/workflows/stage63_student_access_security_definer_exposure_assessment.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stage63-security-definer-assessment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile security assessment guards
+        run: |
+          python -m py_compile \
+            04_backend_supabase/tools/verify_stage63_student_access_security_definer_exposure_assessment.py \
+            04_backend_supabase/tools/run_stage63_student_access_security_definer_exposure_assessment.py \
+            04_backend_supabase/tools/verify_security_definer_exposure_authority.py \
+            04_backend_supabase/tools/verify_student_access_issuance_authority.py \
+            04_backend_supabase/tools/verify_student_access_security_contract.py \
+            04_backend_supabase/tools/verify_tenant_isolation_contract.py \
+            04_backend_supabase/tools/verify_stage51_security_definer_advisor_reconciliation.py \
+            04_backend_supabase/tools/verify_stage62_stage61_final_reconciliation.py \
+            04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify Stage63 SECURITY DEFINER assessment
+        run: python 04_backend_supabase/tools/run_stage63_student_access_security_definer_exposure_assessment.py
+
+      - name: Verify SECURITY DEFINER exposure allowlist
+        run: python 04_backend_supabase/tools/verify_security_definer_exposure_authority.py
+
+      - name: Verify student access issuance authority
+        run: python 04_backend_supabase/tools/verify_student_access_issuance_authority.py
+
+      - name: Verify student access security contract
+        run: python 04_backend_supabase/tools/verify_student_access_security_contract.py
+
+      - name: Verify tenant isolation adversarial contract
+        run: python 04_backend_supabase/tools/verify_tenant_isolation_contract.py
+
+      - name: Verify Stage51 advisor reconciliation remains intentional
+        run: python 04_backend_supabase/tools/verify_stage51_security_definer_advisor_reconciliation.py
+
+      - name: Verify Stage62 current external-boundary reconciliation
+        run: python 04_backend_supabase/tools/verify_stage62_stage61_final_reconciliation.py
+
+      - name: Verify migration ledger authority
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Assert Stage63 is assessment-only
+        shell: bash
+        run: |
+          if find 04_backend_supabase/migrations -maxdepth 1 -type f -iname '*stage63*' | grep -q .; then
+            echo 'STAGE63_MIGRATION_PRESENT=FAIL'
+            exit 1
+          fi
+          echo 'STAGE63_MIGRATION_PRESENT=NO'
+          echo 'REMOTE_MUTATION_AUTHORITY=DENIED_NOT_REQUIRED'
+          echo 'PRIVILEGE_CHANGE_AUTHORITY=DENIED_NOT_REQUIRED'
+          echo 'LAUNCH_GATE=DENIED'
