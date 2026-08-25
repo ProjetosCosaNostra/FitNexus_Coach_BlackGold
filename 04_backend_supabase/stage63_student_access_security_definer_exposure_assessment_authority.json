@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE63_STUDENT_ACCESS_SECURITY_DEFINER_EXPOSURE_ASSESSMENT",
+  "baseline_main_sha": "5889ca5337a6dff23c88e05dd8e226fb0664dde8",
+  "current_state": "EXPECTED_GUARDED_EXPOSURE_NO_PRIVILEGE_CHANGE_REQUIRED",
+  "assessment_scope": "READ_ONLY_REPOSITORY_AND_REMOTE_SECURITY_BOUNDARY_REASSESSMENT",
+  "fresh_remote_read_only_snapshot": {
+    "observed_at_utc": "2026-08-25T11:59:37.987884+00:00",
+    "remote_mutation_performed": false,
+    "security_advisor_warning_count": 1,
+    "security_advisor_lint": "authenticated_security_definer_function_executable",
+    "security_advisor_function": "public.issue_student_access_token_v2(p_student_id uuid)",
+    "security_advisor_level": "WARN",
+    "security_advisor_classification": "EXPECTED_INTENTIONAL_AUTHENTICATED_MANAGER_WRAPPER",
+    "private_rest_exposure_guc_proven": false,
+    "private_rest_exposure_guc_note": "pgrst.db_schemas and pgrst.db_extra_search_path were unavailable via current_setting(..., true); this is explicitly non-evidence and is not used to classify the authenticated public wrapper as safe."
+  },
+  "sealed_repository_inputs": {
+    "security_definer_exposure_authority": {
+      "path": "04_backend_supabase/security_definer_exposure_authority.json",
+      "git_blob_sha": "e00fa2577f2a06eee6a0ef430f3aba79aa4f358e"
+    },
+    "security_definer_exposure_guard": {
+      "path": "04_backend_supabase/tools/verify_security_definer_exposure_authority.py",
+      "git_blob_sha": "3081f3f94da6af9a1b00494b46ff159d302e0e2e"
+    },
+    "stage51_advisor_reconciliation_authority": {
+      "path": "04_backend_supabase/stage51_security_definer_advisor_reconciliation_authority.json",
+      "git_blob_sha": "e2d90eb485d0e6eea68dee05533ff9b762f9f982"
+    },
+    "stage51_advisor_reconciliation_guard": {
+      "path": "04_backend_supabase/tools/verify_stage51_security_definer_advisor_reconciliation.py",
+      "git_blob_sha": "117459b8311168db417368c431097b56c4ec2710"
+    },
+    "stage52_final_authority": {
+      "path": "04_backend_supabase/stage52_student_issuance_target_privacy_final_authority.json",
+      "git_blob_sha": "075824c55ce463a0863211e4bffecdd8b111a4e9"
+    },
+    "stage52_final_guard": {
+      "path": "04_backend_supabase/tools/verify_stage52_student_issuance_target_privacy_final_reconciliation.py",
+      "git_blob_sha": "93680df30749dd2abdd668dfc28c80ac1f2ba380"
+    },
+    "stage52_hardening_migration": {
+      "path": "04_backend_supabase/migrations/20260824203000_stage52_student_issuance_target_privacy_hardening.sql",
+      "git_blob_sha": "80529ec11b923d83d10e01bb846ed284d34442f6"
+    },
+    "stage62_final_authority": {
+      "path": "04_backend_supabase/stage62_stage61_final_reconciliation_authority.json",
+      "git_blob_sha": "4c9c99ecb2f3f016287e9d5c7de1888e6e2c846f"
+    }
+  },
+  "remote_function_inventory": {
+    "public.issue_student_access_token_v2(p_student_id uuid)": {
+      "owner": "postgres",
+      "security_definer": true,
+      "safe_empty_search_path": true,
+      "public_execute": false,
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": true,
+      "definition_sha256": "6b47a21a83e884710447da01c6a5c95b8ff3e7bc7d415484a9ff698ba7b2a343",
+      "requires_auth_uid": true,
+      "authorization_and_target_lookup_coalesced": true,
+      "manager_roles": ["owner", "admin"],
+      "unauthorized_and_nonexistent_targets_share_error": "STUDENT_ACCESS_TARGET_UNAVAILABLE",
+      "rotation_cooldown_present": true,
+      "calls_v1_only_after_wrapper_authorization": true,
+      "new_link_lookup_bound_to_student_and_org": true,
+      "link_updates_bound_to_org": true
+    },
+    "public.issue_student_access_token(p_student_id uuid)": {
+      "owner": "postgres",
+      "security_definer": true,
+      "safe_empty_search_path": true,
+      "public_execute": false,
+      "anon_execute": false,
+      "authenticated_execute": false,
+      "service_role_execute": true,
+      "definition_sha256": "e94ec8b489635fe22ce67536753279b8770e268a16e7bcbf999936df6644a61f",
+      "manager_recheck_present": true,
+      "raw_token_returned_once": true,
+      "token_stored_hashed": true
+    },
+    "private.is_org_manager(target_org uuid)": {
+      "owner": "postgres",
+      "security_definer": true,
+      "safe_empty_search_path": true,
+      "public_execute": false,
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": true,
+      "definition_sha256": "040c533cdce62a40e4eef46c7c4b2bb196ba2df63646649c5728e535c61596a5",
+      "self_scoped_to_auth_uid": true,
+      "roles": ["owner", "admin"],
+      "mutates_state": false
+    },
+    "private.is_org_member(p_org_id uuid)": {
+      "owner": "postgres",
+      "security_definer": true,
+      "safe_empty_search_path": true,
+      "public_execute": false,
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": true,
+      "definition_sha256": "b016c44ab1ab827bedace3f0ded174c79a7102fa239d996ef44adecabf9f31ae",
+      "self_scoped_to_auth_uid": true,
+      "mutates_state": false
+    },
+    "private.is_org_owner(p_org_id uuid)": {
+      "owner": "postgres",
+      "security_definer": true,
+      "safe_empty_search_path": true,
+      "public_execute": false,
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": true,
+      "definition_sha256": "795933356fb5beda52de5da4fb9ebe48c35e12c1dd3305270a461404412fcaa8",
+      "self_scoped_to_auth_uid": true,
+      "role": "owner",
+      "mutates_state": false
+    }
+  },
+  "remote_table_boundary": {
+    "private.student_access_security_events": {
+      "rls_enabled": false,
+      "authenticated_select": false,
+      "authenticated_insert": false,
+      "authenticated_update": false,
+      "authenticated_delete": false,
+      "service_role_full_crud": true
+    },
+    "public.student_access_links": {
+      "rls_enabled": true,
+      "authenticated_select": false,
+      "authenticated_insert": false,
+      "authenticated_update": false,
+      "authenticated_delete": false,
+      "service_role_full_crud": true
+    },
+    "public.students": {
+      "rls_enabled": true,
+      "authenticated_table_grants_present": true,
+      "select_policy": "organization member",
+      "write_policy": "organization manager"
+    },
+    "public.organization_members": {
+      "rls_enabled": true,
+      "authenticated_table_grants_present": true,
+      "select_policy": "same organization member",
+      "write_policy": "organization owner"
+    },
+    "public.organizations": {
+      "rls_enabled": true,
+      "authenticated_table_grants_present": true,
+      "select_policy": "organization member",
+      "update_policy": "organization owner"
+    }
+  },
+  "critical_relational_constraints": {
+    "organization_members_pkey": "PRIMARY KEY (organization_id, user_id)",
+    "organization_members_role_check": "role IN (owner, admin, coach)",
+    "students_pkey": "PRIMARY KEY (id)",
+    "students_id_organization_id_key": "UNIQUE (id, organization_id)",
+    "student_access_links_student_same_org_fk": "FOREIGN KEY (student_id, organization_id) REFERENCES students(id, organization_id) ON DELETE CASCADE",
+    "student_access_links_rotation_same_student_org_fk": "FOREIGN KEY (rotated_from_link_id, student_id, organization_id) REFERENCES student_access_links(id, student_id, organization_id) ON DELETE RESTRICT",
+    "student_access_links_token_hash_key": "UNIQUE (token_hash)"
+  },
+  "attack_class_assessment": {
+    "anonymous_v2_execution": "PASS_DENIED",
+    "non_manager_or_foreign_student_token_issuance": "PASS_DENIED_BY_OWNER_ADMIN_JOIN",
+    "student_identifier_existence_oracle": "PASS_CLOSED_BY_STAGE52_UNIFORM_ERROR",
+    "direct_authenticated_v1_bypass": "PASS_DENIED_BY_EXECUTE_GRANT",
+    "search_path_hijack": "PASS_MITIGATED_BY_EMPTY_SEARCH_PATH_AND_QUALIFIED_OBJECTS",
+    "membership_role_self_escalation": "PASS_DENIED_BY_OWNER_ONLY_RLS_WRITES",
+    "direct_authenticated_link_mutation": "PASS_DENIED_BY_TABLE_GRANTS",
+    "cross_organization_link_coherence_break": "PASS_DENIED_BY_COMPOSITE_FOREIGN_KEY",
+    "cross_organization_v1_deactivation": "PASS_GUARDED_BY_GLOBAL_STUDENT_ID_AND_V1_MANAGER_RECHECK",
+    "rotation_cooldown_bypass_via_v1_from_authenticated": "PASS_DENIED_BY_V1_EXECUTE_GRANT",
+    "private_helper_privilege_escalation": "PASS_HELPERS_ARE_SELF_SCOPED_READ_ONLY_PREDICATES",
+    "security_event_table_authenticated_access": "PASS_DENIED_BY_TABLE_GRANTS"
+  },
+  "decision": {
+    "advisor_warning_is_expected_by_current_architecture": true,
+    "advisor_warning_is_equivalent_to_confirmed_vulnerability": false,
+    "authenticated_v2_execute_is_intentional": true,
+    "authenticated_v2_execute_must_remain_explicitly_allowlisted": true,
+    "automatic_revoke_authenticated_execute_allowed": false,
+    "automatic_switch_to_security_invoker_allowed": false,
+    "automatic_move_out_of_public_schema_allowed": false,
+    "privilege_change_required_now": false,
+    "ddl_change_required_now": false,
+    "migration_required_now": false,
+    "remote_mutation_required_now": false,
+    "future_new_security_definer_advisor_warning_requires_fail_closed_review": true,
+    "future_v2_body_or_grant_drift_requires_fail_closed_review": true
+  },
+  "failure_classes": [
+    "BGF-STAGE63-SECURITY-DEFINER-ALLOWLIST-DRIFT-602",
+    "BGF-STAGE63-V2-RUNTIME-GRANT-DRIFT-603",
+    "BGF-STAGE63-V1-DIRECT-AUTHENTICATED-EXPOSURE-604",
+    "BGF-STAGE63-TARGET-PRIVACY-REGRESSION-605",
+    "BGF-STAGE63-TENANT-RELATIONAL-BOUNDARY-DRIFT-606",
+    "BGF-STAGE63-DIRECT-LINK-MUTATION-EXPOSURE-607",
+    "BGF-STAGE63-UNPROVEN-PRIVATE-REST-ASSUMPTION-608",
+    "BGF-STAGE63-ADVISOR-AUTO-REMEDIATION-609",
+    "BGF-STAGE63-SECURITY-DEFINER-EXPOSURE-ASSESSMENT-GUARD-610"
+  ],
+  "gates": {
+    "stage63_security_definer_assessment": "PASS_EXPECTED_GUARDED_EXPOSURE_NO_CHANGE_REQUIRED_PENDING_CI",
+    "security_advisor_reconciliation": "PASS_INTENTIONAL_AUTHENTICATED_MANAGER_WRAPPER_TARGET_PRIVACY_HARDENED",
+    "privilege_change": "DENIED_NOT_REQUIRED",
+    "remote_mutation": "DENIED_NOT_REQUIRED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
