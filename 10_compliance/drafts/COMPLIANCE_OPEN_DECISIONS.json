@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "status": "DRAFT_UNREVIEWED_NOT_EVIDENCE",
+  "project": "FitNexus Coach BlackGold",
+  "purpose": "Machine-readable inventory of unresolved legal/privacy/DSR/incident decisions. This file cannot attest readiness or close any gate.",
+  "official_contact_candidate": "projetoscosanostra@gmail.com",
+  "unresolved": [
+    {
+      "id": "LEGAL_ENTITY_IDENTITY",
+      "applies_to": ["legal_privacy_notice", "legal_terms_of_use"],
+      "required": "Approved provider/legal entity identity, registration data when applicable and official address.",
+      "resolution_authority": "independent legal/business review",
+      "state": "OPEN"
+    },
+    {
+      "id": "LEGAL_REVIEWER_REFERENCE",
+      "applies_to": ["legal_privacy_notice", "legal_terms_of_use", "legal_role_mapping"],
+      "required": "Named/traceable real legal review reference for the approved versions.",
+      "resolution_authority": "independent legal review",
+      "state": "OPEN"
+    },
+    {
+      "id": "CONTROLLER_PROCESSOR_ROLE_MATRIX",
+      "applies_to": ["legal_role_mapping", "legal_privacy_notice", "data_subject_request_channel", "incident_response"],
+      "required": "Approved purpose-by-purpose controller/operator mapping and legal-basis review.",
+      "resolution_authority": "independent legal/privacy review",
+      "state": "OPEN"
+    },
+    {
+      "id": "SENSITIVE_DATA_TREATMENT",
+      "applies_to": ["legal_role_mapping", "legal_privacy_notice", "incident_response"],
+      "required": "Approved treatment/minimization rules for health, injury, pain or other potentially sensitive student information.",
+      "resolution_authority": "independent legal/privacy review",
+      "state": "OPEN"
+    },
+    {
+      "id": "SUBPROCESSOR_AND_TRANSFER_MAP",
+      "applies_to": ["legal_privacy_notice", "legal_role_mapping"],
+      "required": "Actual provider inventory, regions, contracts, retention and international-transfer mechanism when applicable.",
+      "resolution_authority": "provider evidence plus legal/privacy review",
+      "state": "OPEN"
+    },
+    {
+      "id": "RETENTION_MATRIX",
+      "applies_to": ["legal_privacy_notice", "data_subject_request_channel", "incident_response"],
+      "required": "Approved category-by-category retention, backup expiration and legal-hold rules.",
+      "resolution_authority": "legal/privacy/operations review",
+      "state": "OPEN"
+    },
+    {
+      "id": "BILLING_CANCELLATION_REFUND_POLICY",
+      "applies_to": ["legal_terms_of_use"],
+      "required": "Approved trial, renewal, cancellation, refund/withdrawal, delinquency and reactivation policy.",
+      "resolution_authority": "business plus legal review after real billing authority",
+      "state": "OPEN"
+    },
+    {
+      "id": "TERMS_ACCEPTANCE_VERSIONING",
+      "applies_to": ["legal_terms_of_use"],
+      "required": "Production mechanism binding user acceptance to immutable terms version/digest.",
+      "resolution_authority": "product implementation plus independent review",
+      "state": "OPEN"
+    },
+    {
+      "id": "DSR_STABLE_PUBLIC_ROUTE",
+      "applies_to": ["data_subject_request_channel"],
+      "required": "Stable published titular contact route with protocol handling.",
+      "resolution_authority": "real operational evidence",
+      "state": "OPEN"
+    },
+    {
+      "id": "DSR_OWNER_AND_BACKUP",
+      "applies_to": ["data_subject_request_channel"],
+      "required": "Real owner and backup owner assignment.",
+      "resolution_authority": "operational authority",
+      "state": "OPEN"
+    },
+    {
+      "id": "DSR_CONTROLLED_TESTS",
+      "applies_to": ["data_subject_request_channel"],
+      "required": "Synthetic tenant-scoped access/export, correction, deletion/anonymization/blocking/retention-hold tests and tabletop receipt.",
+      "resolution_authority": "controlled operational test plus independent review",
+      "state": "OPEN"
+    },
+    {
+      "id": "INCIDENT_OWNER_ASSIGNMENTS",
+      "applies_to": ["incident_response"],
+      "required": "Real incident commander, privacy owner and technical owner assignments.",
+      "resolution_authority": "operational authority",
+      "state": "OPEN"
+    },
+    {
+      "id": "INCIDENT_RISK_AND_COMMUNICATION_PROCEDURE",
+      "applies_to": ["incident_response"],
+      "required": "Reviewed risk classification and current ANPD/data-subject communication decision procedure.",
+      "resolution_authority": "legal/privacy/operations review",
+      "state": "OPEN"
+    },
+    {
+      "id": "INCIDENT_TABLETOPS",
+      "applies_to": ["incident_response"],
+      "required": "Three real controlled tabletop receipts using synthetic/non-customer fixtures plus final drill postmortem.",
+      "resolution_authority": "controlled operational test plus independent review",
+      "state": "OPEN"
+    }
+  ],
+  "hard_boundaries": {
+    "can_mark_any_gate_ready": false,
+    "can_create_evidence_ref": false,
+    "can_create_evidence_digest": false,
+    "can_replace_legal_review": false,
+    "can_replace_operational_test": false,
+    "can_trigger_evidence_migration": false,
+    "controlled_launch_promoted": false,
+    "paid_media_promoted": false
+  }
+}
