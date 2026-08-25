@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE55_STAGE54_FINAL_RECONCILIATION",
+  "baseline_main_sha": "6db1a0c500355a0d7e7e04aaca92099ec5390820",
+  "stage54_pr": {
+    "number": 145,
+    "head_sha": "4fa5db8077622486991f5ea14fc665de3c8e9fae",
+    "merge_sha": "6db1a0c500355a0d7e7e04aaca92099ec5390820",
+    "mergeable_before_merge": true,
+    "exact_head_merge_enforced": true
+  },
+  "stage54_ci": {
+    "stage54_run_id": 32793487853,
+    "stage54_conclusion": "success",
+    "flutter_run_id": 32793487921,
+    "flutter_conclusion": "success",
+    "consumed_live_proof_workflows_replayed": false
+  },
+  "sealed_stage54_inputs": {
+    "authority": {
+      "path": "04_backend_supabase/stage54_billing_external_evidence_promotion_boundary_authority.json",
+      "git_blob_sha": "05c99cdc785bcd8872b51773078a8c97b56675af"
+    },
+    "verifier": {
+      "path": "04_backend_supabase/tools/verify_stage54_billing_external_evidence_promotion_boundary.py",
+      "git_blob_sha": "e7d3a1d65fc30526ea1b05dd05ffbe7a6f07ffbf"
+    }
+  },
+  "postmerge_remote_read_only_snapshot": {
+    "observed_at_utc": "2026-08-25T00:34:19.673533+00:00",
+    "read_only": true,
+    "remote_mutation_performed": false,
+    "canonical_private_function_call_succeeded": false,
+    "canonical_private_function_failure": "permission denied for function get_controlled_launch_readiness_authority",
+    "fallback_projection": "DIRECT_SELECT_EQUIVALENT_OF_STAGE20_READINESS_LOGIC",
+    "ready_mandatory_gates": 2,
+    "mandatory_gates": 9,
+    "blocking_gate_count": 7,
+    "tracking_core_ready": true,
+    "pricing_experiment_ready": true,
+    "billing_provider_credentials_ready": false,
+    "manual_evidence_ready_rows": 0,
+    "billing_external_evidence_total": 0,
+    "credentials_verified_rows": 0,
+    "proof_complete_rows": 0,
+    "billing_selection": {
+      "scope": "BR_V1",
+      "provider_code": "asaas",
+      "state": "selected_pending_credentials",
+      "evidence_version": "2026-08-18-official-docs-v1",
+      "activated_at": null
+    },
+    "blocked_evidence_migration_gates": [
+      "data_subject_request_channel",
+      "incident_response",
+      "legal_privacy_notice",
+      "legal_role_mapping",
+      "legal_terms_of_use",
+      "production_deployment"
+    ]
+  },
+  "final_state": "STAGE54_MERGED_GREEN_REMOTE_UNCHANGED_BILLING_EXTERNAL_AUTHORITY_STILL_MISSING",
+  "governance": {
+    "stage54_boundary": "PASS_MERGED_REPO_ONLY",
+    "stage54_remote_apply_required": false,
+    "stage54_remote_apply_authorized": false,
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE_AND_INDEPENDENT_REVIEW",
+    "proof_complete": "DENIED_AWAITING_DEDICATED_WEBHOOK_AND_CHECKOUT_PROOF_PROTOCOL",
+    "provider_activation": "DENIED",
+    "provider_call": "DENIED",
+    "incident_response": "DENIED",
+    "production_deployment": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED",
+    "execute_sql_dml_or_ddl_allowed": false,
+    "private_function_permission_failure_may_be_repaired_by_privilege_mutation": false
+  },
+  "failure_classes": [
+    "BGF-STAGE55-READONLY-PRIVATE-FUNCTION-CONNECTOR-ROLE-DENIED-521",
+    "BGF-STAGE55-POSTMERGE-GATE-DRIFT-522",
+    "BGF-STAGE55-STAGE54-SEALED-INPUT-DRIFT-523",
+    "BGF-STAGE55-REMOTE-MUTATION-DURING-RECONCILIATION-524",
+    "BGF-STAGE55-FALSE-BILLING-READY-525",
+    "BGF-STAGE55-FINAL-RECONCILIATION-GUARD-526"
+  ]
+}
