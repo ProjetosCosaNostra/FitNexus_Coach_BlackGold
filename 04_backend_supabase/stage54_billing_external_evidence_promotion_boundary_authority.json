@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE54_BILLING_EXTERNAL_EVIDENCE_PROMOTION_BOUNDARY",
+  "baseline_main_sha": "1a1bc55b74c0fdb3806c111aafa236eea9cb5d75",
+  "current_state": "CREDENTIAL_EVIDENCE_PROMOTION_BOUNDARY_PREPARED_NO_EXTERNAL_REVIEW_NO_EVIDENCE_INSERT_NO_PROVIDER_ACTIVATION_NO_REMOTE_MUTATION",
+  "problem_statement": {
+    "stage38_runtime_boundary": "Runtime roles have no DML authority on private.billing_provider_external_evidence, so versioned migrations are the intended evidence-write surface.",
+    "stage39_declared_sequence": "Stage39 requires independent review before a dedicated credentials_verified evidence migration is drafted.",
+    "remaining_governance_gap": "Before Stage54, no repository-wide promotion boundary cryptographically bound a future billing evidence migration to the canonical Stage39 source receipt and an independent-review receipt, so a future versioned migration could insert structurally valid credentials_verified evidence without proving that binding.",
+    "stage47_structural_aggregate_is_external_billing_authority": false,
+    "stage49_evidence_migration_protocol_applies_to_billing_provider_credentials": false,
+    "proof_complete_has_dedicated_external_proof_protocol_today": false
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-25T00:18:33.060924+00:00",
+    "billing_evidence_rows": 0,
+    "credentials_verified_rows": 0,
+    "proof_complete_rows": 0,
+    "selection_scope": "BR_V1",
+    "selection_provider_code": "asaas",
+    "selection_state": "selected_pending_credentials",
+    "selection_evidence_version": "2026-08-18-official-docs-v1",
+    "selection_activated_at": null,
+    "runtime_write_grants": 0,
+    "provider_code_index_present": true,
+    "remote_mutation_performed": false
+  },
+  "sealed_inputs": {
+    "stage38_billing_evidence_bound_activation": {
+      "path": "04_backend_supabase/migrations/20260823174500_stage38_billing_evidence_bound_activation.sql",
+      "git_blob_sha": "a09aa83eb6eb24739ad0a73b7c08db3185eb4f63"
+    },
+    "stage39_external_evidence_preparation": {
+      "path": "04_backend_supabase/stage39_billing_credential_authority_external_evidence_preparation.json",
+      "git_blob_sha": "404a320c43ba1e1f7092f11686d9ce990a602329"
+    },
+    "stage39_canonical_reviewer": {
+      "path": "04_backend_supabase/tools/review_stage39_billing_credential_evidence_receipt.py",
+      "git_blob_sha": "9caf186172eff35ea3f216b86565a3a98387a5cd"
+    },
+    "stage40_production_environment_interlock": {
+      "path": "04_backend_supabase/migrations/20260824003000_stage40_billing_production_environment_interlock.sql",
+      "git_blob_sha": "9900408bec1b7d60f40c39f4e97e5e8c0c1c96cf"
+    },
+    "stage47_unified_external_evidence_intake": {
+      "path": "04_backend_supabase/stage47_unified_external_evidence_intake_orchestration_authority.json",
+      "git_blob_sha": "9a8d504d3462a926014ced34508cdf42babbff46"
+    },
+    "stage49_evidence_migration_promotion_boundary": {
+      "path": "04_backend_supabase/stage49_evidence_migration_promotion_boundary_authority.json",
+      "git_blob_sha": "6378fdc6435123ce1809c235b9d1c5342357e4d3"
+    },
+    "stage53_final_reconciliation": {
+      "path": "04_backend_supabase/stage53_billing_evidence_provider_fk_index_final_authority.json",
+      "git_blob_sha": "365666b19aeb3c8ac28173cb7632c006d7e88bcc"
+    }
+  },
+  "promotion_protocol": {
+    "protocol_id": "STAGE54_V1",
+    "eligible_scope": "BR_V1",
+    "eligible_provider_code": "asaas",
+    "eligible_evidence_version": "2026-08-18-official-docs-v1",
+    "eligible_state": "credentials_verified",
+    "required_provider_environment_id": "asaas-production",
+    "canonical_source_receipt_stage": "STAGE39_BILLING_CREDENTIAL_AUTHORITY_EXTERNAL_EVIDENCE",
+    "companion_authority_directory": "04_backend_supabase/billing_evidence_promotions",
+    "companion_authority_required_for_future_credentials_verified_migration": true,
+    "canonical_source_receipt_sha256_required": true,
+    "independent_review_receipt_sha256_required": true,
+    "source_artifact_review_digest_required": true,
+    "review_bundle_digest_required": true,
+    "reviewer_reference_digest_required": true,
+    "reviewer_independence_attestation_required": true,
+    "source_artifacts_reviewed_out_of_band_attestation_required": true,
+    "operator_redaction_confirmation_required": true,
+    "provider_account_owner_authorization_digest_required": true,
+    "credential_activation_digest_required": true,
+    "production_environment_exact_match_required": true,
+    "selected_evidence_version_exact_match_required": true,
+    "migration_precondition_requires_pending_unactivated_selection": true,
+    "one_credentials_verified_row_per_migration": true,
+    "script_can_verify_reviewer_independence": false,
+    "synthetic_fixture_can_satisfy_promotion": false,
+    "stage47_aggregate_can_satisfy_promotion": false,
+    "stage48_regression_can_satisfy_promotion": false,
+    "stage49_protocol_can_substitute_for_billing_authorization": false,
+    "candidate_generation_is_remote_apply_authority": false,
+    "versioned_migration_presence_is_remote_apply_authority": false,
+    "provider_activation_may_be_bundled_with_evidence_migration": false,
+    "provider_call_may_be_bundled_with_evidence_migration": false,
+    "proof_complete_promotion_allowed_by_stage54_v1": false,
+    "update_or_delete_existing_billing_evidence_allowed_by_stage54_v1": false,
+    "remote_apply_requires_separate_preapply_authority_reread": true,
+    "provider_activation_requires_separate_postapply_remote_evidence_read": true,
+    "execute_sql_dml_or_ddl_allowed": false
+  },
+  "current_registry": {
+    "registered_billing_evidence_promotions": 0,
+    "versioned_credentials_verified_promotion_migrations": 0,
+    "remote_credentials_verified_rows": 0,
+    "remote_proof_complete_rows": 0
+  },
+  "failure_classes": [
+    "BGF-STAGE54-UNREGISTERED-BILLING-EVIDENCE-MIGRATION-508",
+    "BGF-STAGE54-PROOF-COMPLETE-WITHOUT-DEDICATED-PROTOCOL-509",
+    "BGF-STAGE54-SOURCE-RECEIPT-DIGEST-UNBOUND-510",
+    "BGF-STAGE54-INDEPENDENT-REVIEW-DIGEST-UNBOUND-511",
+    "BGF-STAGE54-PRODUCTION-ENVIRONMENT-MISMATCH-512",
+    "BGF-STAGE54-SECRET-MATERIAL-IN-PROMOTION-AUTHORITY-513",
+    "BGF-STAGE54-ACTIVATION-BUNDLED-WITH-EVIDENCE-MIGRATION-514",
+    "BGF-STAGE54-STAGE47-AGGREGATE-SUBSTITUTION-515",
+    "BGF-STAGE54-SYNTHETIC-REVIEW-FALSE-AUTHORITY-516",
+    "BGF-STAGE54-CANDIDATE-DIRECT-APPLY-517",
+    "BGF-STAGE54-EXECUTE-SQL-EVIDENCE-DML-518",
+    "BGF-STAGE54-BILLING-EVIDENCE-PROMOTION-BOUNDARY-GUARD-519",
+    "BGF-STAGE54-REGISTERED-PROMOTION-BODY-DRIFT-520"
+  ],
+  "gates": {
+    "stage54_boundary": "REPO_ONLY_PENDING_CI",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE_AND_INDEPENDENT_REVIEW",
+    "provider_activation": "DENIED",
+    "provider_call": "DENIED",
+    "proof_complete": "DENIED_AWAITING_DEDICATED_WEBHOOK_AND_CHECKOUT_PROOF_PROTOCOL",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}
