@@ -1,6 +1,7 @@
 # FitNexus Coach BlackGold — Processing Role Matrix — CANDIDATO NÃO REVISADO
 
 > **STATUS OBRIGATÓRIO:** DRAFT_UNREVIEWED_NOT_LEGAL_EVIDENCE  
+> **HIPÓTESE, NÃO CONCLUSÃO JURÍDICA:** esta matriz existe para orientar revisão independente.  
 > Matriz técnica para orientar revisão jurídica. Nenhuma linha abaixo congela controlador, operador, base legal, transferência internacional ou retenção.
 
 | Fluxo | Dados previstos | Finalidade técnica | Hipótese de papel FitNexus | Hipótese de papel coach/organização | Sensível possível? | Subprocessor atual/candidato | Decisão jurídica pendente |
