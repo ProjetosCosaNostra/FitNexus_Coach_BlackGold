@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE67_COMPLIANCE_OPERATIONS_CANDIDATE_PACK",
+  "baseline_main_sha": "90653a6df4efc497f196ddd1ff482fe8082911c0",
+  "current_state": "UNREVIEWED_COMPLIANCE_AND_OPERATIONS_CANDIDATES_PREPARED_OPEN_DECISIONS_EXPLICIT_NO_PUBLICATION_NO_GATE_PROMOTION",
+  "upstream_authority": {
+    "external_gate_placeholders": "04_backend_supabase/external_gate_evidence_placeholders.json",
+    "external_gate_placeholders_blob": "07e6eb3330076f3e576ed2dd2a2e385f5fa3b2db",
+    "stage45_incident_response_preparation": "04_backend_supabase/stage45_incident_response_external_evidence_preparation_authority.json",
+    "stage45_incident_response_preparation_blob": "d5d32990e8ef7a3c4f13dc63e2088ea28e471f12",
+    "stage66_release_candidate_pipeline": "04_backend_supabase/stage66_production_release_candidate_evidence_pipeline_authority.json",
+    "stage66_release_candidate_pipeline_blob": "8f3be15da1027d9a5bed6e7d1f43cefebcf6a9eb"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-25T16:50:57.507476+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "evidence_migration_gates": {
+      "legal_privacy_notice": "blocked",
+      "legal_terms_of_use": "blocked",
+      "legal_role_mapping": "blocked",
+      "data_subject_request_channel": "blocked",
+      "incident_response": "blocked",
+      "production_deployment": "blocked"
+    },
+    "evidence_refs_present": false,
+    "evidence_digests_present": false,
+    "remote_mutation_performed": false
+  },
+  "candidate_files": {
+    "privacy_notice": "10_compliance/drafts/PRIVACY_NOTICE_CANDIDATE_PTBR.md",
+    "terms_of_use": "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md",
+    "processing_role_matrix": "10_compliance/drafts/PROCESSING_ROLE_MATRIX_CANDIDATE.md",
+    "data_subject_request_runbook": "10_compliance/drafts/DATA_SUBJECT_REQUEST_RUNBOOK_CANDIDATE.md",
+    "incident_response_runbook": "10_compliance/drafts/INCIDENT_RESPONSE_RUNBOOK_CANDIDATE.md",
+    "open_decisions": "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+  },
+  "candidate_contract": {
+    "all_documents_must_be_explicitly_unreviewed": true,
+    "all_documents_must_deny_gate_promotion": true,
+    "unknown_legal_entity_must_remain_placeholder": true,
+    "unknown_legal_deadlines_must_not_be_invented": true,
+    "pricing_experiment_must_not_become_legal_price_commitment": true,
+    "asaas_must_remain_pending_until_real_activation": true,
+    "controller_processor_mapping_must_remain_hypothesis_until_review": true,
+    "sensitive_data_ad_targeting_prohibited": true,
+    "real_customer_data_allowed_in_tests": false,
+    "drafts_can_be_published_as_official": false,
+    "drafts_can_be_used_as_evidence_ref": false,
+    "drafts_can_be_used_as_evidence_digest": false,
+    "drafts_can_create_evidence_migration": false,
+    "supabase_mutation_allowed": false,
+    "provider_call_allowed": false,
+    "deployment_action_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "open_decision_domains": [
+    "legal entity identity",
+    "independent legal reviewer/reference",
+    "controller/operator and legal-basis mapping",
+    "potentially sensitive data treatment",
+    "subprocessor and international-transfer map",
+    "retention matrix and legal hold",
+    "billing cancellation/refund policy",
+    "terms acceptance/versioning",
+    "DSR stable route and real owner assignments",
+    "DSR controlled synthetic tests",
+    "incident owner assignments",
+    "incident risk/communication procedure",
+    "three controlled incident tabletops plus postmortem"
+  ],
+  "failure_classes": [
+    "BGF-STAGE67-DRAFT-AS-LEGAL-EVIDENCE-636",
+    "BGF-STAGE67-UNKNOWN-LEGAL-IDENTITY-SYNTHESIS-637",
+    "BGF-STAGE67-UNREVIEWED-LEGAL-DEADLINE-FABRICATION-638",
+    "BGF-STAGE67-PRICING-EXPERIMENT-FROZEN-BY-TERMS-639",
+    "BGF-STAGE67-ROLE-HYPOTHESIS-AS-LEGAL-CONCLUSION-640",
+    "BGF-STAGE67-DSR-DRAFT-AS-OPERATIONAL-PROOF-641",
+    "BGF-STAGE67-INCIDENT-RUNBOOK-AS-TABLETOP-PROOF-642",
+    "BGF-STAGE67-UNREVIEWED-DRAFT-PUBLICATION-643",
+    "BGF-STAGE67-OPEN-DECISIONS-FALSE-GREEN-644",
+    "BGF-STAGE67-COMPLIANCE-CANDIDATE-PACK-GUARD-645"
+  ],
+  "gates": {
+    "stage67_candidate_pack": "REPO_ONLY_PENDING_CI",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Automate synthetic DSR and incident tabletop preparation against these candidate runbooks while preserving candidate-only status. Real owner assignments and independent legal/privacy review remain external blockers.",
+    "publication_allowed": false,
+    "evidence_migration_allowed": false
+  }
+}
