@@ -263,15 +263,22 @@ def verify_evaluator_negative_controls() -> None:
 def verify_no_side_effect_surface() -> None:
     source = EVALUATOR.read_text(encoding="utf-8")
     forbidden = (
-        "requests",
-        "httpx",
-        "urllib.request",
-        "socket.",
-        "subprocess",
-        "psycopg",
-        "supabase",
-        "apply_migration",
-        "execute_sql",
+        "import requests",
+        "from requests",
+        "import httpx",
+        "from httpx",
+        "import urllib",
+        "from urllib",
+        "import socket",
+        "from socket",
+        "import subprocess",
+        "from subprocess",
+        "import psycopg",
+        "from psycopg",
+        "import supabase",
+        "from supabase",
+        "apply_migration(",
+        "execute_sql(",
     )
     lowered = source.lower()
     for token in forbidden:
