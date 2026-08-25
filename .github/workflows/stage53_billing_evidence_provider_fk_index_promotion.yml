@@ -10,9 +10,11 @@ on:
       - '04_backend_supabase/operations/stage53_billing_evidence_provider_fk_index_candidate.sql'
       - '04_backend_supabase/stage53_billing_evidence_provider_fk_index_candidate_authority.json'
       - '04_backend_supabase/stage53_billing_evidence_provider_fk_index_promotion_authority.json'
+      - '04_backend_supabase/tools/stage53_billing_evidence_migration_frontier.py'
       - '04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_candidate.py'
       - '04_backend_supabase/tools/verify_stage53_candidate_historical_compat.py'
       - '04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_promotion.py'
+      - '04_backend_supabase/tools/verify_stage53_promotion_historical_compat.py'
       - '04_backend_supabase/tools/verify_stage52_final_historical_compat.py'
       - '.github/workflows/stage53_billing_evidence_provider_fk_index_promotion.yml'
   push:
@@ -22,8 +24,10 @@ on:
       - '04_backend_supabase/migration_ledger_authority.json'
       - '04_backend_supabase/migrations/20260824211500_stage53_billing_evidence_provider_fk_index_hardening.sql'
       - '04_backend_supabase/stage53_billing_evidence_provider_fk_index_promotion_authority.json'
+      - '04_backend_supabase/tools/stage53_billing_evidence_migration_frontier.py'
       - '04_backend_supabase/tools/verify_stage53_candidate_historical_compat.py'
       - '04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_promotion.py'
+      - '04_backend_supabase/tools/verify_stage53_promotion_historical_compat.py'
       - '04_backend_supabase/tools/verify_stage52_final_historical_compat.py'
       - '.github/workflows/stage53_billing_evidence_provider_fk_index_promotion.yml'
 
@@ -39,13 +43,15 @@ jobs:
 
       - name: Compile Stage53 promotion surfaces
         run: |
+          python -m py_compile 04_backend_supabase/tools/stage53_billing_evidence_migration_frontier.py
           python -m py_compile 04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_candidate.py
           python -m py_compile 04_backend_supabase/tools/verify_stage53_candidate_historical_compat.py
           python -m py_compile 04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_promotion.py
+          python -m py_compile 04_backend_supabase/tools/verify_stage53_promotion_historical_compat.py
           python -m py_compile 04_backend_supabase/tools/verify_stage52_final_historical_compat.py
 
-      - name: Verify Stage53 exact candidate migration promotion
-        run: python 04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_promotion.py
+      - name: Verify Stage53 exact candidate migration promotion under historical projection
+        run: python 04_backend_supabase/tools/verify_stage53_promotion_historical_compat.py
 
       - name: Verify sealed Stage53 candidate under historical projection
         run: python 04_backend_supabase/tools/verify_stage53_candidate_historical_compat.py
