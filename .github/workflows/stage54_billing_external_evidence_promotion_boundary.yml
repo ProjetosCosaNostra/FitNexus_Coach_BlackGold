@@ -1,0 +1,91 @@
+name: Stage54 Billing External Evidence Promotion Boundary
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/stage54_billing_external_evidence_promotion_boundary_authority.json'
+      - '04_backend_supabase/tools/stage54_billing_evidence_promotion_contract.py'
+      - '04_backend_supabase/tools/build_stage54_billing_external_evidence_credentials_candidate.py'
+      - '04_backend_supabase/tools/verify_stage54_billing_external_evidence_promotion_boundary.py'
+      - '04_backend_supabase/billing_evidence_promotions/**'
+      - '04_backend_supabase/migrations/**'
+      - '04_backend_supabase/stage39_billing_credential_authority_external_evidence_preparation.json'
+      - '04_backend_supabase/tools/review_stage39_billing_credential_evidence_receipt.py'
+      - '04_backend_supabase/stage47_unified_external_evidence_intake_orchestration_authority.json'
+      - '04_backend_supabase/stage48_unified_intake_adversarial_regression_authority.json'
+      - '04_backend_supabase/stage49_evidence_migration_promotion_boundary_authority.json'
+      - '04_backend_supabase/stage50_evidence_promotion_adversarial_regression_authority.json'
+      - '04_backend_supabase/stage53_billing_evidence_provider_fk_index_final_authority.json'
+      - '.github/workflows/stage54_billing_external_evidence_promotion_boundary.yml'
+  push:
+    branches:
+      - 'blackgold/stage54-billing-external-evidence-promotion-boundary'
+    paths:
+      - '04_backend_supabase/stage54_billing_external_evidence_promotion_boundary_authority.json'
+      - '04_backend_supabase/tools/stage54_billing_evidence_promotion_contract.py'
+      - '04_backend_supabase/tools/build_stage54_billing_external_evidence_credentials_candidate.py'
+      - '04_backend_supabase/tools/verify_stage54_billing_external_evidence_promotion_boundary.py'
+      - '04_backend_supabase/billing_evidence_promotions/**'
+      - '04_backend_supabase/migrations/**'
+      - '04_backend_supabase/stage39_billing_credential_authority_external_evidence_preparation.json'
+      - '04_backend_supabase/tools/review_stage39_billing_credential_evidence_receipt.py'
+      - '04_backend_supabase/stage47_unified_external_evidence_intake_orchestration_authority.json'
+      - '04_backend_supabase/stage48_unified_intake_adversarial_regression_authority.json'
+      - '04_backend_supabase/stage49_evidence_migration_promotion_boundary_authority.json'
+      - '04_backend_supabase/stage50_evidence_promotion_adversarial_regression_authority.json'
+      - '04_backend_supabase/stage53_billing_evidence_provider_fk_index_final_authority.json'
+      - '.github/workflows/stage54_billing_external_evidence_promotion_boundary.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stage54-billing-external-evidence-promotion-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Compile Stage54 surfaces
+        run: |
+          python -m py_compile 04_backend_supabase/tools/stage54_billing_evidence_promotion_contract.py
+          python -m py_compile 04_backend_supabase/tools/build_stage54_billing_external_evidence_credentials_candidate.py
+          python -m py_compile 04_backend_supabase/tools/verify_stage54_billing_external_evidence_promotion_boundary.py
+
+      - name: Verify Stage54 billing evidence promotion boundary
+        run: python 04_backend_supabase/tools/verify_stage54_billing_external_evidence_promotion_boundary.py
+
+      - name: Verify migration ledger authority
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify Stage47 unified external evidence intake
+        run: python 04_backend_supabase/tools/verify_stage47_unified_external_evidence_intake_orchestration.py
+
+      - name: Verify Stage48 unified intake adversarial regression
+        run: python 04_backend_supabase/tools/verify_stage48_unified_intake_adversarial_regression.py
+
+      - name: Verify Stage49 evidence migration promotion boundary
+        run: python 04_backend_supabase/tools/verify_stage49_evidence_migration_promotion_boundary.py
+
+      - name: Verify Stage50 evidence promotion adversarial regression
+        run: python 04_backend_supabase/tools/verify_stage50_evidence_promotion_adversarial_regression.py
+
+      - name: Verify Stage40 final historical compatibility
+        run: python 04_backend_supabase/tools/verify_stage40_final_historical_compat.py
+
+      - name: Verify Stage53 final remote reconciliation
+        run: python 04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_final_reconciliation.py
+
+      - name: Verify billing provider contract
+        run: python 04_backend_supabase/tools/verify_billing_provider_contract.py
+
+      - name: Verify controlled launch admission contract
+        run: python 04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+
+      - name: Verify external gate evidence placeholders
+        run: python 04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py
+
+      - name: Verify PostgreSQL view replacement compatibility
+        run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py
