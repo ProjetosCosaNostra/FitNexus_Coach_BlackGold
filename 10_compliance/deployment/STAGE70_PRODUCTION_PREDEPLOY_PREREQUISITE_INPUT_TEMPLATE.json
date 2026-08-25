@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "input_kind": "REAL_PRODUCTION_PREDEPLOY_PREREQUISITE_INPUT",
+  "status": "PLACEHOLDER_TEMPLATE_NOT_OPERATIONAL_EVIDENCE",
+  "test_fixture": true,
+  "contains_placeholders": true,
+  "operator_acknowledged": false,
+  "stable_production_domain": "<REAL_STABLE_HTTPS_DOMAIN_REQUIRED>",
+  "artifacts": {
+    "tls_baseline": "<REAL_NONEMPTY_ARTIFACT_PATH_REQUIRED>",
+    "environment_readiness_without_secrets": "<REAL_NONEMPTY_ARTIFACT_PATH_REQUIRED>",
+    "rollback_readiness": "<REAL_NONEMPTY_ARTIFACT_PATH_REQUIRED>",
+    "monitoring_alerting_readiness": "<REAL_NONEMPTY_ARTIFACT_PATH_REQUIRED>",
+    "backup_restore_readiness": "<REAL_NONEMPTY_ARTIFACT_PATH_REQUIRED>",
+    "deployment_destination_control": "<REAL_NONEMPTY_ARTIFACT_PATH_REQUIRED>"
+  },
+  "instructions": "Copy outside the repository. Replace every placeholder with real reviewed operational inputs, set test_fixture=false, contains_placeholders=false and operator_acknowledged=true. Do not put secret values in any artifact. The completed file must not be committed.",
+  "privacy_security_boundary": {
+    "completed_input_must_not_be_committed": true,
+    "secret_values_allowed": false,
+    "binder_output_must_not_copy_paths": true,
+    "binder_output_must_not_copy_artifact_contents": true,
+    "binder_output_may_record_sha256": true
+  }
+}
