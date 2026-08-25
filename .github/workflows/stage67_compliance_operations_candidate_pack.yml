@@ -1,0 +1,50 @@
+name: Stage67 Compliance Operations Candidate Pack
+
+on:
+  pull_request:
+    paths:
+      - '10_compliance/drafts/**'
+      - '04_backend_supabase/stage67_compliance_operations_candidate_pack_authority.json'
+      - '04_backend_supabase/tools/verify_stage67_compliance_operations_candidate_pack.py'
+      - '04_backend_supabase/external_gate_evidence_placeholders.json'
+      - '04_backend_supabase/stage45_incident_response_external_evidence_preparation_authority.json'
+      - '04_backend_supabase/stage66_production_release_candidate_evidence_pipeline_authority.json'
+      - '.github/workflows/stage67_compliance_operations_candidate_pack.yml'
+  push:
+    branches:
+      - 'blackgold/stage67-compliance-operations-candidate-pack'
+    paths:
+      - '10_compliance/drafts/**'
+      - '04_backend_supabase/stage67_compliance_operations_candidate_pack_authority.json'
+      - '04_backend_supabase/tools/verify_stage67_compliance_operations_candidate_pack.py'
+      - '04_backend_supabase/external_gate_evidence_placeholders.json'
+      - '04_backend_supabase/stage45_incident_response_external_evidence_preparation_authority.json'
+      - '04_backend_supabase/stage66_production_release_candidate_evidence_pipeline_authority.json'
+      - '.github/workflows/stage67_compliance_operations_candidate_pack.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-candidate-pack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+
+      - name: Validate Stage67 candidate pack
+        run: python 04_backend_supabase/tools/verify_stage67_compliance_operations_candidate_pack.py
+
+      - name: Preserve non-attesting boundary
+        run: |
+          echo 'STAGE67_COMPLIANCE_OPERATIONS_CANDIDATE_PACK=PASS_CANDIDATE_ONLY'
+          echo 'DRAFT_PUBLICATION=false'
+          echo 'LEGAL_REVIEW_ATTESTED=false'
+          echo 'OPERATIONAL_TEST_ATTESTED=false'
+          echo 'EVIDENCE_MIGRATION=false'
+          echo 'REMOTE_MUTATION=false'
+          echo 'CONTROLLED_LAUNCH=DENIED'
+          echo 'PAID_MEDIA=DENIED'
