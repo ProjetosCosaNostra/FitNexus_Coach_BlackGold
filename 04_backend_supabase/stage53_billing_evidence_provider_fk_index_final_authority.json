@@ -16,7 +16,8 @@
     "BGF-STAGE53-PREMATURE-REMOTE-APPLY-502",
     "BGF-STAGE53-PROMOTION-GUARD-503",
     "BGF-STAGE53-STAGE52-PROMOTION-PROJECTION-FUTURE-REPO-ONLY-504",
-    "BGF-STAGE53-FINAL-REMOTE-RECONCILIATION-GUARD-505"
+    "BGF-STAGE53-FINAL-REMOTE-RECONCILIATION-GUARD-505",
+    "BGF-STAGE53-STAGE52-PROMOTION-PROJECTION-FUTURE-REMOTE-MIGRATION-506"
   ],
   "candidate": {
     "file": "04_backend_supabase/operations/stage53_billing_evidence_provider_fk_index_candidate.sql",
@@ -87,6 +88,14 @@
     "unused_index_lints_removed": false,
     "reason_unused_indexes_preserved": "The assessed system still has effectively zero customer workload. An unused-index counter without representative traffic is not sufficient authority to remove indexes that may be required by foreign keys, operational queries, or future load.",
     "future_index_removal_requires_representative_workload_evidence": true
+  },
+  "historical_projection_hardening": {
+    "first_final_reconciliation_run": 32792124823,
+    "first_final_reconciliation_result": "FAIL_STAGE52_PROMOTION_PROJECTION_RETAINED_FUTURE_STAGE53_REMOTE_MIGRATION",
+    "failure_class": "BGF-STAGE53-STAGE52-PROMOTION-PROJECTION-FUTURE-REMOTE-MIGRATION-506",
+    "prevention": "Stage52 historical projections now remove remote migration rows whose remote version belongs to a later frontier, in addition to dropping future repo-only declarations. This keeps sealed historical guards exact without mutating the real current ledger.",
+    "current_ledger_mutated_by_projection": false,
+    "remote_mutation_performed_by_projection": false
   },
   "security_and_product_invariants": {
     "foreign_key_definition_changed": false,
