@@ -1,0 +1,56 @@
+name: Stage57 Stage56 Final Reconciliation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/stage57_stage56_final_reconciliation_authority.json'
+      - '04_backend_supabase/tools/verify_stage57_stage56_final_reconciliation.py'
+      - '.github/workflows/stage57_stage56_final_reconciliation.yml'
+  push:
+    branches:
+      - 'blackgold/stage57-stage56-final-reconciliation'
+    paths:
+      - '04_backend_supabase/stage57_stage56_final_reconciliation_authority.json'
+      - '04_backend_supabase/tools/verify_stage57_stage56_final_reconciliation.py'
+      - '.github/workflows/stage57_stage56_final_reconciliation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stage57-stage56-final-reconciliation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Compile Stage56 and Stage57 guards
+        run: |
+          python -m py_compile 04_backend_supabase/tools/verify_stage56_billing_proof_complete_promotion_boundary.py
+          python -m py_compile 04_backend_supabase/tools/verify_stage57_stage56_final_reconciliation.py
+
+      - name: Verify Stage56 proof-complete promotion boundary
+        run: python 04_backend_supabase/tools/verify_stage56_billing_proof_complete_promotion_boundary.py
+
+      - name: Verify Stage57 final reconciliation
+        run: python 04_backend_supabase/tools/verify_stage57_stage56_final_reconciliation.py
+
+      - name: Verify Stage55 final reconciliation
+        run: python 04_backend_supabase/tools/verify_stage55_stage54_final_reconciliation.py
+
+      - name: Verify Stage54 credentials evidence promotion boundary
+        run: python 04_backend_supabase/tools/verify_stage54_billing_external_evidence_promotion_boundary.py
+
+      - name: Verify migration ledger authority
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify billing provider contract
+        run: python 04_backend_supabase/tools/verify_billing_provider_contract.py
+
+      - name: Verify controlled launch admission contract
+        run: python 04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+
+      - name: Verify external gate evidence placeholders
+        run: python 04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py
