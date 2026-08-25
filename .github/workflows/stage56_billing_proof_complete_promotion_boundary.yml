@@ -1,0 +1,72 @@
+name: Stage56 Billing Proof Complete Promotion Boundary
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/stage56_billing_proof_complete_promotion_boundary_authority.json'
+      - '04_backend_supabase/tools/stage56_billing_proof_promotion_contract.py'
+      - '04_backend_supabase/tools/build_stage56_billing_proof_complete_candidate.py'
+      - '04_backend_supabase/tools/verify_stage56_billing_proof_complete_promotion_boundary.py'
+      - '04_backend_supabase/billing_proof_promotions/**'
+      - '04_backend_supabase/migrations/**'
+      - '04_backend_supabase/stage54_billing_external_evidence_promotion_boundary_authority.json'
+      - '04_backend_supabase/stage55_stage54_final_reconciliation_authority.json'
+      - '.github/workflows/stage56_billing_proof_complete_promotion_boundary.yml'
+  push:
+    branches:
+      - 'blackgold/stage56-billing-proof-complete-promotion-boundary'
+    paths:
+      - '04_backend_supabase/stage56_billing_proof_complete_promotion_boundary_authority.json'
+      - '04_backend_supabase/tools/stage56_billing_proof_promotion_contract.py'
+      - '04_backend_supabase/tools/build_stage56_billing_proof_complete_candidate.py'
+      - '04_backend_supabase/tools/verify_stage56_billing_proof_complete_promotion_boundary.py'
+      - '04_backend_supabase/billing_proof_promotions/**'
+      - '04_backend_supabase/migrations/**'
+      - '04_backend_supabase/stage54_billing_external_evidence_promotion_boundary_authority.json'
+      - '04_backend_supabase/stage55_stage54_final_reconciliation_authority.json'
+      - '.github/workflows/stage56_billing_proof_complete_promotion_boundary.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  stage56-billing-proof-complete-promotion-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Compile Stage56 surfaces
+        run: |
+          python -m py_compile 04_backend_supabase/tools/stage56_billing_proof_promotion_contract.py
+          python -m py_compile 04_backend_supabase/tools/build_stage56_billing_proof_complete_candidate.py
+          python -m py_compile 04_backend_supabase/tools/verify_stage56_billing_proof_complete_promotion_boundary.py
+
+      - name: Verify Stage56 proof-complete promotion boundary
+        run: python 04_backend_supabase/tools/verify_stage56_billing_proof_complete_promotion_boundary.py
+
+      - name: Verify Stage55 final reconciliation
+        run: python 04_backend_supabase/tools/verify_stage55_stage54_final_reconciliation.py
+
+      - name: Verify Stage54 credentials evidence promotion boundary
+        run: python 04_backend_supabase/tools/verify_stage54_billing_external_evidence_promotion_boundary.py
+
+      - name: Verify Stage53 final remote reconciliation
+        run: python 04_backend_supabase/tools/verify_stage53_billing_evidence_provider_fk_index_final_reconciliation.py
+
+      - name: Verify migration ledger authority
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify billing provider contract
+        run: python 04_backend_supabase/tools/verify_billing_provider_contract.py
+
+      - name: Verify controlled launch admission contract
+        run: python 04_backend_supabase/tools/verify_controlled_launch_admission_contract.py
+
+      - name: Verify external gate evidence placeholders
+        run: python 04_backend_supabase/tools/verify_external_gate_evidence_placeholders.py
+
+      - name: Verify PostgreSQL view replacement compatibility
+        run: python 04_backend_supabase/tools/verify_postgres_view_replace_compatibility.py
