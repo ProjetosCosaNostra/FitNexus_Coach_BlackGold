@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE64_STAGE63_REMOTE_RECEIPT_RECONCILIATION",
+  "baseline_main_sha": "e478f7c6bbbd5f985d7ef6f9a47342ae36129921",
+  "current_state": "STAGE63_CLASSIFICATION_RETAINED_REMOTE_RECEIPT_PARTIALLY_SUPERSEDED_NO_REMOTE_MUTATION",
+  "problem_statement": {
+    "summary": "The Stage63 post-merge verification detected that several non-v2 function hashes, helper identity labels, and helper service_role EXECUTE claims recorded in the Stage63 authority do not match fresh remote truth.",
+    "runtime_security_bypass_proven": false,
+    "remote_mutation_during_stage63_merge": false,
+    "stage63_public_v2_critical_boundary_drifted": false,
+    "historical_stage63_authority_rewritten": false
+  },
+  "sealed_repository_inputs": {
+    "stage63_authority": {
+      "path": "04_backend_supabase/stage63_student_access_security_definer_exposure_assessment_authority.json",
+      "git_blob_sha": "c20cdc38c56808bc355e64d84ef3af5e46b0bcae"
+    },
+    "stage63_guard": {
+      "path": "04_backend_supabase/tools/verify_stage63_student_access_security_definer_exposure_assessment.py",
+      "git_blob_sha": "142afd5f6f8d888b7f619f8385ce4f137bdd09ce"
+    },
+    "stage1_auth_tenancy_foundation": {
+      "path": "04_backend_supabase/migrations/20260818113806_stage1_auth_tenancy_foundation.sql",
+      "git_blob_sha": "fd8dc2671d367be95e4a14be35cfa240cffb253b"
+    },
+    "stage3_students_training_domain": {
+      "path": "04_backend_supabase/migrations/20260818134341_stage3_students_training_domain.sql",
+      "git_blob_sha": "83a4408c8d48b51a96f909ef6817f2cebd7074aa"
+    },
+    "stage5_student_access_workout_execution": {
+      "path": "04_backend_supabase/migrations/20260818152500_stage5_student_access_workout_execution.sql",
+      "git_blob_sha": "9b3719fef110a082e811aaee35df2cf285514435"
+    },
+    "stage52_final_authority": {
+      "path": "04_backend_supabase/stage52_student_issuance_target_privacy_final_authority.json",
+      "git_blob_sha": "075824c55ce463a0863211e4bffecdd8b111a4e9"
+    },
+    "security_definer_exposure_authority": {
+      "path": "04_backend_supabase/security_definer_exposure_authority.json",
+      "git_blob_sha": "e00fa2577f2a06eee6a0ef430f3aba79aa4f358e"
+    }
+  },
+  "stage63_repository_promotion": {
+    "pull_request": 154,
+    "head_sha": "e4c76bad8ace11a22ade6b735cf1e55c65a1055e",
+    "merge_main_sha": "e478f7c6bbbd5f985d7ef6f9a47342ae36129921",
+    "stage63_workflow_run": 32846427857,
+    "stage63_workflow_result": "SUCCESS",
+    "flutter_quality_gate_run": 32846427863,
+    "flutter_quality_gate_result": "SUCCESS"
+  },
+  "fresh_postmerge_remote_read_only_receipt": {
+    "function_snapshot_observed_at_utc": "2026-08-25T13:17:42.408380Z",
+    "table_snapshot_observed_at_utc": "2026-08-25T13:17:26.165133Z",
+    "security_advisor_rechecked_after_merge": true,
+    "security_advisor_warning_count": 1,
+    "security_advisor_lint": "authenticated_security_definer_function_executable",
+    "security_advisor_function": "public.issue_student_access_token_v2(p_student_id uuid)",
+    "remote_mutation_performed": false,
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0
+  },
+  "corrected_remote_function_inventory": {
+    "public.issue_student_access_token_v2(p_student_id uuid)": {
+      "security_definer": true,
+      "safe_empty_search_path": true,
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": true,
+      "definition_sha256": "6b47a21a83e884710447da01c6a5c95b8ff3e7bc7d415484a9ff698ba7b2a343",
+      "stage63_value_was_correct": true
+    },
+    "public.issue_student_access_token(p_student_id uuid)": {
+      "security_definer": true,
+      "safe_empty_search_path": true,
+      "anon_execute": false,
+      "authenticated_execute": false,
+      "service_role_execute": true,
+      "definition_sha256": "a04d80af9947f5f6780d1d3a70da4f0d6ca6d9f6bc65cdea3c5a840d8891dc2e",
+      "manager_recheck_present": true,
+      "stage63_recorded_definition_sha256": "e94ec8b489635fe22ce67536753279b8770e268a16e7bcbf999936df6644a61f",
+      "stage63_hash_field_superseded": true
+    },
+    "private.is_org_manager(target_org uuid)": {
+      "security_definer": true,
+      "safe_empty_search_path": true,
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": false,
+      "definition_sha256": "040c514af336ae2c8453ae89889ed3dcea14791e855b4420a0a9bd56bbf21fa0",
+      "self_scoped_to_auth_uid": true,
+      "roles": ["owner", "admin"],
+      "stage63_recorded_service_role_execute": true,
+      "stage63_recorded_definition_sha256": "040c533cdce62a40e4eef46c7c4b2bb196ba2df63646649c5728e535c61596a5",
+      "stage63_fields_superseded": true
+    },
+    "private.is_org_member(target_org uuid)": {
+      "security_definer": true,
+      "safe_empty_search_path": true,
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": false,
+      "definition_sha256": "0ef1c6d13f2807e476b6c144a4db021265aea974a93d00ba1498e7419934969d",
+      "self_scoped_to_auth_uid": true,
+      "stage63_recorded_identity": "private.is_org_member(p_org_id uuid)",
+      "stage63_recorded_service_role_execute": true,
+      "stage63_recorded_definition_sha256": "b016c44ab1ab827bedace3f0ded174c79a7102fa239d996ef44adecabf9f31ae",
+      "stage63_fields_superseded": true
+    },
+    "private.is_org_owner(target_org uuid)": {
+      "security_definer": true,
+      "safe_empty_search_path": true,
+      "anon_execute": false,
+      "authenticated_execute": true,
+      "service_role_execute": false,
+      "definition_sha256": "90933c1d1ef891a36e10be8c0aa0a5497d987182e0ecb42cf11778428beca17f",
+      "self_scoped_to_auth_uid": true,
+      "stage63_recorded_identity": "private.is_org_owner(p_org_id uuid)",
+      "stage63_recorded_service_role_execute": true,
+      "stage63_recorded_definition_sha256": "795933356fb5beda52de5da4fb9ebe48c35e12c1dd3305270a461404412fcaa8",
+      "stage63_fields_superseded": true
+    }
+  },
+  "fresh_table_boundary": {
+    "public.student_access_links": {
+      "rls_enabled": true,
+      "authenticated_select": false,
+      "authenticated_insert": false,
+      "authenticated_update": false,
+      "authenticated_delete": false,
+      "service_role_full_crud": true
+    },
+    "private.student_access_security_events": {
+      "rls_enabled": false,
+      "authenticated_select": false,
+      "authenticated_insert": false,
+      "authenticated_update": false,
+      "authenticated_delete": false,
+      "service_role_full_crud": true
+    },
+    "public.students": {"rls_enabled": true},
+    "public.organization_members": {"rls_enabled": true},
+    "public.organizations": {"rls_enabled": true}
+  },
+  "repository_to_remote_consistency": {
+    "stage1_defines_is_org_member_target_org_and_authenticated_execute": true,
+    "stage1_defines_is_org_owner_target_org_and_authenticated_execute": true,
+    "stage3_defines_is_org_manager_target_org_owner_admin_and_authenticated_execute": true,
+    "stage5_v1_contains_auth_uid_guard": true,
+    "stage5_v1_contains_manager_recheck": true,
+    "stage5_v1_stores_token_hash_not_raw_token": true,
+    "stage52_v2_exact_hash_still_matches_remote": true,
+    "stage52_v2_uniform_target_error_still_authoritative": true,
+    "evidence_supports_receipt_misrecord_not_runtime_drift": true
+  },
+  "decision": {
+    "stage63_security_classification_remains_supported": true,
+    "stage63_remote_receipt_is_fully_authoritative": false,
+    "stage63_remote_receipt_superseded_for_enumerated_fields": true,
+    "v2_authenticated_execute_remains_intentional": true,
+    "v1_direct_authenticated_execute_remains_denied": true,
+    "private_helper_service_role_execute_is_required": false,
+    "narrower_helper_acl_is_not_a_security_regression": true,
+    "automatic_revoke_authenticated_v2_execute_allowed": false,
+    "automatic_switch_v2_to_security_invoker_allowed": false,
+    "ddl_change_required_now": false,
+    "remote_mutation_required_now": false,
+    "future_remote_receipts_must_be_postmerge_rechecked_before_final_reconciliation": true
+  },
+  "failure_classes": [
+    "BGF-STAGE64-REMOTE-RECEIPT-FUNCTION-HASH-MISRECORD-611",
+    "BGF-STAGE64-REMOTE-RECEIPT-GRANT-MISRECORD-612",
+    "BGF-STAGE64-FUNCTION-IDENTITY-ARGUMENT-MISLABEL-613",
+    "BGF-STAGE64-POSTMERGE-REMOTE-RECHECK-MISSING-614",
+    "BGF-STAGE64-RUNTIME-DRIFT-VS-RECEIPT-DRIFT-AMBIGUITY-615",
+    "BGF-STAGE64-HISTORICAL-AUTHORITY-REWRITE-616",
+    "BGF-STAGE64-REMOTE-MUTATION-DURING-RECONCILIATION-617",
+    "BGF-STAGE64-STAGE63-REMOTE-RECEIPT-RECONCILIATION-GUARD-618"
+  ],
+  "gates": {
+    "stage64_receipt_reconciliation": "PASS_REPO_ONLY_REQUIRED_BEFORE_FINAL_MERGE",
+    "stage63_security_classification": "PASS_RETAINED_WITH_CORRECTED_REMOTE_RECEIPT",
+    "privilege_change": "DENIED_NOT_REQUIRED",
+    "remote_mutation": "DENIED_NOT_REQUIRED",
+    "production_deployment": "DENIED",
+    "incident_response": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  }
+}

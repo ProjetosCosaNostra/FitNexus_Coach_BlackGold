@@ -1,0 +1,71 @@
+name: Stage64 Stage63 Remote Receipt Reconciliation
+
+on:
+  pull_request:
+    paths:
+      - "04_backend_supabase/stage64_stage63_remote_receipt_reconciliation_authority.json"
+      - "04_backend_supabase/tools/verify_stage64_stage63_remote_receipt_reconciliation.py"
+      - "04_backend_supabase/stage63_student_access_security_definer_exposure_assessment_authority.json"
+      - "04_backend_supabase/tools/verify_stage63_student_access_security_definer_exposure_assessment.py"
+      - "04_backend_supabase/migrations/**"
+      - ".github/workflows/stage64_stage63_remote_receipt_reconciliation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stage64-reconciliation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile reconciliation guards
+        run: |
+          python -m py_compile \
+            04_backend_supabase/tools/verify_stage64_stage63_remote_receipt_reconciliation.py \
+            04_backend_supabase/tools/verify_stage63_student_access_security_definer_exposure_assessment.py \
+            04_backend_supabase/tools/verify_security_definer_exposure_authority.py \
+            04_backend_supabase/tools/verify_student_access_issuance_authority.py \
+            04_backend_supabase/tools/verify_student_access_security_contract.py \
+            04_backend_supabase/tools/verify_tenant_isolation_contract.py \
+            04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify Stage64 corrected remote receipt
+        run: python 04_backend_supabase/tools/verify_stage64_stage63_remote_receipt_reconciliation.py
+
+      - name: Verify historical Stage63 remains sealed
+        run: python 04_backend_supabase/tools/run_stage63_student_access_security_definer_exposure_assessment.py
+
+      - name: Verify SECURITY DEFINER exposure allowlist
+        run: python 04_backend_supabase/tools/verify_security_definer_exposure_authority.py
+
+      - name: Verify student access issuance authority
+        run: python 04_backend_supabase/tools/verify_student_access_issuance_authority.py
+
+      - name: Verify student access security contract
+        run: python 04_backend_supabase/tools/verify_student_access_security_contract.py
+
+      - name: Verify tenant isolation contract
+        run: python 04_backend_supabase/tools/verify_tenant_isolation_contract.py
+
+      - name: Verify migration ledger contract
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Assert Stage64 is reconciliation-only
+        shell: bash
+        run: |
+          if find 04_backend_supabase/migrations -maxdepth 1 -type f -iname '*stage64*' | grep -q .; then
+            echo 'STAGE64_MIGRATION_PRESENT=FAIL'
+            exit 1
+          fi
+          echo 'STAGE64_MIGRATION_PRESENT=NO'
+          echo 'REMOTE_MUTATION_AUTHORITY=DENIED_NOT_REQUIRED'
+          echo 'PRIVILEGE_CHANGE_AUTHORITY=DENIED_NOT_REQUIRED'
+          echo 'LAUNCH_GATE=DENIED'
