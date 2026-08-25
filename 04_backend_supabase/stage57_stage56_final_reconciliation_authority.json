@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE57_STAGE56_FINAL_RECONCILIATION",
+  "baseline_main_sha": "0cf9c72827d622fd0c093ac3c7dd4b2aaa9cbbe2",
+  "stage56_pr": {
+    "number": 147,
+    "head_sha": "0d6d89507d37d749d31859e5e467939e0df41e56",
+    "merge_sha": "0cf9c72827d622fd0c093ac3c7dd4b2aaa9cbbe2",
+    "mergeable_before_merge": true,
+    "exact_head_merge_enforced": true
+  },
+  "stage56_ci": {
+    "stage56_run_id": 32798284211,
+    "stage56_conclusion": "success",
+    "flutter_run_id": 32798284071,
+    "flutter_conclusion": "success",
+    "consumed_live_proof_workflows_replayed": false
+  },
+  "sealed_stage56_inputs": {
+    "authority": {
+      "path": "04_backend_supabase/stage56_billing_proof_complete_promotion_boundary_authority.json",
+      "git_blob_sha": "4822ad8f32aa7154c851b15a79804698388c8311"
+    },
+    "verifier": {
+      "path": "04_backend_supabase/tools/verify_stage56_billing_proof_complete_promotion_boundary.py",
+      "git_blob_sha": "6560d29765cbf793f304bffab45642ae29b3add5"
+    }
+  },
+  "postmerge_remote_read_only_snapshot": {
+    "observed_at_utc": "2026-08-25T01:40:03.959689+00:00",
+    "read_only": true,
+    "remote_mutation_performed": false,
+    "billing_selection": {
+      "scope": "BR_V1",
+      "provider_code": "asaas",
+      "state": "selected_pending_credentials",
+      "evidence_version": "2026-08-18-official-docs-v1",
+      "activated_at": null
+    },
+    "billing_external_evidence_total": 0,
+    "credentials_verified_rows": 0,
+    "proof_complete_rows": 0,
+    "checkout_intents": 0,
+    "webhook_receipts": 0,
+    "evidence_migration_ready_rows": 0,
+    "runtime_write_grants": 0,
+    "provider_code_index_present": true
+  },
+  "final_state": "STAGE56_MERGED_GREEN_REMOTE_UNCHANGED_PROOF_COMPLETE_AUTHORITY_PREPARED_NO_LIVE_PROOF",
+  "governance": {
+    "stage56_boundary": "PASS_MERGED_REPO_ONLY",
+    "stage56_remote_apply_required": false,
+    "stage56_remote_apply_authorized": false,
+    "credentials_verified": "DENIED_AWAITING_REAL_STAGE54_EXTERNAL_EVIDENCE_PROMOTION",
+    "provider_activation": "DENIED",
+    "provider_call": "DENIED",
+    "proof_complete": "DENIED_AWAITING_REAL_CONTROLLED_WEBHOOK_AND_CHECKOUT_PROOF_BUNDLE",
+    "billing_provider_credentials": "DENIED",
+    "incident_response": "DENIED",
+    "production_deployment": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED",
+    "execute_sql_dml_or_ddl_allowed": false
+  },
+  "failure_classes": [
+    "BGF-STAGE57-POSTMERGE-PROOF-STATE-DRIFT-544",
+    "BGF-STAGE57-STAGE56-SEALED-INPUT-DRIFT-545",
+    "BGF-STAGE57-REMOTE-MUTATION-DURING-RECONCILIATION-546",
+    "BGF-STAGE57-FALSE-PROOF-COMPLETE-READY-547",
+    "BGF-STAGE57-CONSUMED-LIVE-PROOF-REPLAY-548",
+    "BGF-STAGE57-FINAL-RECONCILIATION-GUARD-549"
+  ]
+}
