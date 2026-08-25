@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "input_kind": "REAL_ASSIGNED_OWNER_INPUT",
+  "status": "PLACEHOLDER_TEMPLATE_NOT_REAL_ASSIGNMENT",
+  "test_fixture": true,
+  "contains_placeholders": true,
+  "instructions": "Copy this file outside the repository, replace every placeholder with a real assigned person and a real non-empty assignment artifact path, set test_fixture=false and contains_placeholders=false, then provide the external copy to the Stage69 preparer. Never commit the completed real-owner file.",
+  "roles": {
+    "dsr_primary_owner": {
+      "display_name": "<REAL_NAME_REQUIRED>",
+      "assignment_artifact_path": "<REAL_NONEMPTY_ASSIGNMENT_ARTIFACT_PATH_REQUIRED>",
+      "acknowledged": false
+    },
+    "dsr_backup_owner": {
+      "display_name": "<REAL_NAME_REQUIRED>",
+      "assignment_artifact_path": "<REAL_NONEMPTY_ASSIGNMENT_ARTIFACT_PATH_REQUIRED>",
+      "acknowledged": false
+    },
+    "incident_commander": {
+      "display_name": "<REAL_NAME_REQUIRED>",
+      "assignment_artifact_path": "<REAL_NONEMPTY_ASSIGNMENT_ARTIFACT_PATH_REQUIRED>",
+      "acknowledged": false
+    },
+    "privacy_owner": {
+      "display_name": "<REAL_NAME_REQUIRED>",
+      "assignment_artifact_path": "<REAL_NONEMPTY_ASSIGNMENT_ARTIFACT_PATH_REQUIRED>",
+      "acknowledged": false
+    },
+    "technical_owner": {
+      "display_name": "<REAL_NAME_REQUIRED>",
+      "assignment_artifact_path": "<REAL_NONEMPTY_ASSIGNMENT_ARTIFACT_PATH_REQUIRED>",
+      "acknowledged": false
+    },
+    "exercise_facilitator": {
+      "display_name": "<REAL_NAME_REQUIRED>",
+      "assignment_artifact_path": "<REAL_NONEMPTY_ASSIGNMENT_ARTIFACT_PATH_REQUIRED>",
+      "acknowledged": false
+    }
+  },
+  "privacy_boundary": {
+    "completed_real_owner_input_must_not_be_committed": true,
+    "preparer_output_must_not_copy_display_names": true,
+    "preparer_output_must_not_copy_artifact_paths": true,
+    "preparer_output_may_record_assignment_sha256_by_role": true
+  }
+}
