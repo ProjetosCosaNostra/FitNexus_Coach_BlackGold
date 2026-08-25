@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE72_EXTERNAL_READINESS_DASHBOARD",
+  "baseline_main_sha": "884589037ad29862f07eb4ab79e38a88f8e305a4",
+  "current_state": "DETERMINISTIC_NON_ATTESTING_EXTERNAL_BLOCKER_DASHBOARD_PREPARED_NO_EVIDENCE_PROMOTION_NO_REMOTE_MUTATION",
+  "upstream_authority": {
+    "stage47_unified_external_intake": "04_backend_supabase/stage47_unified_external_evidence_intake_orchestration_authority.json",
+    "stage47_unified_external_intake_blob": "9a8d504d3462a926014ced34508cdf42babbff46",
+    "external_gate_placeholders": "04_backend_supabase/external_gate_evidence_placeholders.json",
+    "external_gate_placeholders_blob": "07e6eb3330076f3e576ed2dd2a2e385f5fa3b2db",
+    "stage67_open_decisions": "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json",
+    "stage67_open_decisions_blob": "215d527c1cb79d7b72697f03f1f84887e3a72d95",
+    "stage71_postdeploy_intake": "04_backend_supabase/stage71_postdeploy_evidence_intake_contract_authority.json",
+    "stage71_postdeploy_intake_blob": "b365902a5b8777ffc842a6bbf731c98453f6c875"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-25T18:08:25.942073+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "ready_evidence_migration_count": 0,
+    "blocked_evidence_migration_count": 6,
+    "tracking_core_ready": true,
+    "pricing_experiment_ready": true,
+    "remote_mutation_performed": false
+  },
+  "dashboard_contract": {
+    "builder": "04_backend_supabase/tools/build_stage72_external_readiness_dashboard.py",
+    "guard": "04_backend_supabase/tools/verify_stage72_external_readiness_dashboard.py",
+    "workflow": ".github/workflows/stage72_external_readiness_dashboard.yml",
+    "external_gate_count": 7,
+    "gate_order": [
+      "billing_provider_credentials",
+      "legal_terms_of_use",
+      "legal_privacy_notice",
+      "legal_role_mapping",
+      "data_subject_request_channel",
+      "incident_response",
+      "production_deployment"
+    ],
+    "automatic_internal_signals_reported_separately": true,
+    "candidate_tooling_reported_separately_from_evidence": true,
+    "required_evidence_items_come_only_from_stage20_placeholders": true,
+    "open_decisions_come_only_from_stage67_registry": true,
+    "canonical_reviewers_come_only_from_stage47": true,
+    "remote_state_is_pinned_read_only_observation": true,
+    "dashboard_can_mark_gate_ready": false,
+    "dashboard_can_create_evidence_ref": false,
+    "dashboard_can_create_evidence_digest": false,
+    "dashboard_can_create_evidence_migration": false,
+    "dashboard_can_call_provider": false,
+    "dashboard_can_deploy": false,
+    "dashboard_can_mutate_supabase": false,
+    "dashboard_can_promote_controlled_launch": false,
+    "dashboard_can_promote_paid_media": false
+  },
+  "candidate_tooling_inventory": {
+    "billing_provider_credentials": [
+      "canonical Stage39 structural reviewer exists"
+    ],
+    "legal_terms_of_use": [
+      "Stage67 unreviewed Terms candidate",
+      "canonical Stage41 structural reviewer exists"
+    ],
+    "legal_privacy_notice": [
+      "Stage67 unreviewed Privacy Notice candidate",
+      "canonical Stage42 structural reviewer exists"
+    ],
+    "legal_role_mapping": [
+      "Stage67 unreviewed processing-role matrix candidate",
+      "canonical Stage43 structural reviewer exists"
+    ],
+    "data_subject_request_channel": [
+      "Stage67 DSR runbook candidate",
+      "Stage68 deterministic synthetic DSR rehearsal packets",
+      "Stage69 real-owner-gated controlled exercise session boundary",
+      "canonical Stage44 structural reviewer exists"
+    ],
+    "incident_response": [
+      "Stage67 incident response runbook candidate",
+      "Stage68 deterministic synthetic incident rehearsal packets",
+      "Stage69 real-owner-gated controlled exercise session boundary",
+      "canonical Stage45 structural reviewer exists"
+    ],
+    "production_deployment": [
+      "Stage66 exact-SHA deterministic release candidate pipeline",
+      "Stage70 real-prerequisite-gated predeploy binding interlock",
+      "Stage71 postdeploy digest-only evidence intake contract",
+      "canonical Stage46 structural reviewer exists"
+    ]
+  },
+  "progress_semantics": {
+    "automatic_internal_status": "tracking_core and pricing_experiment are ready, but neither grants launch authority",
+    "external_status": "all seven external gates still require real external or operational evidence; no dashboard row is evidence",
+    "purpose": "Replace scattered blocker hunting with one deterministic, reviewable inventory so the next work targets the shortest real path to controlled launch without manufacturing evidence."
+  },
+  "failure_classes": [
+    "BGF-STAGE72-CANDIDATE-TOOLING-AS-EVIDENCE-686",
+    "BGF-STAGE72-INTERNAL-READY-AS-LAUNCH-AUTHORITY-687",
+    "BGF-STAGE72-OPEN-DECISION-OMISSION-688",
+    "BGF-STAGE72-REQUIRED-EVIDENCE-DRIFT-689",
+    "BGF-STAGE72-CANONICAL-REVIEWER-DRIFT-690",
+    "BGF-STAGE72-DASHBOARD-GATE-PROMOTION-691",
+    "BGF-STAGE72-REMOTE-STATE-SYNTHESIS-692",
+    "BGF-STAGE72-EXTERNAL-GATE-COUNT-DRIFT-693",
+    "BGF-STAGE72-DASHBOARD-NONDETERMINISM-694",
+    "BGF-STAGE72-EXTERNAL-READINESS-DASHBOARD-GUARD-695"
+  ],
+  "gates": {
+    "stage72_dashboard": "REPO_ONLY_PENDING_CI",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Use dashboard output to rank external blockers by dependency and prepare the next non-attesting evidence-acquisition packet for the highest-leverage blocker, without guessing missing business/legal/operator facts.",
+    "external_evidence_still_required": true,
+    "evidence_migration_allowed": false
+  }
+}

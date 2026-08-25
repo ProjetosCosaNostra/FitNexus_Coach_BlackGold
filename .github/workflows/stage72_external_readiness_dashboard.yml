@@ -1,0 +1,61 @@
+name: Stage72 External Readiness Dashboard
+
+on:
+  pull_request:
+    paths:
+      - '04_backend_supabase/stage72_external_readiness_dashboard_authority.json'
+      - '04_backend_supabase/tools/build_stage72_external_readiness_dashboard.py'
+      - '04_backend_supabase/tools/verify_stage72_external_readiness_dashboard.py'
+      - '.github/workflows/stage72_external_readiness_dashboard.yml'
+  push:
+    branches:
+      - main
+      - 'blackgold/**'
+    paths:
+      - '04_backend_supabase/stage72_external_readiness_dashboard_authority.json'
+      - '04_backend_supabase/tools/build_stage72_external_readiness_dashboard.py'
+      - '04_backend_supabase/tools/verify_stage72_external_readiness_dashboard.py'
+      - '.github/workflows/stage72_external_readiness_dashboard.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-non-attesting-dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify Stage72 dashboard contract
+        run: python 04_backend_supabase/tools/verify_stage72_external_readiness_dashboard.py
+
+      - name: Build deterministic dashboard twice
+        run: |
+          python 04_backend_supabase/tools/build_stage72_external_readiness_dashboard.py \
+            --source-sha "${{ github.event.pull_request.head.sha || github.sha }}" \
+            --output /tmp/stage72_dashboard_a.json
+          python 04_backend_supabase/tools/build_stage72_external_readiness_dashboard.py \
+            --source-sha "${{ github.event.pull_request.head.sha || github.sha }}" \
+            --output /tmp/stage72_dashboard_b.json
+          cmp /tmp/stage72_dashboard_a.json /tmp/stage72_dashboard_b.json
+
+      - name: Upload non-attesting readiness dashboard
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage72-external-readiness-dashboard-${{ github.event.pull_request.head.sha || github.sha }}
+          path: /tmp/stage72_dashboard_a.json
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Preserve external gate denial boundary
+        run: |
+          echo "EXTERNAL_GATE_COUNT=7"
+          echo "READY_EXTERNAL_GATE_COUNT=0"
+          echo "TRACKING_CORE_READY=true"
+          echo "PRICING_EXPERIMENT_READY=true"
+          echo "INTERNAL_READY_IS_LAUNCH_AUTHORITY=false"
+          echo "REMOTE_MUTATION=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
