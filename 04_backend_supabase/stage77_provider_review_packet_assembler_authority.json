@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE77_PROVIDER_REVIEW_PACKET_ASSEMBLER_BOUNDARY",
+  "baseline_main_sha": "c83fa7ae55876ada43b12d06985e87b7da44d8af",
+  "current_state": "MULTI_PROVIDER_STAGE76_DIGEST_REVIEW_PACKET_ASSEMBLER_PREPARED_REAL_CANDIDATES_REQUIRED_NO_LEGAL_REVIEW_NO_GATE_PROMOTION",
+  "upstream_authority": {
+    "stage76_provider_evidence_acquisition": "04_backend_supabase/stage76_provider_evidence_acquisition_boundary_authority.json",
+    "stage76_provider_evidence_acquisition_blob": "c07c2fca4894a2f6076ed86bb6587c3a878d93ec",
+    "open_decisions": "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json",
+    "open_decisions_blob": "215d527c1cb79d7b72697f03f1f84887e3a72d95"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-26T05:04:25.591633+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "remote_mutation_performed": false
+  },
+  "target_open_decision": {
+    "id": "SUBPROCESSOR_AND_TRANSFER_MAP",
+    "state": "OPEN",
+    "required": "Actual provider inventory, regions, contracts, retention and international-transfer mechanism when applicable.",
+    "resolution_authority": "provider evidence plus legal/privacy review",
+    "stage77_can_close_decision": false
+  },
+  "assembler_contract": {
+    "candidate_set_template": "10_compliance/review/STAGE77_STAGE76_DIGEST_CANDIDATE_SET_TEMPLATE.json",
+    "assembler": "04_backend_supabase/tools/build_stage77_provider_review_packet.py",
+    "guard": "04_backend_supabase/tools/verify_stage77_provider_review_packet_assembler.py",
+    "workflow": ".github/workflows/stage77_provider_review_packet_assembler.yml",
+    "allowed_service_ids": [
+      "supabase",
+      "telegram_bot_api",
+      "asaas",
+      "cloudflare_edge_signal",
+      "github_repository_ci_pages"
+    ],
+    "required_stage76_output_kind": "DIGEST_ONLY_PROVIDER_PRIVACY_EVIDENCE_INTAKE_CANDIDATE",
+    "required_stage76_candidate_state": "REAL_EXTERNAL_SOURCE_ARTIFACT_DIGESTS_BOUND_AWAITING_INDEPENDENT_LEGAL_PRIVACY_REVIEW_NOT_GATE_EVIDENCE",
+    "real_stage76_digest_candidates_required": true,
+    "candidate_set_completed_copy_must_remain_outside_repo": true,
+    "committed_placeholder_candidate_set_must_fail": true,
+    "test_fixture_candidate_set_must_fail": true,
+    "candidate_paths_copied_to_packet": false,
+    "raw_provider_artifacts_copied_to_packet": false,
+    "secret_values_copied_to_packet": false,
+    "duplicate_service_candidates_allowed": false,
+    "candidate_entries_sorted_by_service_id": true,
+    "packet_is_deterministic_for_same_source_and_candidates": true,
+    "packet_can_include_stage76_digest_metadata": true,
+    "packet_extracts_or_attests_provider_facts": false,
+    "packet_performs_legal_privacy_review": false,
+    "packet_determines_legal_subprocessor_status": false,
+    "packet_determines_transfer_legality": false,
+    "packet_determines_contract_sufficiency": false,
+    "packet_determines_retention_sufficiency": false,
+    "all_five_services_present_can_close_decision": false,
+    "partial_provider_set_can_close_decision": false,
+    "independent_legal_privacy_review_required_after_packet": true,
+    "network_calls_allowed": false,
+    "provider_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "deployment_action_allowed": false,
+    "evidence_ref_creation_allowed": false,
+    "evidence_digest_promotion_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "gate_promotion_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "scope_separation": {
+    "stage77_packet": "Digest-only review preparation from real Stage76 intake candidates; never a provider-fact or legal conclusion artifact.",
+    "billing_credentials": "Remain under Stage39/58/59/61/62 authorities and cannot be inferred from Stage76 or Stage77.",
+    "production_deployment": "Remains under Stage46/66/70/71 authorities and cannot be inferred from Stage76 or Stage77.",
+    "provider_web_research_inside_ci": false
+  },
+  "failure_classes": [
+    "BGF-STAGE77-PLACEHOLDER-CANDIDATE-SET-FALSE-GREEN-736",
+    "BGF-STAGE77-NON-STAGE76-CANDIDATE-ACCEPTANCE-737",
+    "BGF-STAGE77-DUPLICATE-PROVIDER-CANDIDATE-738",
+    "BGF-STAGE77-STAGE76-DIGEST-SCHEMA-DRIFT-739",
+    "BGF-STAGE77-PACKET-AS-PROVIDER-FACT-ATTESTATION-740",
+    "BGF-STAGE77-PACKET-AS-LEGAL-REVIEW-741",
+    "BGF-STAGE77-PARTIAL-PACKET-AS-MAP-CLOSURE-742",
+    "BGF-STAGE77-ALL-SERVICES-PACKET-AS-MAP-CLOSURE-743",
+    "BGF-STAGE77-PREMATURE-GATE-PROMOTION-744",
+    "BGF-STAGE77-PROVIDER-REVIEW-PACKET-ASSEMBLER-GUARD-745"
+  ],
+  "gates": {
+    "stage77_provider_review_packet_assembler": "REPO_ONLY_PENDING_CI",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Do not fabricate Stage76 candidates. A real Stage77 review packet may be assembled only after real external Stage76 digest candidates exist; unrelated internal preparation may continue on other open blockers.",
+    "real_stage76_candidates_present": false,
+    "independent_legal_privacy_review_still_required": true,
+    "target_decision_still_open": true,
+    "evidence_migration_allowed": false
+  }
+}

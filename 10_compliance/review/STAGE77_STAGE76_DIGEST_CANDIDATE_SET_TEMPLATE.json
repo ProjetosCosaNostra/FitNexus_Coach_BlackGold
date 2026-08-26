@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "manifest_kind": "STAGE77_REAL_STAGE76_DIGEST_CANDIDATE_SET",
+  "status": "PLACEHOLDER_TEMPLATE_NOT_REAL_STAGE76_CANDIDATE_SET",
+  "test_fixture": true,
+  "contains_placeholders": true,
+  "candidate_paths": [
+    "<REAL_STAGE76_DIGEST_CANDIDATE_JSON_PATH_REQUIRED>"
+  ],
+  "review_preparation_reference": "<REAL_TRACEABLE_REVIEW_PREPARATION_REFERENCE_REQUIRED>",
+  "scope_boundary": {
+    "candidate_set_is_provider_fact_evidence": false,
+    "candidate_set_is_legal_review": false,
+    "candidate_set_closes_subprocessor_transfer_decision": false,
+    "candidate_set_marks_legal_gate_ready": false,
+    "candidate_set_is_billing_credential_evidence": false,
+    "candidate_set_is_checkout_proof": false,
+    "candidate_set_is_production_deployment_evidence": false,
+    "candidate_set_creates_evidence_migration": false
+  },
+  "instructions": "Copy this template outside the repository only after one or more real Stage76 digest-only candidate JSON files have been produced from real external provider source artifacts. Set test_fixture=false, contains_placeholders=false, replace candidate_paths with those real Stage76 candidate paths, add a real traceable review_preparation_reference, and never commit the completed manifest."
+}
