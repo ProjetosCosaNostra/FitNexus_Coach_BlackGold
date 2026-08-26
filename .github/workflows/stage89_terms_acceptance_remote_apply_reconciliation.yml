@@ -1,0 +1,60 @@
+name: Stage89 Terms Acceptance Remote Apply Reconciliation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify-terms-acceptance-remote-apply-reconciliation:
+    if: github.head_ref == 'blackgold/stage89-terms-acceptance-remote-apply-reconciliation'
+    runs-on: ubuntu-24.04
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify Stage89 Terms acceptance remote apply reconciliation
+        run: python 04_backend_supabase/tools/verify_stage89_terms_acceptance_remote_apply_reconciliation.py
+
+      - name: Verify migration ledger contract
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify SECURITY DEFINER exposure authority
+        run: python 04_backend_supabase/tools/verify_security_definer_exposure_authority.py
+
+      - name: Build deterministic Stage89 reconciliation packet twice
+        run: |
+          python 04_backend_supabase/tools/build_stage89_terms_acceptance_remote_apply_reconciliation.py --source-sha "$SOURCE_SHA" --output /tmp/stage89_reconciliation_a.json
+          python 04_backend_supabase/tools/build_stage89_terms_acceptance_remote_apply_reconciliation.py --source-sha "$SOURCE_SHA" --output /tmp/stage89_reconciliation_b.json
+          cmp /tmp/stage89_reconciliation_a.json /tmp/stage89_reconciliation_b.json
+          cp /tmp/stage89_reconciliation_a.json stage89_terms_acceptance_remote_apply_reconciliation_packet.json
+
+      - name: Upload Stage89 captured reconciliation packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage89-terms-acceptance-remote-apply-reconciliation-${{ github.event.pull_request.head.sha }}
+          path: stage89_terms_acceptance_remote_apply_reconciliation_packet.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Preserve Stage89 no-second-apply and legal boundaries
+        run: |
+          echo "REMOTE_MIGRATION_APPLIED_EXACTLY_ONCE=true"
+          echo "REMOTE_VERSION=20260826184218"
+          echo "SECOND_REMOTE_APPLY_ALLOWED=false"
+          echo "TERMS_REGISTRY_ROWS=0"
+          echo "ACCEPTANCE_LEDGER_ROWS=0"
+          echo "TERMS_CANDIDATE_APPROVED=false"
+          echo "TERMS_CANDIDATE_PUBLISHED=false"
+          echo "TARGET_DECISION_CLOSED=false"
+          echo "LEGAL_TERMS_GATE_READY=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "PAID_MEDIA=DENIED"

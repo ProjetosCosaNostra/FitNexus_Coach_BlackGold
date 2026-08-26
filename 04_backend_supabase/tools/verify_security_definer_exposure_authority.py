@@ -16,6 +16,7 @@ FAILURE_CLASS = "BGF-SECURITY-DEFINER-EXPOSURE-DRIFT-159"
 STAGE33_MIGRATION = "stage33_direct_rpc_revocation_and_post_revocation_fixture"
 STAGE86_TERMS_MIGRATION = "stage85_terms_acceptance_registry_ledger"
 STAGE86_TERMS_MIGRATION_FILE = MIGRATIONS / "20260826180000_stage85_terms_acceptance_registry_ledger.sql"
+STAGE89_REMOTE_VERSION = "20260826184218"
 
 DEFINITION_RE = re.compile(
     r"create\s+(?:or\s+replace\s+)?function\s+public\.(?P<name>[a-z0-9_]+)\s*\(.*?\)\s*returns.*?\bas\s+\$\$",
@@ -200,53 +201,98 @@ def main() -> None:
         if transition.get("remote_applied") is not True:
             fail("remote-reconciled transition missing remote_applied")
 
+    expected_repo = {
+        "issue_student_access_token_v2": {"authenticated"},
+        "get_current_terms_v1": {"anon", "authenticated"},
+        "accept_current_terms_v1": {"authenticated"},
+        "get_my_terms_acceptance_gate_v1": {"authenticated"},
+    }
+    if repo_expected != expected_repo:
+        fail("Terms repository target exposure allowlist drift")
+
     stage86 = authority.get("stage86_repository_target_transition")
+    if not isinstance(stage86, dict):
+        fail("Stage86 Terms migration requires explicit exposure transition authority")
+    if stage86.get("baseline_main_sha") != "3d6d14a659611594081b8a22b0ae6c483459de48":
+        fail("Stage86 exposure baseline main drift")
+    if stage86.get("migration_name") != STAGE86_TERMS_MIGRATION:
+        fail("Stage86 exposure migration name drift")
+    if stage86.get("migration_file") != str(STAGE86_TERMS_MIGRATION_FILE.relative_to(ROOT)).replace("\\", "/"):
+        fail("Stage86 exposure migration path drift")
+    if stage86.get("migration_blob_sha") != git_blob_sha(STAGE86_TERMS_MIGRATION_FILE):
+        fail("Stage86 exposure migration blob drift")
+    if stage86.get("migration_blob_sha") != "a9a77ebbf61f464e5549f338362cdd3a59df8df1":
+        fail("Stage86 exposure exact migration pin drift")
+    if stage86.get("repository_target_new_terms_function_count") != 3:
+        fail("Stage86 new Terms function exposure count drift")
+    if stage86.get("repository_target_total_security_definer_exposure_count") != 4:
+        fail("Stage86 total repository exposure count drift")
+    if stage86.get("repository_target_anon_exposure_count") != 1:
+        fail("Stage86 repository anon exposure count drift")
+    if stage86.get("repository_target_authenticated_exposure_count") != 4:
+        fail("Stage86 repository authenticated exposure count drift")
+    if stage86.get("terms_registry_seeded") is not False or stage86.get("acceptance_seeded") is not False:
+        fail("Terms exposure authority cannot claim Terms/acceptance data")
+    if stage86.get("legal_terms_gate_promoted") is not False:
+        fail("Terms exposure authority cannot promote legal Terms gate")
+
+    terms_remote_exposures = 0
     if STAGE86_TERMS_MIGRATION in repo_only:
-        if not isinstance(stage86, dict):
-            fail("Stage86 repo-only Terms migration requires explicit exposure transition authority")
-        if stage86.get("baseline_main_sha") != "3d6d14a659611594081b8a22b0ae6c483459de48":
-            fail("Stage86 exposure baseline main drift")
-        if stage86.get("migration_name") != STAGE86_TERMS_MIGRATION:
-            fail("Stage86 exposure migration name drift")
-        if stage86.get("migration_file") != str(STAGE86_TERMS_MIGRATION_FILE.relative_to(ROOT)).replace("\\", "/"):
-            fail("Stage86 exposure migration path drift")
-        if stage86.get("migration_blob_sha") != git_blob_sha(STAGE86_TERMS_MIGRATION_FILE):
-            fail("Stage86 exposure migration blob drift")
-        if stage86.get("migration_blob_sha") != "a9a77ebbf61f464e5549f338362cdd3a59df8df1":
-            fail("Stage86 exposure exact migration pin drift")
         if stage86.get("migration_ledger_state") != "repo_only":
-            fail("Stage86 Terms migration exposure must remain repo_only")
+            fail("Stage86 Terms migration exposure must remain repo_only before remote apply")
         if stage86.get("remote_applied") is not False or stage86.get("remote_version") is not None:
             fail("Stage86 exposure authority falsely claims remote application")
         if STAGE86_TERMS_MIGRATION in remote:
             fail("Stage86 Terms migration unexpectedly present in remote baseline")
         if stage86.get("remote_current_new_terms_exposure_count") != 0:
-            fail("Stage86 new Terms exposure must remain remote-zero")
-        if stage86.get("terms_registry_seeded") is not False or stage86.get("acceptance_seeded") is not False:
-            fail("Stage86 exposure authority cannot claim Terms/acceptance data")
-        if stage86.get("legal_terms_gate_promoted") is not False:
-            fail("Stage86 exposure authority cannot promote legal Terms gate")
+            fail("Stage86 new Terms exposure must remain remote-zero before apply")
+    elif remote.get(STAGE86_TERMS_MIGRATION) is not None:
+        if stage86.get("migration_ledger_state") != "remote_reconciled":
+            fail("Stage89 Terms migration exposure must be remote_reconciled")
+        if stage86.get("remote_applied") is not True:
+            fail("Stage89 Terms exposure authority missing remote application")
+        if stage86.get("remote_version") != remote.get(STAGE86_TERMS_MIGRATION):
+            fail("Stage89 Terms remote version mismatch")
+        if stage86.get("remote_version") != STAGE89_REMOTE_VERSION:
+            fail("Stage89 Terms exact remote version drift")
+        if stage86.get("remote_current_new_terms_exposure_count") != 3:
+            fail("Stage89 Terms remote exposure count drift")
+        if STAGE86_TERMS_MIGRATION in repo_only:
+            fail("Stage89 reconciled Terms migration still declared repo-only")
 
-        expected_repo = {
-            "issue_student_access_token_v2": {"authenticated"},
-            "get_current_terms_v1": {"anon", "authenticated"},
-            "accept_current_terms_v1": {"authenticated"},
-            "get_my_terms_acceptance_gate_v1": {"authenticated"},
+        stage89 = authority.get("stage89_terms_remote_reconciliation")
+        if not isinstance(stage89, dict):
+            fail("Stage89 remote reconciliation receipt missing")
+        expected_stage89 = {
+            "baseline_main_sha": "e18ebc4ef534238348b57b699abacc122857e8c0",
+            "migration_name": STAGE86_TERMS_MIGRATION,
+            "migration_blob_sha": "a9a77ebbf61f464e5549f338362cdd3a59df8df1",
+            "remote_version": STAGE89_REMOTE_VERSION,
+            "remote_applied": True,
+            "observed_post_apply_at_utc": "2026-08-26T18:42:39.672815Z",
+            "observed_privileges_at_utc": "2026-08-26T19:10:54.951712Z",
+            "terms_registry_exists": True,
+            "acceptance_ledger_exists": True,
+            "terms_registry_rows": 0,
+            "acceptance_ledger_rows": 0,
+            "terms_rpc_exposure_count": 3,
+            "get_current_terms_v1_roles": ["anon", "authenticated"],
+            "accept_current_terms_v1_roles": ["authenticated"],
+            "get_my_terms_acceptance_gate_v1_roles": ["authenticated"],
+            "student_direct_route_anon_execute_count": 0,
+            "student_direct_route_authenticated_execute_count": 0,
+            "issue_student_access_token_v2_anon_execute": False,
+            "issue_student_access_token_v2_authenticated_execute": True,
+            "terms_artifact_registered": False,
+            "real_acceptance_collected": False,
+            "legal_terms_gate_promoted": False,
         }
-        if repo_expected != expected_repo:
-            fail("Stage86 repository target exposure allowlist drift")
-        if stage86.get("repository_target_new_terms_function_count") != 3:
-            fail("Stage86 new Terms function exposure count drift")
-        if stage86.get("repository_target_total_security_definer_exposure_count") != 4:
-            fail("Stage86 total repository exposure count drift")
-        if stage86.get("repository_target_anon_exposure_count") != 1:
-            fail("Stage86 repository anon exposure count drift")
-        if stage86.get("repository_target_authenticated_exposure_count") != 4:
-            fail("Stage86 repository authenticated exposure count drift")
+        for key, expected in expected_stage89.items():
+            if stage89.get(key) != expected:
+                fail(f"Stage89 remote reconciliation drift: {key}")
+        terms_remote_exposures = 3
     else:
-        expected_repo = {"issue_student_access_token_v2": {"authenticated"}}
-        if repo_expected != expected_repo:
-            fail("repository target exposure advanced without declared repo-only Stage86 migration")
+        fail("Terms migration is neither declared repo-only nor present in reconciled remote ledger")
 
     states = replay_repository_privileges()
     actual: dict[str, set[str]] = {}
@@ -276,7 +322,7 @@ def main() -> None:
     print(f"REPOSITORY_TARGET_EXPOSURES={len(repo_expected)}")
     print(f"REPOSITORY_TARGET_ANON_EXPOSURES={sum('anon' in roles for roles in repo_expected.values())}")
     print(f"REPOSITORY_TARGET_AUTH_EXPOSURES={sum('authenticated' in roles for roles in repo_expected.values())}")
-    print("STAGE86_TERMS_REMOTE_EXPOSURES=0")
+    print(f"STAGE86_TERMS_REMOTE_EXPOSURES={terms_remote_exposures}")
     print("UNAPPROVED_EXPOSURES=0")
     print("PUBLIC_DEFAULT_EXECUTE_DRIFT=0")
 
