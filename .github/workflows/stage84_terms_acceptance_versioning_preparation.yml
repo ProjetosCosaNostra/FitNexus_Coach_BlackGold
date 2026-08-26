@@ -1,0 +1,72 @@
+name: Stage84 Terms Acceptance Versioning Preparation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "04_backend_supabase/stage84_terms_acceptance_versioning_preparation_authority.json"
+      - "04_backend_supabase/tools/build_stage84_terms_acceptance_versioning_preparation.py"
+      - "04_backend_supabase/tools/verify_stage84_terms_acceptance_versioning_preparation.py"
+      - "10_compliance/inventory/STAGE84_TERMS_ACCEPTANCE_VERSIONING_IMPLEMENTATION_PREPARATION.json"
+      - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+      - "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md"
+      - "04_backend_supabase/stage83_billing_policy_review_questionnaire_skeleton_authority.json"
+      - ".github/workflows/stage84_terms_acceptance_versioning_preparation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-terms-acceptance-versioning-preparation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify Stage84 terms acceptance versioning preparation
+        run: python 04_backend_supabase/tools/verify_stage84_terms_acceptance_versioning_preparation.py
+
+      - name: Build deterministic Stage84 preparation packet twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python 04_backend_supabase/tools/build_stage84_terms_acceptance_versioning_preparation.py \
+            --source-sha "${{ github.event.pull_request.head.sha }}" \
+            --output /tmp/stage84_terms_a.json
+          python 04_backend_supabase/tools/build_stage84_terms_acceptance_versioning_preparation.py \
+            --source-sha "${{ github.event.pull_request.head.sha }}" \
+            --output /tmp/stage84_terms_b.json
+          cmp /tmp/stage84_terms_a.json /tmp/stage84_terms_b.json
+          grep -F '"implementation_unit_count": 4' /tmp/stage84_terms_a.json >/dev/null
+          grep -F '"terms_candidate_approved": false' /tmp/stage84_terms_a.json >/dev/null
+          grep -F '"real_acceptance_collected": false' /tmp/stage84_terms_a.json >/dev/null
+          grep -F '"schema_migration_created": false' /tmp/stage84_terms_a.json >/dev/null
+          grep -F '"remote_mutation": false' /tmp/stage84_terms_a.json >/dev/null
+          grep -F '"target_decision_closed": false' /tmp/stage84_terms_a.json >/dev/null
+          grep -F '"legal_terms_gate_ready": false' /tmp/stage84_terms_a.json >/dev/null
+          echo "STAGE84_DETERMINISTIC_TERMS_ACCEPTANCE_PREPARATION_BUILD=PASS"
+
+      - name: Upload non-attesting Stage84 preparation packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage84-terms-acceptance-versioning-preparation-${{ github.event.pull_request.head.sha }}
+          retention-days: 7
+          if-no-files-found: error
+          path: /tmp/stage84_terms_a.json
+
+      - name: Preserve Terms and launch boundaries
+        run: |
+          echo "TERMS_ACCEPTANCE_VERSIONING=OPEN"
+          echo "TERMS_CANDIDATE_APPROVED=false"
+          echo "TERMS_CANDIDATE_PUBLISHED=false"
+          echo "REAL_ACCEPTANCE_COLLECTED=false"
+          echo "SCHEMA_MIGRATION_CREATED=false"
+          echo "REMOTE_MUTATION=false"
+          echo "TARGET_DECISION_CLOSED=false"
+          echo "LEGAL_TERMS_GATE_READY=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "PAID_MEDIA=DENIED"
