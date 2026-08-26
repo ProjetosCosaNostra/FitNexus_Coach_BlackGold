@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE78_TECHNICAL_RETENTION_SURFACE_INVENTORY",
+  "baseline_main_sha": "c92da46e17e7a8614545c62f6921f22ff661a10c",
+  "current_state": "SOURCE_DERIVED_DATA_RETENTION_SURFACES_AND_LIFECYCLE_MARKERS_INVENTORIED_NO_RETENTION_PERIODS_APPROVED_NO_GATE_PROMOTION",
+  "upstream_authority": {
+    "stage77_provider_review_packet": "04_backend_supabase/stage77_provider_review_packet_assembler_authority.json",
+    "stage77_provider_review_packet_blob": "12053a4ffbe60919511ca7f119671a291e418f48",
+    "open_decisions": "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json",
+    "open_decisions_blob": "215d527c1cb79d7b72697f03f1f84887e3a72d95",
+    "privacy_notice_candidate": "10_compliance/drafts/PRIVACY_NOTICE_CANDIDATE_PTBR.md",
+    "privacy_notice_candidate_blob": "1e5afdba4735469d734490883be8f7e011ac8159",
+    "dsr_runbook_candidate": "10_compliance/drafts/DATA_SUBJECT_REQUEST_RUNBOOK_CANDIDATE.md",
+    "dsr_runbook_candidate_blob": "a4a9ee94d29dc17c9a76db2f8ede629d7c207ab8"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only_information_schema_plus_storage_and_extension_metadata",
+    "observed_at_utc": "2026-08-26T09:54:33.471621+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "public_private_table_count": 45,
+    "cleanup_like_named_routines_observed": 0,
+    "storage_bucket_count": 0,
+    "pg_cron_installed": false,
+    "remote_mutation_performed": false,
+    "interpretation_boundaries": {
+      "zero_customer_rows_means_retention_requirements_resolved": false,
+      "zero_cleanup_named_routines_means_no_deletion_paths_exist": false,
+      "zero_storage_buckets_means_no_backup_or_provider_retention_exists": false,
+      "pg_cron_not_installed_means_no_external_scheduled_cleanup_exists": false
+    }
+  },
+  "target_open_decision": {
+    "id": "RETENTION_MATRIX",
+    "state": "OPEN",
+    "affected_gates": [
+      "legal_privacy_notice",
+      "data_subject_request_channel",
+      "incident_response"
+    ],
+    "required": "Approved category-by-category retention, backup expiration and legal-hold rules.",
+    "resolution_authority": "legal/privacy/operations review",
+    "stage78_contribution": "Inventory technical data-bearing surfaces, sensitivity indicators and lifecycle markers only. No legal retention duration, deletion obligation, backup expiration, legal hold or cancellation rule may be invented."
+  },
+  "inventory_contract": {
+    "registry": "10_compliance/inventory/STAGE78_TECHNICAL_DATA_RETENTION_SURFACE_REGISTRY.json",
+    "builder": "04_backend_supabase/tools/build_stage78_technical_retention_surface_inventory.py",
+    "guard": "04_backend_supabase/tools/verify_stage78_technical_retention_surface_inventory.py",
+    "workflow": ".github/workflows/stage78_technical_retention_surface_inventory.yml",
+    "migration_corpus": "04_backend_supabase/migrations/*.sql",
+    "expected_category_count": 10,
+    "expected_non_table_surface_count": 2,
+    "technical_source_binding_required": true,
+    "migration_corpus_digest_required": true,
+    "registry_digest_required": true,
+    "candidate_document_digests_required": true,
+    "technical_lifecycle_markers_may_be_reported": true,
+    "technical_lifecycle_marker_is_retention_policy": false,
+    "retention_periods_may_be_selected": false,
+    "backup_expiration_may_be_selected": false,
+    "legal_hold_rules_may_be_selected": false,
+    "cancellation_or_delinquency_retention_may_be_selected": false,
+    "anonymization_or_deletion_obligations_may_be_approved": false,
+    "legal_basis_may_be_selected": false,
+    "sensitivity_flags_are_final_legal_classification": false,
+    "target_open_decision_can_be_closed": false,
+    "inventory_is_legal_review": false,
+    "inventory_is_operational_deletion_test": false,
+    "inventory_is_dsr_evidence": false,
+    "inventory_is_incident_response_evidence": false,
+    "network_calls_allowed": false,
+    "provider_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "deployment_action_allowed": false,
+    "evidence_ref_creation_allowed": false,
+    "evidence_digest_promotion_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "gate_promotion_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "source_interpretation_contract": {
+    "privacy_notice_retention_section": "Draft Section 8 requires category-by-category period/criterion, purpose/basis, cancellation/delinquency effect, backup purge window, legal hold and anonymization/blocking/deletion, while explicitly forbidding invented periods.",
+    "dsr_runbook_retention_section": "Draft Section 9 requires technical separation of immediate deletion, reviewed mandatory/contractual retention, backup retention windows, anonymization/blocking and security/audit retention, while explicitly freezing no period or obligation.",
+    "live_schema_observation": "Public/private tables and lifecycle fields show where retention decisions will apply; timestamps, expires_at, revoked_at, status and is_active are technical lifecycle markers only.",
+    "source_code_scope": "The builder validates registry table/field markers against repository SQL migration text and produces a deterministic non-attesting inventory."
+  },
+  "failure_classes": [
+    "BGF-STAGE78-LIFECYCLE-MARKER-AS-RETENTION-POLICY-746",
+    "BGF-STAGE78-RETENTION-PERIOD-FABRICATION-747",
+    "BGF-STAGE78-BACKUP-EXPIRATION-FABRICATION-748",
+    "BGF-STAGE78-LEGAL-HOLD-RULE-FABRICATION-749",
+    "BGF-STAGE78-SENSITIVITY-FLAG-AS-FINAL-LEGAL-CLASSIFICATION-750",
+    "BGF-STAGE78-ZERO-ROWS-AS-NO-RETENTION-OBLIGATION-751",
+    "BGF-STAGE78-ZERO-BUCKETS-AS-NO-BACKUP-RETENTION-752",
+    "BGF-STAGE78-CLEANUP-NAME-ABSENCE-AS-NO-DELETION-PATH-753",
+    "BGF-STAGE78-INVENTORY-AS-GATE-EVIDENCE-754",
+    "BGF-STAGE78-TECHNICAL-RETENTION-SURFACE-GUARD-755"
+  ],
+  "gates": {
+    "stage78_retention_surface_inventory": "REPO_ONLY_PENDING_CI",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Prepare a fail-closed retention-decision questionnaire and review intake template that binds the Stage78 category inventory but leaves every period, legal hold, backup purge and deletion/anonymization rule unresolved until real legal/privacy/operations review.",
+    "real_review_required": true,
+    "target_decision_still_open": true,
+    "evidence_migration_allowed": false
+  }
+}
