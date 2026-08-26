@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE75_TECHNICAL_EXTERNAL_PROVIDER_INVENTORY_CANDIDATE",
+  "baseline_main_sha": "2a9fab9e102b5f750e22891f4527f8df375d937a",
+  "current_state": "SOURCE_DERIVED_TECHNICAL_EXTERNAL_SERVICE_INVENTORY_PREPARED_LEGAL_CLASSIFICATION_AND_PROVIDER_TERMS_UNRESOLVED_NO_GATE_PROMOTION",
+  "upstream_authority": {
+    "stage74_independent_review_intake": "04_backend_supabase/stage74_controller_processor_independent_review_intake_authority.json",
+    "stage74_independent_review_intake_blob": "ac75422c37b74642e342fb516527463c4c7cd10e",
+    "stage67_open_decisions": "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json",
+    "stage67_open_decisions_blob": "215d527c1cb79d7b72697f03f1f84887e3a72d95",
+    "processing_role_matrix_candidate": "10_compliance/drafts/PROCESSING_ROLE_MATRIX_CANDIDATE.md",
+    "processing_role_matrix_candidate_blob": "7ddaa7bef68f489478f5db3fb31beb79abadf026"
+  },
+  "technical_source_pins": {
+    "flutter_pubspec": {
+      "path": "03_app_flutter/fitnexus_app/pubspec.yaml",
+      "blob": "644e57059c75964066645f8b9b0223f70a0a07c5"
+    },
+    "student_access_edge_gateway": {
+      "path": "04_backend_supabase/student_access_edge_gateway_authority.json",
+      "blob": "e5a97eb416194110062fdd1ddcaeb307af7e8d0f"
+    },
+    "student_access_production_edge_selection": {
+      "path": "04_backend_supabase/student_access_production_edge_selection_authority.json",
+      "blob": "7f21a980d3cd3846a2500995a1ae57edc428d61a"
+    },
+    "cf_origin_spoof_sentinel": {
+      "path": "04_backend_supabase/cf_origin_spoof_sentinel_authority.json",
+      "blob": "5aadef86b6061a1e7bf2fc8755c3218b0d49d51c"
+    },
+    "student_access_alert_delivery_contract": {
+      "path": "04_backend_supabase/student_access_alert_delivery_contract.json",
+      "blob": "7dde0dbd4788c66df1ca82a5ae29996a4dd4dc3e"
+    },
+    "stage35_alert_delivery_reconciliation": {
+      "path": "04_backend_supabase/stage35_alert_external_delivery_cleanup_final_reconciliation_authority.json",
+      "blob": "f495f0c01bb16b049b5383f46db9868724b798e8"
+    },
+    "stage39_billing_credential_preparation": {
+      "path": "04_backend_supabase/stage39_billing_credential_authority_external_evidence_preparation.json",
+      "blob": "404a320c43ba1e1f7092f11686d9ce990a602329"
+    },
+    "stage62_billing_final_reconciliation": {
+      "path": "04_backend_supabase/stage62_stage61_final_reconciliation_authority.json",
+      "blob": "4c9c99ecb2f3f016287e9d5c7de1888e6e2c846f"
+    },
+    "stage66_release_candidate": {
+      "path": "04_backend_supabase/stage66_production_release_candidate_evidence_pipeline_authority.json",
+      "blob": "8f3be15da1027d9a5bed6e7d1f43cefebcf6a9eb"
+    }
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-26T04:19:35.424894+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "remote_mutation_performed": false
+  },
+  "target_open_decision": {
+    "id": "SUBPROCESSOR_AND_TRANSFER_MAP",
+    "state": "OPEN",
+    "affected_gates": [
+      "legal_privacy_notice",
+      "legal_role_mapping"
+    ],
+    "required": "Actual provider inventory, regions, contracts, retention and international-transfer mechanism when applicable.",
+    "resolution_authority": "provider evidence plus legal/privacy review",
+    "stage75_contribution": "Prepare source-derived technical service inventory and explicit missing-evidence matrix only; do not classify subprocessors or resolve regions/contracts/retention/transfers."
+  },
+  "inventory_contract": {
+    "source_registry": "10_compliance/inventory/STAGE75_TECHNICAL_EXTERNAL_SERVICE_SOURCE_REGISTRY.json",
+    "builder": "04_backend_supabase/tools/build_stage75_technical_external_provider_inventory.py",
+    "guard": "04_backend_supabase/tools/verify_stage75_technical_external_provider_inventory.py",
+    "workflow": ".github/workflows/stage75_technical_external_provider_inventory.yml",
+    "service_count": 5,
+    "expected_service_ids": [
+      "supabase",
+      "telegram_bot_api",
+      "asaas",
+      "cloudflare_edge_signal",
+      "github_repository_ci_pages"
+    ],
+    "technical_relationship_labels_are_legal_classifications": false,
+    "direct_subprocessor_designation_allowed": false,
+    "provider_contract_evidence_present": false,
+    "provider_region_evidence_present": false,
+    "provider_retention_evidence_present": false,
+    "international_transfer_mechanism_evidence_present": false,
+    "provider_legal_entity_evidence_present": false,
+    "subprocessor_chain_evidence_present": false,
+    "cloudflare_direct_contract_may_be_inferred": false,
+    "github_pages_may_be_treated_as_current_production_release": false,
+    "asaas_may_be_treated_as_activated": false,
+    "telegram_controlled_proof_may_be_generalized_to_customer_data_processing": false,
+    "source_claims_must_be_bound_to_repository_artifacts": true,
+    "inventory_is_provider_evidence": false,
+    "inventory_is_legal_review": false,
+    "inventory_can_close_target_decision": false,
+    "inventory_can_mark_gate_ready": false,
+    "network_calls_allowed": false,
+    "provider_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "deployment_action_allowed": false,
+    "evidence_ref_creation_allowed": false,
+    "evidence_digest_promotion_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "gate_promotion_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "relationship_status_semantics": {
+    "CONFIRMED_ACTIVE_DIRECT_TECHNICAL_SERVICE": "Repository/runtime evidence confirms direct technical integration/use; this does not establish a legal processor/subprocessor classification.",
+    "CONFIRMED_ACTIVE_EXTERNAL_ALERT_DELIVERY_SERVICE": "Controlled runtime evidence confirms Telegram alert delivery; payload and legal relationship remain bounded by source evidence.",
+    "SELECTED_PRODUCTION_BILLING_PROVIDER_NOT_ACTIVATED": "Asaas is selected for BR_V1 but remains pending real production credential and activation evidence.",
+    "INDIRECT_INFRASTRUCTURE_SIGNAL_OBSERVED_CONTRACTUAL_RELATIONSHIP_UNVERIFIED": "Cloudflare-specific edge signal is observed, but repository evidence does not prove a direct FitNexus contractual relationship.",
+    "CONFIRMED_REPOSITORY_CI_SERVICE_STALE_PUBLIC_PAGES_SURFACE_NOT_CURRENT_PRODUCTION_AUTHORITY": "GitHub repository/CI use is concrete; existing Pages route is stale and cannot be treated as current production deployment evidence."
+  },
+  "required_external_completion_fields_per_relevant_service": [
+    "provider legal entity",
+    "contract/DPA or governing data terms reference",
+    "approved processing purpose and data categories",
+    "processing/hosting regions",
+    "retention/deletion terms",
+    "subprocessor/sub-subprocessor chain",
+    "international transfer mechanism where applicable",
+    "legal relationship classification after review"
+  ],
+  "failure_classes": [
+    "BGF-STAGE75-TECHNICAL-SERVICE-AS-LEGAL-SUBPROCESSOR-716",
+    "BGF-STAGE75-PROVIDER-CONTRACT-FABRICATION-717",
+    "BGF-STAGE75-PROVIDER-REGION-RETENTION-FABRICATION-718",
+    "BGF-STAGE75-TRANSFER-MECHANISM-FABRICATION-719",
+    "BGF-STAGE75-CLOUDFLARE-DIRECT-CONTRACT-INFERENCE-720",
+    "BGF-STAGE75-ASAAS-ACTIVATION-INFERENCE-721",
+    "BGF-STAGE75-TELEGRAM-PROOF-SCOPE-OVERGENERALIZATION-722",
+    "BGF-STAGE75-GITHUB-PAGES-PRODUCTION-AUTHORITY-INFERENCE-723",
+    "BGF-STAGE75-INVENTORY-AS-GATE-EVIDENCE-724",
+    "BGF-STAGE75-TECHNICAL-PROVIDER-INVENTORY-GUARD-725"
+  ],
+  "gates": {
+    "stage75_provider_inventory": "REPO_ONLY_PENDING_CI",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Prepare a provider-evidence acquisition checklist bound to this inventory, requiring externally verified provider terms/region/retention/transfer artifacts before any legal provider map can be reviewed.",
+    "real_provider_evidence_still_required": true,
+    "independent_legal_privacy_review_still_required": true,
+    "evidence_migration_allowed": false
+  }
+}
