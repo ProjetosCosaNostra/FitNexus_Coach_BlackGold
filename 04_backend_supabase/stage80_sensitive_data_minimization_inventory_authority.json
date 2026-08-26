@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE80_TECHNICAL_SENSITIVE_DATA_MINIMIZATION_INVENTORY",
+  "baseline_main_sha": "1f9de92a9add0bc6762f153fd9ad2d40ac23fc71",
+  "current_state": "SOURCE_DERIVED_SENSITIVE_DATA_EXPOSURE_AND_MINIMIZATION_SURFACES_INVENTORIED_NO_FINAL_LEGAL_CLASSIFICATION_NO_POLICY_OR_GATE_PROMOTION",
+  "upstream_authority": {
+    "stage79_retention_review_intake": "04_backend_supabase/stage79_retention_decision_review_intake_authority.json",
+    "stage79_retention_review_intake_blob": "1fd19a3747961f9ca4b4fb3950e6ade805779114",
+    "stage78_retention_registry": "10_compliance/inventory/STAGE78_TECHNICAL_DATA_RETENTION_SURFACE_REGISTRY.json",
+    "stage78_retention_registry_blob": "9a5c8c549a26f04146298c8c1b52b2fb64a414ec",
+    "open_decisions": "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json",
+    "open_decisions_blob": "215d527c1cb79d7b72697f03f1f84887e3a72d95",
+    "processing_role_matrix": "10_compliance/drafts/PROCESSING_ROLE_MATRIX_CANDIDATE.md",
+    "processing_role_matrix_blob": "7ddaa7bef68f489478f5db3fb31beb79abadf026",
+    "privacy_notice_candidate": "10_compliance/drafts/PRIVACY_NOTICE_CANDIDATE_PTBR.md",
+    "privacy_notice_candidate_blob": "1e5afdba4735469d734490883be8f7e011ac8159",
+    "incident_runbook_candidate": "10_compliance/drafts/INCIDENT_RESPONSE_RUNBOOK_CANDIDATE.md",
+    "incident_runbook_candidate_blob": "e18ac0bec1c3d49cb9387e27f315d03c24efdf7d"
+  },
+  "stage80_registry": {
+    "path": "10_compliance/inventory/STAGE80_TECHNICAL_SENSITIVE_DATA_MINIMIZATION_REGISTRY.json",
+    "blob": "b72c073e5b4079ef78dd3de94a5d3123dc7e4488"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only_information_schema_plus_pg_class_plus_role_table_grants",
+    "observed_at_utc": "2026-08-26T10:11:17.815037+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "reviewed_public_table_count": 8,
+    "reviewed_public_rls_enabled_count": 8,
+    "reviewed_private_table_count": 6,
+    "anon_authenticated_direct_table_grant_count": 0,
+    "remote_mutation_performed": false,
+    "interpretation_boundaries": {
+      "rls_enabled_means_sensitive_data_policy_approved": false,
+      "private_schema_means_sensitive_data_policy_approved": false,
+      "zero_direct_table_grants_proves_all_access_paths_safe": false,
+      "zero_customer_rows_removes_sensitive_data_governance_need": false
+    }
+  },
+  "target_open_decision": {
+    "id": "SENSITIVE_DATA_TREATMENT",
+    "state": "OPEN",
+    "affected_gates": [
+      "legal_role_mapping",
+      "legal_privacy_notice",
+      "incident_response"
+    ],
+    "required": "Approved treatment/minimization rules for health, injury, pain or other potentially sensitive student information.",
+    "resolution_authority": "independent legal/privacy review",
+    "stage80_contribution": "Bind source-derived fields/flows and technical minimization requirements only. Do not decide final sensitive-data classification, legal basis, necessity, disclosure, retention, consent or incident communication obligations."
+  },
+  "inventory_contract": {
+    "registry": "10_compliance/inventory/STAGE80_TECHNICAL_SENSITIVE_DATA_MINIMIZATION_REGISTRY.json",
+    "builder": "04_backend_supabase/tools/build_stage80_sensitive_data_minimization_inventory.py",
+    "guard": "04_backend_supabase/tools/verify_stage80_sensitive_data_minimization_inventory.py",
+    "workflow": ".github/workflows/stage80_sensitive_data_minimization_inventory.yml",
+    "migration_corpus": "04_backend_supabase/migrations/*.sql",
+    "expected_table_backed_surface_count": 7,
+    "expected_non_table_surface_count": 2,
+    "technical_source_binding_required": true,
+    "draft_document_boundary_binding_required": true,
+    "migration_corpus_digest_required": true,
+    "registry_digest_required": true,
+    "technical_minimization_requirements_may_be_reported": true,
+    "potentially_sensitive_source_flags_may_be_reported": true,
+    "potentially_sensitive_source_flags_are_final_legal_classification": false,
+    "technical_minimization_requirements_are_approved_legal_policy": false,
+    "legal_basis_may_be_selected": false,
+    "consent_requirement_may_be_selected": false,
+    "necessity_or_proportionality_may_be_legally_approved": false,
+    "retention_period_may_be_selected": false,
+    "incident_notification_decision_may_be_selected": false,
+    "controller_processor_role_may_be_selected": false,
+    "external_ai_sensitive_data_use_may_be_authorized": false,
+    "marketing_sensitive_data_use_may_be_authorized": false,
+    "target_open_decision_can_be_closed": false,
+    "inventory_is_legal_review": false,
+    "inventory_is_incident_evidence": false,
+    "network_calls_allowed": false,
+    "provider_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "deployment_action_allowed": false,
+    "evidence_ref_creation_allowed": false,
+    "evidence_digest_promotion_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "gate_promotion_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "source_interpretation_contract": {
+    "role_matrix": "The draft role matrix identifies student profile, training/prescription, execution/feedback, Decision Intelligence, support, DSR and incident flows as potentially sensitive or capable of containing sensitive context, while marking roles/legal conclusions unresolved.",
+    "privacy_notice": "The draft privacy notice lists information that may reveal health, injury, pain or limitations and explicitly forbids sensitive data in UTMs, advertising payloads, unnecessary logs and engineering receipts; external AI use requires later privacy/security/provider review.",
+    "incident_runbook": "The draft incident runbook requires protecting potentially sensitive data, minimizing blast-radius inspection and exercising the sensitive-student-data scenario with synthetic/non-customer fixtures, but does not decide regulatory notification.",
+    "live_schema": "The live read-only schema confirms concrete fields such as students.objective, training_plans.notes, workout_feedback.pain_score/pain_location/note, Decision Intelligence brief/note and coach_action_events.note, plus bounded security/growth identifier surfaces."
+  },
+  "failure_classes": [
+    "BGF-STAGE80-TECHNICAL-SENSITIVE-FLAG-AS-FINAL-LEGAL-CLASSIFICATION-766",
+    "BGF-STAGE80-MINIMIZATION-GUIDANCE-AS-APPROVED-POLICY-767",
+    "BGF-STAGE80-RLS-AS-LEGAL-SUFFICIENCY-768",
+    "BGF-STAGE80-PRIVATE-SCHEMA-AS-LEGAL-SUFFICIENCY-769",
+    "BGF-STAGE80-NO-EXPLICIT-HEALTH-COLUMN-AS-NO-SENSITIVE-RISK-770",
+    "BGF-STAGE80-MARKETING-SENSITIVE-DATA-AUTHORIZATION-771",
+    "BGF-STAGE80-EXTERNAL-AI-SENSITIVE-DATA-AUTHORIZATION-772",
+    "BGF-STAGE80-INCIDENT-NOTIFICATION-AUTO-CONCLUSION-773",
+    "BGF-STAGE80-INVENTORY-AS-GATE-EVIDENCE-774",
+    "BGF-STAGE80-SENSITIVE-DATA-MINIMIZATION-GUARD-775"
+  ],
+  "gates": {
+    "stage80_sensitive_data_inventory": "REPO_ONLY_PENDING_CI",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Prepare a fail-closed SENSITIVE_DATA_TREATMENT legal/privacy review questionnaire and external digest-only review intake bound to Stage80, without recommending legal classification or authorizing sensitive-data processing.",
+    "real_independent_review_required": true,
+    "target_decision_still_open": true,
+    "evidence_migration_allowed": false
+  }
+}
