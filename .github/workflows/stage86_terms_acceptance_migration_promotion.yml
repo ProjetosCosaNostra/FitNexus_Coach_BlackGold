@@ -1,0 +1,56 @@
+name: Stage86 Terms Acceptance Migration Promotion
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify-terms-acceptance-migration-promotion:
+    if: github.head_ref == 'blackgold/stage86-terms-acceptance-migration-promotion'
+    runs-on: ubuntu-24.04
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify Stage86 Terms acceptance migration promotion
+        run: python 04_backend_supabase/tools/verify_stage86_terms_acceptance_migration_promotion.py
+
+      - name: Verify migration ledger contract
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Build deterministic Stage86 promotion packet twice
+        run: |
+          python 04_backend_supabase/tools/build_stage86_terms_acceptance_migration_promotion.py --source-sha "$SOURCE_SHA" --output /tmp/stage86_promotion_a.json
+          python 04_backend_supabase/tools/build_stage86_terms_acceptance_migration_promotion.py --source-sha "$SOURCE_SHA" --output /tmp/stage86_promotion_b.json
+          cmp /tmp/stage86_promotion_a.json /tmp/stage86_promotion_b.json
+          cp /tmp/stage86_promotion_a.json stage86_terms_acceptance_migration_promotion_packet.json
+
+      - name: Upload non-attesting Stage86 promotion packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage86-terms-acceptance-migration-promotion-${{ github.event.pull_request.head.sha }}
+          path: stage86_terms_acceptance_migration_promotion_packet.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Preserve migration, Terms and launch boundaries
+        run: |
+          echo "MIGRATION_LEDGER_STATE=repo_only"
+          echo "EXECUTABLE_BODY_BYTE_IDENTICAL=true"
+          echo "REMOTE_MIGRATION_APPLIED=false"
+          echo "SUPABASE_MUTATION=false"
+          echo "TERMS_REGISTRY_ROW_CREATED=false"
+          echo "REAL_ACCEPTANCE_COLLECTED=false"
+          echo "TARGET_DECISION_CLOSED=false"
+          echo "LEGAL_TERMS_GATE_READY=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "PAID_MEDIA=DENIED"
