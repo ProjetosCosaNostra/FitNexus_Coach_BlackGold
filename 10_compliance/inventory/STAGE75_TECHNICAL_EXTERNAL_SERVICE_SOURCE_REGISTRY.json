@@ -141,8 +141,8 @@
         ".github/workflows/stage66_production_release_candidate_evidence_pipeline.yml"
       ],
       "source_claim_markers": [
-        "existing_public_surface",
-        "stale_gh_pages_branch",
+        "fresh_public_surface_read_only_assessment",
+        "public_surface_bound_to_current_main\": false",
         "actions/upload-artifact"
       ],
       "current_pages_surface_is_production_deployment_evidence": false,
