@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "status": "TECHNICAL_SENSITIVE_DATA_MINIMIZATION_REGISTRY_NOT_FINAL_LEGAL_CLASSIFICATION_NOT_POLICY_NOT_EVIDENCE",
+  "project": "FitNexus Coach BlackGold",
+  "purpose": "Source-derived technical inventory of fields and flows that can contain, inherit, reference or accidentally receive potentially sensitive student information. It prepares SENSITIVE_DATA_TREATMENT review without deciding final legal classification, legal basis, necessity, retention, consent, disclosure or incident obligations.",
+  "global_boundaries": {
+    "potentially_sensitive_flag_is_final_legal_classification": false,
+    "technical_minimization_rule_is_approved_legal_policy": false,
+    "absence_of_explicit_health_column_means_sensitive_data_impossible": false,
+    "rls_enabled_means_sensitive_data_treatment_approved": false,
+    "private_schema_means_sensitive_data_treatment_approved": false,
+    "zero_direct_anon_authenticated_table_grants_means_all_access_paths_proven_safe": false,
+    "zero_customer_rows_means_sensitive_data_treatment_not_required": false,
+    "registry_can_close_sensitive_data_treatment": false,
+    "registry_can_mark_gate_ready": false,
+    "registry_can_create_evidence_ref_or_digest": false,
+    "registry_can_trigger_evidence_migration": false
+  },
+  "table_backed_surfaces": [
+    {
+      "surface_id": "student_profile_objective_and_context",
+      "source_tables": ["public.students"],
+      "field_markers": ["name", "email", "objective", "level", "last_workout", "next_session", "status"],
+      "risk_mechanism": "Objective and free-form/context-like fields can reveal limitations, health context or other sensitive information depending on actual content.",
+      "potentially_sensitive_source_flag": true,
+      "final_legal_classification": "UNRESOLVED_REQUIRES_INDEPENDENT_LEGAL_PRIVACY_REVIEW",
+      "technical_minimization_requirements_for_review": [
+        "collect only fields necessary for the coaching workflow",
+        "avoid placing health or injury narrative in general profile fields when a narrower structured field would suffice",
+        "keep organization/tenant isolation and purpose boundaries",
+        "do not copy student profile content into growth, advertising or engineering receipts"
+      ],
+      "approved_policy_state": "UNRESOLVED"
+    },
+    {
+      "surface_id": "training_prescription_notes_and_lineage",
+      "source_tables": ["public.training_plans", "public.training_plan_lineage"],
+      "field_markers": ["student_id", "notes", "next_session", "decision_reason", "trigger_context"],
+      "risk_mechanism": "Prescription notes, lineage reasons and trigger context can encode injury, pain, limitation or other sensitive coaching context.",
+      "potentially_sensitive_source_flag": true,
+      "final_legal_classification": "UNRESOLVED_REQUIRES_INDEPENDENT_LEGAL_PRIVACY_REVIEW",
+      "technical_minimization_requirements_for_review": [
+        "avoid unnecessary diagnostic or clinical narrative",
+        "limit lineage context to what is necessary to explain the training decision",
+        "do not reuse prescription context for advertising or unrelated analytics",
+        "preserve human review for consequential coaching changes"
+      ],
+      "approved_policy_state": "UNRESOLVED"
+    },
+    {
+      "surface_id": "workout_feedback_pain_energy_and_notes",
+      "source_tables": ["public.workout_feedback"],
+      "field_markers": ["student_id", "perceived_exertion", "pain_score", "energy_score", "pain_location", "note"],
+      "risk_mechanism": "Pain score/location, exertion, energy and free-form feedback are explicit high-sensitivity candidates in the product context.",
+      "potentially_sensitive_source_flag": true,
+      "final_legal_classification": "UNRESOLVED_REQUIRES_INDEPENDENT_LEGAL_PRIVACY_REVIEW",
+      "technical_minimization_requirements_for_review": [
+        "collect only the feedback needed for training follow-up",
+        "do not infer diagnosis from pain or energy fields",
+        "do not place feedback content in UTMs, advertising payloads or unnecessary logs",
+        "separate student feedback from growth and billing purposes"
+      ],
+      "approved_policy_state": "UNRESOLVED"
+    },
+    {
+      "surface_id": "decision_intelligence_context_and_outcomes",
+      "source_tables": ["public.decision_intelligence_runs", "public.decision_intelligence_outcomes"],
+      "field_markers": ["student_id", "brief", "outcome", "note", "decided_by"],
+      "risk_mechanism": "Decision Intelligence inputs/outputs can inherit sensitive context from student, training and feedback data even when the table has no health-specific column name.",
+      "potentially_sensitive_source_flag": true,
+      "final_legal_classification": "UNRESOLVED_REQUIRES_INDEPENDENT_LEGAL_PRIVACY_REVIEW",
+      "technical_minimization_requirements_for_review": [
+        "include only context necessary for the specific coach decision",
+        "preserve human-in-the-loop decision authority",
+        "do not send sensitive context to a future external AI provider before privacy/security/provider gates are satisfied",
+        "avoid copying full source records when a bounded summary or derived signal is sufficient"
+      ],
+      "approved_policy_state": "UNRESOLVED"
+    },
+    {
+      "surface_id": "coach_action_notes",
+      "source_tables": ["public.coach_action_events"],
+      "field_markers": ["student_id", "resolution", "note", "created_by"],
+      "risk_mechanism": "Coach action notes can reproduce sensitive student context even if the originating field was elsewhere.",
+      "potentially_sensitive_source_flag": true,
+      "final_legal_classification": "UNRESOLVED_REQUIRES_INDEPENDENT_LEGAL_PRIVACY_REVIEW",
+      "technical_minimization_requirements_for_review": [
+        "store only action context necessary for follow-up and audit",
+        "avoid duplicating full pain/injury narratives",
+        "do not use action notes as marketing attributes",
+        "keep tenant-scoped access controls"
+      ],
+      "approved_policy_state": "UNRESOLVED"
+    },
+    {
+      "surface_id": "student_access_security_identifiers_and_alerts",
+      "source_tables": ["public.student_access_links", "private.student_access_security_events", "private.student_access_security_signals", "private.student_access_alert_delivery_receipts"],
+      "field_markers": ["token_hash", "student_id", "organization_id", "operation", "outcome", "subject_key", "destination_fingerprint", "controlled_proof_marker"],
+      "risk_mechanism": "Security telemetry can identify or link a student even when it should not contain coaching/health content; alert delivery creates a boundary where over-sharing must be prevented.",
+      "potentially_sensitive_source_flag": false,
+      "sensitive_content_ingress_should_be_prohibited": true,
+      "final_legal_classification": "UNRESOLVED_REQUIRES_INDEPENDENT_LEGAL_PRIVACY_REVIEW",
+      "technical_minimization_requirements_for_review": [
+        "use identifiers/fingerprints and bounded event metadata instead of workout or health narrative",
+        "do not place raw tokens or secrets in receipts/alerts",
+        "do not place pain, injury or workout-note content in external alert payloads",
+        "retain only event fields needed for security detection, investigation and reviewed retention"
+      ],
+      "approved_policy_state": "UNRESOLVED"
+    },
+    {
+      "surface_id": "growth_attribution_and_marketing_boundary",
+      "source_tables": ["private.growth_events", "private.growth_attribution", "private.growth_capture_failures"],
+      "field_markers": ["actor_user_id", "organization_id", "event_name", "source_entity_table", "source_entity_id", "first_source", "first_medium", "first_campaign", "first_term", "first_content", "last_source", "last_medium", "last_campaign", "last_term", "last_content"],
+      "risk_mechanism": "Attribution and marketing fields could accidentally receive sensitive free text or derived health/fitness targeting if ingestion boundaries are not enforced.",
+      "potentially_sensitive_source_flag": false,
+      "sensitive_content_ingress_should_be_prohibited": true,
+      "final_legal_classification": "UNRESOLVED_REQUIRES_INDEPENDENT_LEGAL_PRIVACY_REVIEW",
+      "technical_minimization_requirements_for_review": [
+        "never encode pain, injury, health, workout notes or sensitive student context into UTM/source/term/content values",
+        "do not use sensitive student information for ad targeting",
+        "keep growth events non-authoritative for external readiness",
+        "use minimum approved identifiers and event names only after applicable privacy/marketing review"
+      ],
+      "approved_policy_state": "UNRESOLVED"
+    }
+  ],
+  "non_table_surfaces": [
+    {
+      "surface_id": "support_and_dsr_free_form_ingress",
+      "source_document_markers": ["suporte", "solicitações de direitos", "não enviar excesso"],
+      "risk_mechanism": "Users may voluntarily send sensitive content in support or rights-request channels even when the product did not request it.",
+      "technical_minimization_requirements_for_review": [
+        "request only information necessary to authenticate and resolve the request",
+        "warn against sending unnecessary health or workout detail",
+        "separate request identity proof from unrelated support content",
+        "avoid copying raw sensitive submissions into engineering receipts"
+      ],
+      "approved_policy_state": "UNRESOLVED"
+    },
+    {
+      "surface_id": "incident_response_sensitive_data_handling",
+      "source_document_markers": ["Proteger tenants e dados potencialmente sensíveis", "blast radius", "Potentially sensitive student data", "somente dados sintéticos/non-customer"],
+      "risk_mechanism": "Incident investigation can expand access/copying of sensitive student content unless blast-radius and evidence collection are minimized.",
+      "technical_minimization_requirements_for_review": [
+        "inspect no more personal data than necessary to establish incident facts",
+        "use minimized references/digests where possible",
+        "do not copy secrets or unrelated tenant data into incident records",
+        "exercise sensitive-data scenarios only with synthetic/non-customer fixtures until real authority exists"
+      ],
+      "approved_policy_state": "UNRESOLVED"
+    }
+  ],
+  "observed_access_control_context": {
+    "reviewed_public_table_count": 8,
+    "reviewed_public_rls_enabled_count": 8,
+    "reviewed_private_table_count": 6,
+    "anon_authenticated_direct_table_grant_count": 0,
+    "interpretation": "These are bounded technical observations. They do not prove legal minimization sufficiency, all access paths, or final sensitive-data treatment readiness."
+  }
+}
