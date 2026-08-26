@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "status": "TECHNICAL_BILLING_LIFECYCLE_SURFACE_REGISTRY_R2_SOURCE_RECONCILED_POLICY_UNRESOLVED_NOT_CUSTOMER_TERMS_NOT_EVIDENCE",
+  "project": "FitNexus Coach BlackGold",
+  "purpose": "Source-reconciled technical inventory of subscription, checkout, billing-event and provider-state surfaces relevant to the still-open BILLING_CANCELLATION_REFUND_POLICY decision. Field markers are restricted to names observed in the current database schema and expected migration corpus; this registry does not decide customer-facing policy or provider behavior.",
+  "canonical_open_decision": {
+    "id": "BILLING_CANCELLATION_REFUND_POLICY",
+    "state": "OPEN",
+    "applies_to": ["legal_terms_of_use"],
+    "required": "Approved trial, renewal, cancellation, refund/withdrawal, delinquency and reactivation policy.",
+    "resolution_authority": "business plus legal review after real billing authority"
+  },
+  "source_reconciliation": {
+    "remote_schema_observed_at_utc": "2026-08-26T14:53:30.123086+00:00",
+    "historical_stage82_registry_blob": "8df44e092680c5dba82d602efa23872124daedd0",
+    "historical_false_or_unproven_markers_removed": [
+      "canceled_at",
+      "delinquent_since",
+      "previous_state",
+      "new_state",
+      "source",
+      "reason",
+      "actor_user_id",
+      "occurred_at",
+      "external_charge_ref",
+      "processing_error",
+      "matched_organization_id",
+      "matched_subscription_id",
+      "effective_to",
+      "percentage_bps",
+      "fixed_fee_minor",
+      "tax_bps",
+      "source_ref",
+      "lifecycle_state",
+      "deactivated_at",
+      "evidence_ref",
+      "evidence_kind",
+      "evidence_value",
+      "evidence_status",
+      "observed_at"
+    ],
+    "representative_authoritative_markers_added": [
+      "from_status",
+      "to_status",
+      "authority_source",
+      "external_event_ref",
+      "effective_at",
+      "provider_checkout_ref",
+      "auth_verified",
+      "organization_id",
+      "provider_subscription_ref",
+      "effective_until",
+      "variable_bps",
+      "fixed_amount_minor",
+      "contractual",
+      "lifecycle",
+      "provider_environment_id",
+      "credentials_verified_at",
+      "proof_completed_at",
+      "attested_at"
+    ]
+  },
+  "global_boundaries": {
+    "database_status_enum_is_customer_policy": false,
+    "technical_cancel_flag_is_approved_cancellation_rule": false,
+    "current_period_end_is_approved_service_entitlement_end": false,
+    "status_transition_is_approved_delinquency_grace_rule": false,
+    "canceled_checkout_status_is_refund_or_charge_cancellation_evidence": false,
+    "webhook_event_is_approved_customer_terms": false,
+    "provider_selected_means_provider_active": false,
+    "provider_capabilities_json_is_verified_production_refund_capability": false,
+    "zero_current_billing_rows_means_policy_not_required": false,
+    "registry_can_close_billing_cancellation_refund_policy": false,
+    "registry_can_modify_terms_of_use": false,
+    "registry_can_mark_legal_terms_gate_ready": false,
+    "registry_can_create_evidence_ref_or_digest": false,
+    "registry_can_trigger_evidence_migration": false
+  },
+  "technical_surfaces": [
+    {
+      "surface_id": "trial_lifecycle",
+      "source_tables": ["public.organization_subscriptions", "public.subscription_plans"],
+      "field_markers": ["status", "trial_started_at", "trial_ends_at", "trial_days"],
+      "technical_observation": "The current model represents trial state and trial boundaries. Those fields do not define withdrawal rights, cancellation timing, conversion behavior or customer notice obligations.",
+      "policy_questions_for_future_real_review": [
+        "When and how may a customer cancel during trial?",
+        "What happens to access after trial cancellation?",
+        "What notice is required before trial conversion or expiration?",
+        "How does the policy behave while billing authority is unavailable?"
+      ],
+      "approved_policy_state": "UNRESOLVED_AFTER_REAL_BILLING_AUTHORITY_BUSINESS_PLUS_LEGAL_REVIEW"
+    },
+    {
+      "surface_id": "paid_period_and_entitlement_boundary",
+      "source_tables": ["public.organization_subscriptions", "public.subscription_plan_prices"],
+      "field_markers": ["current_period_start", "current_period_end", "billing_interval", "amount_minor", "currency"],
+      "technical_observation": "Current billing-period and price markers exist technically. They do not establish post-cancellation service entitlement, refund amount, renewal disclosure or price-change policy.",
+      "policy_questions_for_future_real_review": [
+        "Does paid access continue through current_period_end after cancellation?",
+        "Under what reviewed circumstances may access end earlier?",
+        "Do monthly and yearly plans have different cancellation or refund rules?",
+        "How are renewal and price changes disclosed?"
+      ],
+      "approved_policy_state": "UNRESOLVED_AFTER_REAL_BILLING_AUTHORITY_BUSINESS_PLUS_LEGAL_REVIEW"
+    },
+    {
+      "surface_id": "cancel_at_period_end_intent",
+      "source_tables": ["public.organization_subscriptions"],
+      "field_markers": ["cancel_at_period_end", "status", "current_period_end", "updated_at"],
+      "technical_observation": "The schema contains cancel_at_period_end but no dedicated canceled_at column in the current authoritative schema. The flag is therefore only a technical intent marker, not an approved customer cancellation rule or effective-date record.",
+      "policy_questions_for_future_real_review": [
+        "What customer action may set cancel_at_period_end?",
+        "What confirmation must be shown or sent?",
+        "Can a scheduled cancellation be reversed before the period ends?",
+        "Which independently reviewed event establishes effective cancellation?"
+      ],
+      "approved_policy_state": "UNRESOLVED_AFTER_REAL_BILLING_AUTHORITY_BUSINESS_PLUS_LEGAL_REVIEW"
+    },
+    {
+      "surface_id": "delinquency_and_recovery",
+      "source_tables": ["public.organization_subscriptions", "public.subscription_authority_events"],
+      "field_markers": ["status", "event_type", "from_status", "to_status", "authority_source", "effective_at"],
+      "technical_observation": "The current model can represent subscription status and audited transitions but has no dedicated delinquent_since column in the authoritative schema. Status transitions do not establish grace duration, retry cadence, suspension timing, recovery rules or customer notice.",
+      "policy_questions_for_future_real_review": [
+        "Which provider-confirmed event moves a subscription into delinquency?",
+        "Is there a grace period and, if so, what independently reviewed rule defines it?",
+        "What product access changes are allowed during delinquency?",
+        "What retry, recovery and communication rules apply?",
+        "When may delinquency lead to terminal cancellation?"
+      ],
+      "approved_policy_state": "UNRESOLVED_AFTER_REAL_BILLING_AUTHORITY_BUSINESS_PLUS_LEGAL_REVIEW"
+    },
+    {
+      "surface_id": "terminal_subscription_cancellation",
+      "source_tables": ["public.organization_subscriptions", "public.subscription_authority_events"],
+      "field_markers": ["status", "event_type", "from_status", "to_status", "authority_source", "external_event_ref", "effective_at"],
+      "technical_observation": "Terminal subscription state can be reflected by status plus authority-event transitions. Those technical records do not define cancellation rights, refund eligibility, post-cancellation access, customer communication or data-retention treatment.",
+      "policy_questions_for_future_real_review": [
+        "Which causes may produce terminal cancellation?",
+        "What real provider or owner evidence authorizes each cancellation path?",
+        "What customer confirmation and effective date are required?",
+        "What happens to account access and retained data after cancellation?"
+      ],
+      "approved_policy_state": "UNRESOLVED_AFTER_REAL_BILLING_AUTHORITY_BUSINESS_PLUS_LEGAL_REVIEW"
+    },
+    {
+      "surface_id": "checkout_intent_lifecycle",
+      "source_tables": ["public.billing_checkout_intents"],
+      "field_markers": ["status", "amount_minor", "currency", "provider_checkout_ref", "checkout_url", "expires_at", "created_at", "updated_at"],
+      "technical_observation": "Checkout intents contain provider_checkout_ref and lifecycle metadata. A checkout-intent status does not establish that money moved, that a refund occurred or that a customer cancellation right was exercised.",
+      "policy_questions_for_future_real_review": [
+        "How are abandoned, expired, failed and canceled checkout attempts communicated?",
+        "How are duplicate or repeated payment attempts handled?",
+        "What provider evidence is required before treating a charge as paid?",
+        "How must failed, duplicated or disputed charges be escalated?"
+      ],
+      "approved_policy_state": "UNRESOLVED_AFTER_REAL_BILLING_AUTHORITY_BUSINESS_PLUS_LEGAL_REVIEW"
+    },
+    {
+      "surface_id": "webhook_reconciliation_and_payment_events",
+      "source_tables": ["public.billing_webhook_receipts"],
+      "field_markers": ["provider_event_id", "event_type", "payload_sha256", "auth_verified", "processing_status", "organization_id", "provider_subscription_ref", "received_at", "processed_at", "created_at"],
+      "technical_observation": "Webhook receipts provide authenticated-event and processing metadata using the current schema. They remain operational reconciliation records, not customer terms or proof of provider financial truth without the authorized billing evidence chain.",
+      "policy_questions_for_future_real_review": [
+        "Which real provider events are authoritative for payment, cancellation, delinquency and refund transitions?",
+        "How are duplicate, late, unauthenticated or failed events handled?",
+        "What customer communication follows a material billing-state reconciliation?",
+        "Which receipts must be retained under the future approved retention matrix?"
+      ],
+      "approved_policy_state": "UNRESOLVED_AFTER_REAL_BILLING_AUTHORITY_BUSINESS_PLUS_LEGAL_REVIEW"
+    },
+    {
+      "surface_id": "subscription_authority_audit_trail",
+      "source_tables": ["public.subscription_authority_events"],
+      "field_markers": ["organization_id", "event_type", "from_plan_code", "to_plan_code", "from_status", "to_status", "authority_source", "external_event_ref", "payload_sha256", "effective_at", "created_at"],
+      "technical_observation": "The current authority-event ledger captures plan/status transitions, source metadata, external references and digests. It is an audit surface, not the customer contract, refund decision or legal approval record.",
+      "policy_questions_for_future_real_review": [
+        "Which cancellation, refund and delinquency decisions require an authority event?",
+        "Which authority_source values are allowed after real billing activation?",
+        "Which provider or human decisions require a separate receipt?",
+        "How long must this audit trail be retained?"
+      ],
+      "approved_policy_state": "UNRESOLVED_AFTER_REAL_BILLING_AUTHORITY_BUSINESS_PLUS_LEGAL_REVIEW"
+    },
+    {
+      "surface_id": "plan_price_and_fee_assumption_boundaries",
+      "source_tables": ["public.subscription_plans", "public.subscription_plan_prices", "public.billing_fee_assumptions"],
+      "field_markers": ["trial_days", "billing_interval", "amount_minor", "effective_from", "effective_until", "variable_bps", "fixed_amount_minor", "contractual", "evidence_version", "evidence_checked_at", "notes"],
+      "technical_observation": "Plan, price and fee-assumption metadata can support calculations and versioning. Current fields use effective_until, variable_bps and fixed_amount_minor; none establishes refund amount, proration, tax treatment, fee pass-through or required customer disclosure.",
+      "policy_questions_for_future_real_review": [
+        "Under which reviewed circumstances is a refund full, partial, prorated or unavailable?",
+        "How are taxes and real provider fees treated after provider evidence exists?",
+        "Which price and evidence version applies when a financial reversal is reviewed?",
+        "What disclosure is required for renewals and price changes?"
+      ],
+      "approved_policy_state": "UNRESOLVED_AFTER_REAL_BILLING_AUTHORITY_BUSINESS_PLUS_LEGAL_REVIEW"
+    },
+    {
+      "surface_id": "provider_selection_and_external_billing_boundary",
+      "source_tables": ["public.billing_provider_registry", "public.billing_provider_selections", "private.billing_provider_external_evidence"],
+      "field_markers": ["provider_code", "lifecycle", "state", "selected_at", "activated_at", "evidence_version", "provider_environment_id", "credentials_verified_at", "proof_completed_at", "attested_at"],
+      "technical_observation": "The current schema separates provider registry lifecycle, selection state and private external-evidence fields. Asaas remains selected_pending_credentials and inactive; provider selection or registry capabilities do not prove real production refund/cancellation behavior.",
+      "policy_questions_for_future_real_review": [
+        "Which provider-native cancellation and refund capabilities are actually available after real activation?",
+        "Which provider receipts are required for a real financial reversal?",
+        "What happens when reviewed customer policy requires an outcome that provider mechanics cannot complete automatically?",
+        "Which provider timing, fee or operational constraints require customer disclosure after real evidence review?"
+      ],
+      "approved_policy_state": "UNRESOLVED_AFTER_REAL_BILLING_AUTHORITY_BUSINESS_PLUS_LEGAL_REVIEW"
+    }
+  ],
+  "cross_surface_unresolved_policy_decisions": [
+    "trial cancellation and conversion behavior",
+    "renewal disclosure",
+    "effective cancellation timing",
+    "paid access after cancellation",
+    "delinquency trigger, grace, retry and suspension",
+    "reactivation conditions",
+    "refund or withdrawal eligibility and review window",
+    "full versus partial versus prorated refund",
+    "tax and real provider fee handling",
+    "duplicate or disputed charge handling",
+    "customer confirmation and billing communications",
+    "provider cancellation and refund mechanics after real activation",
+    "data and access treatment after cancellation",
+    "retention-matrix dependency",
+    "terms acceptance/versioning dependency"
+  ],
+  "resolution_authority": "business plus legal review after real billing authority"
+}
