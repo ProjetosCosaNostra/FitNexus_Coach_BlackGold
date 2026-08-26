@@ -77,21 +77,21 @@
       "identity_arguments": "text",
       "roles": ["anon", "authenticated"],
       "boundary": "approved_published_terms_metadata_read",
-      "reason": "Stage86 repository-only Terms migration exposes only the fail-closed resolver for an already registered approved/published Terms version; no draft fallback or client mutation authority exists."
+      "reason": "Stage86/Stage89 Terms infrastructure exposes only the fail-closed resolver for an already registered approved/published Terms version; no draft fallback or client mutation authority exists."
     },
     {
       "function": "accept_current_terms_v1",
       "identity_arguments": "uuid,text,text,text,text,text",
       "roles": ["authenticated"],
       "boundary": "authenticated_terms_acceptance_append",
-      "reason": "Stage86 repository-only Terms migration permits authenticated append-only acceptance only after server-derived actor identity, organization membership and exact current version/digest validation."
+      "reason": "Stage86/Stage89 Terms infrastructure permits authenticated append-only acceptance only after server-derived actor identity, organization membership and exact current version/digest validation."
     },
     {
       "function": "get_my_terms_acceptance_gate_v1",
       "identity_arguments": "uuid,text",
       "roles": ["authenticated"],
       "boundary": "authenticated_version_aware_terms_gate_read",
-      "reason": "Stage86 repository-only Terms migration exposes a tenant-scoped version-aware acceptance gate that fails closed when no approved/published current Terms record exists."
+      "reason": "Stage86/Stage89 Terms infrastructure exposes a tenant-scoped version-aware acceptance gate that fails closed when no approved/published current Terms record exists."
     }
   ],
   "stage33_transition": {
@@ -119,16 +119,40 @@
     "migration_name": "stage85_terms_acceptance_registry_ledger",
     "migration_file": "04_backend_supabase/migrations/20260826180000_stage85_terms_acceptance_registry_ledger.sql",
     "migration_blob_sha": "a9a77ebbf61f464e5549f338362cdd3a59df8df1",
-    "migration_ledger_state": "repo_only",
-    "remote_applied": false,
-    "remote_version": null,
-    "remote_current_new_terms_exposure_count": 0,
+    "migration_ledger_state": "remote_reconciled",
+    "remote_applied": true,
+    "remote_version": "20260826184218",
+    "remote_current_new_terms_exposure_count": 3,
     "repository_target_new_terms_function_count": 3,
     "repository_target_total_security_definer_exposure_count": 4,
     "repository_target_anon_exposure_count": 1,
     "repository_target_authenticated_exposure_count": 4,
     "terms_registry_seeded": false,
     "acceptance_seeded": false,
+    "legal_terms_gate_promoted": false
+  },
+  "stage89_terms_remote_reconciliation": {
+    "baseline_main_sha": "e18ebc4ef534238348b57b699abacc122857e8c0",
+    "migration_name": "stage85_terms_acceptance_registry_ledger",
+    "migration_blob_sha": "a9a77ebbf61f464e5549f338362cdd3a59df8df1",
+    "remote_version": "20260826184218",
+    "remote_applied": true,
+    "observed_post_apply_at_utc": "2026-08-26T18:42:39.672815Z",
+    "observed_privileges_at_utc": "2026-08-26T19:10:54.951712Z",
+    "terms_registry_exists": true,
+    "acceptance_ledger_exists": true,
+    "terms_registry_rows": 0,
+    "acceptance_ledger_rows": 0,
+    "terms_rpc_exposure_count": 3,
+    "get_current_terms_v1_roles": ["anon", "authenticated"],
+    "accept_current_terms_v1_roles": ["authenticated"],
+    "get_my_terms_acceptance_gate_v1_roles": ["authenticated"],
+    "student_direct_route_anon_execute_count": 0,
+    "student_direct_route_authenticated_execute_count": 0,
+    "issue_student_access_token_v2_anon_execute": false,
+    "issue_student_access_token_v2_authenticated_execute": true,
+    "terms_artifact_registered": false,
+    "real_acceptance_collected": false,
     "legal_terms_gate_promoted": false
   }
 }
