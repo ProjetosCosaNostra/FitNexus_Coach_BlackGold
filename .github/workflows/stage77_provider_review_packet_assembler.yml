@@ -1,0 +1,68 @@
+name: Stage77 Provider Review Packet Assembler
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "04_backend_supabase/stage77_provider_review_packet_assembler_authority.json"
+      - "04_backend_supabase/tools/build_stage77_provider_review_packet.py"
+      - "04_backend_supabase/tools/verify_stage77_provider_review_packet_assembler.py"
+      - "10_compliance/review/STAGE77_STAGE76_DIGEST_CANDIDATE_SET_TEMPLATE.json"
+      - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+      - "04_backend_supabase/stage76_provider_evidence_acquisition_boundary_authority.json"
+      - ".github/workflows/stage77_provider_review_packet_assembler.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-provider-review-packet-assembler:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify Stage77 provider review packet assembler contract
+        run: python 04_backend_supabase/tools/verify_stage77_provider_review_packet_assembler.py
+
+      - name: Prove committed placeholder Stage76 candidate set is refused
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f /tmp/stage77_placeholder_packet.json /tmp/stage77_placeholder.log
+          if python 04_backend_supabase/tools/build_stage77_provider_review_packet.py \
+            --candidate-manifest 10_compliance/review/STAGE77_STAGE76_DIGEST_CANDIDATE_SET_TEMPLATE.json \
+            --source-sha "${{ github.event.pull_request.head.sha }}" \
+            --output /tmp/stage77_placeholder_packet.json \
+            > /tmp/stage77_placeholder.log 2>&1; then
+            echo "Committed placeholder candidate set unexpectedly produced a Stage77 packet" >&2
+            exit 1
+          fi
+          test ! -e /tmp/stage77_placeholder_packet.json
+          grep -F "STAGE77_PROVIDER_REVIEW_PACKET=FAIL" /tmp/stage77_placeholder.log >/dev/null
+          grep -F "FAILURE_CLASS=BGF-STAGE77-PROVIDER-REVIEW-PACKET-ASSEMBLER-GUARD-745" /tmp/stage77_placeholder.log >/dev/null
+          echo "PLACEHOLDER_STAGE76_CANDIDATE_SET_REFUSED=PASS"
+
+      - name: Upload non-attesting Stage77 assembler boundary packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage77-provider-review-packet-assembler-${{ github.event.pull_request.head.sha }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            04_backend_supabase/stage77_provider_review_packet_assembler_authority.json
+            04_backend_supabase/tools/build_stage77_provider_review_packet.py
+            10_compliance/review/STAGE77_STAGE76_DIGEST_CANDIDATE_SET_TEMPLATE.json
+
+      - name: Preserve independent legal privacy review boundary
+        run: |
+          echo "PROVIDER_FACTS_ATTESTED=false"
+          echo "LEGAL_REVIEW_PERFORMED=false"
+          echo "TARGET_DECISION_CLOSED=false"
+          echo "GATE_PROMOTION=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "REMOTE_MUTATION=false"
