@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE84_TERMS_ACCEPTANCE_VERSIONING_IMPLEMENTATION_PREPARATION",
+  "baseline_main_sha": "07366968780d6efa732022237116eb7f79201646",
+  "current_state": "TERMS_ACCEPTANCE_VERSIONING_TECHNICAL_PREPARATION_ONLY_NO_APPROVED_TERMS_NO_REMOTE_MUTATION_NO_GATE_PROMOTION",
+  "upstream_stage83_green": {
+    "merged_main_sha": "07366968780d6efa732022237116eb7f79201646",
+    "green_head_sha": "0062fa75bcc0ceb66172f9c864453e7550438b72",
+    "dedicated_ci_run_id": 32990197181,
+    "dedicated_ci_conclusion": "success",
+    "flutter_quality_gate_run_id": 32990197521,
+    "flutter_quality_gate_conclusion": "success",
+    "artifact_id": 9614302419,
+    "artifact_digest": "sha256:5b6c13ce3f2cbb09447cd90fd689151bd63d0419fd52a6b2b66acff87fec4e62",
+    "artifact_is_legal_or_gate_evidence": false
+  },
+  "canonical_target_open_decision": {
+    "id": "TERMS_ACCEPTANCE_VERSIONING",
+    "state": "OPEN",
+    "affected_gates": ["legal_terms_of_use"],
+    "required": "Production mechanism binding user acceptance to immutable terms version/digest.",
+    "resolution_authority": "product implementation plus independent review",
+    "stage84_can_close_decision": false
+  },
+  "sealed_inputs": {
+    "open_decisions": "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json",
+    "open_decisions_blob": "215d527c1cb79d7b72697f03f1f84887e3a72d95",
+    "terms_candidate": "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md",
+    "terms_candidate_blob": "0652fb664db57842a8d9dd5d22f0b0b48d645d2d",
+    "stage83_authority": "04_backend_supabase/stage83_billing_policy_review_questionnaire_skeleton_authority.json",
+    "stage83_authority_blob": "ab273d380b85a032b83b45679f420fd49a38f6ac"
+  },
+  "fresh_remote_read_only_observation": {
+    "source": "Supabase information_schema read-only",
+    "terms_or_acceptance_schema_surface_found": false,
+    "matching_business_terms_tables": [],
+    "matching_business_acceptance_tables": [],
+    "non_terms_false_positive_columns": ["private.growth_attribution.first_term", "private.growth_attribution.last_term"],
+    "remote_mutation_performed": false
+  },
+  "candidate_terms_document_registry_contract": {
+    "purpose": "Bind future independently approved and published Terms artifacts to immutable version and SHA-256 without turning a draft into active customer terms.",
+    "required_fields": [
+      "document_kind",
+      "version",
+      "sha256",
+      "effective_at",
+      "public_url",
+      "approval_reference",
+      "publication_reference",
+      "created_at"
+    ],
+    "immutability_requirements": [
+      "version cannot be overwritten in place",
+      "sha256 cannot be changed after registration",
+      "a new material Terms text requires a new version/digest record",
+      "no registry row may be treated as active without independent approved publication evidence"
+    ],
+    "stage84_materializes_table": false
+  },
+  "candidate_acceptance_ledger_contract": {
+    "purpose": "Append-only evidence that a real authenticated user accepted one exact approved Terms version/digest.",
+    "required_fields": [
+      "acceptance_id",
+      "actor_user_id",
+      "organization_id",
+      "document_kind",
+      "terms_version",
+      "terms_sha256",
+      "accepted_at",
+      "acceptance_surface",
+      "idempotency_key",
+      "created_at"
+    ],
+    "write_authority_requirements": [
+      "authenticated actor identity is server-derived",
+      "client cannot invent an unregistered terms version or digest",
+      "accepted version and digest must resolve to the same future approved published registry row",
+      "duplicate submission is idempotent",
+      "acceptance history is append-only and auditable"
+    ],
+    "stage84_materializes_table": false
+  },
+  "implementation_sequence_after_stage84": [
+    "prepare exact migration candidate and RLS/RPC contract in a later technical stage",
+    "prove deterministic schema and tenant/actor isolation before remote mutation",
+    "promote migration through the canonical migration ledger only after GREEN CI",
+    "do not register or publish any Terms artifact until independent approved Terms evidence exists",
+    "later bind real acceptance UI to the exact approved registry version/digest",
+    "only independent review plus production evidence may close TERMS_ACCEPTANCE_VERSIONING"
+  ],
+  "hard_boundaries": {
+    "terms_candidate_is_approved": false,
+    "terms_candidate_is_published": false,
+    "terms_candidate_has_legal_effect": false,
+    "legal_review_completed": false,
+    "billing_policy_approved": false,
+    "terms_registry_row_created": false,
+    "acceptance_row_created": false,
+    "migration_created": false,
+    "migration_applied": false,
+    "supabase_mutation_allowed": false,
+    "provider_call_allowed": false,
+    "network_side_effect_allowed": false,
+    "terms_of_use_modified": false,
+    "target_decision_may_be_closed": false,
+    "evidence_ref_creation_allowed": false,
+    "evidence_digest_promotion_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "legal_terms_gate_ready": false,
+    "deployment_allowed": false,
+    "controlled_launch_promoted": false,
+    "paid_media_promoted": false,
+    "launch_promoted": false
+  },
+  "failure_classes": [
+    "BGF-STAGE84-DRAFT-TERMS-AS-ACTIVE-CONTRACT-830",
+    "BGF-STAGE84-CLIENT-SUPPLIED-TERMS-DIGEST-AUTHORITY-831",
+    "BGF-STAGE84-MUTABLE-TERMS-VERSION-RECORD-832",
+    "BGF-STAGE84-ACCEPTANCE-LEDGER-NON-IDEMPOTENT-833",
+    "BGF-STAGE84-ACCEPTANCE-WITHOUT-AUTHENTICATED-ACTOR-834",
+    "BGF-STAGE84-TECHNICAL-PREPARATION-AS-LEGAL-APPROVAL-835",
+    "BGF-STAGE84-PREMATURE-REMOTE-MIGRATION-836",
+    "BGF-STAGE84-SELF-REFERENTIAL-PIN-CASCADE-837",
+    "BGF-STAGE84-PREMATURE-TERMS-GATE-PROMOTION-838",
+    "BGF-STAGE84-TERMS-ACCEPTANCE-VERSIONING-PREPARATION-GUARD-839",
+    "BGF-STAGE84-UPSTREAM-BOUNDARY-PATH-SCHEMA-MISMATCH-840"
+  ],
+  "gates": {
+    "stage84_terms_acceptance_versioning_preparation": "REPO_ONLY_PENDING_CI",
+    "terms_acceptance_versioning": "OPEN_IMPLEMENTATION_NOT_YET_MATERIALIZED_OR_INDEPENDENTLY_REVIEWED",
+    "legal_terms_of_use": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Stage85 may prepare an exact migration/RLS/RPC implementation candidate for immutable Terms registry plus append-only acceptance ledger, still without applying remotely or registering the draft Terms candidate.",
+    "remote_mutation_allowed": false,
+    "target_decision_still_open": true
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "status": "TECHNICAL_IMPLEMENTATION_PREPARATION_ONLY_NOT_TERMS_NOT_APPROVAL_NOT_EVIDENCE",
+  "project": "FitNexus Coach BlackGold",
+  "target_open_decision": "TERMS_ACCEPTANCE_VERSIONING",
+  "current_source_facts": {
+    "terms_candidate_path": "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md",
+    "terms_candidate_status": "DRAFT_UNREVIEWED_NOT_PUBLISHED_NOT_LEGAL_EVIDENCE",
+    "terms_candidate_requires_immutable_terms_version": true,
+    "terms_candidate_requires_sha256_digest": true,
+    "terms_candidate_requires_effective_date": true,
+    "terms_candidate_requires_stable_public_url": true,
+    "terms_candidate_requires_acceptance_evidence_bound_to_version": true,
+    "terms_candidate_requires_version_history": true,
+    "remote_terms_acceptance_schema_present": false
+  },
+  "implementation_units": [
+    {
+      "unit_id": "terms_document_registry",
+      "goal": "Immutable registry for future independently approved and published Terms artifacts.",
+      "minimum_fields": ["document_kind", "version", "sha256", "effective_at", "public_url", "approval_reference", "publication_reference", "created_at"],
+      "required_invariants": [
+        "document_kind plus version is unique",
+        "document_kind plus sha256 is unique",
+        "version and sha256 are immutable after registration",
+        "no draft file is auto-promoted into the registry",
+        "active customer-facing status requires separate approved publication authority"
+      ],
+      "materialized_in_stage84": false
+    },
+    {
+      "unit_id": "terms_acceptance_ledger",
+      "goal": "Append-only acceptance evidence for one authenticated actor and one exact approved Terms version/digest.",
+      "minimum_fields": ["acceptance_id", "actor_user_id", "organization_id", "document_kind", "terms_version", "terms_sha256", "accepted_at", "acceptance_surface", "idempotency_key", "created_at"],
+      "required_invariants": [
+        "actor identity is derived from authenticated server context",
+        "client cannot select arbitrary digest authority",
+        "version and digest must resolve to one registered approved published Terms artifact",
+        "duplicate retries are idempotent",
+        "acceptance history cannot be overwritten in place",
+        "tenant-scoped reads cannot expose another organization acceptance history"
+      ],
+      "materialized_in_stage84": false
+    },
+    {
+      "unit_id": "current_terms_resolver",
+      "goal": "Resolve the one customer-visible approved Terms artifact that the product is allowed to present for acceptance.",
+      "required_invariants": [
+        "resolver never chooses a draft candidate",
+        "resolver never trusts a client-provided version",
+        "resolver returns exact version, digest, effective date and stable URL",
+        "absence of an approved published artifact fails closed instead of fabricating one"
+      ],
+      "materialized_in_stage84": false
+    },
+    {
+      "unit_id": "acceptance_gate",
+      "goal": "Allow future product flow to require acceptance only against exact approved Terms authority.",
+      "required_invariants": [
+        "acceptance requirement is version-aware",
+        "material Terms change can require new acceptance without rewriting historical evidence",
+        "no legal gate closes merely because the technical mechanism exists",
+        "independent review remains required"
+      ],
+      "materialized_in_stage84": false
+    }
+  ],
+  "verification_plan_for_later_implementation": [
+    "schema/parser contract tests",
+    "immutable version and digest regression",
+    "idempotent duplicate acceptance regression",
+    "forged client digest rejection",
+    "unauthenticated acceptance rejection",
+    "cross-tenant acceptance read/write denial",
+    "draft Terms cannot become current Terms regression",
+    "no-current-approved-Terms fail-closed regression",
+    "historical acceptance remains retrievable after later Terms version exists"
+  ],
+  "stage84_boundaries": {
+    "creates_sql_migration": false,
+    "applies_remote_ddl": false,
+    "inserts_terms_registry_data": false,
+    "collects_real_acceptance": false,
+    "publishes_terms": false,
+    "modifies_terms_candidate": false,
+    "performs_legal_review": false,
+    "closes_target_decision": false,
+    "marks_legal_terms_gate_ready": false,
+    "deploys": false,
+    "promotes_controlled_launch": false,
+    "promotes_paid_media": false
+  }
+}
