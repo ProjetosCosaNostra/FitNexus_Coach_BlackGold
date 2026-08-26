@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "input_kind": "REAL_RETENTION_DECISION_REVIEW_INPUT",
+  "status": "PLACEHOLDER_TEMPLATE_NOT_REAL_RETENTION_REVIEW",
+  "test_fixture": true,
+  "contains_placeholders": true,
+  "stage78_registry_git_blob": "9a5c8c549a26f04146298c8c1b52b2fb64a414ec",
+  "review_session_reference": "<REAL_TRACEABLE_REVIEW_SESSION_REFERENCE_REQUIRED>",
+  "reviewed_at_utc": "<REAL_TIMEZONE_AWARE_ISO8601_TIMESTAMP_REQUIRED>",
+  "participants": [
+    {
+      "role": "legal_review",
+      "reviewer_reference": "<REAL_TRACEABLE_REVIEWER_REFERENCE_REQUIRED>",
+      "review_artifact_path": "<REAL_NONEMPTY_UTF8_ARTIFACT_PATH_REQUIRED>"
+    },
+    {
+      "role": "privacy_review",
+      "reviewer_reference": "<REAL_TRACEABLE_REVIEWER_REFERENCE_REQUIRED>",
+      "review_artifact_path": "<REAL_NONEMPTY_UTF8_ARTIFACT_PATH_REQUIRED>"
+    },
+    {
+      "role": "operations_review",
+      "reviewer_reference": "<REAL_TRACEABLE_REVIEWER_REFERENCE_REQUIRED>",
+      "review_artifact_path": "<REAL_NONEMPTY_UTF8_ARTIFACT_PATH_REQUIRED>"
+    }
+  ],
+  "review_surfaces": [
+    {
+      "surface_id": "account_and_tenancy",
+      "reviewed_retention_criterion": "<REAL_REVIEWED_CRITERION_REQUIRED>",
+      "purpose_or_authority_reference": "<REAL_REVIEWED_REFERENCE_REQUIRED>",
+      "cancellation_effect": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "delinquency_effect": "<REAL_REVIEWED_DECISION_OR_NOT_APPLICABLE_REQUIRED>",
+      "backup_purge_or_expiration_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "legal_hold_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "end_of_retention_action": "<REAL_REVIEWED_DELETION_ANONYMIZATION_BLOCKING_OR_PRESERVATION_DECISION_REQUIRED>",
+      "security_audit_exception_or_none": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "review_material_reference": "<REAL_TRACEABLE_REVIEW_MATERIAL_REFERENCE_REQUIRED>",
+      "review_complete_for_surface": false
+    },
+    {
+      "surface_id": "student_identity_and_coaching_profile",
+      "reviewed_retention_criterion": "<REAL_REVIEWED_CRITERION_REQUIRED>",
+      "purpose_or_authority_reference": "<REAL_REVIEWED_REFERENCE_REQUIRED>",
+      "cancellation_effect": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "delinquency_effect": "<REAL_REVIEWED_DECISION_OR_NOT_APPLICABLE_REQUIRED>",
+      "backup_purge_or_expiration_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "legal_hold_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "end_of_retention_action": "<REAL_REVIEWED_DELETION_ANONYMIZATION_BLOCKING_OR_PRESERVATION_DECISION_REQUIRED>",
+      "security_audit_exception_or_none": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "review_material_reference": "<REAL_TRACEABLE_REVIEW_MATERIAL_REFERENCE_REQUIRED>",
+      "review_complete_for_surface": false
+    },
+    {
+      "surface_id": "training_prescription_templates_and_lineage",
+      "reviewed_retention_criterion": "<REAL_REVIEWED_CRITERION_REQUIRED>",
+      "purpose_or_authority_reference": "<REAL_REVIEWED_REFERENCE_REQUIRED>",
+      "cancellation_effect": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "delinquency_effect": "<REAL_REVIEWED_DECISION_OR_NOT_APPLICABLE_REQUIRED>",
+      "backup_purge_or_expiration_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "legal_hold_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "end_of_retention_action": "<REAL_REVIEWED_DELETION_ANONYMIZATION_BLOCKING_OR_PRESERVATION_DECISION_REQUIRED>",
+      "security_audit_exception_or_none": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "review_material_reference": "<REAL_TRACEABLE_REVIEW_MATERIAL_REFERENCE_REQUIRED>",
+      "review_complete_for_surface": false
+    },
+    {
+      "surface_id": "workout_execution_history",
+      "reviewed_retention_criterion": "<REAL_REVIEWED_CRITERION_REQUIRED>",
+      "purpose_or_authority_reference": "<REAL_REVIEWED_REFERENCE_REQUIRED>",
+      "cancellation_effect": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "delinquency_effect": "<REAL_REVIEWED_DECISION_OR_NOT_APPLICABLE_REQUIRED>",
+      "backup_purge_or_expiration_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "legal_hold_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "end_of_retention_action": "<REAL_REVIEWED_DELETION_ANONYMIZATION_BLOCKING_OR_PRESERVATION_DECISION_REQUIRED>",
+      "security_audit_exception_or_none": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "review_material_reference": "<REAL_TRACEABLE_REVIEW_MATERIAL_REFERENCE_REQUIRED>",
+      "review_complete_for_surface": false
+    },
+    {
+      "surface_id": "potentially_sensitive_workout_feedback",
+      "reviewed_retention_criterion": "<REAL_REVIEWED_CRITERION_REQUIRED>",
+      "purpose_or_authority_reference": "<REAL_REVIEWED_REFERENCE_REQUIRED>",
+      "cancellation_effect": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "delinquency_effect": "<REAL_REVIEWED_DECISION_OR_NOT_APPLICABLE_REQUIRED>",
+      "backup_purge_or_expiration_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "legal_hold_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "end_of_retention_action": "<REAL_REVIEWED_DELETION_ANONYMIZATION_BLOCKING_OR_PRESERVATION_DECISION_REQUIRED>",
+      "security_audit_exception_or_none": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "review_material_reference": "<REAL_TRACEABLE_REVIEW_MATERIAL_REFERENCE_REQUIRED>",
+      "review_complete_for_surface": false
+    },
+    {
+      "surface_id": "decision_intelligence_and_coach_action_history",
+      "reviewed_retention_criterion": "<REAL_REVIEWED_CRITERION_REQUIRED>",
+      "purpose_or_authority_reference": "<REAL_REVIEWED_REFERENCE_REQUIRED>",
+      "cancellation_effect": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "delinquency_effect": "<REAL_REVIEWED_DECISION_OR_NOT_APPLICABLE_REQUIRED>",
+      "backup_purge_or_expiration_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "legal_hold_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "end_of_retention_action": "<REAL_REVIEWED_DELETION_ANONYMIZATION_BLOCKING_OR_PRESERVATION_DECISION_REQUIRED>",
+      "security_audit_exception_or_none": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "review_material_reference": "<REAL_TRACEABLE_REVIEW_MATERIAL_REFERENCE_REQUIRED>",
+      "review_complete_for_surface": false
+    },
+    {
+      "surface_id": "student_access_security_and_abuse_telemetry",
+      "reviewed_retention_criterion": "<REAL_REVIEWED_CRITERION_REQUIRED>",
+      "purpose_or_authority_reference": "<REAL_REVIEWED_REFERENCE_REQUIRED>",
+      "cancellation_effect": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "delinquency_effect": "<REAL_REVIEWED_DECISION_OR_NOT_APPLICABLE_REQUIRED>",
+      "backup_purge_or_expiration_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "legal_hold_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "end_of_retention_action": "<REAL_REVIEWED_DELETION_ANONYMIZATION_BLOCKING_OR_PRESERVATION_DECISION_REQUIRED>",
+      "security_audit_exception_or_none": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "review_material_reference": "<REAL_TRACEABLE_REVIEW_MATERIAL_REFERENCE_REQUIRED>",
+      "review_complete_for_surface": false
+    },
+    {
+      "surface_id": "growth_attribution_and_funnel_telemetry",
+      "reviewed_retention_criterion": "<REAL_REVIEWED_CRITERION_REQUIRED>",
+      "purpose_or_authority_reference": "<REAL_REVIEWED_REFERENCE_REQUIRED>",
+      "cancellation_effect": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "delinquency_effect": "<REAL_REVIEWED_DECISION_OR_NOT_APPLICABLE_REQUIRED>",
+      "backup_purge_or_expiration_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "legal_hold_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "end_of_retention_action": "<REAL_REVIEWED_DELETION_ANONYMIZATION_BLOCKING_OR_PRESERVATION_DECISION_REQUIRED>",
+      "security_audit_exception_or_none": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "review_material_reference": "<REAL_TRACEABLE_REVIEW_MATERIAL_REFERENCE_REQUIRED>",
+      "review_complete_for_surface": false
+    },
+    {
+      "surface_id": "billing_subscription_and_webhook_history",
+      "reviewed_retention_criterion": "<REAL_REVIEWED_CRITERION_REQUIRED>",
+      "purpose_or_authority_reference": "<REAL_REVIEWED_REFERENCE_REQUIRED>",
+      "cancellation_effect": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "delinquency_effect": "<REAL_REVIEWED_DECISION_OR_NOT_APPLICABLE_REQUIRED>",
+      "backup_purge_or_expiration_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "legal_hold_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "end_of_retention_action": "<REAL_REVIEWED_DELETION_ANONYMIZATION_BLOCKING_OR_PRESERVATION_DECISION_REQUIRED>",
+      "security_audit_exception_or_none": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "review_material_reference": "<REAL_TRACEABLE_REVIEW_MATERIAL_REFERENCE_REQUIRED>",
+      "review_complete_for_surface": false
+    },
+    {
+      "surface_id": "governance_and_gate_evidence_metadata",
+      "reviewed_retention_criterion": "<REAL_REVIEWED_CRITERION_REQUIRED>",
+      "purpose_or_authority_reference": "<REAL_REVIEWED_REFERENCE_REQUIRED>",
+      "cancellation_effect": "<REAL_REVIEWED_DECISION_OR_NOT_APPLICABLE_REQUIRED>",
+      "delinquency_effect": "<REAL_REVIEWED_DECISION_OR_NOT_APPLICABLE_REQUIRED>",
+      "backup_purge_or_expiration_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "legal_hold_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "end_of_retention_action": "<REAL_REVIEWED_DELETION_ANONYMIZATION_BLOCKING_OR_PRESERVATION_DECISION_REQUIRED>",
+      "security_audit_exception_or_none": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "review_material_reference": "<REAL_TRACEABLE_REVIEW_MATERIAL_REFERENCE_REQUIRED>",
+      "review_complete_for_surface": false
+    },
+    {
+      "surface_id": "backup_restore_and_expiration",
+      "reviewed_retention_criterion": "<REAL_REVIEWED_BACKUP_RETENTION_OR_EXPIRATION_CRITERION_REQUIRED>",
+      "purpose_or_authority_reference": "<REAL_REVIEWED_REFERENCE_REQUIRED>",
+      "cancellation_effect": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "delinquency_effect": "<REAL_REVIEWED_DECISION_OR_NOT_APPLICABLE_REQUIRED>",
+      "backup_purge_or_expiration_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "legal_hold_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "end_of_retention_action": "<REAL_REVIEWED_EXPIRATION_PURGE_OR_PRESERVATION_DECISION_REQUIRED>",
+      "security_audit_exception_or_none": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "review_material_reference": "<REAL_TRACEABLE_REVIEW_MATERIAL_REFERENCE_REQUIRED>",
+      "review_complete_for_surface": false
+    },
+    {
+      "surface_id": "scheduled_cleanup_or_purge",
+      "reviewed_retention_criterion": "<REAL_REVIEWED_OPERATIONAL_ENFORCEMENT_CRITERION_REQUIRED>",
+      "purpose_or_authority_reference": "<REAL_REVIEWED_REFERENCE_REQUIRED>",
+      "cancellation_effect": "<REAL_REVIEWED_DECISION_OR_NOT_APPLICABLE_REQUIRED>",
+      "delinquency_effect": "<REAL_REVIEWED_DECISION_OR_NOT_APPLICABLE_REQUIRED>",
+      "backup_purge_or_expiration_rule": "<REAL_REVIEWED_DECISION_OR_NOT_APPLICABLE_REQUIRED>",
+      "legal_hold_rule": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "end_of_retention_action": "<REAL_REVIEWED_OPERATIONAL_ENFORCEMENT_ACTION_REQUIRED>",
+      "security_audit_exception_or_none": "<REAL_REVIEWED_DECISION_REQUIRED>",
+      "review_material_reference": "<REAL_TRACEABLE_REVIEW_MATERIAL_REFERENCE_REQUIRED>",
+      "review_complete_for_surface": false
+    }
+  ],
+  "artifact_secret_values_absent_or_redacted_confirmed": false,
+  "scope_boundary": {
+    "input_is_approved_retention_policy": false,
+    "input_is_legal_gate_evidence": false,
+    "collector_can_copy_reviewer_identity_or_paths": false,
+    "collector_can_close_retention_matrix": false,
+    "collector_can_modify_privacy_or_dsr_documents": false,
+    "collector_can_create_evidence_ref_or_digest": false,
+    "collector_can_create_evidence_migration": false,
+    "collector_can_mutate_supabase": false,
+    "collector_can_deploy": false,
+    "collector_can_promote_controlled_launch_or_paid_media": false
+  },
+  "instructions": "Copy this file outside the repository. Complete it only from real legal/privacy/operations review, set test_fixture=false and contains_placeholders=false, provide real traceable review references/artifacts, mark every review_complete_for_surface=true, confirm artifacts are secret-free/redacted, and never commit the completed input."
+}
