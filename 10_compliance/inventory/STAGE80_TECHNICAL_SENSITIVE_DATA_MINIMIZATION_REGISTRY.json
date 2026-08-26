@@ -128,7 +128,7 @@
   "non_table_surfaces": [
     {
       "surface_id": "support_and_dsr_free_form_ingress",
-      "source_document_markers": ["support", "solicitações de direitos", "não enviar excesso"],
+      "source_document_markers": ["suporte", "solicitações de direitos", "não enviar excesso"],
       "risk_mechanism": "Users may voluntarily send sensitive content in support or rights-request channels even when the product did not request it.",
       "technical_minimization_requirements_for_review": [
         "request only information necessary to authenticate and resolve the request",
