@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "input_kind": "REAL_CONTROLLED_EXERCISE_REVIEW_INPUT",
+  "status": "PLACEHOLDER_NOT_REAL_EVIDENCE",
+  "test_fixture": true,
+  "contains_placeholders": true,
+  "stage69_session_candidate_path": "<EXTERNAL_STAGE69_SESSION_CANDIDATE_JSON>",
+  "completed_exercise_record_path": "<EXTERNAL_COMPLETED_EXERCISE_RECORD_JSON>",
+  "independent_review_record_path": "<EXTERNAL_INDEPENDENT_REVIEW_RECORD_JSON>",
+  "reviewer_authority_artifact_path": "<EXTERNAL_REVIEWER_AUTHORITY_ARTIFACT>",
+  "notes": "Copy this template outside the repository, replace every placeholder with real externally held artifacts, set test_fixture=false and contains_placeholders=false, then run the Stage91 collector locally. Never commit real owner/reviewer identities or artifact paths."
+}

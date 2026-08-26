@@ -1,0 +1,69 @@
+name: Stage91 Controlled Exercise Independent Review Intake
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify-controlled-exercise-independent-review-intake:
+    if: github.head_ref == 'blackgold/stage91-controlled-exercise-independent-review-intake'
+    runs-on: ubuntu-24.04
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify Stage91 controlled exercise independent review intake
+        run: python 04_backend_supabase/tools/verify_stage91_controlled_exercise_independent_review_intake.py
+
+      - name: Verify migration ledger contract
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify SECURITY DEFINER exposure authority
+        run: python 04_backend_supabase/tools/verify_security_definer_exposure_authority.py
+
+      - name: Compile exact Stage68 synthetic rehearsal bundle
+        run: |
+          python 04_backend_supabase/tools/build_stage68_synthetic_governance_rehearsal_bundle.py \
+            --source-sha "$SOURCE_SHA" \
+            --output /tmp/stage68_stage91_bundle.json
+
+      - name: Prove committed Stage91 placeholder intake is refused
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f /tmp/stage91_review_candidate.json
+          if python 04_backend_supabase/tools/collect_stage91_controlled_exercise_independent_review.py \
+            --source-sha "$SOURCE_SHA" \
+            --intake-input 10_compliance/rehearsals/STAGE91_REAL_CONTROLLED_EXERCISE_REVIEW_INPUT_TEMPLATE.json \
+            --output /tmp/stage91_review_candidate.json; then
+            echo "PLACEHOLDER_STAGE91_INPUT_FALSE_GREEN=FAIL"
+            exit 1
+          fi
+          test ! -e /tmp/stage91_review_candidate.json
+          echo "PLACEHOLDER_STAGE91_INPUT_REFUSED=PASS"
+
+      - name: Preserve Stage91 external-human and evidence boundaries
+        run: |
+          echo "REAL_OWNER_ASSIGNMENTS_REQUIRED=true"
+          echo "HUMAN_EXERCISE_EXECUTION_REQUIRED=true"
+          echo "INDEPENDENT_REVIEW_REQUIRED=true"
+          echo "CI_EXERCISE_EXECUTED=false"
+          echo "CI_INDEPENDENT_REVIEW_ATTESTED=false"
+          echo "OWNER_IDENTITY_COPIED=false"
+          echo "REVIEWER_IDENTITY_COPIED=false"
+          echo "STAGE44_EVIDENCE=false"
+          echo "STAGE45_EVIDENCE=false"
+          echo "SUPABASE_MUTATION=false"
+          echo "DSR_GATE_READY=false"
+          echo "INCIDENT_RESPONSE_GATE_READY=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "PAID_MEDIA=DENIED"
