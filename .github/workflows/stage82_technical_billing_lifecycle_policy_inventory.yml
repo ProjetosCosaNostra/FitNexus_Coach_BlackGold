@@ -7,11 +7,15 @@ on:
     paths:
       - "04_backend_supabase/stage82_technical_billing_lifecycle_policy_inventory_authority.json"
       - "04_backend_supabase/stage82r1_billing_policy_source_wording_reconciliation_authority.json"
+      - "04_backend_supabase/stage82r2_billing_lifecycle_source_reconciliation_authority.json"
       - "04_backend_supabase/tools/build_stage82_technical_billing_lifecycle_policy_inventory.py"
       - "04_backend_supabase/tools/verify_stage82_technical_billing_lifecycle_policy_inventory.py"
       - "04_backend_supabase/tools/build_stage82r1_reconciled_billing_lifecycle_inventory.py"
       - "04_backend_supabase/tools/verify_stage82r1_billing_policy_source_wording_reconciliation.py"
+      - "04_backend_supabase/tools/build_stage82r2_source_reconciled_billing_lifecycle_inventory.py"
+      - "04_backend_supabase/tools/verify_stage82r2_billing_lifecycle_source_reconciliation.py"
       - "10_compliance/inventory/STAGE82_TECHNICAL_BILLING_LIFECYCLE_POLICY_SURFACE_REGISTRY.json"
+      - "10_compliance/inventory/STAGE82R2_TECHNICAL_BILLING_LIFECYCLE_POLICY_SURFACE_REGISTRY.json"
       - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
       - "04_backend_supabase/stage61_billing_authorization_state_machine_authority.json"
       - "04_backend_supabase/stage62_stage61_final_reconciliation_authority.json"
@@ -31,41 +35,42 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
-      - name: Verify Stage82R1 billing policy source wording reconciliation
-        run: python 04_backend_supabase/tools/verify_stage82r1_billing_policy_source_wording_reconciliation.py
+      - name: Verify Stage82R2 billing lifecycle source reconciliation
+        run: python 04_backend_supabase/tools/verify_stage82r2_billing_lifecycle_source_reconciliation.py
 
-      - name: Build deterministic Stage82R1 reconciled inventory twice
+      - name: Build deterministic Stage82R2 source-reconciled inventory twice
         shell: bash
         run: |
           set -euo pipefail
-          python 04_backend_supabase/tools/build_stage82r1_reconciled_billing_lifecycle_inventory.py \
+          python 04_backend_supabase/tools/build_stage82r2_source_reconciled_billing_lifecycle_inventory.py \
             --source-sha "${{ github.event.pull_request.head.sha }}" \
-            --output /tmp/stage82r1_inventory_a.json
-          python 04_backend_supabase/tools/build_stage82r1_reconciled_billing_lifecycle_inventory.py \
+            --output /tmp/stage82r2_inventory_a.json
+          python 04_backend_supabase/tools/build_stage82r2_source_reconciled_billing_lifecycle_inventory.py \
             --source-sha "${{ github.event.pull_request.head.sha }}" \
-            --output /tmp/stage82r1_inventory_b.json
-          cmp /tmp/stage82r1_inventory_a.json /tmp/stage82r1_inventory_b.json
-          grep -F '"surface_count": 10' /tmp/stage82r1_inventory_a.json >/dev/null
-          grep -F '"real_billing_authority_present": false' /tmp/stage82r1_inventory_a.json >/dev/null
-          grep -F '"customer_policy_approved": false' /tmp/stage82r1_inventory_a.json >/dev/null
-          grep -F '"refund_rule_approved": false' /tmp/stage82r1_inventory_a.json >/dev/null
-          grep -F '"cancellation_rule_approved": false' /tmp/stage82r1_inventory_a.json >/dev/null
-          grep -F '"delinquency_rule_approved": false' /tmp/stage82r1_inventory_a.json >/dev/null
-          grep -F '"terms_of_use_modified": false' /tmp/stage82r1_inventory_a.json >/dev/null
-          grep -F '"target_open_decision_closed": false' /tmp/stage82r1_inventory_a.json >/dev/null
-          echo "STAGE82R1_DETERMINISTIC_RECONCILED_BUILD=PASS"
+            --output /tmp/stage82r2_inventory_b.json
+          cmp /tmp/stage82r2_inventory_a.json /tmp/stage82r2_inventory_b.json
+          grep -F '"surface_count": 10' /tmp/stage82r2_inventory_a.json >/dev/null
+          grep -F '"real_billing_authority_present": false' /tmp/stage82r2_inventory_a.json >/dev/null
+          grep -F '"customer_policy_approved": false' /tmp/stage82r2_inventory_a.json >/dev/null
+          grep -F '"refund_rule_approved": false' /tmp/stage82r2_inventory_a.json >/dev/null
+          grep -F '"cancellation_rule_approved": false' /tmp/stage82r2_inventory_a.json >/dev/null
+          grep -F '"delinquency_rule_approved": false' /tmp/stage82r2_inventory_a.json >/dev/null
+          grep -F '"reactivation_rule_approved": false' /tmp/stage82r2_inventory_a.json >/dev/null
+          grep -F '"terms_of_use_modified": false' /tmp/stage82r2_inventory_a.json >/dev/null
+          grep -F '"target_open_decision_closed": false' /tmp/stage82r2_inventory_a.json >/dev/null
+          echo "STAGE82R2_DETERMINISTIC_SOURCE_RECONCILED_BUILD=PASS"
 
-      - name: Upload non-attesting Stage82R1 reconciled billing lifecycle inventory
+      - name: Upload non-attesting Stage82R2 source-reconciled billing lifecycle inventory
         uses: actions/upload-artifact@v4
         with:
-          name: stage82r1-reconciled-billing-lifecycle-policy-inventory-${{ github.event.pull_request.head.sha }}
+          name: stage82r2-source-reconciled-billing-lifecycle-policy-inventory-${{ github.event.pull_request.head.sha }}
           retention-days: 7
           if-no-files-found: error
-          path: /tmp/stage82r1_inventory_a.json
+          path: /tmp/stage82r2_inventory_a.json
 
-      - name: Preserve failed-head and unresolved billing policy boundary
+      - name: Preserve failed-head chain and unresolved billing policy boundary
         run: |
-          echo "FAILED_STAGE82_HEAD_PRESERVED=true"
+          echo "FAILED_STAGE82_HEAD_COUNT=2"
           echo "CANONICAL_DECISION_STATE=OPEN"
           echo "REAL_BILLING_AUTHORITY_PRESENT=false"
           echo "CUSTOMER_POLICY_APPROVED=false"
