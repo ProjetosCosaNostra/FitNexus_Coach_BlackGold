@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# PR synchronize marker: dedicated Stage84 workflow now exists in the head before this commit.
+
 import argparse
 import hashlib
 import json
