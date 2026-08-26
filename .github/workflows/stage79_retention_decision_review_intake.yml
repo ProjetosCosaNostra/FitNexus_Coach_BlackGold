@@ -1,0 +1,69 @@
+name: Stage79 Retention Decision Review Intake
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "04_backend_supabase/stage79_retention_decision_review_intake_authority.json"
+      - "04_backend_supabase/tools/collect_stage79_retention_review_candidate.py"
+      - "04_backend_supabase/tools/verify_stage79_retention_decision_review_intake.py"
+      - "10_compliance/review/STAGE79_RETENTION_DECISION_QUESTIONNAIRE.md"
+      - "10_compliance/review/STAGE79_RETENTION_REVIEW_INPUT_TEMPLATE.json"
+      - "04_backend_supabase/stage78_technical_retention_surface_inventory_authority.json"
+      - "10_compliance/inventory/STAGE78_TECHNICAL_DATA_RETENTION_SURFACE_REGISTRY.json"
+      - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+      - ".github/workflows/stage79_retention_decision_review_intake.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-retention-review-intake-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify Stage79 retention decision review intake contract
+        run: python 04_backend_supabase/tools/verify_stage79_retention_decision_review_intake.py
+
+      - name: Prove committed placeholder retention review input is refused
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f /tmp/stage79_placeholder_candidate.json /tmp/stage79_placeholder.log
+          if python 04_backend_supabase/tools/collect_stage79_retention_review_candidate.py \
+            --review-input 10_compliance/review/STAGE79_RETENTION_REVIEW_INPUT_TEMPLATE.json \
+            --output /tmp/stage79_placeholder_candidate.json \
+            > /tmp/stage79_placeholder.log 2>&1; then
+            echo "Committed placeholder retention review input unexpectedly produced a Stage79 candidate" >&2
+            exit 1
+          fi
+          test ! -e /tmp/stage79_placeholder_candidate.json
+          grep -F "STAGE79_RETENTION_REVIEW_CANDIDATE=FAIL" /tmp/stage79_placeholder.log >/dev/null
+          grep -F "FAILURE_CLASS=BGF-STAGE79-RETENTION-REVIEW-INTAKE-GUARD-765" /tmp/stage79_placeholder.log >/dev/null
+          echo "PLACEHOLDER_RETENTION_REVIEW_INPUT_REFUSED=PASS"
+
+      - name: Upload non-attesting Stage79 review intake boundary
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage79-retention-decision-review-intake-${{ github.event.pull_request.head.sha }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            04_backend_supabase/stage79_retention_decision_review_intake_authority.json
+            04_backend_supabase/tools/collect_stage79_retention_review_candidate.py
+            10_compliance/review/STAGE79_RETENTION_DECISION_QUESTIONNAIRE.md
+            10_compliance/review/STAGE79_RETENTION_REVIEW_INPUT_TEMPLATE.json
+
+      - name: Preserve canonical independent acceptance boundary
+        run: |
+          echo "RETENTION_POLICY_APPROVED=false"
+          echo "TARGET_DECISION_CLOSED=false"
+          echo "GATE_PROMOTION=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "REMOTE_MUTATION=false"
