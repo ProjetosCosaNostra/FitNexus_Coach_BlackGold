@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "stage": "STAGE88_TERMS_ACCEPTANCE_REMOTE_APPLY_EXECUTION_SEAL",
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "target_migration": {
+    "name": "stage85_terms_acceptance_registry_ledger",
+    "repository_file": "04_backend_supabase/migrations/20260826180000_stage85_terms_acceptance_registry_ledger.sql",
+    "repository_blob_sha": "a9a77ebbf61f464e5549f338362cdd3a59df8df1",
+    "source_candidate_blob_sha": "990ee4b1a5d36324d8eb395c7096b3f6af23cdfa"
+  },
+  "bound_stage87_gate": {
+    "authority_file": "04_backend_supabase/stage87_terms_acceptance_remote_apply_gate_preparation_authority.json",
+    "authority_blob_sha": "b844aa81e39ac6d6feb8b2916dc4af14ed2e0219",
+    "contract_file": "04_backend_supabase/operations/stage87_terms_acceptance_remote_apply_gate_contract.json",
+    "contract_blob_sha": "80e70b9bdfbb2a70a1b6c67c5b8af781c118aaef"
+  },
+  "execution_seal": {
+    "stage88_executes_remote_apply": false,
+    "future_execution_is_one_shot": true,
+    "future_apply_interface": "Supabase.apply_migration",
+    "future_apply_project_ref": "mceukeondizkwlpfxzgf",
+    "future_apply_migration_name": "stage85_terms_acceptance_registry_ledger",
+    "future_apply_sql_source": "exact repository migration bytes",
+    "future_apply_requires_fresh_precondition_receipt_after_stage88_merge": true,
+    "future_apply_requires_remote_target_absent": true,
+    "future_apply_requires_all_terms_surfaces_absent": true,
+    "future_apply_requires_is_org_member_present": true,
+    "future_apply_requires_repo_only_ledger_state": true,
+    "future_apply_must_not_seed_terms_or_acceptance": true,
+    "future_apply_result_must_be_reconciled_before_any_retry": true,
+    "future_apply_ambiguous_result_blind_retry_allowed": false,
+    "future_apply_automatic_destructive_rollback_allowed": false
+  },
+  "future_execution_sequence": [
+    "read exact main migration blob and fail if it differs",
+    "read actual remote migration ledger and fail if target is already present",
+    "read actual Terms schema/RPC preconditions and fail if any target surface already exists",
+    "verify private.is_org_member(uuid) still exists",
+    "verify TERMS_ACCEPTANCE_VERSIONING remains OPEN and draft Terms remain unapproved/unpublished",
+    "apply exact migration once through migration application semantics",
+    "immediately re-read actual remote migration ledger",
+    "immediately verify both private tables and all three public RPCs exist",
+    "verify both new private tables have zero rows",
+    "verify no Terms artifact and no acceptance evidence was seeded",
+    "reconcile repository migration ledger authority to the observed remote version before any further lifecycle promotion"
+  ],
+  "stage88_hard_boundaries": {
+    "remote_apply": false,
+    "supabase_mutation": false,
+    "terms_registry_row_created": false,
+    "real_acceptance_collected": false,
+    "terms_candidate_approved": false,
+    "terms_candidate_published": false,
+    "target_decision_closed": false,
+    "legal_terms_gate_promoted": false,
+    "deployment_promoted": false,
+    "controlled_launch_promoted": false,
+    "paid_media_promoted": false
+  }
+}

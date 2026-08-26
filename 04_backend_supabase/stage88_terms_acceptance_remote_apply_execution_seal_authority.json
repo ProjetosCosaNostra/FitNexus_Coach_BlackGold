@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE88_TERMS_ACCEPTANCE_REMOTE_APPLY_EXECUTION_SEAL",
+  "baseline_main_sha": "f69ef0a74f03f98e767cd6dc3d84948bc4fac7ee",
+  "current_state": "ONE_SHOT_REMOTE_APPLY_EXECUTION_SEALED_REPO_ONLY_REMOTE_UNEXECUTED_NO_TERMS_DATA_NO_ACCEPTANCE_DATA_NO_GATE_PROMOTION",
+  "upstream_stage87_green": {
+    "merged_main_sha": "f69ef0a74f03f98e767cd6dc3d84948bc4fac7ee",
+    "green_head_sha": "f8e0e4447c556f2068e434c35334a3534d5de3aa",
+    "dedicated_ci_run_id": 33000280847,
+    "dedicated_ci_conclusion": "success",
+    "flutter_quality_gate_run_id": 33000280670,
+    "flutter_quality_gate_conclusion": "success",
+    "artifact_id": 9618242758,
+    "artifact_digest": "sha256:cef5c19cc903d505eda47e0c203dccfe3941884def95ce7d1f304b118fb8f3aa",
+    "artifact_expiry_utc": "2026-09-02T18:32:59Z",
+    "artifact_is_remote_apply_evidence": false,
+    "artifact_is_legal_or_gate_evidence": false
+  },
+  "canonical_target_open_decision": {
+    "id": "TERMS_ACCEPTANCE_VERSIONING",
+    "state": "OPEN",
+    "affected_gates": ["legal_terms_of_use"],
+    "required": "Production mechanism binding user acceptance to immutable terms version/digest.",
+    "resolution_authority": "product implementation plus independent review",
+    "stage88_can_close_decision": false
+  },
+  "sealed_inputs": {
+    "stage87_authority": "04_backend_supabase/stage87_terms_acceptance_remote_apply_gate_preparation_authority.json",
+    "stage87_authority_blob": "b844aa81e39ac6d6feb8b2916dc4af14ed2e0219",
+    "stage87_gate_contract": "04_backend_supabase/operations/stage87_terms_acceptance_remote_apply_gate_contract.json",
+    "stage87_gate_contract_blob": "80e70b9bdfbb2a70a1b6c67c5b8af781c118aaef",
+    "migration": "04_backend_supabase/migrations/20260826180000_stage85_terms_acceptance_registry_ledger.sql",
+    "migration_blob": "a9a77ebbf61f464e5549f338362cdd3a59df8df1",
+    "migration_ledger": "04_backend_supabase/migration_ledger_authority.json",
+    "migration_ledger_blob": "427f83c2ae6c8430cf9d050380e6f1cfa15c2c87",
+    "execution_plan": "04_backend_supabase/operations/stage88_terms_acceptance_remote_apply_execution_plan.json",
+    "execution_plan_blob": "5c1a138a416baaf3daef416d370e645435b49fab"
+  },
+  "fresh_pre_seal_remote_receipt": {
+    "observed_at_utc": "2026-08-26T18:35:53.356463Z",
+    "source": "Supabase.list_migrations plus read-only Terms schema/RPC checks",
+    "remote_migration_count": 67,
+    "target_remote_migration_present": false,
+    "auth_users": 0,
+    "organizations": 0,
+    "organization_members": 0,
+    "terms_registry_exists": false,
+    "acceptance_ledger_exists": false,
+    "current_terms_rpc_exists": false,
+    "accept_terms_rpc_exists": false,
+    "acceptance_gate_rpc_exists": false,
+    "is_org_member_helper_exists": true,
+    "remote_mutation_performed": false
+  },
+  "execution_seal": {
+    "target_migration_name": "stage85_terms_acceptance_registry_ledger",
+    "target_migration_blob": "a9a77ebbf61f464e5549f338362cdd3a59df8df1",
+    "execution_plan_blob": "5c1a138a416baaf3daef416d370e645435b49fab",
+    "migration_ledger_state": "repo_only",
+    "remote_apply_count": 0,
+    "remote_version": null,
+    "stage88_executes_remote_apply": false,
+    "later_one_shot_execution_allowed_only_after_stage88_merge": true,
+    "later_execution_requires_fresh_post_merge_preconditions": true,
+    "later_execution_must_use_apply_migration_semantics": true,
+    "later_execution_must_reconcile_remote_result_before_retry": true,
+    "later_execution_blind_retry_allowed": false,
+    "automatic_destructive_rollback_allowed": false
+  },
+  "failure_classes": [
+    "BGF-STAGE88-STAGE87-GATE-BINDING-DRIFT-870",
+    "BGF-STAGE88-EXECUTION-PLAN-BYTE-DRIFT-871",
+    "BGF-STAGE88-STALE-PRE-SEAL-REMOTE-RECEIPT-872",
+    "BGF-STAGE88-PREMATURE-REMOTE-EXECUTION-873",
+    "BGF-STAGE88-BLIND-RETRY-SEAL-874",
+    "BGF-STAGE88-DESTRUCTIVE-AUTO-ROLLBACK-875",
+    "BGF-STAGE88-PREMATURE-TERMS-DATA-OR-ACCEPTANCE-876",
+    "BGF-STAGE88-PREMATURE-LEGAL-GATE-PROMOTION-877",
+    "BGF-STAGE88-REMOTE-APPLY-EXECUTION-SEAL-GUARD-878"
+  ],
+  "hard_boundaries": {
+    "remote_migration_applied": false,
+    "supabase_mutation_performed": false,
+    "terms_candidate_approved": false,
+    "terms_candidate_published": false,
+    "terms_registry_row_created": false,
+    "real_acceptance_collected": false,
+    "target_decision_may_be_closed": false,
+    "legal_terms_gate_ready": false,
+    "deployment_allowed": false,
+    "controlled_launch_promoted": false,
+    "paid_media_promoted": false,
+    "launch_promoted": false
+  },
+  "gates": {
+    "stage88_remote_apply_execution_seal": "REPO_ONLY_PENDING_CI",
+    "stage88_remote_apply_execution": "FORBIDDEN_UNTIL_STAGE88_MERGED_AND_FRESH_PRECONDITIONS_RECHECKED",
+    "terms_acceptance_versioning": "OPEN_INFRASTRUCTURE_MIGRATION_REMOTE_UNAPPLIED_INDEPENDENT_REVIEW_STILL_REQUIRED",
+    "legal_terms_of_use": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "After Stage88 is GREEN and merged, Stage89 may perform a fresh remote precondition recheck and, only if every exact seal condition remains true, apply stage85_terms_acceptance_registry_ledger exactly once through Supabase migration application semantics, immediately verify zero-row infrastructure postconditions, and reconcile the migration ledger. Stage89 still cannot register Terms, collect acceptance, close TERMS_ACCEPTANCE_VERSIONING or promote legal_terms_of_use.",
+    "remote_apply_allowed_during_stage88": false,
+    "target_decision_still_open": true
+  }
+}
