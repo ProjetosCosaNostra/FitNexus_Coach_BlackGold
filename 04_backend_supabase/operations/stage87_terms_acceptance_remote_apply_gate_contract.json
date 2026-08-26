@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "stage": "STAGE87_TERMS_ACCEPTANCE_REMOTE_APPLY_GATE_PREPARATION",
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "purpose": "Prepare the exact fail-closed one-shot gate for a later remote application of the already reviewed and merged Terms acceptance infrastructure migration without applying it during Stage87.",
+  "target_migration": {
+    "name": "stage85_terms_acceptance_registry_ledger",
+    "repository_file": "04_backend_supabase/migrations/20260826180000_stage85_terms_acceptance_registry_ledger.sql",
+    "repository_blob_sha": "a9a77ebbf61f464e5549f338362cdd3a59df8df1",
+    "source_candidate_blob_sha": "990ee4b1a5d36324d8eb395c7096b3f6af23cdfa"
+  },
+  "execution_contract": {
+    "stage87_executes_remote_apply": false,
+    "later_execution_must_be_one_shot": true,
+    "later_execution_authority": "Supabase migration application lifecycle only after a separately merged exact execution seal",
+    "migration_name_must_match_exactly": true,
+    "migration_bytes_must_match_exactly": true,
+    "remote_apply_count_before_execution": 0,
+    "remote_apply_count_after_success": 1,
+    "retry_after_ambiguous_result_without_remote_reconciliation": false,
+    "raw_execute_sql_for_ddl_allowed": false,
+    "terms_data_seed_allowed": false,
+    "acceptance_data_seed_allowed": false
+  },
+  "mandatory_fresh_pre_apply_checks": [
+    "main contains the exact merged migration blob a9a77ebbf61f464e5549f338362cdd3a59df8df1",
+    "actual remote migration ledger does not contain stage85_terms_acceptance_registry_ledger",
+    "private.terms_document_registry does not exist",
+    "private.terms_acceptance_ledger does not exist",
+    "public.get_current_terms_v1(text) does not exist",
+    "public.accept_current_terms_v1(uuid,text,text,text,text,text) does not exist",
+    "public.get_my_terms_acceptance_gate_v1(uuid,text) does not exist",
+    "private.is_org_member(uuid) still exists",
+    "canonical TERMS_ACCEPTANCE_VERSIONING decision is still OPEN",
+    "draft Terms remain unapproved and unpublished",
+    "repository migration ledger still declares exactly one repo_only target divergence"
+  ],
+  "mandatory_post_apply_checks_for_later_execution": [
+    "actual remote migration ledger contains stage85_terms_acceptance_registry_ledger exactly once",
+    "private.terms_document_registry exists",
+    "private.terms_acceptance_ledger exists",
+    "public.get_current_terms_v1(text) exists",
+    "public.accept_current_terms_v1(uuid,text,text,text,text,text) exists",
+    "public.get_my_terms_acceptance_gate_v1(uuid,text) exists",
+    "private.is_org_member(uuid) still exists",
+    "private.terms_document_registry row count is zero immediately after infrastructure apply",
+    "private.terms_acceptance_ledger row count is zero immediately after infrastructure apply",
+    "no Terms artifact has been registered by migration application",
+    "no real acceptance has been collected by migration application",
+    "legal_terms_of_use remains denied"
+  ],
+  "ambiguous_or_failed_execution_policy": {
+    "automatic_second_apply": false,
+    "automatic_drop_or_rollback": false,
+    "must_read_actual_remote_migration_ledger_before_any_next_action": true,
+    "must_read_actual_schema_postconditions_before_any_next_action": true,
+    "fail_closed_on_partial_or_ambiguous_evidence": true
+  },
+  "hard_boundaries": {
+    "remote_apply_during_stage87": false,
+    "terms_candidate_approved": false,
+    "terms_candidate_published": false,
+    "terms_registry_row_created": false,
+    "real_acceptance_collected": false,
+    "target_decision_closed": false,
+    "legal_terms_gate_promoted": false,
+    "deployment_promoted": false,
+    "controlled_launch_promoted": false,
+    "paid_media_promoted": false
+  }
+}
