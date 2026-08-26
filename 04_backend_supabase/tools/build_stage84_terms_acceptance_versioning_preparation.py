@@ -2,6 +2,7 @@ from __future__ import annotations
 
 # PR synchronize marker: dedicated Stage84 workflow now exists in the head before this commit.
 # Final-head synchronization marker: run both Stage84 dedicated CI and Flutter Quality Gate after failure-class registration.
+# Post-gate exact-head trigger: previous head gates completed before this final synchronization commit.
 
 import argparse
 import hashlib
