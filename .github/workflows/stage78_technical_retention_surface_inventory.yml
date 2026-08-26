@@ -1,0 +1,68 @@
+name: Stage78 Technical Retention Surface Inventory
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "04_backend_supabase/stage78_technical_retention_surface_inventory_authority.json"
+      - "04_backend_supabase/tools/build_stage78_technical_retention_surface_inventory.py"
+      - "04_backend_supabase/tools/verify_stage78_technical_retention_surface_inventory.py"
+      - "10_compliance/inventory/STAGE78_TECHNICAL_DATA_RETENTION_SURFACE_REGISTRY.json"
+      - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+      - "10_compliance/drafts/PRIVACY_NOTICE_CANDIDATE_PTBR.md"
+      - "10_compliance/drafts/DATA_SUBJECT_REQUEST_RUNBOOK_CANDIDATE.md"
+      - "04_backend_supabase/migrations/**"
+      - ".github/workflows/stage78_technical_retention_surface_inventory.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-non-attesting-retention-surface-inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify Stage78 technical retention surface contract
+        run: python 04_backend_supabase/tools/verify_stage78_technical_retention_surface_inventory.py
+
+      - name: Build deterministic retention surface inventory twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python 04_backend_supabase/tools/build_stage78_technical_retention_surface_inventory.py \
+            --source-sha "${{ github.event.pull_request.head.sha }}" \
+            --output /tmp/stage78_retention_a.json
+          python 04_backend_supabase/tools/build_stage78_technical_retention_surface_inventory.py \
+            --source-sha "${{ github.event.pull_request.head.sha }}" \
+            --output /tmp/stage78_retention_b.json
+          cmp /tmp/stage78_retention_a.json /tmp/stage78_retention_b.json
+          grep -F '"retention_periods_defined_count": 0' /tmp/stage78_retention_a.json >/dev/null
+          grep -F '"target_open_decision_closed": false' /tmp/stage78_retention_a.json >/dev/null
+          grep -F '"supabase_mutation_performed": false' /tmp/stage78_retention_a.json >/dev/null
+
+      - name: Upload non-attesting retention surface inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage78-technical-retention-surface-inventory-${{ github.event.pull_request.head.sha }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            /tmp/stage78_retention_a.json
+            04_backend_supabase/stage78_technical_retention_surface_inventory_authority.json
+            10_compliance/inventory/STAGE78_TECHNICAL_DATA_RETENTION_SURFACE_REGISTRY.json
+
+      - name: Preserve retention review boundary
+        run: |
+          echo "RETENTION_PERIODS_DEFINED=0"
+          echo "LEGAL_HOLD_RULES_APPROVED=false"
+          echo "BACKUP_EXPIRATION_APPROVED=false"
+          echo "TARGET_DECISION_CLOSED=false"
+          echo "GATE_PROMOTION=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "REMOTE_MUTATION=false"
