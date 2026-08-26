@@ -1,0 +1,66 @@
+name: Stage76 Provider Evidence Acquisition Boundary
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "04_backend_supabase/stage76_provider_evidence_acquisition_boundary_authority.json"
+      - "04_backend_supabase/tools/collect_stage76_provider_evidence_candidate.py"
+      - "04_backend_supabase/tools/verify_stage76_provider_evidence_acquisition_boundary.py"
+      - "10_compliance/inventory/STAGE75_TECHNICAL_EXTERNAL_SERVICE_SOURCE_REGISTRY.json"
+      - "10_compliance/inventory/STAGE76_PROVIDER_EVIDENCE_INPUT_TEMPLATE.json"
+      - ".github/workflows/stage76_provider_evidence_acquisition_boundary.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-provider-evidence-acquisition-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify Stage76 provider evidence acquisition contract
+        run: python 04_backend_supabase/tools/verify_stage76_provider_evidence_acquisition_boundary.py
+
+      - name: Prove committed placeholder provider evidence input is refused
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f /tmp/stage76_placeholder_output.json /tmp/stage76_placeholder.log
+          if python 04_backend_supabase/tools/collect_stage76_provider_evidence_candidate.py \
+            --provider-input 10_compliance/inventory/STAGE76_PROVIDER_EVIDENCE_INPUT_TEMPLATE.json \
+            --output /tmp/stage76_placeholder_output.json \
+            > /tmp/stage76_placeholder.log 2>&1; then
+            echo "Committed placeholder unexpectedly passed Stage76 intake" >&2
+            exit 1
+          fi
+          test ! -e /tmp/stage76_placeholder_output.json
+          grep -F "STAGE76_PROVIDER_EVIDENCE_CANDIDATE=FAIL" /tmp/stage76_placeholder.log >/dev/null
+          grep -F "FAILURE_CLASS=BGF-STAGE76-PROVIDER-EVIDENCE-ACQUISITION-GUARD-735" /tmp/stage76_placeholder.log >/dev/null
+          echo "PLACEHOLDER_PROVIDER_EVIDENCE_INPUT_REFUSED=PASS"
+
+      - name: Upload non-attesting acquisition boundary packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage76-provider-evidence-acquisition-boundary-${{ github.event.pull_request.head.sha }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            04_backend_supabase/stage76_provider_evidence_acquisition_boundary_authority.json
+            10_compliance/inventory/STAGE75_TECHNICAL_EXTERNAL_SERVICE_SOURCE_REGISTRY.json
+            10_compliance/inventory/STAGE76_PROVIDER_EVIDENCE_INPUT_TEMPLATE.json
+
+      - name: Preserve provider and legal review boundary
+        run: |
+          echo "PROVIDER_FACTS_ATTESTED=false"
+          echo "LEGAL_RELATIONSHIP_CLASSIFIED=false"
+          echo "TARGET_DECISION_CLOSED=false"
+          echo "GATE_PROMOTION=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "REMOTE_MUTATION=false"
