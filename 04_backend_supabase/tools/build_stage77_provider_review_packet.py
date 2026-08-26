@@ -32,6 +32,16 @@ ARTIFACT_KEYS = [
     "subprocessor_chain_source",
     "international_transfer_mechanism_source",
 ]
+SCOPE_KEYS = [
+    "candidate_set_is_provider_fact_evidence",
+    "candidate_set_is_legal_review",
+    "candidate_set_closes_subprocessor_transfer_decision",
+    "candidate_set_marks_legal_gate_ready",
+    "candidate_set_is_billing_credential_evidence",
+    "candidate_set_is_checkout_proof",
+    "candidate_set_is_production_deployment_evidence",
+    "candidate_set_creates_evidence_migration",
+]
 FALSE_STAGE76_FLAGS = [
     "stage75_relationship_status_is_legal_classification",
     "artifact_paths_copied",
@@ -63,16 +73,6 @@ FALSE_STAGE76_FLAGS = [
     "controlled_launch_promoted",
     "paid_media_promoted",
 ]
-SCOPE_KEYS = [
-    "candidate_set_is_provider_fact_evidence",
-    "candidate_set_is_legal_review",
-    "candidate_set_closes_subprocessor_transfer_decision",
-    "candidate_set_marks_legal_gate_ready",
-    "candidate_set_is_billing_credential_evidence",
-    "candidate_set_is_checkout_proof",
-    "candidate_set_is_production_deployment_evidence",
-    "candidate_set_creates_evidence_migration",
-]
 
 
 def fail(detail: str) -> None:
@@ -101,7 +101,7 @@ def sha256_file(path: Path) -> str:
     try:
         return sha256_bytes(path.read_bytes())
     except OSError as exc:
-        fail(f"unable to hash candidate file: {type(exc).__name__}")
+        fail(f"unable to hash file: {type(exc).__name__}")
 
 
 def validate_repo_authorities() -> None:
@@ -112,41 +112,37 @@ def validate_repo_authorities() -> None:
         fail("Stage77 baseline main SHA drift")
     upstream = authority.get("upstream_authority")
     if not isinstance(upstream, dict) or upstream.get("stage76_provider_evidence_acquisition_blob") != "c07c2fca4894a2f6076ed86bb6587c3a878d93ec":
-        fail("Stage77 Stage76 authority pin drift")
+        fail("Stage76 authority pin drift")
 
     stage76 = load_json(STAGE76, "Stage76 authority")
-    if stage76.get("stage") != "STAGE76_PROVIDER_EVIDENCE_ACQUISITION_BOUNDARY":
-        fail("Stage76 authority stage drift")
     contract = stage76.get("acquisition_contract")
-    if not isinstance(contract, dict) or contract.get("allowed_service_ids") != EXPECTED_IDS:
+    if stage76.get("stage") != "STAGE76_PROVIDER_EVIDENCE_ACQUISITION_BOUNDARY" or not isinstance(contract, dict):
+        fail("Stage76 authority drift")
+    if contract.get("allowed_service_ids") != EXPECTED_IDS:
         fail("Stage76 allowed service IDs drift")
     if contract.get("target_open_decision_remains_open_after_collection") is not True:
-        fail("Stage76 target decision boundary drift")
+        fail("Stage76 target-decision boundary drift")
 
     decisions = load_json(OPEN_DECISIONS, "open decisions")
     unresolved = decisions.get("unresolved")
     if not isinstance(unresolved, list):
         fail("open decisions registry missing unresolved list")
-    target = next((item for item in unresolved if isinstance(item, dict) and item.get("id") == "SUBPROCESSOR_AND_TRANSFER_MAP"), None)
+    target = next((x for x in unresolved if isinstance(x, dict) and x.get("id") == "SUBPROCESSOR_AND_TRANSFER_MAP"), None)
     if not isinstance(target, dict) or target.get("state") != "OPEN":
         fail("SUBPROCESSOR_AND_TRANSFER_MAP must remain OPEN")
     if target.get("resolution_authority") != "provider evidence plus legal/privacy review":
         fail("SUBPROCESSOR_AND_TRANSFER_MAP resolution authority drift")
 
 
-def validate_manifest(path: Path) -> tuple[dict, list[Path], str]:
+def validate_manifest(path: Path) -> tuple[list[Path], str]:
     manifest = load_json(path, "Stage77 real Stage76 candidate set")
-    if manifest.get("schema_version") != 1:
-        fail("candidate set schema_version must be 1")
-    if manifest.get("manifest_kind") != "STAGE77_REAL_STAGE76_DIGEST_CANDIDATE_SET":
-        fail("candidate set manifest_kind drift")
+    if manifest.get("schema_version") != 1 or manifest.get("manifest_kind") != "STAGE77_REAL_STAGE76_DIGEST_CANDIDATE_SET":
+        fail("candidate set identity drift")
     status = str(manifest.get("status", "")).strip()
     if status != "REAL_STAGE76_DIGEST_CANDIDATE_SET_FOR_REVIEW_PREPARATION" or PLACEHOLDER_RE.search(status):
         fail("candidate set is not a real Stage76 digest candidate set")
-    if manifest.get("test_fixture") is not False:
-        fail("test fixture candidate set cannot create a Stage77 review packet")
-    if manifest.get("contains_placeholders") is not False:
-        fail("candidate set still declares placeholders")
+    if manifest.get("test_fixture") is not False or manifest.get("contains_placeholders") is not False:
+        fail("candidate set is a fixture or still contains placeholders")
 
     reference = str(manifest.get("review_preparation_reference", "")).strip()
     if len(reference) < 3 or PLACEHOLDER_RE.search(reference):
@@ -156,37 +152,32 @@ def validate_manifest(path: Path) -> tuple[dict, list[Path], str]:
     if not isinstance(raw_paths, list) or not 1 <= len(raw_paths) <= len(EXPECTED_IDS):
         fail("candidate_paths must contain between one and five real Stage76 candidate files")
     candidate_paths: list[Path] = []
-    seen_paths: set[Path] = set()
+    seen: set[Path] = set()
     for raw in raw_paths:
         text = str(raw).strip()
         if not text or PLACEHOLDER_RE.search(text):
             fail("candidate_paths contains a missing or placeholder path")
         candidate = Path(text).expanduser()
-        if not candidate.is_absolute():
-            candidate = (path.parent / candidate).resolve()
-        else:
-            candidate = candidate.resolve()
-        if candidate in seen_paths:
+        candidate = (path.parent / candidate).resolve() if not candidate.is_absolute() else candidate.resolve()
+        if candidate in seen:
             fail("candidate_paths contains a duplicate file path")
         if not candidate.is_file() or candidate.stat().st_size <= 0:
             fail("candidate_paths contains a missing or empty file")
-        seen_paths.add(candidate)
+        seen.add(candidate)
         candidate_paths.append(candidate)
 
     boundary = manifest.get("scope_boundary")
-    if not isinstance(boundary, dict) or list(boundary) != SCOPE_KEYS:
+    if not isinstance(boundary, dict) or set(boundary) != set(SCOPE_KEYS):
         fail("candidate set scope_boundary keys drift")
     for key in SCOPE_KEYS:
         if boundary.get(key) is not False:
             fail(f"candidate set scope boundary must remain false: {key}")
-    return manifest, candidate_paths, reference
+    return candidate_paths, reference
 
 
 def validate_stage76_candidate(path: Path) -> dict:
     candidate = load_json(path, "Stage76 digest candidate")
-    if candidate.get("schema_version") != 1:
-        fail("Stage76 candidate schema_version drift")
-    if candidate.get("stage") != "STAGE76_PROVIDER_EVIDENCE_ACQUISITION_BOUNDARY":
+    if candidate.get("schema_version") != 1 or candidate.get("stage") != "STAGE76_PROVIDER_EVIDENCE_ACQUISITION_BOUNDARY":
         fail("non-Stage76 candidate supplied")
     if candidate.get("output_kind") != "DIGEST_ONLY_PROVIDER_PRIVACY_EVIDENCE_INTAKE_CANDIDATE":
         fail("Stage76 candidate output_kind drift")
@@ -195,7 +186,7 @@ def validate_stage76_candidate(path: Path) -> dict:
 
     service_id = str(candidate.get("service_id", "")).strip()
     if service_id not in EXPECTED_IDS:
-        fail("Stage76 candidate service_id is outside the Stage75 inventory")
+        fail("Stage76 candidate service_id outside Stage75 inventory")
     relationship_status = candidate.get("stage75_relationship_status")
     if not isinstance(relationship_status, str) or not relationship_status.strip():
         fail("Stage76 candidate relationship status missing")
@@ -206,7 +197,7 @@ def validate_stage76_candidate(path: Path) -> dict:
             fail(f"Stage76 candidate invalid SHA-256 field: {key}")
 
     artifact_sha256 = candidate.get("artifact_sha256")
-    if not isinstance(artifact_sha256, dict) or list(artifact_sha256) != ARTIFACT_KEYS:
+    if not isinstance(artifact_sha256, dict) or set(artifact_sha256) != set(ARTIFACT_KEYS):
         fail("Stage76 candidate artifact digest keys drift")
     for key in ARTIFACT_KEYS:
         digest = artifact_sha256.get(key)
@@ -245,8 +236,7 @@ def main() -> None:
 
     validate_repo_authorities()
     manifest_path = args.candidate_manifest.expanduser().resolve()
-    manifest, candidate_paths, review_reference = validate_manifest(manifest_path)
-
+    candidate_paths, review_reference = validate_manifest(manifest_path)
     entries = [validate_stage76_candidate(path) for path in candidate_paths]
     entries.sort(key=lambda item: item["service_id"])
     ids = [item["service_id"] for item in entries]
