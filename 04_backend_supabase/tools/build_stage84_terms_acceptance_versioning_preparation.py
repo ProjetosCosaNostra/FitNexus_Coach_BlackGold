@@ -95,8 +95,13 @@ def validate_sources() -> tuple[dict, dict]:
     stage83 = load_json(STAGE83, "Stage83 authority")
     if stage83.get("canonical_target_open_decision", {}).get("id") != "BILLING_CANCELLATION_REFUND_POLICY":
         fail("Stage83 source identity drift")
-    if stage83.get("hard_boundaries", {}).get("terms_of_use_modified") is not False:
-        fail("Stage83 unexpectedly modified Terms")
+    # Stage83 does not expose a top-level hard_boundaries object. Its canonical
+    # Terms mutation boundary lives in questionnaire_contract and must be read
+    # from the schema that actually exists, rather than treating a missing key
+    # as evidence of mutation.
+    stage83_contract = stage83.get("questionnaire_contract", {})
+    if stage83_contract.get("terms_of_use_may_be_modified") is not False:
+        fail("Stage83 Terms mutation boundary drift")
 
     inventory = load_json(INVENTORY, "Stage84 inventory")
     if inventory.get("status") != "TECHNICAL_IMPLEMENTATION_PREPARATION_ONLY_NOT_TERMS_NOT_APPROVAL_NOT_EVIDENCE":
