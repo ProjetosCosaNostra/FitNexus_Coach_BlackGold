@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "input_kind": "REAL_INDEPENDENT_CONTROLLER_PROCESSOR_REVIEW_INPUT",
+  "status": "PLACEHOLDER_TEMPLATE_NOT_REAL_REVIEW",
+  "test_fixture": true,
+  "contains_placeholders": true,
+  "decision_id": "CONTROLLER_PROCESSOR_ROLE_MATRIX",
+  "reviewer_reference": "<REAL_TRACEABLE_REVIEWER_REFERENCE_REQUIRED>",
+  "reviewer_role": "<REAL_REVIEWER_ROLE_OR_QUALIFICATION_REQUIRED>",
+  "reviewed_at_utc": "<REAL_TIMEZONE_AWARE_ISO8601_TIMESTAMP_REQUIRED>",
+  "independent_review_confirmed": false,
+  "reviewer_acknowledged_exact_source_digests": false,
+  "review_artifact_secret_values_absent_or_redacted_confirmed": false,
+  "outcome": "<APPROVED_WITHOUT_CHANGES_OR_APPROVED_WITH_REQUIRED_CHANGES_OR_NOT_APPROVED_REQUIRES_REVISION>",
+  "review_artifact_path": "<REAL_NONEMPTY_REVIEW_ARTIFACT_PATH_REQUIRED>",
+  "reviewed_source_sha256": {
+    "privacy_notice": "<EXACT_PACKET_SHA256_REQUIRED>",
+    "processing_role_matrix": "<EXACT_PACKET_SHA256_REQUIRED>",
+    "dsr_runbook": "<EXACT_PACKET_SHA256_REQUIRED>",
+    "incident_runbook": "<EXACT_PACKET_SHA256_REQUIRED>",
+    "open_decisions": "<EXACT_PACKET_SHA256_REQUIRED>"
+  },
+  "instructions": "Copy this template outside the repository. Complete it only from a real independent review of the exact packet bytes. Set test_fixture=false and contains_placeholders=false, provide a traceable reviewer reference, real review artifact and exact source digests, then acknowledge the review. Never commit the completed real-review input.",
+  "boundary": {
+    "completed_real_review_input_must_not_be_committed": true,
+    "collector_copies_reviewer_identity": false,
+    "collector_copies_review_artifact_path": false,
+    "collector_may_hash_reviewer_reference": true,
+    "collector_may_hash_review_artifact": true,
+    "collector_updates_candidate_documents": false,
+    "collector_closes_open_decision": false,
+    "collector_marks_gate_ready": false,
+    "collector_creates_evidence_migration": false
+  }
+}
