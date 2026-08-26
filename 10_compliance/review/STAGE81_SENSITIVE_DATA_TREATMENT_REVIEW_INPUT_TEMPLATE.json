@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "stage": "STAGE81_SENSITIVE_DATA_TREATMENT_REVIEW_EXTERNAL_INPUT",
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "test_fixture": true,
+  "status": "PLACEHOLDER_TEMPLATE_NOT_REAL_REVIEW_MATERIAL_MUST_FAIL_COLLECTOR",
+  "review_session_reference": "REPLACE_WITH_REAL_TRACEABLE_REVIEW_SESSION_REFERENCE",
+  "reviewed_at": "REPLACE_WITH_REAL_TIMEZONE_AWARE_TIMESTAMP",
+  "upstream_binding": {
+    "stage80r1_registry_pin_reconciliation_blob": "3f05971fae97c0491ba8c532d0577383f2b630c6",
+    "current_stage80_registry_blob": "2aacf6d36834f6542e0cc9ef1f9be360fc61019d"
+  },
+  "participants": [
+    {
+      "role": "legal_review",
+      "reviewer_reference": "REPLACE_WITH_REAL_LEGAL_REVIEWER_REFERENCE",
+      "review_artifact_path": "REPLACE_WITH_LOCAL_EXTERNAL_REAL_LEGAL_REVIEW_ARTIFACT_PATH",
+      "artifact_secret_values_absent_or_redacted": false,
+      "acknowledged_real_review": false
+    },
+    {
+      "role": "privacy_review",
+      "reviewer_reference": "REPLACE_WITH_REAL_PRIVACY_REVIEWER_REFERENCE",
+      "review_artifact_path": "REPLACE_WITH_LOCAL_EXTERNAL_REAL_PRIVACY_REVIEW_ARTIFACT_PATH",
+      "artifact_secret_values_absent_or_redacted": false,
+      "acknowledged_real_review": false
+    }
+  ],
+  "surface_reviews": [
+    {
+      "surface_id": "student_profile_objective_and_context",
+      "final_legal_classification": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "purpose_and_necessity": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "minimization_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "free_form_content_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "access_control_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "external_ai_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "marketing_analytics_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "transparency_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "incident_handling_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "retention_dependency_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE",
+      "review_material_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE"
+    },
+    {
+      "surface_id": "training_prescription_notes_and_lineage",
+      "final_legal_classification": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "purpose_and_necessity": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "minimization_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "free_form_content_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "access_control_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "external_ai_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "marketing_analytics_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "transparency_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "incident_handling_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "retention_dependency_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE",
+      "review_material_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE"
+    },
+    {
+      "surface_id": "workout_feedback_pain_energy_and_notes",
+      "final_legal_classification": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "purpose_and_necessity": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "minimization_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "free_form_content_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "access_control_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "external_ai_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "marketing_analytics_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "transparency_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "incident_handling_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "retention_dependency_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE",
+      "review_material_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE"
+    },
+    {
+      "surface_id": "decision_intelligence_context_and_outcomes",
+      "final_legal_classification": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "purpose_and_necessity": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "minimization_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "free_form_content_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "access_control_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "external_ai_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "marketing_analytics_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "transparency_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "incident_handling_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "retention_dependency_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE",
+      "review_material_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE"
+    },
+    {
+      "surface_id": "coach_action_notes",
+      "final_legal_classification": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "purpose_and_necessity": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "minimization_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "free_form_content_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "access_control_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "external_ai_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "marketing_analytics_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "transparency_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "incident_handling_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "retention_dependency_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE",
+      "review_material_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE"
+    },
+    {
+      "surface_id": "student_access_security_identifiers_and_alerts",
+      "final_legal_classification": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "purpose_and_necessity": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "minimization_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "free_form_content_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "access_control_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "external_ai_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "marketing_analytics_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "transparency_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "incident_handling_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "retention_dependency_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE",
+      "review_material_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE"
+    },
+    {
+      "surface_id": "growth_attribution_and_marketing_boundary",
+      "final_legal_classification": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "purpose_and_necessity": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "minimization_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "free_form_content_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "access_control_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "external_ai_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "marketing_analytics_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "transparency_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "incident_handling_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "retention_dependency_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE",
+      "review_material_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE"
+    },
+    {
+      "surface_id": "support_and_dsr_free_form_ingress",
+      "final_legal_classification": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "purpose_and_necessity": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "minimization_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "free_form_content_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "access_control_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "external_ai_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "marketing_analytics_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "transparency_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "incident_handling_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "retention_dependency_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE",
+      "review_material_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE"
+    },
+    {
+      "surface_id": "incident_response_sensitive_data_handling",
+      "final_legal_classification": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "purpose_and_necessity": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "minimization_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "free_form_content_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "access_control_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "external_ai_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "marketing_analytics_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "transparency_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "incident_handling_rule": "REPLACE_WITH_REAL_REVIEW_CONCLUSION",
+      "retention_dependency_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE",
+      "review_material_reference": "REPLACE_WITH_REAL_REVIEW_REFERENCE"
+    }
+  ],
+  "cross_surface_review_reference": "REPLACE_WITH_REAL_CROSS_SURFACE_REVIEW_MATERIAL_REFERENCE",
+  "all_surface_reviews_complete": false,
+  "legal_and_privacy_review_complete": false,
+  "canonical_independent_acceptance_performed": false,
+  "sensitive_data_treatment_decision_closed": false,
+  "gate_promotion_performed": false
+}
