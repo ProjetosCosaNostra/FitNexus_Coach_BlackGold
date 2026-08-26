@@ -4,6 +4,17 @@
   "stage": "STAGE84_TERMS_ACCEPTANCE_VERSIONING_IMPLEMENTATION_PREPARATION",
   "baseline_main_sha": "07366968780d6efa732022237116eb7f79201646",
   "current_state": "TERMS_ACCEPTANCE_VERSIONING_TECHNICAL_PREPARATION_ONLY_NO_APPROVED_TERMS_NO_REMOTE_MUTATION_NO_GATE_PROMOTION",
+  "upstream_stage83_green": {
+    "merged_main_sha": "07366968780d6efa732022237116eb7f79201646",
+    "green_head_sha": "0062fa75bcc0ceb66172f9c864453e7550438b72",
+    "dedicated_ci_run_id": 32990197181,
+    "dedicated_ci_conclusion": "success",
+    "flutter_quality_gate_run_id": 32990197521,
+    "flutter_quality_gate_conclusion": "success",
+    "artifact_id": 9614302419,
+    "artifact_digest": "sha256:5b6c13ce3f2cbb09447cd90fd689151bd63d0419fd52a6b2b66acff87fec4e62",
+    "artifact_is_legal_or_gate_evidence": false
+  },
   "canonical_target_open_decision": {
     "id": "TERMS_ACCEPTANCE_VERSIONING",
     "state": "OPEN",
@@ -17,7 +28,8 @@
     "open_decisions_blob": "215d527c1cb79d7b72697f03f1f84887e3a72d95",
     "terms_candidate": "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md",
     "terms_candidate_blob": "0652fb664db57842a8d9dd5d22f0b0b48d645d2d",
-    "stage83_authority": "04_backend_supabase/stage83_billing_policy_review_questionnaire_skeleton_authority.json"
+    "stage83_authority": "04_backend_supabase/stage83_billing_policy_review_questionnaire_skeleton_authority.json",
+    "stage83_authority_blob": "ab273d380b85a032b83b45679f420fd49a38f6ac"
   },
   "fresh_remote_read_only_observation": {
     "source": "Supabase information_schema read-only",
