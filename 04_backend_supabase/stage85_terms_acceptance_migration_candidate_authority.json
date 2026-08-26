@@ -60,8 +60,9 @@
     "creates_current_terms_resolver": true,
     "creates_acceptance_rpc": true,
     "creates_version_aware_acceptance_gate": true,
-    "inserts_terms_registry_rows": false,
-    "inserts_acceptance_rows": false
+    "inserts_terms_registry_rows_at_migration_apply": false,
+    "inserts_acceptance_rows_at_migration_apply": false,
+    "runtime_acceptance_rpc_appends_acceptance_row": true
   },
   "candidate_contract": {
     "terms_registry_table": "private.terms_document_registry",
@@ -85,7 +86,7 @@
   },
   "verification_matrix": [
     "candidate must remain under operations and absent from migrations",
-    "candidate must contain no INSERT into terms registry or acceptance ledger",
+    "candidate migration application must contain no seed DML that registers a Terms row or creates a real acceptance row; the only acceptance-ledger INSERT is inside the authenticated runtime acceptance RPC body",
     "registry version and digest identity are immutable",
     "acceptance history is append-only",
     "private tables deny direct anon/authenticated access",
