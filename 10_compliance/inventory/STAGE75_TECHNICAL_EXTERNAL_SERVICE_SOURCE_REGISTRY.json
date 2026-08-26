@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "status": "TECHNICAL_SOURCE_REGISTRY_NOT_LEGAL_PROVIDER_MAP_NOT_EVIDENCE",
+  "project": "FitNexus Coach BlackGold",
+  "purpose": "Source-derived technical inventory inputs for SUBPROCESSOR_AND_TRANSFER_MAP review. Relationship labels describe observed technical use only and are not controller/operator/subprocessor legal classifications.",
+  "global_unknowns": {
+    "provider_legal_entity": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+    "contract_or_dpa_reference": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+    "processing_regions": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+    "retention_terms": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE_AND_REVIEW",
+    "international_transfer_mechanism": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE_AND_LEGAL_REVIEW",
+    "subprocessor_chain": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+    "legal_relationship_classification": "UNRESOLVED_REQUIRES_LEGAL_PRIVACY_REVIEW"
+  },
+  "services": [
+    {
+      "service_id": "supabase",
+      "display_name": "Supabase",
+      "relationship_status": "CONFIRMED_ACTIVE_DIRECT_TECHNICAL_SERVICE",
+      "technical_purposes_observed": [
+        "authentication and account infrastructure",
+        "Postgres application data and tenant-isolation backend",
+        "student-access Edge Functions",
+        "security and alert receipt infrastructure"
+      ],
+      "source_artifacts": [
+        "03_app_flutter/fitnexus_app/pubspec.yaml",
+        "04_backend_supabase/student_access_edge_gateway_authority.json",
+        "04_backend_supabase/student_access_production_edge_selection_authority.json",
+        "04_backend_supabase/stage35_alert_external_delivery_cleanup_final_reconciliation_authority.json"
+      ],
+      "source_claim_markers": [
+        "supabase_flutter: ^2.0.0",
+        "edge_function_name\": \"student-access-gateway",
+        "flutter_uses_edge_gateway\": true",
+        "student_access_alert_dispatcher"
+      ],
+      "customer_data_processing_possible_from_repo_design": true,
+      "current_customer_rows_observed": 0,
+      "legal_relationship_classification": "UNRESOLVED_REQUIRES_LEGAL_PRIVACY_REVIEW",
+      "provider_legal_entity": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+      "contract_or_dpa_reference": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+      "processing_regions": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+      "retention_terms": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE_AND_REVIEW",
+      "international_transfer_mechanism": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE_AND_LEGAL_REVIEW",
+      "subprocessor_chain": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE"
+    },
+    {
+      "service_id": "telegram_bot_api",
+      "display_name": "Telegram Bot API",
+      "relationship_status": "CONFIRMED_ACTIVE_EXTERNAL_ALERT_DELIVERY_SERVICE",
+      "technical_purposes_observed": [
+        "external delivery of high/critical student-access security alerts"
+      ],
+      "source_artifacts": [
+        "04_backend_supabase/student_access_alert_delivery_contract.json",
+        "04_backend_supabase/stage35_alert_external_delivery_cleanup_final_reconciliation_authority.json"
+      ],
+      "source_claim_markers": [
+        "provider\": \"telegram_bot_api",
+        "provider_http_200_and_ok_true\": true",
+        "real_customer_data_used\": false"
+      ],
+      "customer_data_processing_possible_from_repo_design": false,
+      "payload_direct_student_identifiers_forbidden_by_contract": true,
+      "controlled_proof_used_real_customer_data": false,
+      "legal_relationship_classification": "UNRESOLVED_REQUIRES_LEGAL_PRIVACY_REVIEW",
+      "provider_legal_entity": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+      "contract_or_dpa_reference": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+      "processing_regions": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+      "retention_terms": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE_AND_REVIEW",
+      "international_transfer_mechanism": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE_AND_LEGAL_REVIEW",
+      "subprocessor_chain": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE"
+    },
+    {
+      "service_id": "asaas",
+      "display_name": "Asaas",
+      "relationship_status": "SELECTED_PRODUCTION_BILLING_PROVIDER_NOT_ACTIVATED",
+      "technical_purposes_observed": [
+        "planned BR_V1 subscription billing and checkout integration"
+      ],
+      "source_artifacts": [
+        "04_backend_supabase/stage39_billing_credential_authority_external_evidence_preparation.json",
+        "04_backend_supabase/stage62_stage61_final_reconciliation_authority.json",
+        "10_compliance/drafts/PROCESSING_ROLE_MATRIX_CANDIDATE.md"
+      ],
+      "source_claim_markers": [
+        "provider_code\": \"asaas",
+        "selected_pending_credentials",
+        "Asaas somente após ativação real"
+      ],
+      "production_credentials_verified": false,
+      "provider_activation_observed": false,
+      "real_checkout_proof_completed": false,
+      "customer_data_processing_current_state": "NOT_ATTESTED_ACTIVE_PROCESSING_PROVIDER_REMAINS_PENDING_CREDENTIALS",
+      "legal_relationship_classification": "UNRESOLVED_REQUIRES_LEGAL_PRIVACY_REVIEW",
+      "provider_legal_entity": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+      "contract_or_dpa_reference": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+      "processing_regions": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+      "retention_terms": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE_AND_REVIEW",
+      "international_transfer_mechanism": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE_AND_LEGAL_REVIEW",
+      "subprocessor_chain": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE"
+    },
+    {
+      "service_id": "cloudflare_edge_signal",
+      "display_name": "Cloudflare edge signal",
+      "relationship_status": "INDIRECT_INFRASTRUCTURE_SIGNAL_OBSERVED_CONTRACTUAL_RELATIONSHIP_UNVERIFIED",
+      "technical_purposes_observed": [
+        "edge-layer protected network-origin signal visible to deployed student-access gateway"
+      ],
+      "source_artifacts": [
+        "04_backend_supabase/cf_origin_spoof_sentinel_authority.json",
+        "04_backend_supabase/student_access_edge_gateway_authority.json"
+      ],
+      "source_claim_markers": [
+        "cf-connecting-ip",
+        "SPOOF_RESISTANCE_VERIFIED_EDGE_BLOCK_403"
+      ],
+      "direct_contract_with_fitnexus_proven": false,
+      "direct_provider_selection_by_fitnexus_proven": false,
+      "must_not_be_called_confirmed_subprocessor_from_repo_evidence": true,
+      "legal_relationship_classification": "UNRESOLVED_RELATIONSHIP_ITSELF_REQUIRES_PROVIDER_AND_LEGAL_REVIEW",
+      "provider_legal_entity": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+      "contract_or_dpa_reference": "UNKNOWN_NOT_PROVEN_DIRECT_RELATIONSHIP",
+      "processing_regions": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+      "retention_terms": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE_AND_REVIEW",
+      "international_transfer_mechanism": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE_AND_LEGAL_REVIEW",
+      "subprocessor_chain": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE"
+    },
+    {
+      "service_id": "github_repository_ci_pages",
+      "display_name": "GitHub repository / Actions / Pages",
+      "relationship_status": "CONFIRMED_REPOSITORY_CI_SERVICE_STALE_PUBLIC_PAGES_SURFACE_NOT_CURRENT_PRODUCTION_AUTHORITY",
+      "technical_purposes_observed": [
+        "source repository hosting",
+        "continuous integration and build artifacts",
+        "existing stale public GitHub Pages surface"
+      ],
+      "source_artifacts": [
+        "04_backend_supabase/stage66_production_release_candidate_evidence_pipeline_authority.json",
+        ".github/workflows/stage66_production_release_candidate_evidence_pipeline.yml"
+      ],
+      "source_claim_markers": [
+        "existing_public_surface",
+        "stale_gh_pages_branch",
+        "actions/upload-artifact"
+      ],
+      "current_pages_surface_is_production_deployment_evidence": false,
+      "customer_data_processing_by_pages_or_ci_attested": false,
+      "legal_relationship_classification": "UNRESOLVED_REQUIRES_SCOPE_AND_LEGAL_PRIVACY_REVIEW",
+      "provider_legal_entity": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+      "contract_or_dpa_reference": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+      "processing_regions": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE",
+      "retention_terms": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE_AND_REVIEW",
+      "international_transfer_mechanism": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE_AND_LEGAL_REVIEW",
+      "subprocessor_chain": "UNKNOWN_REQUIRES_PROVIDER_EVIDENCE"
+    }
+  ],
+  "hard_boundaries": {
+    "registry_is_legal_subprocessor_map": false,
+    "registry_is_provider_contract_evidence": false,
+    "registry_is_transfer_assessment": false,
+    "registry_is_retention_assessment": false,
+    "registry_can_close_subprocessor_transfer_decision": false,
+    "registry_can_mark_legal_gate_ready": false,
+    "registry_can_create_evidence_ref_or_digest": false,
+    "registry_can_promote_launch": false
+  }
+}
