@@ -1,0 +1,12 @@
+STAGE85_CI_BOOTSTRAP_TRIGGER
+
+Purpose: create one clean synchronization commit after the dedicated Stage85 workflow exists in the branch, so both the Stage85 candidate gate and Flutter Quality Gate can attach to the same exact head.
+
+Final repaired-head trigger after excluding SQL comments from executable semantic-token checks and registering BGF-STAGE85-SQL-COMMENT-SEMANTIC-TOKEN-FALSE-POSITIVE-851.
+
+No runtime behavior.
+No SQL execution.
+No Supabase mutation.
+No Terms publication or approval.
+No acceptance collection.
+No gate promotion.
