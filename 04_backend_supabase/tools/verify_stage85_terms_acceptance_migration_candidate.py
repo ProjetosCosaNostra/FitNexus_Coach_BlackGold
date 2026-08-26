@@ -49,6 +49,10 @@ def git_blob_sha(path: Path) -> str:
     return hashlib.sha1(f"blob {len(raw)}\0".encode("utf-8") + raw).hexdigest()
 
 
+def sql_without_line_comments(sql: str) -> str:
+    return "\n".join(line.split("--", 1)[0] for line in sql.splitlines())
+
+
 def verify_authority_and_upstream() -> None:
     authority = load_json(AUTHORITY)
     if authority.get("schema_version") != 1 or authority.get("project_ref") != "mceukeondizkwlpfxzgf":
@@ -166,9 +170,11 @@ def verify_candidate_sql() -> None:
         sql = CANDIDATE.read_text(encoding="utf-8")
     except OSError as exc:
         fail(f"unable to read Stage85 SQL candidate: {type(exc).__name__}")
-    low = sql.lower()
+    raw_low = sql.lower()
+    semantic_sql = sql_without_line_comments(sql)
+    low = semantic_sql.lower()
 
-    if "not a migration and must not be executed from operations/" not in low:
+    if "not a migration and must not be executed from operations/" not in raw_low:
         fail("candidate-only execution boundary missing")
     if "insert into private.terms_document_registry" in low:
         fail("candidate must not seed/register a Terms artifact")
@@ -179,8 +185,8 @@ def verify_candidate_sql() -> None:
     insert_pos = low.find("insert into private.terms_acceptance_ledger")
     if accept_start < 0 or accept_end < 0 or not (accept_start < insert_pos < accept_end):
         fail("acceptance ledger INSERT must exist only inside authenticated acceptance RPC")
-    if re.search(r"\bis_current\b", sql, flags=re.IGNORECASE):
-        fail("mutable is_current flag is forbidden")
+    if re.search(r"\bis_current\b", semantic_sql, flags=re.IGNORECASE):
+        fail("mutable is_current flag is forbidden in executable SQL")
     if "terms_of_use_candidate_ptbr" in low:
         fail("candidate SQL must never reference repository draft Terms as runtime authority")
 
