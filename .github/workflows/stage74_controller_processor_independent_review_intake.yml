@@ -1,0 +1,86 @@
+name: Stage74 Controller Processor Independent Review Intake
+
+on:
+  pull_request:
+    paths:
+      - '04_backend_supabase/stage74_controller_processor_independent_review_intake_authority.json'
+      - '04_backend_supabase/tools/build_stage74_controller_processor_review_packet.py'
+      - '04_backend_supabase/tools/collect_stage74_independent_review_candidate.py'
+      - '04_backend_supabase/tools/verify_stage74_controller_processor_independent_review_intake.py'
+      - '10_compliance/review/STAGE74_CONTROLLER_PROCESSOR_REVIEW_QUESTIONNAIRE.md'
+      - '10_compliance/review/STAGE74_INDEPENDENT_REVIEW_INPUT_TEMPLATE.json'
+      - '.github/workflows/stage74_controller_processor_independent_review_intake.yml'
+  push:
+    branches:
+      - main
+      - 'blackgold/**'
+    paths:
+      - '04_backend_supabase/stage74_controller_processor_independent_review_intake_authority.json'
+      - '04_backend_supabase/tools/build_stage74_controller_processor_review_packet.py'
+      - '04_backend_supabase/tools/collect_stage74_independent_review_candidate.py'
+      - '04_backend_supabase/tools/verify_stage74_controller_processor_independent_review_intake.py'
+      - '10_compliance/review/STAGE74_CONTROLLER_PROCESSOR_REVIEW_QUESTIONNAIRE.md'
+      - '10_compliance/review/STAGE74_INDEPENDENT_REVIEW_INPUT_TEMPLATE.json'
+      - '.github/workflows/stage74_controller_processor_independent_review_intake.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-independent-review-intake:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify Stage74 review intake contract
+        run: python 04_backend_supabase/tools/verify_stage74_controller_processor_independent_review_intake.py
+
+      - name: Build deterministic review packet twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/stage74"
+          python 04_backend_supabase/tools/build_stage74_controller_processor_review_packet.py \
+            --source-sha "${{ github.event.pull_request.head.sha || github.sha }}" \
+            --output "$RUNNER_TEMP/stage74/packet_a.json"
+          python 04_backend_supabase/tools/build_stage74_controller_processor_review_packet.py \
+            --source-sha "${{ github.event.pull_request.head.sha || github.sha }}" \
+            --output "$RUNNER_TEMP/stage74/packet_b.json"
+          cmp "$RUNNER_TEMP/stage74/packet_a.json" "$RUNNER_TEMP/stage74/packet_b.json"
+
+      - name: Prove committed placeholder review input is refused
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f "$RUNNER_TEMP/stage74/review_candidate.json"
+          if python 04_backend_supabase/tools/collect_stage74_independent_review_candidate.py \
+            --review-packet "$RUNNER_TEMP/stage74/packet_a.json" \
+            --review-input 10_compliance/review/STAGE74_INDEPENDENT_REVIEW_INPUT_TEMPLATE.json \
+            --output "$RUNNER_TEMP/stage74/review_candidate.json"; then
+            echo "PLACEHOLDER_REVIEW_FALSE_GREEN=FAIL"
+            exit 1
+          fi
+          test ! -e "$RUNNER_TEMP/stage74/review_candidate.json"
+          echo "PLACEHOLDER_REVIEW_INPUT_REFUSED=PASS"
+
+      - name: Upload non-attesting review packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage74-controller-processor-review-packet-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/stage74/packet_a.json
+          retention-days: 7
+
+      - name: Preserve external review boundary
+        run: |
+          echo "REAL_REVIEW=false"
+          echo "REVIEW_OUTCOME_ATTESTED=false"
+          echo "CANDIDATE_DOCUMENT_PROMOTION=false"
+          echo "OPEN_DECISION_CLOSED=false"
+          echo "EVIDENCE_MIGRATION=false"
+          echo "GATE_PROMOTION=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "PAID_MEDIA=DENIED"
+          echo "REMOTE_MUTATION=false"

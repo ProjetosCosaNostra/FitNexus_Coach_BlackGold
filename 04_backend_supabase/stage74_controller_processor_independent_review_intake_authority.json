@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE74_CONTROLLER_PROCESSOR_INDEPENDENT_REVIEW_INTAKE",
+  "baseline_main_sha": "5ac1ded742eb71d9e9b124a8c878473e70d3dbbc",
+  "current_state": "HIGHEST_FANOUT_CONTROLLER_PROCESSOR_DECISION_REVIEW_INTAKE_PREPARED_NO_REVIEW_ATTESTATION_NO_DRAFT_PROMOTION_NO_GATE_PROMOTION",
+  "upstream_authority": {
+    "stage73_decision_frontier": "04_backend_supabase/stage73_cross_gate_decision_frontier_authority.json",
+    "stage73_decision_frontier_blob": "6ef6cce7e3be3b51fe53ad99c9367b7cada43f14",
+    "stage67_open_decisions": "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json",
+    "stage67_open_decisions_blob": "215d527c1cb79d7b72697f03f1f84887e3a72d95"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-26T04:08:42.653896+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "remote_mutation_performed": false
+  },
+  "review_scope": {
+    "decision_id": "CONTROLLER_PROCESSOR_ROLE_MATRIX",
+    "fanout_count": 4,
+    "affected_external_gates": [
+      "legal_privacy_notice",
+      "legal_role_mapping",
+      "data_subject_request_channel",
+      "incident_response"
+    ],
+    "resolution_authority": "independent legal/privacy review",
+    "questionnaire": "10_compliance/review/STAGE74_CONTROLLER_PROCESSOR_REVIEW_QUESTIONNAIRE.md",
+    "external_review_input_template": "10_compliance/review/STAGE74_INDEPENDENT_REVIEW_INPUT_TEMPLATE.json",
+    "packet_builder": "04_backend_supabase/tools/build_stage74_controller_processor_review_packet.py",
+    "review_candidate_collector": "04_backend_supabase/tools/collect_stage74_independent_review_candidate.py",
+    "guard": "04_backend_supabase/tools/verify_stage74_controller_processor_independent_review_intake.py",
+    "workflow": ".github/workflows/stage74_controller_processor_independent_review_intake.yml"
+  },
+  "review_contract": {
+    "candidate_sources_remain_draft": true,
+    "candidate_sources_can_be_promoted_by_packet": false,
+    "real_independent_reviewer_reference_required_for_review_candidate": true,
+    "real_review_artifact_required_for_review_candidate": true,
+    "exact_candidate_source_digests_must_match_review_input": true,
+    "review_input_completed_copy_must_remain_outside_repo": true,
+    "committed_placeholder_review_input_must_fail": true,
+    "test_fixture_review_input_must_fail": true,
+    "review_outcome_may_be_recorded_only_from_real_external_input": true,
+    "review_outcome_automatically_changes_candidate_documents": false,
+    "review_outcome_automatically_closes_open_decision": false,
+    "review_outcome_is_gate_evidence": false,
+    "review_candidate_requires_canonical_gate_review_afterward": true,
+    "reviewer_identity_copied_to_candidate_output": false,
+    "reviewer_reference_sha256_allowed": true,
+    "review_artifact_path_copied_to_candidate_output": false,
+    "review_artifact_sha256_allowed": true,
+    "network_calls_allowed": false,
+    "provider_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "deployment_action_allowed": false,
+    "evidence_ref_creation_allowed": false,
+    "evidence_digest_promotion_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "gate_promotion_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "candidate_sources": [
+    "10_compliance/drafts/PRIVACY_NOTICE_CANDIDATE_PTBR.md",
+    "10_compliance/drafts/PROCESSING_ROLE_MATRIX_CANDIDATE.md",
+    "10_compliance/drafts/DATA_SUBJECT_REQUEST_RUNBOOK_CANDIDATE.md",
+    "10_compliance/drafts/INCIDENT_RESPONSE_RUNBOOK_CANDIDATE.md",
+    "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+  ],
+  "outcome_contract": {
+    "allowed_real_review_outcomes": [
+      "APPROVED_WITHOUT_CHANGES",
+      "APPROVED_WITH_REQUIRED_CHANGES",
+      "NOT_APPROVED_REQUIRES_REVISION"
+    ],
+    "approved_without_changes_still_does_not_close_any_gate": true,
+    "approved_with_required_changes_requires_new_candidate_bytes_and_new_review": true,
+    "not_approved_requires_revision_and_new_review": true,
+    "document_approval_version_or_effective_date_is_not_created_by_stage74": true
+  },
+  "failure_classes": [
+    "BGF-STAGE74-PLACEHOLDER-REVIEW-AS-REAL-706",
+    "BGF-STAGE74-TEST-FIXTURE-REVIEW-AS-REAL-707",
+    "BGF-STAGE74-REVIEW-SOURCE-DIGEST-MISMATCH-708",
+    "BGF-STAGE74-REVIEWER-REFERENCE-OMISSION-709",
+    "BGF-STAGE74-REVIEW-ARTIFACT-OMISSION-710",
+    "BGF-STAGE74-REVIEW-OUTCOME-FABRICATION-711",
+    "BGF-STAGE74-REVIEW-CANDIDATE-AS-GATE-EVIDENCE-712",
+    "BGF-STAGE74-REVIEWER-IDENTITY-PATH-LEAKAGE-713",
+    "BGF-STAGE74-PREMATURE-DRAFT-OR-GATE-PROMOTION-714",
+    "BGF-STAGE74-INDEPENDENT-REVIEW-INTAKE-GUARD-715"
+  ],
+  "gates": {
+    "stage74_review_intake": "REPO_ONLY_PENDING_CI",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "After Stage74 is green, no controller/processor legal conclusion may be invented internally. The next transition for this frontier requires a real external independent reviewer input; other independent internal preparation may continue on unrelated blockers.",
+    "real_independent_review_required": true,
+    "external_review_input_present": false,
+    "evidence_migration_allowed": false
+  }
+}
