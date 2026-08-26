@@ -32,7 +32,7 @@
     "stage83_questionnaire": "10_compliance/review/STAGE83_BILLING_POLICY_REVIEW_QUESTIONNAIRE_SKELETON.md",
     "stage83_questionnaire_blob": "1644ebd8d55bf16146c74decacb674aa4cc6cf4a",
     "stage83_builder": "04_backend_supabase/tools/build_stage83_billing_policy_review_questionnaire_skeleton.py",
-    "stage83_builder_blob": "77d24f56267db0b64e0fa3298702872aac7726ea"
+    "stage83_builder_blob": "24e302fa7f4e8595a1c1dd8afe32515d29ef83e5"
   },
   "fresh_postmerge_remote_read_only_receipt": {
     "source": "Supabase.execute_sql_read_only",
@@ -116,7 +116,8 @@
     "BGF-STAGE83-QUESTIONNAIRE-AS-POLICY-APPROVAL-825",
     "BGF-STAGE83-PREMATURE-TARGET-DECISION-CLOSURE-826",
     "BGF-STAGE83-PREMATURE-GATE-PROMOTION-827",
-    "BGF-STAGE83-BILLING-POLICY-QUESTIONNAIRE-SKELETON-GUARD-828"
+    "BGF-STAGE83-BILLING-POLICY-QUESTIONNAIRE-SKELETON-GUARD-828",
+    "BGF-STAGE83-FIXED-SOURCE-PIN-NOT-RECONCILED-829"
   ],
   "gates": {
     "stage83_billing_policy_review_questionnaire_skeleton": "REPO_ONLY_PENDING_CI",
