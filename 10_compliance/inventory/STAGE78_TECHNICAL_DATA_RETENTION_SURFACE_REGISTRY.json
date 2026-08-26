@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "status": "TECHNICAL_DATA_RETENTION_SURFACE_REGISTRY_NOT_APPROVED_RETENTION_POLICY_NOT_EVIDENCE",
+  "project": "FitNexus Coach BlackGold",
+  "purpose": "Source-derived technical inventory of data-bearing surfaces and lifecycle markers relevant to RETENTION_MATRIX review. It does not select legal retention periods, legal bases, backup expiration windows or deletion obligations.",
+  "policy_boundary": {
+    "retention_periods_defined": false,
+    "legal_hold_rules_defined": false,
+    "backup_expiration_defined": false,
+    "cancellation_retention_defined": false,
+    "delinquency_retention_defined": false,
+    "anonymization_rules_approved": false,
+    "deletion_rules_approved": false,
+    "technical_lifecycle_marker_is_retention_policy": false,
+    "registry_can_close_retention_matrix": false,
+    "registry_can_mark_gate_ready": false,
+    "registry_can_create_evidence_ref_or_digest": false,
+    "registry_can_trigger_evidence_migration": false
+  },
+  "categories": [
+    {
+      "category_id": "account_and_tenancy",
+      "technical_description": "Account profile, organization identity and organization membership/role surfaces.",
+      "source_tables": ["public.profiles", "public.organizations", "public.organization_members"],
+      "key_field_markers": ["user_id", "display_name", "owner_user_id", "role", "created_at", "updated_at"],
+      "data_subject_linkage_possible": true,
+      "potentially_sensitive": false,
+      "observed_lifecycle_markers": ["created_at", "updated_at"],
+      "explicit_retention_period_in_registry": null,
+      "retention_policy_state": "UNRESOLVED_REQUIRES_LEGAL_PRIVACY_OPERATIONS_REVIEW"
+    },
+    {
+      "category_id": "student_identity_and_coaching_profile",
+      "technical_description": "Student identity/contact and coaching profile fields used by the organization.",
+      "source_tables": ["public.students"],
+      "key_field_markers": ["name", "email", "objective", "level", "status", "last_workout_date", "created_at", "updated_at"],
+      "data_subject_linkage_possible": true,
+      "potentially_sensitive": true,
+      "sensitivity_note": "Objective, status and free-form coaching context may become sensitive depending on actual content; this registry does not make the final legal classification.",
+      "observed_lifecycle_markers": ["status", "last_workout_date", "created_at", "updated_at"],
+      "explicit_retention_period_in_registry": null,
+      "retention_policy_state": "UNRESOLVED_REQUIRES_LEGAL_PRIVACY_OPERATIONS_REVIEW"
+    },
+    {
+      "category_id": "training_prescription_templates_and_lineage",
+      "technical_description": "Training prescriptions, reusable templates, exercises and plan lineage/history.",
+      "source_tables": ["public.training_plans", "public.training_exercises", "public.training_templates", "public.training_template_exercises", "public.training_plan_lineage"],
+      "key_field_markers": ["student_id", "notes", "prescription", "is_active", "predecessor_plan_id", "decision_reason", "trigger_context", "created_at", "updated_at"],
+      "data_subject_linkage_possible": true,
+      "potentially_sensitive": true,
+      "sensitivity_note": "Prescription, notes, decision reasons and context may reflect limitations or health-related coaching information depending on use.",
+      "observed_lifecycle_markers": ["is_active", "predecessor_plan_id", "created_at", "updated_at"],
+      "explicit_retention_period_in_registry": null,
+      "retention_policy_state": "UNRESOLVED_REQUIRES_LEGAL_PRIVACY_OPERATIONS_REVIEW"
+    },
+    {
+      "category_id": "workout_execution_history",
+      "technical_description": "Workout session and exercise completion history.",
+      "source_tables": ["public.workout_sessions", "public.workout_exercise_logs"],
+      "key_field_markers": ["student_id", "training_plan_id", "status", "started_at", "completed_at", "completed", "created_at", "updated_at"],
+      "data_subject_linkage_possible": true,
+      "potentially_sensitive": true,
+      "sensitivity_note": "Execution history can reveal behavioral or fitness information and must be reviewed together with student/coaching context.",
+      "observed_lifecycle_markers": ["status", "started_at", "completed_at", "created_at", "updated_at"],
+      "explicit_retention_period_in_registry": null,
+      "retention_policy_state": "UNRESOLVED_REQUIRES_LEGAL_PRIVACY_OPERATIONS_REVIEW"
+    },
+    {
+      "category_id": "potentially_sensitive_workout_feedback",
+      "technical_description": "Workout feedback including exertion, energy, pain score/location and free-form note.",
+      "source_tables": ["public.workout_feedback"],
+      "key_field_markers": ["student_id", "perceived_exertion", "pain_score", "energy_score", "pain_location", "note", "submitted_at", "updated_at"],
+      "data_subject_linkage_possible": true,
+      "potentially_sensitive": true,
+      "sensitivity_note": "Pain and injury-related feedback is explicitly treated as potentially sensitive in the draft privacy materials; final legal treatment remains open.",
+      "observed_lifecycle_markers": ["submitted_at", "updated_at"],
+      "explicit_retention_period_in_registry": null,
+      "retention_policy_state": "UNRESOLVED_REQUIRES_LEGAL_PRIVACY_OPERATIONS_REVIEW"
+    },
+    {
+      "category_id": "decision_intelligence_and_coach_action_history",
+      "technical_description": "Decision Intelligence runs/outcomes, evaluation cases, promotion packets and coach action history.",
+      "source_tables": ["public.decision_intelligence_runs", "public.decision_intelligence_outcomes", "public.decision_engine_evaluation_runs", "public.decision_engine_evaluation_cases", "public.decision_engine_promotion_packets", "public.coach_action_events"],
+      "key_field_markers": ["student_id", "brief", "outcome", "note", "champion_output", "challenger_output", "packet", "resolution", "snooze_until", "created_at", "completed_at", "decided_at"],
+      "data_subject_linkage_possible": true,
+      "potentially_sensitive": true,
+      "sensitivity_note": "Decision outputs can inherit sensitive context from student/workout data; the system remains human-in-the-loop and this is not a legal classification.",
+      "observed_lifecycle_markers": ["created_at", "completed_at", "decided_at", "snooze_until"],
+      "explicit_retention_period_in_registry": null,
+      "retention_policy_state": "UNRESOLVED_REQUIRES_LEGAL_PRIVACY_OPERATIONS_REVIEW"
+    },
+    {
+      "category_id": "student_access_security_and_abuse_telemetry",
+      "technical_description": "Student access links, command receipts, rate buckets, security events/signals and alert-delivery receipts.",
+      "source_tables": ["public.student_access_links", "private.student_access_command_receipts", "private.student_access_rate_buckets", "private.student_access_network_rate_buckets", "private.student_access_security_events", "private.student_access_security_signals", "private.student_access_alert_delivery_receipts"],
+      "key_field_markers": ["student_id", "organization_id", "token_hash", "expires_at", "revoked_at", "last_used_at", "occurred_at", "window_started_at", "first_seen_at", "last_seen_at", "lease_expires_at", "delivered_at", "created_at", "updated_at"],
+      "data_subject_linkage_possible": true,
+      "potentially_sensitive": false,
+      "security_retention_may_have_independent_purpose": true,
+      "observed_lifecycle_markers": ["expires_at", "revoked_at", "last_used_at", "window_started_at", "lease_expires_at", "occurred_at", "first_seen_at", "last_seen_at", "created_at", "updated_at"],
+      "explicit_retention_period_in_registry": null,
+      "retention_policy_state": "UNRESOLVED_REQUIRES_LEGAL_PRIVACY_SECURITY_OPERATIONS_REVIEW"
+    },
+    {
+      "category_id": "growth_attribution_and_funnel_telemetry",
+      "technical_description": "Growth events, attribution and capture-failure telemetry with actor/organization linkage and campaign/referrer metadata.",
+      "source_tables": ["private.growth_events", "private.growth_attribution", "private.growth_capture_failures"],
+      "key_field_markers": ["organization_id", "actor_user_id", "first_source", "first_medium", "first_campaign", "first_referrer_host", "last_source", "last_medium", "last_campaign", "last_referrer_host", "occurred_at", "created_at", "updated_at"],
+      "data_subject_linkage_possible": true,
+      "potentially_sensitive": false,
+      "sensitive_payloads_forbidden_by_product_rule": true,
+      "observed_lifecycle_markers": ["occurred_at", "first_captured_at", "last_captured_at", "created_at", "updated_at"],
+      "explicit_retention_period_in_registry": null,
+      "retention_policy_state": "UNRESOLVED_REQUIRES_LEGAL_PRIVACY_GROWTH_OPERATIONS_REVIEW"
+    },
+    {
+      "category_id": "billing_subscription_and_webhook_history",
+      "technical_description": "Subscription state, checkout intent, authority events, webhook receipts and external billing evidence digests.",
+      "source_tables": ["public.organization_subscriptions", "public.billing_checkout_intents", "public.billing_webhook_receipts", "public.subscription_authority_events", "private.billing_provider_external_evidence"],
+      "key_field_markers": ["organization_id", "provider_customer_ref", "provider_subscription_ref", "checkout_url", "expires_at", "provider_event_id", "payload_sha256", "external_event_ref", "effective_at", "received_at", "processed_at", "created_at", "updated_at"],
+      "data_subject_linkage_possible": true,
+      "potentially_sensitive": false,
+      "provider_activation_currently_attested": false,
+      "observed_lifecycle_markers": ["trial_ends_at", "current_period_end", "expires_at", "received_at", "processed_at", "effective_at", "created_at", "updated_at"],
+      "explicit_retention_period_in_registry": null,
+      "retention_policy_state": "UNRESOLVED_REQUIRES_BUSINESS_LEGAL_PRIVACY_BILLING_OPERATIONS_REVIEW"
+    },
+    {
+      "category_id": "governance_and_gate_evidence_metadata",
+      "technical_description": "Controlled-launch gate metadata/evidence references and related governance records.",
+      "source_tables": ["private.controlled_launch_gate_catalog", "private.controlled_launch_gate_evidence"],
+      "key_field_markers": ["gate_code", "state", "evidence_ref", "evidence_digest", "attested_at", "created_at", "updated_at"],
+      "data_subject_linkage_possible": false,
+      "potentially_sensitive": false,
+      "observed_lifecycle_markers": ["attested_at", "created_at", "updated_at"],
+      "explicit_retention_period_in_registry": null,
+      "retention_policy_state": "UNRESOLVED_REQUIRES_GOVERNANCE_OPERATIONS_REVIEW"
+    }
+  ],
+  "non_table_surfaces": [
+    {
+      "surface_id": "backup_restore_and_expiration",
+      "technical_observation": "Backup/restore is an explicit readiness and privacy concern, but no approved backup expiration window is defined by this registry.",
+      "observed_storage_bucket_count": 0,
+      "storage_bucket_count_zero_means_no_backup_or_provider_retention": false,
+      "backup_provider_or_platform_retention_attested": false,
+      "retention_policy_state": "UNRESOLVED_REQUIRES_PROVIDER_OPERATIONS_AND_LEGAL_PRIVACY_REVIEW"
+    },
+    {
+      "surface_id": "scheduled_cleanup_or_purge",
+      "technical_observation": "The Stage78 read-only snapshot found zero public/private routines whose names matched delete/cleanup/purge/prune/expire/retention and pg_cron was not installed. This name-based observation does not prove that no deletion path exists and does not define a retention schedule.",
+      "cleanup_like_named_routines_observed": 0,
+      "pg_cron_installed_observed": false,
+      "absence_of_named_cleanup_means_no_deletion_path": false,
+      "retention_policy_state": "UNRESOLVED_REQUIRES_TECHNICAL_AND_OPERATIONS_REVIEW"
+    }
+  ]
+}
