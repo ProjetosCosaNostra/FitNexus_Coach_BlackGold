@@ -47,6 +47,10 @@ def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def sql_without_line_comments(sql: str) -> str:
+    return "\n".join(line.split("--", 1)[0] for line in sql.splitlines())
+
+
 def canonical_decision() -> dict:
     decisions = load_json(OPEN_DECISIONS, "open decisions")
     unresolved = decisions.get("unresolved")
@@ -158,6 +162,8 @@ def main() -> None:
 
     canonical = canonical_decision()
     authority, sql = validate_sources()
+    semantic_sql = sql_without_line_comments(sql)
+    semantic_low = semantic_sql.lower()
     output = {
         "schema_version": 1,
         "stage": "STAGE85_TERMS_ACCEPTANCE_MIGRATION_CANDIDATE",
@@ -188,9 +194,9 @@ def main() -> None:
             "acceptance_gate_with_authenticated_acceptance_rpc",
         ],
         "sql_contract_signals": {
-            "registry_insert_seed_present": "insert into private.terms_document_registry" in sql.lower(),
-            "runtime_acceptance_insert_count": sql.lower().count("insert into private.terms_acceptance_ledger"),
-            "mutable_is_current_flag_present": bool(re.search(r"\\bis_current\\b", sql, flags=re.IGNORECASE)),
+            "registry_insert_seed_present": "insert into private.terms_document_registry" in semantic_low,
+            "runtime_acceptance_insert_count": semantic_low.count("insert into private.terms_acceptance_ledger"),
+            "mutable_is_current_flag_present": bool(re.search(r"\bis_current\b", semantic_sql, flags=re.IGNORECASE)),
         },
         "hard_boundaries": {
             "terms_candidate_approved": False,
