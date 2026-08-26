@@ -83,9 +83,9 @@ def git_blob_sha(path: Path) -> str:
 
 def verify_pins() -> None:
     expected = {
-        AUTHORITY: "d0b6da327ddd143988ac7c35abbd06589ceb0179",
+        AUTHORITY: "ab273d380b85a032b83b45679f420fd49a38f6ac",
         QUESTIONNAIRE: "1644ebd8d55bf16146c74decacb674aa4cc6cf4a",
-        BUILDER: "77d24f56267db0b64e0fa3298702872aac7726ea",
+        BUILDER: "24e302fa7f4e8595a1c1dd8afe32515d29ef83e5",
         OPEN_DECISIONS: "215d527c1cb79d7b72697f03f1f84887e3a72d95",
         STAGE61: "3225b3c5d03fc45c57a4f043411d03b092e31c13",
         STAGE62: "4c9c99ecb2f3f016287e9d5c7de1888e6e2c846f",
