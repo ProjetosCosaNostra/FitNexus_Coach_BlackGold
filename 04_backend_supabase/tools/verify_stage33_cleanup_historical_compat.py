@@ -93,12 +93,30 @@ def project_exposure(current: dict) -> dict:
     if transition.get("remote_version") != REVOCATION_VERSION or transition.get("remote_applied") is not True:
         fail("current exposure remote receipt drifted")
 
+    current_targets = current.get("repository_target_approved_exposures")
+    if not isinstance(current_targets, list) or not current_targets:
+        fail("current repository exposure allowlist missing")
+    issue_rows = [
+        row for row in current_targets
+        if isinstance(row, dict) and row.get("function") == "issue_student_access_token_v2"
+    ]
+    if len(issue_rows) != 1 or issue_rows[0].get("roles") != ["authenticated"]:
+        fail("current issue_student_access_token_v2 authority drifted")
+
+    # BGF-STAGE86-HISTORICAL-EXPOSURE-PROJECTION-DRIFT-860:
+    # repository-target exposure authority may legitimately advance in later repo-only
+    # migrations. Historical Stage33 replay must project both the lifecycle fields and
+    # the historical allowlist surface instead of leaking future reviewed functions into
+    # an immutable Stage33 guard that correctly expected exactly one exposure.
     value = json.loads(json.dumps(current))
     value["current_state"] = "STAGE33_REVOCATION_REPO_ONLY_REMOTE_PRE_REVOCATION"
     value["baseline_main_sha"] = HISTORICAL_STAGE33_BASELINE
     value["observed_at_utc"] = HISTORICAL_STAGE33_OBSERVED
     value["policy"]["anonymous_exposure"] = "only possession_token_v2_boundary_until_stage33_remote_revocation"
     value["policy"].pop("authenticated_student_route_exposure", None)
+    value["repository_target_approved_exposures"] = [json.loads(json.dumps(issue_rows[0]))]
+    value.pop("stage86_repository_target_transition", None)
+
     projected_transition = value["stage33_transition"]
     projected_transition["migration_ledger_state"] = "repo_only"
     projected_transition["remote_applied"] = False
@@ -184,6 +202,7 @@ def run(mode: str) -> None:
     print("PROJECTED_HISTORICAL_REVOCATION_REMOTE_APPLIED=false")
     print("PROJECTED_HISTORICAL_REVOCATION_REPO_ONLY=true")
     print("PROJECTED_HISTORICAL_LATER_CLEANUP_MIGRATION_VISIBLE=false")
+    print("PROJECTED_HISTORICAL_FUTURE_SECURITY_DEFINER_EXPOSURES_VISIBLE=false")
     print("PROOF_REEXECUTION_ALLOWED=false")
     print("CLEANUP_REAPPLY_ALLOWED=false")
     print("REMOTE_REGRANT_ALLOWED=false")
