@@ -1,0 +1,72 @@
+name: Stage81 Sensitive Data Treatment Review Intake
+
+on:
+  pull_request:
+    paths:
+      - "04_backend_supabase/stage81_sensitive_data_treatment_review_intake_authority.json"
+      - "04_backend_supabase/tools/collect_stage81_sensitive_data_review_candidate.py"
+      - "04_backend_supabase/tools/verify_stage81_sensitive_data_treatment_review_intake.py"
+      - "10_compliance/review/STAGE81_SENSITIVE_DATA_TREATMENT_REVIEW_QUESTIONNAIRE.md"
+      - "10_compliance/review/STAGE81_SENSITIVE_DATA_REVIEW_INPUT_TEMPLATE.json"
+      - ".github/workflows/stage81_sensitive_data_treatment_review_intake.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-sensitive-data-review-intake-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify Stage81 sensitive data review intake contract
+        run: python 04_backend_supabase/tools/verify_stage81_sensitive_data_treatment_review_intake.py
+
+      - name: Prove committed placeholder sensitive-data review input is refused
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp 10_compliance/review/STAGE81_SENSITIVE_DATA_REVIEW_INPUT_TEMPLATE.json /tmp/stage81_placeholder_input.json
+          rm -f /tmp/stage81_placeholder_candidate.json
+          set +e
+          python 04_backend_supabase/tools/collect_stage81_sensitive_data_review_candidate.py \
+            --input /tmp/stage81_placeholder_input.json \
+            --output /tmp/stage81_placeholder_candidate.json \
+            >/tmp/stage81_placeholder_refusal.log 2>&1
+          rc=$?
+          set -e
+          if [ "$rc" -eq 0 ]; then
+            echo "Stage81 placeholder input unexpectedly produced a candidate"
+            exit 1
+          fi
+          test ! -e /tmp/stage81_placeholder_candidate.json
+          grep -F "STAGE81_SENSITIVE_DATA_REVIEW_COLLECTOR=FAIL" /tmp/stage81_placeholder_refusal.log >/dev/null
+          grep -F "test_fixture must be explicitly false" /tmp/stage81_placeholder_refusal.log >/dev/null
+
+      - name: Upload non-attesting Stage81 review intake boundary
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage81-sensitive-data-review-intake-${{ github.event.pull_request.head.sha }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            04_backend_supabase/stage81_sensitive_data_treatment_review_intake_authority.json
+            04_backend_supabase/tools/collect_stage81_sensitive_data_review_candidate.py
+            04_backend_supabase/tools/verify_stage81_sensitive_data_treatment_review_intake.py
+            10_compliance/review/STAGE81_SENSITIVE_DATA_TREATMENT_REVIEW_QUESTIONNAIRE.md
+            10_compliance/review/STAGE81_SENSITIVE_DATA_REVIEW_INPUT_TEMPLATE.json
+
+      - name: Preserve canonical independent acceptance boundary
+        run: |
+          echo "FINAL_SENSITIVE_DATA_CLASSIFICATION_APPROVED=false"
+          echo "SENSITIVE_DATA_PROCESSING_POLICY_APPROVED=false"
+          echo "TARGET_DECISION_CLOSED=false"
+          echo "EVIDENCE_MIGRATION=false"
+          echo "GATE_PROMOTION=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "PAID_MEDIA=DENIED"
+          echo "REMOTE_MUTATION=false"
