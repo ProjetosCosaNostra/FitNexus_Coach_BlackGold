@@ -1,0 +1,55 @@
+name: Stage88 Terms Acceptance Remote Apply Execution Seal
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify-terms-acceptance-remote-apply-execution-seal:
+    if: github.head_ref == 'blackgold/stage88-terms-acceptance-remote-apply-execution-seal'
+    runs-on: ubuntu-24.04
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify Stage88 Terms acceptance remote apply execution seal
+        run: python 04_backend_supabase/tools/verify_stage88_terms_acceptance_remote_apply_execution_seal.py
+
+      - name: Verify migration ledger contract
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Build deterministic Stage88 seal packet twice
+        run: |
+          python 04_backend_supabase/tools/build_stage88_terms_acceptance_remote_apply_execution_seal.py --source-sha "$SOURCE_SHA" --output /tmp/stage88_seal_a.json
+          python 04_backend_supabase/tools/build_stage88_terms_acceptance_remote_apply_execution_seal.py --source-sha "$SOURCE_SHA" --output /tmp/stage88_seal_b.json
+          cmp /tmp/stage88_seal_a.json /tmp/stage88_seal_b.json
+          cp /tmp/stage88_seal_a.json stage88_terms_acceptance_remote_apply_execution_seal_packet.json
+
+      - name: Upload non-attesting Stage88 execution seal packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage88-terms-acceptance-remote-apply-execution-seal-${{ github.event.pull_request.head.sha }}
+          path: stage88_terms_acceptance_remote_apply_execution_seal_packet.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Preserve Stage88 remote execution and legal boundaries
+        run: |
+          echo "ONE_SHOT_EXECUTION_SEALED=true"
+          echo "REMOTE_MIGRATION_APPLIED=false"
+          echo "SUPABASE_MUTATION=false"
+          echo "TERMS_REGISTRY_ROW_CREATED=false"
+          echo "REAL_ACCEPTANCE_COLLECTED=false"
+          echo "TARGET_DECISION_CLOSED=false"
+          echo "LEGAL_TERMS_GATE_READY=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "PAID_MEDIA=DENIED"
