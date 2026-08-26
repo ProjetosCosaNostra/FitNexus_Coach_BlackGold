@@ -75,6 +75,24 @@
     "remote_only_historical_divergence_count": 3,
     "undeclared_divergence_allowed": false
   },
+  "security_definer_exposure_transition": {
+    "first_quality_gate_run_id": 32999198313,
+    "first_quality_gate_job_id": 98276226962,
+    "first_result": "FAIL_CLOSED_BEFORE_ANY_REMOTE_MUTATION",
+    "failed_step": "SECURITY DEFINER exposure authority guard",
+    "failure_class": "BGF-STAGE86-SECURITY-DEFINER-ALLOWLIST-DRIFT-859",
+    "root_cause": "The exact Stage86 repo-only migration introduces three reviewed public SECURITY DEFINER Terms RPC exposures, while the repository exposure allowlist still described the pre-Stage86 target containing only issue_student_access_token_v2.",
+    "prevention_rule": "Every repo-only migration that creates or changes externally executable SECURITY DEFINER functions must advance the repository-target exposure authority in the same PR, while preserving historical remote truth and keeping remote exposure zero until the migration is actually applied and reconciled.",
+    "security_definer_authority_file": "04_backend_supabase/security_definer_exposure_authority.json",
+    "security_definer_authority_blob": "16631522fd64a8a84618e4e48198fb32a9f80a81",
+    "security_definer_verifier_file": "04_backend_supabase/tools/verify_security_definer_exposure_authority.py",
+    "security_definer_verifier_blob": "acfaece7ce0849810afa24ad6be8ad145d1c6165",
+    "new_repository_terms_function_count": 3,
+    "new_remote_terms_function_count": 0,
+    "remote_mutation_observed": false,
+    "terms_registry_row_created": false,
+    "acceptance_row_created": false
+  },
   "promotion_boundary": {
     "migration_may_merge_after_exact_head_ci": true,
     "migration_may_apply_after_this_pr_alone": false,
@@ -97,7 +115,8 @@
     "BGF-STAGE86-PREMATURE-REMOTE-APPLY-855",
     "BGF-STAGE86-PREMATURE-TERMS-DATA-SEED-856",
     "BGF-STAGE86-PREMATURE-TERMS-GATE-PROMOTION-857",
-    "BGF-STAGE86-TERMS-ACCEPTANCE-MIGRATION-PROMOTION-GUARD-858"
+    "BGF-STAGE86-TERMS-ACCEPTANCE-MIGRATION-PROMOTION-GUARD-858",
+    "BGF-STAGE86-SECURITY-DEFINER-ALLOWLIST-DRIFT-859"
   ],
   "hard_boundaries": {
     "terms_candidate_approved": false,
