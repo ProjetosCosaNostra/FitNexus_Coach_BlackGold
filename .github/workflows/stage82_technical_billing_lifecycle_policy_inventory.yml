@@ -1,0 +1,72 @@
+name: Stage82 Technical Billing Lifecycle Policy Inventory
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "04_backend_supabase/stage82_technical_billing_lifecycle_policy_inventory_authority.json"
+      - "04_backend_supabase/tools/build_stage82_technical_billing_lifecycle_policy_inventory.py"
+      - "04_backend_supabase/tools/verify_stage82_technical_billing_lifecycle_policy_inventory.py"
+      - "10_compliance/inventory/STAGE82_TECHNICAL_BILLING_LIFECYCLE_POLICY_SURFACE_REGISTRY.json"
+      - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+      - "04_backend_supabase/stage61_billing_authorization_state_machine_authority.json"
+      - "04_backend_supabase/stage62_stage61_final_reconciliation_authority.json"
+      - "04_backend_supabase/migrations/**"
+      - ".github/workflows/stage82_technical_billing_lifecycle_policy_inventory.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-technical-billing-lifecycle-policy-inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify Stage82 technical billing lifecycle policy inventory contract
+        run: python 04_backend_supabase/tools/verify_stage82_technical_billing_lifecycle_policy_inventory.py
+
+      - name: Build deterministic Stage82 inventory twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python 04_backend_supabase/tools/build_stage82_technical_billing_lifecycle_policy_inventory.py \
+            --source-sha "${{ github.event.pull_request.head.sha }}" \
+            --output /tmp/stage82_inventory_a.json
+          python 04_backend_supabase/tools/build_stage82_technical_billing_lifecycle_policy_inventory.py \
+            --source-sha "${{ github.event.pull_request.head.sha }}" \
+            --output /tmp/stage82_inventory_b.json
+          cmp /tmp/stage82_inventory_a.json /tmp/stage82_inventory_b.json
+          grep -F '"surface_count": 10' /tmp/stage82_inventory_a.json >/dev/null
+          grep -F '"customer_policy_approved": false' /tmp/stage82_inventory_a.json >/dev/null
+          grep -F '"refund_rule_approved": false' /tmp/stage82_inventory_a.json >/dev/null
+          grep -F '"cancellation_rule_approved": false' /tmp/stage82_inventory_a.json >/dev/null
+          grep -F '"delinquency_rule_approved": false' /tmp/stage82_inventory_a.json >/dev/null
+          grep -F '"terms_of_use_modified": false' /tmp/stage82_inventory_a.json >/dev/null
+          grep -F '"target_open_decision_closed": false' /tmp/stage82_inventory_a.json >/dev/null
+          echo "STAGE82_DETERMINISTIC_BUILD=PASS"
+
+      - name: Upload non-attesting Stage82 billing lifecycle inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage82-technical-billing-lifecycle-policy-inventory-${{ github.event.pull_request.head.sha }}
+          retention-days: 7
+          if-no-files-found: error
+          path: /tmp/stage82_inventory_a.json
+
+      - name: Preserve unresolved billing policy boundary
+        run: |
+          echo "CUSTOMER_POLICY_APPROVED=false"
+          echo "REFUND_RULE_APPROVED=false"
+          echo "CANCELLATION_RULE_APPROVED=false"
+          echo "TARGET_DECISION_CLOSED=false"
+          echo "LEGAL_TERMS_GATE_READY=false"
+          echo "PROVIDER_CALL=false"
+          echo "GATE_PROMOTION=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "REMOTE_MUTATION=false"
