@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "stage": "STAGE91_CONTROLLED_EXERCISE_INDEPENDENT_REVIEW_INTAKE",
+  "project": "FitNexus Coach BlackGold",
+  "purpose": "Prepare a fail-closed digest-only intake for completed human-controlled DSR and incident-response exercise records so future independent reviewers can validate them without owner identity leakage or automatic gate promotion.",
+  "current_main_baseline": "3940e7d7b28a8f14be0912ce17edc61bf0073a87",
+  "operational_source_authorities": {
+    "stage69_execution_boundary": {
+      "path": "04_backend_supabase/stage69_controlled_exercise_execution_boundary_authority.json",
+      "git_blob_sha": "3c139c652eea102ae7ac84b274eb60bf01539d3d"
+    },
+    "stage68_rehearsal_compiler": {
+      "path": "04_backend_supabase/stage68_synthetic_governance_rehearsal_compiler_authority.json",
+      "git_blob_sha": "45459541f7e8516258f3cabcba4dd46cd45d256f"
+    },
+    "stage44_dsr_evidence_preparation": {
+      "path": "04_backend_supabase/stage44_data_subject_request_external_evidence_preparation_authority.json",
+      "git_blob_sha": "53321a9af19ba3423fca44191bf000815eb617d5"
+    },
+    "stage45_incident_evidence_preparation": {
+      "path": "04_backend_supabase/stage45_incident_response_external_evidence_preparation_authority.json",
+      "git_blob_sha": "d5d32990e8ef7a3c4f13dc63e2088ea28e471f12"
+    }
+  },
+  "required_external_inputs": {
+    "stage69_session_candidate": {
+      "required": true,
+      "rule": "Must be the digest-only Stage69 session candidate generated only after real assigned owners and assignment artifacts were supplied externally."
+    },
+    "completed_exercise_record": {
+      "required": true,
+      "rule": "Must document actual human execution of all eight bound synthetic scenarios and contain no real customer data or production secrets."
+    },
+    "independent_review_record": {
+      "required": true,
+      "rule": "Must be produced by a real reviewer distinct from automated CI and must address the required DSR and incident coverage."
+    },
+    "reviewer_assignment_or_authority_artifact": {
+      "required": true,
+      "rule": "Must provide a traceable reviewer-authority artifact. The Stage91 output stores only its SHA-256, never the reviewer identity or file path."
+    }
+  },
+  "required_exercise_coverage": {
+    "dsr": [
+      "verified same-tenant access/export",
+      "cross-tenant request fail-closed without enumeration",
+      "audited correction",
+      "deletion versus retention-hold decision handoff without inventing law or deadlines",
+      "insufficient identity pauses before disclosure"
+    ],
+    "incident": [
+      "suspected cross-tenant exposure",
+      "credential compromise without real secrets/provider calls",
+      "potentially sensitive student data with minimization and legal decision handoff"
+    ]
+  },
+  "required_independent_review_findings": {
+    "dsr": [
+      "owner and backup assignment structurally supported by Stage69 session candidate",
+      "identity verification performed before disclosure",
+      "tenant-scoped access/export behavior exercised",
+      "correction workflow exercised",
+      "deletion/anonymization/blocking versus retention-hold decision path exercised",
+      "controller/operator handoff observed or explicitly recorded as unresolved",
+      "response-time policy dependency not invented by exercise tooling",
+      "tabletop used synthetic or non-customer fixtures only"
+    ],
+    "incident": [
+      "incident commander, privacy owner and technical owner assignment structurally supported by Stage69 session candidate",
+      "risk classification decision path exercised without automated legal conclusion",
+      "operator/controller handoff path exercised",
+      "ANPD/data-subject communication decision remained human/legal authority",
+      "incident evidence-retention path exercised",
+      "all three required incident scenarios executed using synthetic/non-customer fixtures",
+      "postmortem findings and remediation follow-up recorded"
+    ]
+  },
+  "digest_only_output_contract": {
+    "owner_names_copied": false,
+    "reviewer_name_copied": false,
+    "artifact_paths_copied": false,
+    "artifact_filenames_copied": false,
+    "raw_artifact_content_copied": false,
+    "stage69_session_sha256_recorded": true,
+    "completed_exercise_record_sha256_recorded": true,
+    "independent_review_record_sha256_recorded": true,
+    "reviewer_authority_artifact_sha256_recorded": true,
+    "coverage_boolean_summary_recorded": true,
+    "unresolved_findings_count_recorded": true
+  },
+  "fail_closed_rules": {
+    "placeholder_or_test_fixture_input_rejected": true,
+    "exercise_executed_false_rejected": true,
+    "independent_review_completed_false_rejected": true,
+    "real_customer_data_used_true_rejected": true,
+    "production_secret_used_true_rejected": true,
+    "network_or_provider_call_required_by_intake": false,
+    "supabase_mutation_allowed": false,
+    "stage44_evidence_attestation_allowed": false,
+    "stage45_evidence_attestation_allowed": false,
+    "evidence_ref_creation_allowed": false,
+    "evidence_digest_promotion_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "data_subject_request_gate_promotion_allowed": false,
+    "incident_response_gate_promotion_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "review_result_semantics": {
+    "candidate_status_if_structurally_complete": "READY_FOR_SEPARATE_EVIDENCE_REVIEW_NOT_GATE_EVIDENCE",
+    "unresolved_findings_may_exist": true,
+    "unresolved_findings_force_gate_denied": true,
+    "structural_pass_is_not_legal_or_operational_approval": true,
+    "ci_pass_is_not_exercise_execution": true,
+    "ci_pass_is_not_independent_review": true
+  },
+  "next_after_green": {
+    "safe_internal_work": "When real Stage69 owner-bound session, completed exercise and independent review records exist, run the Stage91 digest-only collector outside repository CI. Then independently inspect the source artifacts before any Stage44/45 evidence candidate is prepared.",
+    "real_owner_assignments_still_required": true,
+    "human_exercise_execution_still_required": true,
+    "independent_review_still_required": true,
+    "gate_promotion_from_stage91_alone": false
+  }
+}
