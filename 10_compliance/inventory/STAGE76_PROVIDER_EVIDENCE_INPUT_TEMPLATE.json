@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "input_kind": "REAL_PROVIDER_PRIVACY_EVIDENCE_INPUT",
+  "status": "PLACEHOLDER_TEMPLATE_NOT_REAL_PROVIDER_EVIDENCE",
+  "test_fixture": true,
+  "contains_placeholders": true,
+  "service_id": "<ONE_STAGE75_SERVICE_ID_REQUIRED>",
+  "collector_acknowledges_stage75_relationship_status_only": false,
+  "artifact_secret_values_absent_or_redacted_confirmed": false,
+  "artifacts": {
+    "relationship_scope_resolution": "<REAL_NONEMPTY_UTF8_ARTIFACT_PATH_REQUIRED>",
+    "provider_legal_entity_source": "<REAL_NONEMPTY_UTF8_ARTIFACT_PATH_REQUIRED>",
+    "contract_dpa_or_data_terms_source": "<REAL_NONEMPTY_UTF8_ARTIFACT_PATH_REQUIRED>",
+    "processing_purpose_and_data_categories_source": "<REAL_NONEMPTY_UTF8_ARTIFACT_PATH_REQUIRED>",
+    "processing_or_hosting_regions_source": "<REAL_NONEMPTY_UTF8_ARTIFACT_PATH_REQUIRED>",
+    "retention_and_deletion_terms_source": "<REAL_NONEMPTY_UTF8_ARTIFACT_PATH_REQUIRED>",
+    "subprocessor_chain_source": "<REAL_NONEMPTY_UTF8_ARTIFACT_PATH_REQUIRED>",
+    "international_transfer_mechanism_source": "<REAL_NONEMPTY_UTF8_ARTIFACT_PATH_REQUIRED>"
+  },
+  "instructions": "Copy this file outside the repository and complete it only with real provider/source artifacts collected for legal/privacy review. Set test_fixture=false, contains_placeholders=false and collector_acknowledges_stage75_relationship_status_only=true. Do not place API keys, passwords, tokens, billing credentials or other secret values in the artifacts. Never commit the completed input.",
+  "scope_boundary": {
+    "this_input_is_billing_credential_evidence": false,
+    "this_input_is_checkout_proof": false,
+    "this_input_is_production_deployment_evidence": false,
+    "collector_makes_legal_classification": false,
+    "collector_asserts_provider_facts_from_artifact_contents": false,
+    "collector_marks_subprocessor_transfer_decision_resolved": false,
+    "collector_marks_gate_ready": false,
+    "collector_creates_evidence_migration": false
+  }
+}
