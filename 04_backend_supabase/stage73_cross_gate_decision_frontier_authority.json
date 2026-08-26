@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE73_CROSS_GATE_DECISION_FRONTIER",
+  "baseline_main_sha": "1589c7c4598dee54442dcdea664c2193687dab06",
+  "current_state": "DETERMINISTIC_CROSS_GATE_DECISION_FANOUT_AND_REVIEW_PACKET_PREPARED_NON_ATTESTING_NO_GATE_PROMOTION",
+  "upstream_authority": {
+    "stage72_external_readiness_dashboard": "04_backend_supabase/stage72_external_readiness_dashboard_authority.json",
+    "stage72_external_readiness_dashboard_blob": "d142f3f4e690072c08cbb0968e02ef73df4c3e22",
+    "stage67_open_decisions": "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json",
+    "stage67_open_decisions_blob": "215d527c1cb79d7b72697f03f1f84887e3a72d95"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-25T18:14:35.048970+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "ready_evidence_migration_count": 0,
+    "blocked_evidence_migration_count": 6,
+    "remote_mutation_performed": false
+  },
+  "frontier_contract": {
+    "builder": "04_backend_supabase/tools/build_stage73_cross_gate_decision_frontier.py",
+    "guard": "04_backend_supabase/tools/verify_stage73_cross_gate_decision_frontier.py",
+    "workflow": ".github/workflows/stage73_cross_gate_decision_frontier.yml",
+    "ranking_metric": "decision_gate_fanout_count_only",
+    "ranking_order": "fanout_desc_then_decision_id_asc",
+    "ranking_is_business_priority": false,
+    "ranking_is_legal_priority": false,
+    "ranking_is_launch_authority": false,
+    "top_shared_decision_expected": "CONTROLLER_PROCESSOR_ROLE_MATRIX",
+    "top_shared_decision_expected_fanout": 4,
+    "zero_open_decisions_means_gate_ready": false,
+    "billing_and_production_without_stage67_decisions_remain_external_blockers": true,
+    "candidate_documents_must_remain_unreviewed": true,
+    "candidate_document_digests_are_not_approval_digests": true,
+    "review_packet_is_evidence": false,
+    "review_packet_can_replace_independent_review": false,
+    "network_calls_allowed": false,
+    "provider_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "deployment_action_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "gate_promotion_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "candidate_review_documents": [
+    "10_compliance/drafts/PRIVACY_NOTICE_CANDIDATE_PTBR.md",
+    "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md",
+    "10_compliance/drafts/PROCESSING_ROLE_MATRIX_CANDIDATE.md",
+    "10_compliance/drafts/DATA_SUBJECT_REQUEST_RUNBOOK_CANDIDATE.md",
+    "10_compliance/drafts/INCIDENT_RESPONSE_RUNBOOK_CANDIDATE.md",
+    "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+  ],
+  "interpretation_boundary": {
+    "fanout_definition": "Count only how many Stage67 applies_to entries point to one of the seven Stage72 external gates.",
+    "fanout_value": "A larger count means the unresolved decision is referenced by more blocked gates; it does not mean the decision is easier, more urgent, legally sufficient or independently approvable.",
+    "top_frontier_use": "Prepare one coherent independent-review packet around shared controller/operator role mapping before duplicating the same unresolved question across privacy, role mapping, DSR and incident workstreams.",
+    "billing_boundary": "Asaas remains pending real production operator authorization and evidence even though Stage67 has no billing-provider open-decision row.",
+    "production_boundary": "Production deployment remains blocked by real operations/deployment evidence even though Stage67 has no production-deployment open-decision row."
+  },
+  "failure_classes": [
+    "BGF-STAGE73-FANOUT-AS-BUSINESS-PRIORITY-696",
+    "BGF-STAGE73-FANOUT-AS-LEGAL-PRIORITY-697",
+    "BGF-STAGE73-ZERO-DECISIONS-AS-GATE-READY-698",
+    "BGF-STAGE73-UNREVIEWED-DOC-AS-APPROVED-699",
+    "BGF-STAGE73-CANDIDATE-DIGEST-AS-LEGAL-DIGEST-700",
+    "BGF-STAGE73-REVIEW-PACKET-AS-EVIDENCE-701",
+    "BGF-STAGE73-CROSS-GATE-DECISION-OMISSION-702",
+    "BGF-STAGE73-FANOUT-NONDETERMINISM-703",
+    "BGF-STAGE73-PREMATURE-GATE-PROMOTION-704",
+    "BGF-STAGE73-CROSS-GATE-FRONTIER-GUARD-705"
+  ],
+  "gates": {
+    "stage73_decision_frontier": "REPO_ONLY_PENDING_CI",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Prepare a single non-attesting independent-review intake packet for the highest-fanout shared decision, preserving all unknown legal conclusions and requiring a real reviewer reference before any document can move out of draft status.",
+    "real_independent_review_still_required": true,
+    "evidence_migration_allowed": false
+  }
+}
