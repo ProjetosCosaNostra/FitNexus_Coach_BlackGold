@@ -1,0 +1,51 @@
+name: Stage80R1 Registry Pin Reconciliation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "04_backend_supabase/stage80r1_registry_pin_reconciliation_authority.json"
+      - "04_backend_supabase/tools/verify_stage80r1_registry_pin_reconciliation.py"
+      - "04_backend_supabase/stage80_sensitive_data_minimization_inventory_authority.json"
+      - "10_compliance/inventory/STAGE80_TECHNICAL_SENSITIVE_DATA_MINIMIZATION_REGISTRY.json"
+      - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+      - ".github/workflows/stage80r1_registry_pin_reconciliation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-registry-pin-reconciliation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify Stage80R1 registry pin reconciliation
+        run: python 04_backend_supabase/tools/verify_stage80r1_registry_pin_reconciliation.py
+
+      - name: Upload non-attesting Stage80R1 reconciliation addendum
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage80r1-registry-pin-reconciliation-${{ github.event.pull_request.head.sha }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            04_backend_supabase/stage80r1_registry_pin_reconciliation_authority.json
+            04_backend_supabase/tools/verify_stage80r1_registry_pin_reconciliation.py
+
+      - name: Preserve historical and legal review boundaries
+        run: |
+          echo "HISTORICAL_AUTHORITY_REWRITTEN=false"
+          echo "CURRENT_REGISTRY_MUTATED=false"
+          echo "SEMANTIC_POLICY_CHANGE=false"
+          echo "FINAL_LEGAL_CLASSIFICATION_APPROVED=false"
+          echo "SENSITIVE_DATA_POLICY_APPROVED=false"
+          echo "TARGET_DECISION_CLOSED=false"
+          echo "GATE_PROMOTION=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "REMOTE_MUTATION=false"
