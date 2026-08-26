@@ -1,0 +1,94 @@
+name: Stage85 Terms Acceptance Migration Candidate
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "04_backend_supabase/stage85_terms_acceptance_migration_candidate_authority.json"
+      - "04_backend_supabase/operations/stage85_terms_acceptance_registry_ledger_candidate.sql"
+      - "04_backend_supabase/tools/build_stage85_terms_acceptance_migration_candidate.py"
+      - "04_backend_supabase/tools/verify_stage85_terms_acceptance_migration_candidate.py"
+      - "04_backend_supabase/tools/STAGE85_CI_BOOTSTRAP_TRIGGER.txt"
+      - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+      - "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md"
+      - "04_backend_supabase/stage84_terms_acceptance_versioning_preparation_authority.json"
+      - "10_compliance/inventory/STAGE84_TERMS_ACCEPTANCE_VERSIONING_IMPLEMENTATION_PREPARATION.json"
+      - "04_backend_supabase/migration_ledger_authority.json"
+      - ".github/workflows/stage85_terms_acceptance_migration_candidate.yml"
+  push:
+    branches:
+      - "blackgold/stage85-terms-acceptance-migration-candidate"
+    paths:
+      - "04_backend_supabase/stage85_terms_acceptance_migration_candidate_authority.json"
+      - "04_backend_supabase/operations/stage85_terms_acceptance_registry_ledger_candidate.sql"
+      - "04_backend_supabase/tools/build_stage85_terms_acceptance_migration_candidate.py"
+      - "04_backend_supabase/tools/verify_stage85_terms_acceptance_migration_candidate.py"
+      - "04_backend_supabase/tools/STAGE85_CI_BOOTSTRAP_TRIGGER.txt"
+      - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+      - "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md"
+      - "04_backend_supabase/stage84_terms_acceptance_versioning_preparation_authority.json"
+      - "10_compliance/inventory/STAGE84_TERMS_ACCEPTANCE_VERSIONING_IMPLEMENTATION_PREPARATION.json"
+      - "04_backend_supabase/migration_ledger_authority.json"
+      - ".github/workflows/stage85_terms_acceptance_migration_candidate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-terms-acceptance-migration-candidate:
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Verify Stage85 Terms acceptance migration candidate
+        run: python 04_backend_supabase/tools/verify_stage85_terms_acceptance_migration_candidate.py
+
+      - name: Build deterministic Stage85 candidate packet twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python 04_backend_supabase/tools/build_stage85_terms_acceptance_migration_candidate.py \
+            --source-sha "${SOURCE_SHA}" \
+            --output /tmp/stage85_candidate_a.json
+          python 04_backend_supabase/tools/build_stage85_terms_acceptance_migration_candidate.py \
+            --source-sha "${SOURCE_SHA}" \
+            --output /tmp/stage85_candidate_b.json
+          cmp /tmp/stage85_candidate_a.json /tmp/stage85_candidate_b.json
+          grep -F '"implementation_unit_count": 4' /tmp/stage85_candidate_a.json >/dev/null
+          grep -F '"candidate_is_migration": false' /tmp/stage85_candidate_a.json >/dev/null
+          grep -F '"remote_mutation": false' /tmp/stage85_candidate_a.json >/dev/null
+          grep -F '"terms_registry_row_created": false' /tmp/stage85_candidate_a.json >/dev/null
+          grep -F '"real_acceptance_collected": false' /tmp/stage85_candidate_a.json >/dev/null
+          grep -F '"target_decision_closed": false' /tmp/stage85_candidate_a.json >/dev/null
+          grep -F '"legal_terms_gate_ready": false' /tmp/stage85_candidate_a.json >/dev/null
+          grep -F '"registry_insert_seed_present": false' /tmp/stage85_candidate_a.json >/dev/null
+          grep -F '"runtime_acceptance_insert_count": 1' /tmp/stage85_candidate_a.json >/dev/null
+          grep -F '"mutable_is_current_flag_present": false' /tmp/stage85_candidate_a.json >/dev/null
+          echo "STAGE85_DETERMINISTIC_TERMS_ACCEPTANCE_CANDIDATE_BUILD=PASS"
+
+      - name: Upload non-attesting Stage85 candidate packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage85-terms-acceptance-migration-candidate-${{ github.event.pull_request.head.sha || github.sha }}
+          retention-days: 7
+          if-no-files-found: error
+          path: /tmp/stage85_candidate_a.json
+
+      - name: Preserve Terms, migration and launch boundaries
+        run: |
+          echo "TERMS_ACCEPTANCE_VERSIONING=OPEN"
+          echo "CANDIDATE_IS_MIGRATION=false"
+          echo "REMOTE_MUTATION=false"
+          echo "TERMS_REGISTRY_ROW_CREATED=false"
+          echo "REAL_ACCEPTANCE_COLLECTED=false"
+          echo "TARGET_DECISION_CLOSED=false"
+          echo "LEGAL_TERMS_GATE_READY=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "PAID_MEDIA=DENIED"
