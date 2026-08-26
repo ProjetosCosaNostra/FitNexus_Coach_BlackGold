@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from dataclasses import dataclass, field
@@ -13,6 +14,8 @@ LEDGER = BACKEND / "migration_ledger_authority.json"
 MIGRATIONS = BACKEND / "migrations"
 FAILURE_CLASS = "BGF-SECURITY-DEFINER-EXPOSURE-DRIFT-159"
 STAGE33_MIGRATION = "stage33_direct_rpc_revocation_and_post_revocation_fixture"
+STAGE86_TERMS_MIGRATION = "stage85_terms_acceptance_registry_ledger"
+STAGE86_TERMS_MIGRATION_FILE = MIGRATIONS / "20260826180000_stage85_terms_acceptance_registry_ledger.sql"
 
 DEFINITION_RE = re.compile(
     r"create\s+(?:or\s+replace\s+)?function\s+public\.(?P<name>[a-z0-9_]+)\s*\(.*?\)\s*returns.*?\bas\s+\$\$",
@@ -44,6 +47,11 @@ def load(path: Path) -> dict:
     if not isinstance(value, dict):
         fail(f"expected JSON object: {path.relative_to(ROOT)}")
     return value
+
+
+def git_blob_sha(path: Path) -> str:
+    raw = path.read_bytes()
+    return hashlib.sha1(f"blob {len(raw)}\0".encode("utf-8") + raw).hexdigest()
 
 
 def normalize_roles(raw: str) -> list[str]:
@@ -117,7 +125,7 @@ def main() -> None:
     identity = load(IDENTITY)
     ledger = load(LEDGER)
     if authority.get("schema_version") != 2:
-        fail("schema_version must be 2 at Stage33 transition")
+        fail("schema_version must remain 2 for Stage33-compatible lifecycle authority")
     if authority.get("failure_class") != FAILURE_CLASS:
         fail("unexpected failure_class")
     if authority.get("project_ref") != identity.get("project_ref"):
@@ -131,22 +139,21 @@ def main() -> None:
         authority.get("repository_target_approved_exposures"),
         "repository_target_approved_exposures",
     )
-    target_names = {
+
+    student_targets = {
         "get_student_feedback_context_v2",
         "get_student_workout_v2",
         "set_student_exercise_completion_v2",
         "start_student_workout_v2",
         "submit_student_workout_feedback_v2",
     }
-    if set(remote_expected) != target_names | {"issue_student_access_token_v2"}:
+    if set(remote_expected) != student_targets | {"issue_student_access_token_v2"}:
         fail("remote pre-revocation exposure set drifted")
-    for name in target_names:
+    for name in student_targets:
         if remote_expected.get(name) != {"anon", "authenticated"}:
             fail(f"remote pre-revocation roles drifted: {name}")
     if remote_expected.get("issue_student_access_token_v2") != {"authenticated"}:
         fail("issue_student_access_token_v2 remote authority drifted")
-    if repo_expected != {"issue_student_access_token_v2": {"authenticated"}}:
-        fail("repository target exposure must retain only authenticated token issuance")
 
     transition = authority.get("stage33_transition", {})
     state = authority.get("current_state")
@@ -179,8 +186,8 @@ def main() -> None:
         for row in ledger.get("remote_migrations", []) if isinstance(row, dict)
     }
     if state == "STAGE33_REVOCATION_REPO_ONLY_REMOTE_PRE_REVOCATION":
-        if repo_only != {STAGE33_MIGRATION}:
-            fail("Stage33 migration must be the unique repo-only divergence")
+        if STAGE33_MIGRATION not in repo_only:
+            fail("Stage33 migration must remain repo-only in pre-revocation state")
         if STAGE33_MIGRATION in remote:
             fail("Stage33 migration unexpectedly remote in repo-only state")
         if transition.get("remote_applied") is not False or transition.get("remote_version") is not None:
@@ -192,6 +199,54 @@ def main() -> None:
             fail("remote-reconciled Stage33 version mismatch")
         if transition.get("remote_applied") is not True:
             fail("remote-reconciled transition missing remote_applied")
+
+    stage86 = authority.get("stage86_repository_target_transition")
+    if STAGE86_TERMS_MIGRATION in repo_only:
+        if not isinstance(stage86, dict):
+            fail("Stage86 repo-only Terms migration requires explicit exposure transition authority")
+        if stage86.get("baseline_main_sha") != "3d6d14a659611594081b8a22b0ae6c483459de48":
+            fail("Stage86 exposure baseline main drift")
+        if stage86.get("migration_name") != STAGE86_TERMS_MIGRATION:
+            fail("Stage86 exposure migration name drift")
+        if stage86.get("migration_file") != str(STAGE86_TERMS_MIGRATION_FILE.relative_to(ROOT)).replace("\\", "/"):
+            fail("Stage86 exposure migration path drift")
+        if stage86.get("migration_blob_sha") != git_blob_sha(STAGE86_TERMS_MIGRATION_FILE):
+            fail("Stage86 exposure migration blob drift")
+        if stage86.get("migration_blob_sha") != "a9a77ebbf61f464e5549f338362cdd3a59df8df1":
+            fail("Stage86 exposure exact migration pin drift")
+        if stage86.get("migration_ledger_state") != "repo_only":
+            fail("Stage86 Terms migration exposure must remain repo_only")
+        if stage86.get("remote_applied") is not False or stage86.get("remote_version") is not None:
+            fail("Stage86 exposure authority falsely claims remote application")
+        if STAGE86_TERMS_MIGRATION in remote:
+            fail("Stage86 Terms migration unexpectedly present in remote baseline")
+        if stage86.get("remote_current_new_terms_exposure_count") != 0:
+            fail("Stage86 new Terms exposure must remain remote-zero")
+        if stage86.get("terms_registry_seeded") is not False or stage86.get("acceptance_seeded") is not False:
+            fail("Stage86 exposure authority cannot claim Terms/acceptance data")
+        if stage86.get("legal_terms_gate_promoted") is not False:
+            fail("Stage86 exposure authority cannot promote legal Terms gate")
+
+        expected_repo = {
+            "issue_student_access_token_v2": {"authenticated"},
+            "get_current_terms_v1": {"anon", "authenticated"},
+            "accept_current_terms_v1": {"authenticated"},
+            "get_my_terms_acceptance_gate_v1": {"authenticated"},
+        }
+        if repo_expected != expected_repo:
+            fail("Stage86 repository target exposure allowlist drift")
+        if stage86.get("repository_target_new_terms_function_count") != 3:
+            fail("Stage86 new Terms function exposure count drift")
+        if stage86.get("repository_target_total_security_definer_exposure_count") != 4:
+            fail("Stage86 total repository exposure count drift")
+        if stage86.get("repository_target_anon_exposure_count") != 1:
+            fail("Stage86 repository anon exposure count drift")
+        if stage86.get("repository_target_authenticated_exposure_count") != 4:
+            fail("Stage86 repository authenticated exposure count drift")
+    else:
+        expected_repo = {"issue_student_access_token_v2": {"authenticated"}}
+        if repo_expected != expected_repo:
+            fail("repository target exposure advanced without declared repo-only Stage86 migration")
 
     states = replay_repository_privileges()
     actual: dict[str, set[str]] = {}
@@ -218,10 +273,10 @@ def main() -> None:
     print("REMOTE_PRE_REVOCATION_EXPOSURES=6")
     print("REMOTE_PRE_REVOCATION_ANON_EXPOSURES=5")
     print("REMOTE_PRE_REVOCATION_AUTH_EXPOSURES=6")
-    print("REPOSITORY_TARGET_EXPOSURES=1")
-    print("REPOSITORY_TARGET_ANON_EXPOSURES=0")
-    print("REPOSITORY_TARGET_AUTH_EXPOSURES=1")
-    print("REPOSITORY_TARGET_ONLY=issue_student_access_token_v2")
+    print(f"REPOSITORY_TARGET_EXPOSURES={len(repo_expected)}")
+    print(f"REPOSITORY_TARGET_ANON_EXPOSURES={sum('anon' in roles for roles in repo_expected.values())}")
+    print(f"REPOSITORY_TARGET_AUTH_EXPOSURES={sum('authenticated' in roles for roles in repo_expected.values())}")
+    print("STAGE86_TERMS_REMOTE_EXPOSURES=0")
     print("UNAPPROVED_EXPOSURES=0")
     print("PUBLIC_DEFAULT_EXECUTE_DRIFT=0")
 
