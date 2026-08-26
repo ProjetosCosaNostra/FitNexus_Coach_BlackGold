@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "stage": "STAGE90_TERMS_INDEPENDENT_REVIEW_READINESS",
+  "project": "FitNexus Coach BlackGold",
+  "purpose": "Prepare a deterministic, non-attesting review packet for a real independent legal/business review of the exact current Terms candidate. This contract cannot approve, publish, register or activate Terms.",
+  "upstream_stage89_green": {
+    "merged_main_sha": "d6ebd4522ef2e15dc3369f74e174b056872c851c",
+    "green_head_sha": "d5b025e0fd05cda24dfeae79836f4e0322e444cf",
+    "dedicated_ci_run_id": 33004325980,
+    "dedicated_ci_conclusion": "success",
+    "flutter_quality_gate_run_id": 33004325845,
+    "flutter_quality_gate_conclusion": "success",
+    "artifact_id": 9619888017,
+    "artifact_digest": "sha256:cece0bcfa080d16f1d689c46db4b9e9d826cad1b86b950d281995b78467cc7d5",
+    "artifact_is_legal_review": false
+  },
+  "exact_draft_input": {
+    "path": "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md",
+    "git_blob_sha": "0652fb664db57842a8d9dd5d22f0b0b48d645d2d",
+    "status_marker": "DRAFT_UNREVIEWED_NOT_PUBLISHED_NOT_LEGAL_EVIDENCE",
+    "legal_gate_marker": "legal_terms_of_use = BLOCKED",
+    "document_kind_if_later_approved": "terms_of_use",
+    "is_current_legal_terms": false,
+    "is_publication_authority": false
+  },
+  "open_decision_input": {
+    "path": "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json",
+    "git_blob_sha": "215d527c1cb79d7b72697f03f1f84887e3a72d95",
+    "terms_acceptance_versioning_state": "OPEN",
+    "legal_entity_identity_state": "OPEN",
+    "legal_reviewer_reference_state": "OPEN",
+    "billing_cancellation_refund_policy_state": "OPEN",
+    "retention_matrix_state": "OPEN"
+  },
+  "fresh_remote_nonregistration_receipt": {
+    "observed_at_utc": "2026-08-26T19:19:30.994984Z",
+    "source": "Supabase read-only Terms infrastructure and row-count check",
+    "terms_registry_rows": 0,
+    "acceptance_ledger_rows": 0,
+    "current_terms_rpc_exists": true,
+    "accept_terms_rpc_exists": true,
+    "acceptance_gate_rpc_exists": true,
+    "is_org_member_helper_exists": true,
+    "remote_mutation_performed": false
+  },
+  "review_blockers": [
+    {
+      "id": "LEGAL_ENTITY_IDENTITY",
+      "required_output": "Approved provider/legal entity identity, registration data when applicable and official address."
+    },
+    {
+      "id": "LEGAL_REVIEWER_REFERENCE",
+      "required_output": "Traceable real reviewer/approval reference for the exact approved Terms bytes."
+    },
+    {
+      "id": "BILLING_CANCELLATION_REFUND_POLICY",
+      "required_output": "Reviewed trial, renewal, cancellation, refund/withdrawal, delinquency and reactivation policy."
+    },
+    {
+      "id": "TERMS_LIABILITY_AND_CONSUMER_RULES",
+      "required_output": "Reviewed responsibility, limitation, guarantees, consumer-protection and related clauses appropriate to the actual provider and launch market."
+    },
+    {
+      "id": "RETENTION_EXPORT_RULES",
+      "required_output": "Approved retention/export/deletion/legal-hold references that the Terms may safely point to."
+    },
+    {
+      "id": "VERSION_EFFECTIVE_DATE_DIGEST_URL",
+      "required_output": "Exact immutable version, effective date, approved document bytes, stable public HTTPS URL and publication reference."
+    },
+    {
+      "id": "TERMS_ACCEPTANCE_VERSIONING",
+      "required_output": "Independent review that the implemented version/digest acceptance mechanism is suitable for the approved Terms lifecycle; current decision remains OPEN until that review is recorded."
+    }
+  ],
+  "reviewer_must_return": {
+    "approved_document_bytes_or_revised_candidate": true,
+    "approval_reference": true,
+    "reviewer_identity_or_traceable_reference": true,
+    "version": true,
+    "effective_at": true,
+    "stable_public_https_url": true,
+    "publication_reference": true,
+    "billing_policy_resolution": true,
+    "retention_export_resolution": true,
+    "liability_consumer_resolution": true,
+    "terms_acceptance_versioning_review_result": true
+  },
+  "forbidden_shortcuts": {
+    "self_approval": true,
+    "treat_ci_as_legal_review": true,
+    "treat_sha_as_approval": true,
+    "register_draft_in_terms_registry": true,
+    "collect_acceptance_for_draft": true,
+    "invent_publication_url": true,
+    "invent_approval_reference": true,
+    "close_terms_acceptance_versioning_without_independent_review": true,
+    "promote_legal_terms_gate_from_infrastructure_only": true
+  },
+  "hard_boundaries": {
+    "stage90_performs_supabase_mutation": false,
+    "terms_candidate_approved": false,
+    "terms_candidate_published": false,
+    "terms_registry_row_created": false,
+    "real_acceptance_collected": false,
+    "target_decision_closed": false,
+    "legal_terms_gate_ready": false,
+    "deployment_promoted": false,
+    "controlled_launch_promoted": false,
+    "paid_media_promoted": false
+  },
+  "next_after_green": {
+    "safe_internal_work": "Wait for real independent review/publication evidence. Once supplied, a later stage may verify the exact returned document bytes, reviewer/approval reference, version, effective date and stable public URL before preparing any registry insert candidate. No insert or acceptance may occur from this Stage90 packet itself.",
+    "external_review_required": true,
+    "terms_acceptance_versioning_still_open": true
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE90_TERMS_INDEPENDENT_REVIEW_READINESS",
+  "baseline_main_sha": "d6ebd4522ef2e15dc3369f74e174b056872c851c",
+  "current_state": "TERMS_REVIEW_PACKET_PREPARED_DRAFT_UNAPPROVED_UNPUBLISHED_NO_REGISTRY_INSERT_NO_ACCEPTANCE_LEGAL_GATE_DENIED",
+  "upstream_stage89_green": {
+    "merged_main_sha": "d6ebd4522ef2e15dc3369f74e174b056872c851c",
+    "green_head_sha": "d5b025e0fd05cda24dfeae79836f4e0322e444cf",
+    "dedicated_ci_run_id": 33004325980,
+    "dedicated_ci_conclusion": "success",
+    "flutter_quality_gate_run_id": 33004325845,
+    "flutter_quality_gate_conclusion": "success",
+    "artifact_id": 9619888017,
+    "artifact_digest": "sha256:cece0bcfa080d16f1d689c46db4b9e9d826cad1b86b950d281995b78467cc7d5"
+  },
+  "sealed_inputs": {
+    "stage89_authority": "04_backend_supabase/stage89_terms_acceptance_remote_apply_reconciliation_authority.json",
+    "stage89_authority_blob": "70fcae1902568c070b2a82a52eca338c8e8da6bd",
+    "review_contract": "10_compliance/drafts/STAGE90_TERMS_INDEPENDENT_REVIEW_READINESS_CONTRACT.json",
+    "review_contract_blob": "7fc73339b51a5f48bb961c55f4df657f790c4c78",
+    "terms_draft": "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md",
+    "terms_draft_blob": "0652fb664db57842a8d9dd5d22f0b0b48d645d2d",
+    "open_decisions": "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json",
+    "open_decisions_blob": "215d527c1cb79d7b72697f03f1f84887e3a72d95"
+  },
+  "fresh_remote_nonregistration_receipt": {
+    "observed_at_utc": "2026-08-26T19:19:30.994984Z",
+    "terms_registry_rows": 0,
+    "acceptance_ledger_rows": 0,
+    "current_terms_rpc_exists": true,
+    "accept_terms_rpc_exists": true,
+    "acceptance_gate_rpc_exists": true,
+    "is_org_member_helper_exists": true,
+    "remote_mutation_performed": false
+  },
+  "review_readiness": {
+    "exact_draft_bytes_pinned": true,
+    "draft_sha256_must_be_emitted_by_packet_builder": true,
+    "open_decisions_pinned": true,
+    "review_blocker_count": 7,
+    "external_review_required": true,
+    "approved_document_required_before_registry_candidate": true,
+    "stable_public_https_url_required_before_registry_candidate": true,
+    "approval_reference_required_before_registry_candidate": true,
+    "publication_reference_required_before_registry_candidate": true,
+    "effective_date_required_before_registry_candidate": true,
+    "version_required_before_registry_candidate": true
+  },
+  "failure_classes": [
+    "BGF-STAGE90-DRAFT-BYTE-DRIFT-886",
+    "BGF-STAGE90-OPEN-DECISION-DRIFT-887",
+    "BGF-STAGE90-SELF-APPROVAL-SHORTCUT-888",
+    "BGF-STAGE90-PREMATURE-REGISTRY-INSERT-889",
+    "BGF-STAGE90-PREMATURE-ACCEPTANCE-890",
+    "BGF-STAGE90-PREMATURE-LEGAL-GATE-PROMOTION-891",
+    "BGF-STAGE90-INDEPENDENT-REVIEW-READINESS-GUARD-892"
+  ],
+  "hard_boundaries": {
+    "supabase_mutation_performed": false,
+    "terms_candidate_approved": false,
+    "terms_candidate_published": false,
+    "terms_registry_row_created": false,
+    "real_acceptance_collected": false,
+    "terms_acceptance_versioning_closed": false,
+    "legal_terms_gate_ready": false,
+    "deployment_promoted": false,
+    "controlled_launch_promoted": false,
+    "paid_media_promoted": false
+  },
+  "gates": {
+    "stage90_independent_review_readiness": "PENDING_EXACT_HEAD_CI",
+    "external_independent_review": "REQUIRED_NOT_SUPPLIED",
+    "terms_acceptance_versioning": "OPEN",
+    "legal_terms_of_use": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "No registry candidate may be prepared from the current unreviewed draft. Wait for real independent review/publication evidence. A later stage may validate those exact returned artifacts and only then prepare a separately gated registry insert candidate.",
+    "external_evidence_required": true,
+    "no_registry_candidate_from_current_draft": true
+  }
+}
