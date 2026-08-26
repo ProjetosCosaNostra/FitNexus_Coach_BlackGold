@@ -1,0 +1,61 @@
+name: Stage90 Terms Independent Review Readiness
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify-terms-independent-review-readiness:
+    if: github.head_ref == 'blackgold/stage90-terms-independent-review-readiness'
+    runs-on: ubuntu-24.04
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Verify Stage90 Terms independent review readiness
+        run: python 04_backend_supabase/tools/verify_stage90_terms_independent_review_readiness.py
+
+      - name: Verify migration ledger contract
+        run: python 04_backend_supabase/tools/verify_migration_ledger_contract.py
+
+      - name: Verify SECURITY DEFINER exposure authority
+        run: python 04_backend_supabase/tools/verify_security_definer_exposure_authority.py
+
+      - name: Build deterministic Stage90 review packet twice
+        run: |
+          python 04_backend_supabase/tools/build_stage90_terms_independent_review_packet.py --source-sha "$SOURCE_SHA" --output /tmp/stage90_review_a.json
+          python 04_backend_supabase/tools/build_stage90_terms_independent_review_packet.py --source-sha "$SOURCE_SHA" --output /tmp/stage90_review_b.json
+          cmp /tmp/stage90_review_a.json /tmp/stage90_review_b.json
+          cp /tmp/stage90_review_a.json stage90_terms_independent_review_packet.json
+
+      - name: Upload non-attesting Stage90 independent review packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage90-terms-independent-review-readiness-${{ github.event.pull_request.head.sha }}
+          path: stage90_terms_independent_review_packet.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Preserve Stage90 external-review and legal boundaries
+        run: |
+          echo "EXACT_DRAFT_PINNED=true"
+          echo "REVIEW_BLOCKERS=7"
+          echo "EXTERNAL_INDEPENDENT_REVIEW=REQUIRED_NOT_SUPPLIED"
+          echo "SUPABASE_MUTATION=false"
+          echo "TERMS_REGISTRY_ROWS=0"
+          echo "ACCEPTANCE_LEDGER_ROWS=0"
+          echo "TERMS_CANDIDATE_APPROVED=false"
+          echo "TERMS_CANDIDATE_PUBLISHED=false"
+          echo "TERMS_ACCEPTANCE_VERSIONING=OPEN"
+          echo "LEGAL_TERMS_GATE_READY=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "PAID_MEDIA=DENIED"
