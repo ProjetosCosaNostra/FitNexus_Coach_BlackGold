@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE91_CONTROLLED_EXERCISE_INDEPENDENT_REVIEW_INTAKE",
+  "baseline_main_sha": "3940e7d7b28a8f14be0912ce17edc61bf0073a87",
+  "current_state": "DIGEST_ONLY_CONTROLLED_EXERCISE_INDEPENDENT_REVIEW_INTAKE_PREPARED_NO_REAL_INPUT_NO_EXERCISE_EXECUTION_NO_REVIEW_ATTESTATION_NO_GATE_PROMOTION",
+  "upstream_boundaries": {
+    "stage90_terms_review_readiness_merged_main": "3940e7d7b28a8f14be0912ce17edc61bf0073a87",
+    "terms_path_external_review_required": true,
+    "stage69_execution_boundary_file": "04_backend_supabase/stage69_controlled_exercise_execution_boundary_authority.json",
+    "stage69_execution_boundary_blob": "3c139c652eea102ae7ac84b274eb60bf01539d3d",
+    "stage68_rehearsal_compiler_file": "04_backend_supabase/stage68_synthetic_governance_rehearsal_compiler_authority.json",
+    "stage68_rehearsal_compiler_blob": "45459541f7e8516258f3cabcba4dd46cd45d256f",
+    "stage44_dsr_preparation_file": "04_backend_supabase/stage44_data_subject_request_external_evidence_preparation_authority.json",
+    "stage44_dsr_preparation_blob": "53321a9af19ba3423fca44191bf000815eb617d5",
+    "stage45_incident_preparation_file": "04_backend_supabase/stage45_incident_response_external_evidence_preparation_authority.json",
+    "stage45_incident_preparation_blob": "d5d32990e8ef7a3c4f13dc63e2088ea28e471f12"
+  },
+  "sealed_inputs": {
+    "stage68_scenario_registry": "10_compliance/rehearsals/STAGE68_SYNTHETIC_REHEARSAL_SCENARIOS.json",
+    "stage68_scenario_registry_blob": "c3960d3410e6bf12b7336b71ce1cedfd0f2670e6",
+    "stage69_owner_template": "10_compliance/rehearsals/STAGE69_REAL_OWNER_ASSIGNMENT_INPUT_TEMPLATE.json",
+    "stage69_owner_template_blob": "78284ac6cd6479dab901278ecd95e71f5b7a79cd",
+    "stage91_intake_contract": "10_compliance/rehearsals/STAGE91_CONTROLLED_EXERCISE_INDEPENDENT_REVIEW_INTAKE_CONTRACT.json",
+    "stage91_intake_contract_blob": "80785cc36f1f718fb171a8d3af9d9fb78fadff78",
+    "stage91_input_template": "10_compliance/rehearsals/STAGE91_REAL_CONTROLLED_EXERCISE_REVIEW_INPUT_TEMPLATE.json",
+    "stage91_input_template_blob": "6bfb8f80a16622c7263ac41d7c86590bddcd860e",
+    "stage91_collector": "04_backend_supabase/tools/collect_stage91_controlled_exercise_independent_review.py",
+    "stage91_collector_blob": "ec83e38c552f0967ffcd4eb974a3ff34bdcec9c3"
+  },
+  "scenario_registry_binding": {
+    "dsr_scenario_count": 5,
+    "incident_scenario_count": 3,
+    "total_scenario_count": 8,
+    "dsr_ids": [
+      "DSR_ACCESS_EXPORT_SAME_TENANT",
+      "DSR_CROSS_TENANT_REQUEST_FAIL_CLOSED",
+      "DSR_CORRECTION_AUDITED",
+      "DSR_DELETION_WITH_RETENTION_HOLD",
+      "DSR_INSUFFICIENT_IDENTITY_PAUSE"
+    ],
+    "incident_ids": [
+      "INCIDENT_CROSS_TENANT_EXPOSURE",
+      "INCIDENT_CREDENTIAL_COMPROMISE",
+      "INCIDENT_POTENTIALLY_SENSITIVE_STUDENT_DATA"
+    ],
+    "collector_must_match_registry_exactly": true
+  },
+  "intake_boundary": {
+    "real_stage69_session_required": true,
+    "real_completed_human_exercise_record_required": true,
+    "real_independent_review_record_required": true,
+    "real_reviewer_authority_artifact_required": true,
+    "committed_placeholder_input_must_fail": true,
+    "test_fixture_input_must_fail": true,
+    "exercise_executed_false_must_fail": true,
+    "independent_review_completed_false_must_fail": true,
+    "real_customer_data_true_must_fail": true,
+    "production_secrets_true_must_fail": true,
+    "collector_output_digest_only": true,
+    "owner_identity_copied": false,
+    "reviewer_identity_copied": false,
+    "artifact_path_or_filename_copied": false,
+    "raw_artifact_content_copied": false,
+    "network_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "provider_calls_allowed": false,
+    "stage44_evidence_attestation_allowed": false,
+    "stage45_evidence_attestation_allowed": false,
+    "evidence_ref_creation_allowed": false,
+    "evidence_digest_promotion_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "gate_promotion_allowed": false
+  },
+  "ci_semantics": {
+    "ci_uses_only_committed_placeholder_input": true,
+    "ci_must_prove_placeholder_rejected": true,
+    "ci_exercise_executed": false,
+    "ci_independent_review_attested": false,
+    "ci_stage44_evidence_attested": false,
+    "ci_stage45_evidence_attested": false,
+    "ci_gate_ready": false,
+    "ci_supabase_mutation": false
+  },
+  "progress_semantics": {
+    "what_stage91_proves": "The repository contains a fail-closed digest-only intake capable of structurally binding a real Stage69 owner-bound session, completed eight-scenario human exercise record, independent review record and reviewer-authority artifact without copying identities, paths or raw source content.",
+    "what_stage91_does_not_prove": "It does not prove real owner assignment, exercise execution, independent review, operational sufficiency, legal sufficiency, Stage44/45 evidence readiness or gate readiness because no real external input is supplied in repository CI.",
+    "external_execution_rule": "Only after real external inputs exist may the collector run outside repository CI; its output remains a candidate for a separate evidence review and can never promote a gate by itself."
+  },
+  "failure_classes": [
+    "BGF-STAGE91-SCENARIO-ID-REGISTRY-DRIFT-893",
+    "BGF-STAGE91-PLACEHOLDER-INPUT-FALSE-GREEN-894",
+    "BGF-STAGE91-CI-FIXTURE-AS-REAL-EXERCISE-895",
+    "BGF-STAGE91-OWNER-OR-REVIEWER-IDENTITY-LEAKAGE-896",
+    "BGF-STAGE91-ARTIFACT-PATH-OR-RAW-CONTENT-LEAKAGE-897",
+    "BGF-STAGE91-REAL-CUSTOMER-DATA-OR-SECRET-IN-EXERCISE-898",
+    "BGF-STAGE91-UNRESOLVED-FINDING-AS-GATE-EVIDENCE-899",
+    "BGF-STAGE91-PREMATURE-STAGE44-45-EVIDENCE-PROMOTION-900",
+    "BGF-STAGE91-CONTROLLED-EXERCISE-INDEPENDENT-REVIEW-INTAKE-GUARD-901"
+  ],
+  "gates": {
+    "stage91_review_intake_preparation": "REPO_ONLY_PENDING_CI",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Stage91 can merge after exact-head CI and Flutter Quality Gate are GREEN. No real exercise or independent review should be fabricated. The next evidence-bearing step requires real external owner assignments, a real Stage69 session, actual human execution of all eight synthetic scenarios and real independent review before Stage44/45 evidence candidates can be considered.",
+    "external_real_owner_assignments_required": true,
+    "human_controlled_exercise_required": true,
+    "independent_review_required": true,
+    "evidence_migration_allowed": false
+  }
+}
