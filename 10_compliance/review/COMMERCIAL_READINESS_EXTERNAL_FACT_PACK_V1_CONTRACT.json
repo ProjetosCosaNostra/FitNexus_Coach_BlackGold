@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "kind": "NON_ATTESTING_EXTERNAL_FACT_PACK_CONTRACT",
+  "project": "FitNexus Coach BlackGold",
+  "macroblock": "COMMERCIAL_READINESS",
+  "baseline_main_sha": "e51602f97d4a3322f5213d0875a13440db3b1769",
+  "purpose": "Create one current-only external working pack that gathers the already-existing real-input templates and review questionnaires needed to remove commercial-readiness blockers without requiring repeated manual file hunting or multiple commands.",
+  "one_command_operator_entrypoint": "04_backend_supabase/tools/COMMERCIAL_READINESS_EXTERNAL_FACT_PACK_V1.ps1",
+  "builder": "04_backend_supabase/tools/build_commercial_readiness_external_fact_pack_v1.py",
+  "default_output_policy": {
+    "outside_repository": true,
+    "current_only": true,
+    "completed_real_inputs_must_not_be_committed": true,
+    "secret_values_must_not_be_committed": true,
+    "unknown_existing_directory_must_not_be_deleted": true,
+    "generated_directory_requires_exact_marker_before_replace": true
+  },
+  "bound_sources": [
+    {"path":"10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json","git_blob_sha":"215d527c1cb79d7b72697f03f1f84887e3a72d95","role":"canonical open decisions"},
+    {"path":"10_compliance/drafts/STAGE90_TERMS_INDEPENDENT_REVIEW_READINESS_CONTRACT.json","git_blob_sha":"7fc73339b51a5f48bb961c55f4df657f790c4c78","role":"Terms review readiness context"},
+    {"path":"10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md","git_blob_sha":"0652fb664db57842a8d9dd5d22f0b0b48d645d2d","role":"exact unreviewed Terms candidate context"},
+    {"path":"10_compliance/rehearsals/STAGE69_REAL_OWNER_ASSIGNMENT_INPUT_TEMPLATE.json","git_blob_sha":"78284ac6cd6479dab901278ecd95e71f5b7a79cd","role":"real DSR/incident/exercise owner assignment input"},
+    {"path":"10_compliance/rehearsals/STAGE91_REAL_CONTROLLED_EXERCISE_REVIEW_INPUT_TEMPLATE.json","git_blob_sha":"6bfb8f80a16622c7263ac41d7c86590bddcd860e","role":"completed controlled exercise review intake"},
+    {"path":"10_compliance/review/STAGE74_CONTROLLER_PROCESSOR_REVIEW_QUESTIONNAIRE.md","git_blob_sha":"c52b4aee712673c8d58e23dcd3ada4168e8b89ef","role":"controller/operator review questionnaire"},
+    {"path":"10_compliance/review/STAGE74_INDEPENDENT_REVIEW_INPUT_TEMPLATE.json","git_blob_sha":"92186c176644e05717d0ebfa829caf37f6946c11","role":"controller/operator independent review input"},
+    {"path":"10_compliance/review/STAGE79_RETENTION_DECISION_QUESTIONNAIRE.md","git_blob_sha":"71dfb6dfa6497d4a330dc5a20a756bf00bc24344","role":"retention review questionnaire"},
+    {"path":"10_compliance/review/STAGE79_RETENTION_REVIEW_INPUT_TEMPLATE.json","git_blob_sha":"344d041204aac7cc1113bbf586e5387bf2d81108","role":"retention independent review input"},
+    {"path":"10_compliance/review/STAGE81_SENSITIVE_DATA_TREATMENT_REVIEW_QUESTIONNAIRE.md","git_blob_sha":"fd5e62761180641d2cf7e0b0aa6d57ef8ad629a7","role":"sensitive-data review questionnaire"},
+    {"path":"10_compliance/review/STAGE81_SENSITIVE_DATA_TREATMENT_REVIEW_INPUT_TEMPLATE.json","git_blob_sha":"3880a1aa5ec0293bfb178a80f97d585785b058da","role":"sensitive-data independent review input"},
+    {"path":"10_compliance/review/STAGE83_BILLING_POLICY_REVIEW_QUESTIONNAIRE_SKELETON.md","git_blob_sha":"1644ebd8d55bf16146c74decacb674aa4cc6cf4a","role":"billing policy business/legal questionnaire"},
+    {"path":"10_compliance/inventory/STAGE76_PROVIDER_EVIDENCE_INPUT_TEMPLATE.json","git_blob_sha":"869744753560bcebb58468fed44bf11ded3f4992","role":"external provider evidence input"},
+    {"path":"10_compliance/deployment/STAGE70_PRODUCTION_PREDEPLOY_PREREQUISITE_INPUT_TEMPLATE.json","git_blob_sha":"943c8fccdc96f2b58d5b0df38cce3c9f021f6a79","role":"production predeploy prerequisite input"},
+    {"path":"10_compliance/deployment/STAGE71_POSTDEPLOY_EVIDENCE_INPUT_TEMPLATE.json","git_blob_sha":"52235154070642330bb08cdccc7c27d2e09b0e81","role":"postdeploy evidence input for later use only"}
+  ],
+  "generated_pack_must_include": [
+    "README_FIRST.md",
+    "STATUS.json",
+    "MANIFEST.json",
+    "sources/"
+  ],
+  "status_semantics": {
+    "commercial_publication_percent_before_real_fact_change": 74,
+    "technical_product_percent_before_real_fact_change": 92,
+    "pack_generation_progress_credit": 0,
+    "pack_generation_closes_any_decision": false,
+    "pack_generation_promotes_any_gate": false
+  },
+  "hard_boundaries": {
+    "legal_review_attested": false,
+    "owner_assignments_attested": false,
+    "human_exercise_execution_attested": false,
+    "billing_authority_attested": false,
+    "provider_credentials_collected": false,
+    "supabase_mutation_allowed": false,
+    "deployment_allowed": false,
+    "controlled_launch_allowed": false,
+    "paid_media_allowed": false
+  }
+}

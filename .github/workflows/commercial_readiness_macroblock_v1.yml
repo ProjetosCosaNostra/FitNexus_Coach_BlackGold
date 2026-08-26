@@ -7,26 +7,52 @@ on:
       - "10_compliance/inventory/COMMERCIAL_READINESS_MACROBLOCK_V1.json"
       - "10_compliance/COMMERCIAL_READINESS_MACROBLOCK_V1.md"
       - "10_compliance/tools/verify_commercial_readiness_macroblock_v1.py"
+      - "10_compliance/review/COMMERCIAL_READINESS_EXTERNAL_FACT_PACK_V1_CONTRACT.json"
       - "04_backend_supabase/tools/COMMERCIAL_READINESS_MACROBLOCK_V1_CI_SYNC_TRIGGER.txt"
+      - "04_backend_supabase/tools/COMMERCIAL_READINESS_EXTERNAL_FACT_PACK_V1.ps1"
+      - "04_backend_supabase/tools/build_commercial_readiness_external_fact_pack_v1.py"
       - ".github/workflows/commercial_readiness_macroblock_v1.yml"
       - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
       - "10_compliance/drafts/STAGE90_TERMS_INDEPENDENT_REVIEW_READINESS_CONTRACT.json"
+      - "10_compliance/rehearsals/STAGE69_REAL_OWNER_ASSIGNMENT_INPUT_TEMPLATE.json"
       - "10_compliance/rehearsals/STAGE91_CONTROLLED_EXERCISE_INDEPENDENT_REVIEW_INTAKE_CONTRACT.json"
+      - "10_compliance/rehearsals/STAGE91_REAL_CONTROLLED_EXERCISE_REVIEW_INPUT_TEMPLATE.json"
+      - "10_compliance/review/STAGE74_CONTROLLER_PROCESSOR_REVIEW_QUESTIONNAIRE.md"
+      - "10_compliance/review/STAGE74_INDEPENDENT_REVIEW_INPUT_TEMPLATE.json"
+      - "10_compliance/review/STAGE79_RETENTION_DECISION_QUESTIONNAIRE.md"
+      - "10_compliance/review/STAGE79_RETENTION_REVIEW_INPUT_TEMPLATE.json"
+      - "10_compliance/review/STAGE81_SENSITIVE_DATA_TREATMENT_REVIEW_QUESTIONNAIRE.md"
+      - "10_compliance/review/STAGE81_SENSITIVE_DATA_TREATMENT_REVIEW_INPUT_TEMPLATE.json"
+      - "10_compliance/review/STAGE83_BILLING_POLICY_REVIEW_QUESTIONNAIRE_SKELETON.md"
+      - "10_compliance/inventory/STAGE76_PROVIDER_EVIDENCE_INPUT_TEMPLATE.json"
       - "10_compliance/deployment/STAGE70_PRODUCTION_PREDEPLOY_PREREQUISITE_INPUT_TEMPLATE.json"
       - "10_compliance/deployment/STAGE71_POSTDEPLOY_EVIDENCE_INPUT_TEMPLATE.json"
       - "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md"
   push:
     branches:
-      - blackgold/commercial-readiness-macroblock-v1
+      - "blackgold/**"
     paths:
       - "10_compliance/inventory/COMMERCIAL_READINESS_MACROBLOCK_V1.json"
       - "10_compliance/COMMERCIAL_READINESS_MACROBLOCK_V1.md"
       - "10_compliance/tools/verify_commercial_readiness_macroblock_v1.py"
+      - "10_compliance/review/COMMERCIAL_READINESS_EXTERNAL_FACT_PACK_V1_CONTRACT.json"
       - "04_backend_supabase/tools/COMMERCIAL_READINESS_MACROBLOCK_V1_CI_SYNC_TRIGGER.txt"
+      - "04_backend_supabase/tools/COMMERCIAL_READINESS_EXTERNAL_FACT_PACK_V1.ps1"
+      - "04_backend_supabase/tools/build_commercial_readiness_external_fact_pack_v1.py"
       - ".github/workflows/commercial_readiness_macroblock_v1.yml"
       - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
       - "10_compliance/drafts/STAGE90_TERMS_INDEPENDENT_REVIEW_READINESS_CONTRACT.json"
+      - "10_compliance/rehearsals/STAGE69_REAL_OWNER_ASSIGNMENT_INPUT_TEMPLATE.json"
       - "10_compliance/rehearsals/STAGE91_CONTROLLED_EXERCISE_INDEPENDENT_REVIEW_INTAKE_CONTRACT.json"
+      - "10_compliance/rehearsals/STAGE91_REAL_CONTROLLED_EXERCISE_REVIEW_INPUT_TEMPLATE.json"
+      - "10_compliance/review/STAGE74_CONTROLLER_PROCESSOR_REVIEW_QUESTIONNAIRE.md"
+      - "10_compliance/review/STAGE74_INDEPENDENT_REVIEW_INPUT_TEMPLATE.json"
+      - "10_compliance/review/STAGE79_RETENTION_DECISION_QUESTIONNAIRE.md"
+      - "10_compliance/review/STAGE79_RETENTION_REVIEW_INPUT_TEMPLATE.json"
+      - "10_compliance/review/STAGE81_SENSITIVE_DATA_TREATMENT_REVIEW_QUESTIONNAIRE.md"
+      - "10_compliance/review/STAGE81_SENSITIVE_DATA_TREATMENT_REVIEW_INPUT_TEMPLATE.json"
+      - "10_compliance/review/STAGE83_BILLING_POLICY_REVIEW_QUESTIONNAIRE_SKELETON.md"
+      - "10_compliance/inventory/STAGE76_PROVIDER_EVIDENCE_INPUT_TEMPLATE.json"
       - "10_compliance/deployment/STAGE70_PRODUCTION_PREDEPLOY_PREREQUISITE_INPUT_TEMPLATE.json"
       - "10_compliance/deployment/STAGE71_POSTDEPLOY_EVIDENCE_INPUT_TEMPLATE.json"
       - "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md"
@@ -48,10 +74,41 @@ jobs:
       - name: Verify Commercial Readiness Macroblock V1
         run: python3 10_compliance/tools/verify_commercial_readiness_macroblock_v1.py
 
+      - name: Build current-only external fact pack twice
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/fitnexus-commercial-readiness/current"
+          FIRST="$RUNNER_TEMP/fitnexus-commercial-readiness-first"
+          python3 04_backend_supabase/tools/build_commercial_readiness_external_fact_pack_v1.py --output-root "$OUT"
+          cp -a "$OUT" "$FIRST"
+          python3 04_backend_supabase/tools/build_commercial_readiness_external_fact_pack_v1.py --output-root "$OUT"
+          diff -r "$FIRST" "$OUT"
+
+      - name: Verify external fact pack boundaries
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'fitnexus-commercial-readiness' / 'current'
+          status = json.loads((root / 'STATUS.json').read_text(encoding='utf-8'))
+          manifest = json.loads((root / 'MANIFEST.json').read_text(encoding='utf-8'))
+          assert status['canonical_open_decision_count'] == 14
+          assert all(x['state'] == 'OPEN' for x in status['canonical_open_decisions'])
+          assert status['commercial_publication_management_percent'] == 74
+          assert status['progress_credit_from_pack_generation'] == 0
+          assert manifest['entry_count'] == 15
+          assert manifest['commercial_progress_credit'] == 0
+          assert manifest['contains_real_owner_identity'] is False
+          assert manifest['contains_real_reviewer_identity'] is False
+          assert manifest['contains_provider_secret'] is False
+          assert manifest['contains_real_operational_evidence'] is False
+          print('COMMERCIAL_READINESS_EXTERNAL_FACT_PACK_BOUNDARY=PASS')
+          PY
+
       - name: Preserve hard boundaries
         run: |
           echo "OPERATING_MODEL=MACROBLOCKS_NOT_MICROSTAGES"
           echo "COMMERCIAL_PUBLICATION_MANAGEMENT_ESTIMATE=74%"
+          echo "PACK_GENERATION_PROGRESS_CREDIT=0"
           echo "LEGAL_REVIEW_ATTESTED_BY_CI=false"
           echo "HUMAN_EXERCISE_ATTESTED_BY_CI=false"
           echo "REAL_BILLING_AUTHORITY_ATTESTED_BY_CI=false"
