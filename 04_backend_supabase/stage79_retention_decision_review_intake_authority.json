@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE79_RETENTION_DECISION_REVIEW_INTAKE_BOUNDARY",
+  "baseline_main_sha": "7f06f31b7005a07a1b527bed34839b2d93226fc6",
+  "current_state": "RETENTION_REVIEW_QUESTIONNAIRE_AND_EXTERNAL_DIGEST_ONLY_INTAKE_PREPARED_NO_RETENTION_POLICY_APPROVAL_NO_GATE_PROMOTION",
+  "upstream_authority": {
+    "stage78_retention_surface_inventory": "04_backend_supabase/stage78_technical_retention_surface_inventory_authority.json",
+    "stage78_retention_surface_inventory_blob": "fccb9879da90a3e0cb4a8cc7d8ef16010ffe89fe",
+    "stage78_registry": "10_compliance/inventory/STAGE78_TECHNICAL_DATA_RETENTION_SURFACE_REGISTRY.json",
+    "stage78_registry_blob": "9a5c8c549a26f04146298c8c1b52b2fb64a414ec",
+    "open_decisions": "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json",
+    "open_decisions_blob": "215d527c1cb79d7b72697f03f1f84887e3a72d95"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-26T10:01:46.379631+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "remote_mutation_performed": false
+  },
+  "target_open_decision": {
+    "id": "RETENTION_MATRIX",
+    "state": "OPEN",
+    "affected_gates": [
+      "legal_privacy_notice",
+      "data_subject_request_channel",
+      "incident_response"
+    ],
+    "required": "Approved category-by-category retention, backup expiration and legal-hold rules.",
+    "resolution_authority": "legal/privacy/operations review",
+    "stage79_can_close_decision": false
+  },
+  "review_intake_contract": {
+    "questionnaire": "10_compliance/review/STAGE79_RETENTION_DECISION_QUESTIONNAIRE.md",
+    "input_template": "10_compliance/review/STAGE79_RETENTION_REVIEW_INPUT_TEMPLATE.json",
+    "collector": "04_backend_supabase/tools/collect_stage79_retention_review_candidate.py",
+    "guard": "04_backend_supabase/tools/verify_stage79_retention_decision_review_intake.py",
+    "workflow": ".github/workflows/stage79_retention_decision_review_intake.yml",
+    "expected_review_surface_count": 12,
+    "expected_participant_roles": [
+      "legal_review",
+      "privacy_review",
+      "operations_review"
+    ],
+    "completed_input_must_remain_outside_repo": true,
+    "committed_placeholder_input_must_fail": true,
+    "test_fixture_input_must_fail": true,
+    "real_traceable_review_session_reference_required": true,
+    "real_review_artifact_per_participant_required": true,
+    "all_review_surfaces_must_be_complete": true,
+    "artifact_secret_values_must_be_absent_or_redacted": true,
+    "collector_output_is_digest_only": true,
+    "collector_copies_reviewer_identity": false,
+    "collector_copies_review_artifact_paths": false,
+    "collector_copies_review_decision_text": false,
+    "collector_may_hash_reviewer_references": true,
+    "collector_may_hash_review_artifacts": true,
+    "collector_may_hash_surface_decisions": true,
+    "collector_verifies_legal_correctness": false,
+    "collector_approves_retention_policy": false,
+    "collector_updates_candidate_documents": false,
+    "collector_closes_retention_matrix": false,
+    "collector_marks_any_gate_ready": false,
+    "canonical_independent_acceptance_required_after_collection": true,
+    "network_calls_allowed": false,
+    "provider_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "deployment_action_allowed": false,
+    "evidence_ref_creation_allowed": false,
+    "evidence_digest_promotion_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "gate_promotion_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "allowed_candidate_state": "REAL_EXTERNAL_RETENTION_REVIEW_MATERIAL_DIGESTS_BOUND_AWAITING_CANONICAL_INDEPENDENT_ACCEPTANCE_NOT_POLICY_EVIDENCE",
+  "failure_classes": [
+    "BGF-STAGE79-PLACEHOLDER-RETENTION-REVIEW-FALSE-GREEN-756",
+    "BGF-STAGE79-MISSING-LEGAL-PRIVACY-OPERATIONS-REVIEW-757",
+    "BGF-STAGE79-INCOMPLETE-RETENTION-SURFACE-REVIEW-758",
+    "BGF-STAGE79-REVIEW-ARTIFACT-SECRET-LEAKAGE-759",
+    "BGF-STAGE79-REVIEWER-IDENTITY-OR-PATH-LEAKAGE-760",
+    "BGF-STAGE79-REVIEW-DIGEST-AS-POLICY-APPROVAL-761",
+    "BGF-STAGE79-REVIEW-INPUT-AS-GATE-EVIDENCE-762",
+    "BGF-STAGE79-REVIEW-INPUT-AUTO-DRAFT-MUTATION-763",
+    "BGF-STAGE79-PREMATURE-RETENTION-MATRIX-CLOSURE-764",
+    "BGF-STAGE79-RETENTION-REVIEW-INTAKE-GUARD-765"
+  ],
+  "gates": {
+    "stage79_retention_review_intake": "REPO_ONLY_PENDING_CI",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Do not invent retention decisions. This frontier requires real legal/privacy/operations review material before Stage79 can produce a digest-only candidate. Unrelated internal blockers may continue independently.",
+    "real_external_review_present": false,
+    "canonical_independent_acceptance_still_required": true,
+    "target_decision_still_open": true,
+    "evidence_migration_allowed": false
+  }
+}
