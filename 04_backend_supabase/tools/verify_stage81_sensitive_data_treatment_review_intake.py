@@ -199,7 +199,7 @@ def verify_questionnaire_and_template() -> None:
         "privacy_review",
         "exactly these nine stage80 surfaces",
         "real_external_sensitive_data_treatment_review_material_digests_bound_awaiting_canonical_independent_acceptance_not_policy_evidence",
-        "does not mean",
+        "does **not** mean",
         "external ai approved",
         "sensitive-data marketing approved",
     ):
