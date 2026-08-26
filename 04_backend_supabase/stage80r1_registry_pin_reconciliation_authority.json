@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE80R1_REGISTRY_PIN_RECONCILIATION",
+  "baseline_main_sha": "32a0b72a001902e6e0417975105023e017798482",
+  "current_state": "HISTORICAL_STAGE80_AUTHORITY_SNAPSHOT_PRESERVED_CURRENT_REGISTRY_PIN_RECONCILED_BY_ADDENDUM_NO_POLICY_OR_GATE_PROMOTION",
+  "historical_stage80_authority": {
+    "path": "04_backend_supabase/stage80_sensitive_data_minimization_inventory_authority.json",
+    "blob": "9461cf96aaa44f1b422f78a137fe338ef51eae87",
+    "embedded_stage80_registry_blob": "b72c073e5b4079ef78dd3de94a5d3123dc7e4488",
+    "historical_snapshot_must_not_be_rewritten": true
+  },
+  "current_stage80_registry": {
+    "path": "10_compliance/inventory/STAGE80_TECHNICAL_SENSITIVE_DATA_MINIMIZATION_REGISTRY.json",
+    "blob": "2aacf6d36834f6542e0cc9ef1f9be360fc61019d",
+    "status": "TECHNICAL_SENSITIVE_DATA_MINIMIZATION_REGISTRY_NOT_FINAL_LEGAL_CLASSIFICATION_NOT_POLICY_NOT_EVIDENCE"
+  },
+  "reconciliation": {
+    "mismatch_confirmed": true,
+    "cause": "The Stage80 registry source-document marker for the support/DSR ingress surface was normalized from English 'support' to the source-grounded Portuguese marker 'suporte' after a fail-closed CI finding. The historical Stage80 authority snapshot retained the earlier registry blob pin.",
+    "semantic_policy_change": false,
+    "legal_classification_change": false,
+    "minimization_policy_approval_change": false,
+    "target_open_decision_change": false,
+    "current_registry_is_stage80_operational_source_for_downstream_read_only_binding": true,
+    "historical_authority_snapshot_remains_provenance_evidence_only": true,
+    "downstream_stage_must_pin_both_addendum_and_current_registry": true
+  },
+  "stage80_green_evidence": {
+    "exact_head_sha": "c29183359eaf21ea421af09c23a7804ad23ab55b",
+    "dedicated_workflow_run_id": 32964099011,
+    "dedicated_workflow_conclusion": "success",
+    "flutter_quality_gate_run_id": 32964098987,
+    "flutter_quality_gate_conclusion": "success",
+    "artifact_id": 9604997905,
+    "artifact_digest": "sha256:f504b98221d3b8c01527523e9f9c793037c984d007aebc74178c7d03fee3a95d",
+    "merged_main_sha": "32a0b72a001902e6e0417975105023e017798482"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-26T11:38:22.009883+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "remote_mutation_performed": false
+  },
+  "target_open_decision": {
+    "id": "SENSITIVE_DATA_TREATMENT",
+    "state": "OPEN",
+    "resolution_authority": "independent legal/privacy review",
+    "stage80r1_can_close_decision": false
+  },
+  "reconciliation_contract": {
+    "guard": "04_backend_supabase/tools/verify_stage80r1_registry_pin_reconciliation.py",
+    "workflow": ".github/workflows/stage80r1_registry_pin_reconciliation.yml",
+    "historical_authority_mutation_allowed": false,
+    "current_registry_mutation_allowed": false,
+    "legal_or_privacy_review_performed": false,
+    "final_sensitive_data_classification_approved": false,
+    "sensitive_data_processing_policy_approved": false,
+    "network_calls_allowed": false,
+    "provider_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "deployment_action_allowed": false,
+    "evidence_ref_creation_allowed": false,
+    "evidence_digest_promotion_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "gate_promotion_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "failure_classes": [
+    "BGF-STAGE80R1-HISTORICAL-AUTHORITY-SNAPSHOT-REWRITE-776",
+    "BGF-STAGE80R1-CURRENT-REGISTRY-PIN-DRIFT-777",
+    "BGF-STAGE80R1-MARKER-NORMALIZATION-AS-POLICY-CHANGE-778",
+    "BGF-STAGE80R1-RECONCILIATION-AS-LEGAL-APPROVAL-779",
+    "BGF-STAGE80R1-PREMATURE-SENSITIVE-DATA-TREATMENT-CLOSURE-780",
+    "BGF-STAGE80R1-REGISTRY-PIN-RECONCILIATION-GUARD-781"
+  ],
+  "gates": {
+    "stage80r1_registry_pin_reconciliation": "REPO_ONLY_PENDING_CI",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Prepare the fail-closed SENSITIVE_DATA_TREATMENT legal/privacy review questionnaire and external digest-only review intake using this reconciliation addendum plus the current Stage80 registry as explicit upstream pins.",
+    "real_independent_review_required": true,
+    "target_decision_still_open": true,
+    "evidence_migration_allowed": false
+  }
+}
