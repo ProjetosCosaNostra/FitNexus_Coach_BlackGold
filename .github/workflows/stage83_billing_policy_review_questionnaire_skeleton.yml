@@ -8,6 +8,23 @@ on:
       - "04_backend_supabase/stage83_billing_policy_review_questionnaire_skeleton_authority.json"
       - "04_backend_supabase/tools/build_stage83_billing_policy_review_questionnaire_skeleton.py"
       - "04_backend_supabase/tools/verify_stage83_billing_policy_review_questionnaire_skeleton.py"
+      - "04_backend_supabase/tools/STAGE83_CI_BOOTSTRAP_TRIGGER.txt"
+      - "10_compliance/review/STAGE83_BILLING_POLICY_REVIEW_QUESTIONNAIRE_SKELETON.md"
+      - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+      - "10_compliance/inventory/STAGE82R2_TECHNICAL_BILLING_LIFECYCLE_POLICY_SURFACE_REGISTRY.json"
+      - "04_backend_supabase/stage61_billing_authorization_state_machine_authority.json"
+      - "04_backend_supabase/stage62_stage61_final_reconciliation_authority.json"
+      - "04_backend_supabase/stage82r2_billing_lifecycle_source_reconciliation_authority.json"
+      - "04_backend_supabase/tools/verify_stage82r2_billing_lifecycle_source_reconciliation.py"
+      - ".github/workflows/stage83_billing_policy_review_questionnaire_skeleton.yml"
+  push:
+    branches:
+      - "blackgold/stage83-billing-policy-review-questionnaire-skeleton"
+    paths:
+      - "04_backend_supabase/stage83_billing_policy_review_questionnaire_skeleton_authority.json"
+      - "04_backend_supabase/tools/build_stage83_billing_policy_review_questionnaire_skeleton.py"
+      - "04_backend_supabase/tools/verify_stage83_billing_policy_review_questionnaire_skeleton.py"
+      - "04_backend_supabase/tools/STAGE83_CI_BOOTSTRAP_TRIGGER.txt"
       - "10_compliance/review/STAGE83_BILLING_POLICY_REVIEW_QUESTIONNAIRE_SKELETON.md"
       - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
       - "10_compliance/inventory/STAGE82R2_TECHNICAL_BILLING_LIFECYCLE_POLICY_SURFACE_REGISTRY.json"
@@ -23,11 +40,13 @@ permissions:
 jobs:
   verify-billing-policy-review-questionnaire-skeleton:
     runs-on: ubuntu-latest
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - name: Checkout exact head
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
 
       - name: Verify Stage83 billing policy questionnaire skeleton contract
@@ -38,10 +57,10 @@ jobs:
         run: |
           set -euo pipefail
           python 04_backend_supabase/tools/build_stage83_billing_policy_review_questionnaire_skeleton.py \
-            --source-sha "${{ github.event.pull_request.head.sha }}" \
+            --source-sha "${SOURCE_SHA}" \
             --output /tmp/stage83_skeleton_a.json
           python 04_backend_supabase/tools/build_stage83_billing_policy_review_questionnaire_skeleton.py \
-            --source-sha "${{ github.event.pull_request.head.sha }}" \
+            --source-sha "${SOURCE_SHA}" \
             --output /tmp/stage83_skeleton_b.json
           cmp /tmp/stage83_skeleton_a.json /tmp/stage83_skeleton_b.json
           grep -F '"surface_count": 10' /tmp/stage83_skeleton_a.json >/dev/null
@@ -61,7 +80,7 @@ jobs:
       - name: Upload non-attesting Stage83 questionnaire skeleton packet
         uses: actions/upload-artifact@v4
         with:
-          name: stage83-unanswered-billing-policy-questionnaire-skeleton-${{ github.event.pull_request.head.sha }}
+          name: stage83-unanswered-billing-policy-questionnaire-skeleton-${{ github.event.pull_request.head.sha || github.sha }}
           retention-days: 7
           if-no-files-found: error
           path: /tmp/stage83_skeleton_a.json
