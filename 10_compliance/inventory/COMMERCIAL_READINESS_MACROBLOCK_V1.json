@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "kind": "NON_ATTESTING_COMMERCIAL_READINESS_CONTROL_TOWER",
+  "project": "FitNexus Coach BlackGold",
+  "baseline_main_sha": "01709c437b1d5c25dba7d1b3877284cfdea525ed",
+  "strategy": {
+    "operating_model": "MACROBLOCKS_NOT_MICROSTAGES",
+    "macroblocks": [
+      "COMMERCIAL_READINESS",
+      "PRODUCTION_AND_BILLING",
+      "COMMERCIAL_LAUNCH"
+    ],
+    "one_coherent_pr_per_macroblock": true,
+    "poll_ci_repeatedly_in_same_work_cycle": false,
+    "microstage_credit_without_gate_fact_change": false,
+    "dangerous_or_irreversible_operations_remain_separately_gated": true
+  },
+  "source_bindings": {
+    "open_decisions": {
+      "path": "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json",
+      "git_blob_sha": "215d527c1cb79d7b72697f03f1f84887e3a72d95"
+    },
+    "terms_review_readiness": {
+      "path": "10_compliance/drafts/STAGE90_TERMS_INDEPENDENT_REVIEW_READINESS_CONTRACT.json",
+      "git_blob_sha": "7fc73339b51a5f48bb961c55f4df657f790c4c78"
+    },
+    "controlled_exercise_review_intake": {
+      "path": "10_compliance/rehearsals/STAGE91_CONTROLLED_EXERCISE_INDEPENDENT_REVIEW_INTAKE_CONTRACT.json",
+      "git_blob_sha": "80785cc36f1f718fb171a8d3af9d9fb78fadff78"
+    },
+    "predeploy_template": {
+      "path": "10_compliance/deployment/STAGE70_PRODUCTION_PREDEPLOY_PREREQUISITE_INPUT_TEMPLATE.json",
+      "git_blob_sha": "943c8fccdc96f2b58d5b0df38cce3c9f021f6a79"
+    },
+    "postdeploy_template": {
+      "path": "10_compliance/deployment/STAGE71_POSTDEPLOY_EVIDENCE_INPUT_TEMPLATE.json",
+      "git_blob_sha": "52235154070642330bb08cdccc7c27d2e09b0e81"
+    },
+    "terms_candidate": {
+      "path": "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md",
+      "git_blob_sha": "0652fb664db57842a8d9dd5d22f0b0b48d645d2d"
+    }
+  },
+  "management_progress_estimate": {
+    "status": "MANAGEMENT_ESTIMATE_NOT_RELEASE_EVIDENCE",
+    "commercial_publication_percent": 74,
+    "technical_product_percent": 92,
+    "areas": [
+      {
+        "id": "PRODUCT_AND_CORE_EXPERIENCE",
+        "weight": 30,
+        "earned": 29
+      },
+      {
+        "id": "BACKEND_SECURITY_INFRASTRUCTURE",
+        "weight": 20,
+        "earned": 19
+      },
+      {
+        "id": "BILLING_AND_COMMERCIAL_AUTHORITY",
+        "weight": 15,
+        "earned": 8
+      },
+      {
+        "id": "LEGAL_PRIVACY_COMPLIANCE",
+        "weight": 20,
+        "earned": 7
+      },
+      {
+        "id": "DEPLOYMENT_CONTROLLED_LAUNCH",
+        "weight": 15,
+        "earned": 11
+      }
+    ],
+    "credit_policy": "Preparation-only work does not increase commercial-publication percentage unless a gate-relevant real fact changes."
+  },
+  "current_verified_internal_readiness": {
+    "terms_acceptance_infrastructure_present": true,
+    "terms_registry_rows_at_stage90_receipt": 0,
+    "terms_acceptance_rows_at_stage90_receipt": 0,
+    "independent_terms_review_packet_prepared": true,
+    "controlled_exercise_independent_review_intake_prepared": true,
+    "production_predeploy_template_prepared": true,
+    "production_postdeploy_template_prepared": true
+  },
+  "critical_open_decisions": [
+    "LEGAL_ENTITY_IDENTITY",
+    "LEGAL_REVIEWER_REFERENCE",
+    "CONTROLLER_PROCESSOR_ROLE_MATRIX",
+    "SENSITIVE_DATA_TREATMENT",
+    "SUBPROCESSOR_AND_TRANSFER_MAP",
+    "RETENTION_MATRIX",
+    "BILLING_CANCELLATION_REFUND_POLICY",
+    "TERMS_ACCEPTANCE_VERSIONING",
+    "DSR_STABLE_PUBLIC_ROUTE",
+    "DSR_OWNER_AND_BACKUP",
+    "DSR_CONTROLLED_TESTS",
+    "INCIDENT_OWNER_ASSIGNMENTS",
+    "INCIDENT_RISK_AND_COMMUNICATION_PROCEDURE",
+    "INCIDENT_TABLETOPS"
+  ],
+  "macroblock_status": {
+    "COMMERCIAL_READINESS": {
+      "state": "ACTIVE_EXTERNAL_FACT_COLLECTION",
+      "autonomous_preparation": "SUBSTANTIALLY_READY",
+      "requires_real_external_facts": true,
+      "exit_conditions": [
+        "independently reviewed legal/business/privacy outputs for all applicable open decisions",
+        "real DSR and incident owner assignments",
+        "completed synthetic controlled exercises and independent review",
+        "real billing authority sufficient to review customer-facing billing policy"
+      ]
+    },
+    "PRODUCTION_AND_BILLING": {
+      "state": "BLOCKED_BY_COMMERCIAL_READINESS_AND_REAL_PRODUCTION_AUTHORITY",
+      "requires_real_external_facts": true,
+      "exit_conditions": [
+        "approved/published Terms can be registered without draft fallback",
+        "real billing provider authority and end-to-end billing lifecycle verification",
+        "stable production domain and reviewed predeploy operational artifacts",
+        "controlled deployment authorization"
+      ]
+    },
+    "COMMERCIAL_LAUNCH": {
+      "state": "BLOCKED",
+      "requires_real_external_facts": true,
+      "exit_conditions": [
+        "real deployment and postdeploy evidence",
+        "controlled-launch gate promoted by evidence rather than CI",
+        "conversion tracking verified",
+        "paid media remains disabled until controlled launch is GREEN"
+      ]
+    }
+  },
+  "gates": {
+    "legal_terms_of_use": "DENIED",
+    "legal_privacy_notice": "DENIED",
+    "legal_role_mapping": "DENIED",
+    "data_subject_request_channel": "DENIED",
+    "incident_response": "DENIED",
+    "billing_provider_credentials": "DENIED",
+    "deployment": "DENIED",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "commercial_publication": "DENIED"
+  },
+  "hard_boundaries": {
+    "ci_can_close_open_legal_decision": false,
+    "ci_can_attest_human_exercise": false,
+    "ci_can_attest_independent_review": false,
+    "ci_can_invent_provider_credentials": false,
+    "ci_can_promote_controlled_launch": false,
+    "ci_can_enable_paid_media": false,
+    "draft_terms_can_be_registered_as_current": false,
+    "progress_estimate_can_override_gate": false
+  }
+}

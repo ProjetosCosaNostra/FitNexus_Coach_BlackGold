@@ -1,0 +1,59 @@
+name: Commercial Readiness Macroblock V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "10_compliance/inventory/COMMERCIAL_READINESS_MACROBLOCK_V1.json"
+      - "10_compliance/COMMERCIAL_READINESS_MACROBLOCK_V1.md"
+      - "10_compliance/tools/verify_commercial_readiness_macroblock_v1.py"
+      - "04_backend_supabase/tools/COMMERCIAL_READINESS_MACROBLOCK_V1_CI_SYNC_TRIGGER.txt"
+      - ".github/workflows/commercial_readiness_macroblock_v1.yml"
+      - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+      - "10_compliance/drafts/STAGE90_TERMS_INDEPENDENT_REVIEW_READINESS_CONTRACT.json"
+      - "10_compliance/rehearsals/STAGE91_CONTROLLED_EXERCISE_INDEPENDENT_REVIEW_INTAKE_CONTRACT.json"
+      - "10_compliance/deployment/STAGE70_PRODUCTION_PREDEPLOY_PREREQUISITE_INPUT_TEMPLATE.json"
+      - "10_compliance/deployment/STAGE71_POSTDEPLOY_EVIDENCE_INPUT_TEMPLATE.json"
+      - "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md"
+  push:
+    branches:
+      - blackgold/commercial-readiness-macroblock-v1
+    paths:
+      - "10_compliance/inventory/COMMERCIAL_READINESS_MACROBLOCK_V1.json"
+      - "10_compliance/COMMERCIAL_READINESS_MACROBLOCK_V1.md"
+      - "10_compliance/tools/verify_commercial_readiness_macroblock_v1.py"
+      - "04_backend_supabase/tools/COMMERCIAL_READINESS_MACROBLOCK_V1_CI_SYNC_TRIGGER.txt"
+      - ".github/workflows/commercial_readiness_macroblock_v1.yml"
+      - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+      - "10_compliance/drafts/STAGE90_TERMS_INDEPENDENT_REVIEW_READINESS_CONTRACT.json"
+      - "10_compliance/rehearsals/STAGE91_CONTROLLED_EXERCISE_INDEPENDENT_REVIEW_INTAKE_CONTRACT.json"
+      - "10_compliance/deployment/STAGE70_PRODUCTION_PREDEPLOY_PREREQUISITE_INPUT_TEMPLATE.json"
+      - "10_compliance/deployment/STAGE71_POSTDEPLOY_EVIDENCE_INPUT_TEMPLATE.json"
+      - "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-commercial-readiness-control-tower:
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify Commercial Readiness Macroblock V1
+        run: python3 10_compliance/tools/verify_commercial_readiness_macroblock_v1.py
+
+      - name: Preserve hard boundaries
+        run: |
+          echo "OPERATING_MODEL=MACROBLOCKS_NOT_MICROSTAGES"
+          echo "COMMERCIAL_PUBLICATION_MANAGEMENT_ESTIMATE=74%"
+          echo "LEGAL_REVIEW_ATTESTED_BY_CI=false"
+          echo "HUMAN_EXERCISE_ATTESTED_BY_CI=false"
+          echo "REAL_BILLING_AUTHORITY_ATTESTED_BY_CI=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "PAID_MEDIA=DENIED"
