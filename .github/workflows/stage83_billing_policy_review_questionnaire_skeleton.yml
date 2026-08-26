@@ -1,0 +1,101 @@
+name: Stage83 Billing Policy Review Questionnaire Skeleton
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "04_backend_supabase/stage83_billing_policy_review_questionnaire_skeleton_authority.json"
+      - "04_backend_supabase/tools/build_stage83_billing_policy_review_questionnaire_skeleton.py"
+      - "04_backend_supabase/tools/verify_stage83_billing_policy_review_questionnaire_skeleton.py"
+      - "04_backend_supabase/tools/STAGE83_CI_BOOTSTRAP_TRIGGER.txt"
+      - "10_compliance/review/STAGE83_BILLING_POLICY_REVIEW_QUESTIONNAIRE_SKELETON.md"
+      - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+      - "10_compliance/inventory/STAGE82R2_TECHNICAL_BILLING_LIFECYCLE_POLICY_SURFACE_REGISTRY.json"
+      - "04_backend_supabase/stage61_billing_authorization_state_machine_authority.json"
+      - "04_backend_supabase/stage62_stage61_final_reconciliation_authority.json"
+      - "04_backend_supabase/stage82r2_billing_lifecycle_source_reconciliation_authority.json"
+      - "04_backend_supabase/tools/verify_stage82r2_billing_lifecycle_source_reconciliation.py"
+      - ".github/workflows/stage83_billing_policy_review_questionnaire_skeleton.yml"
+  push:
+    branches:
+      - "blackgold/stage83-billing-policy-review-questionnaire-skeleton"
+    paths:
+      - "04_backend_supabase/stage83_billing_policy_review_questionnaire_skeleton_authority.json"
+      - "04_backend_supabase/tools/build_stage83_billing_policy_review_questionnaire_skeleton.py"
+      - "04_backend_supabase/tools/verify_stage83_billing_policy_review_questionnaire_skeleton.py"
+      - "04_backend_supabase/tools/STAGE83_CI_BOOTSTRAP_TRIGGER.txt"
+      - "10_compliance/review/STAGE83_BILLING_POLICY_REVIEW_QUESTIONNAIRE_SKELETON.md"
+      - "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+      - "10_compliance/inventory/STAGE82R2_TECHNICAL_BILLING_LIFECYCLE_POLICY_SURFACE_REGISTRY.json"
+      - "04_backend_supabase/stage61_billing_authorization_state_machine_authority.json"
+      - "04_backend_supabase/stage62_stage61_final_reconciliation_authority.json"
+      - "04_backend_supabase/stage82r2_billing_lifecycle_source_reconciliation_authority.json"
+      - "04_backend_supabase/tools/verify_stage82r2_billing_lifecycle_source_reconciliation.py"
+      - ".github/workflows/stage83_billing_policy_review_questionnaire_skeleton.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-billing-policy-review-questionnaire-skeleton:
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Verify Stage83 billing policy questionnaire skeleton contract
+        run: python 04_backend_supabase/tools/verify_stage83_billing_policy_review_questionnaire_skeleton.py
+
+      - name: Build deterministic Stage83 questionnaire skeleton packet twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python 04_backend_supabase/tools/build_stage83_billing_policy_review_questionnaire_skeleton.py \
+            --source-sha "${SOURCE_SHA}" \
+            --output /tmp/stage83_skeleton_a.json
+          python 04_backend_supabase/tools/build_stage83_billing_policy_review_questionnaire_skeleton.py \
+            --source-sha "${SOURCE_SHA}" \
+            --output /tmp/stage83_skeleton_b.json
+          cmp /tmp/stage83_skeleton_a.json /tmp/stage83_skeleton_b.json
+          grep -F '"surface_count": 10' /tmp/stage83_skeleton_a.json >/dev/null
+          grep -F '"section_count": 13' /tmp/stage83_skeleton_a.json >/dev/null
+          grep -F '"total_question_count": 78' /tmp/stage83_skeleton_a.json >/dev/null
+          grep -F '"real_billing_authority_present": false' /tmp/stage83_skeleton_a.json >/dev/null
+          grep -F '"real_review_collection_allowed": false' /tmp/stage83_skeleton_a.json >/dev/null
+          grep -F '"review_answers_present": false' /tmp/stage83_skeleton_a.json >/dev/null
+          grep -F '"customer_policy_approved": false' /tmp/stage83_skeleton_a.json >/dev/null
+          grep -F '"terms_of_use_modified": false' /tmp/stage83_skeleton_a.json >/dev/null
+          grep -F '"target_open_decision_closed": false' /tmp/stage83_skeleton_a.json >/dev/null
+          grep -F '"legal_terms_gate_ready": false' /tmp/stage83_skeleton_a.json >/dev/null
+          grep -F '"provider_call": false' /tmp/stage83_skeleton_a.json >/dev/null
+          grep -F '"remote_mutation": false' /tmp/stage83_skeleton_a.json >/dev/null
+          echo "STAGE83_DETERMINISTIC_QUESTIONNAIRE_SKELETON_BUILD=PASS"
+
+      - name: Upload non-attesting Stage83 questionnaire skeleton packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage83-unanswered-billing-policy-questionnaire-skeleton-${{ github.event.pull_request.head.sha || github.sha }}
+          retention-days: 7
+          if-no-files-found: error
+          path: /tmp/stage83_skeleton_a.json
+
+      - name: Preserve billing authority and policy boundaries
+        run: |
+          echo "CANONICAL_DECISION_STATE=OPEN"
+          echo "REAL_BILLING_AUTHORITY_PRESENT=false"
+          echo "REAL_REVIEW_COLLECTION_ALLOWED=false"
+          echo "CUSTOMER_POLICY_APPROVED=false"
+          echo "TERMS_OF_USE_MODIFIED=false"
+          echo "TARGET_DECISION_CLOSED=false"
+          echo "LEGAL_TERMS_GATE_READY=false"
+          echo "PROVIDER_CALL=false"
+          echo "GATE_PROMOTION=false"
+          echo "CONTROLLED_LAUNCH=DENIED"
+          echo "PAID_MEDIA=DENIED"
+          echo "REMOTE_MUTATION=false"

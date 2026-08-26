@@ -1,0 +1,15 @@
+STAGE83_CI_BOOTSTRAP_TRIGGER
+
+Purpose: ensure the first Stage83 exact head can trigger both the branch-local Stage83 dedicated workflow and the existing Flutter Quality Gate before the new Stage83 workflow exists on main.
+
+This file is non-attesting tooling only.
+REAL_BILLING_AUTHORITY_PRESENT=false
+REAL_REVIEW_COLLECTION_ALLOWED=false
+CUSTOMER_POLICY_APPROVED=false
+TERMS_OF_USE_MODIFIED=false
+TARGET_DECISION_CLOSED=false
+LEGAL_TERMS_GATE_READY=false
+PROVIDER_CALL=false
+REMOTE_MUTATION=false
+CONTROLLED_LAUNCH=DENIED
+PAID_MEDIA=DENIED
