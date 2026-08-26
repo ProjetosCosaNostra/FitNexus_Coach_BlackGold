@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "stage": "STAGE76_PROVIDER_EVIDENCE_ACQUISITION_BOUNDARY",
+  "baseline_main_sha": "a0e22bc72954325e439d049c2f350bc77994a9b7",
+  "current_state": "PROVIDER_TERMS_REGION_RETENTION_TRANSFER_EVIDENCE_INTAKE_BOUNDARY_PREPARED_NO_PROVIDER_FACTS_ATTESTED_NO_LEGAL_CLASSIFICATION_NO_GATE_PROMOTION",
+  "upstream_authority": {
+    "stage75_provider_inventory": "04_backend_supabase/stage75_technical_external_provider_inventory_authority.json",
+    "stage75_provider_inventory_blob": "8a4d0e6ce6a67360d432e401f34653916aeaf58d",
+    "stage75_source_registry": "10_compliance/inventory/STAGE75_TECHNICAL_EXTERNAL_SERVICE_SOURCE_REGISTRY.json"
+  },
+  "fresh_remote_read_only_receipt": {
+    "source": "Supabase.execute_sql_read_only",
+    "observed_at_utc": "2026-08-26T04:26:41.419814+00:00",
+    "auth_users": 0,
+    "organizations": 0,
+    "students": 0,
+    "asaas_state": "selected_pending_credentials",
+    "asaas_activated_at": null,
+    "remote_mutation_performed": false
+  },
+  "acquisition_contract": {
+    "input_template": "10_compliance/inventory/STAGE76_PROVIDER_EVIDENCE_INPUT_TEMPLATE.json",
+    "collector": "04_backend_supabase/tools/collect_stage76_provider_evidence_candidate.py",
+    "guard": "04_backend_supabase/tools/verify_stage76_provider_evidence_acquisition_boundary.py",
+    "workflow": ".github/workflows/stage76_provider_evidence_acquisition_boundary.yml",
+    "allowed_service_ids": [
+      "supabase",
+      "telegram_bot_api",
+      "asaas",
+      "cloudflare_edge_signal",
+      "github_repository_ci_pages"
+    ],
+    "required_artifact_keys": [
+      "relationship_scope_resolution",
+      "provider_legal_entity_source",
+      "contract_dpa_or_data_terms_source",
+      "processing_purpose_and_data_categories_source",
+      "processing_or_hosting_regions_source",
+      "retention_and_deletion_terms_source",
+      "subprocessor_chain_source",
+      "international_transfer_mechanism_source"
+    ],
+    "real_external_artifacts_required": true,
+    "each_artifact_must_be_nonempty_utf8": true,
+    "secret_like_markers_rejected": true,
+    "completed_input_must_remain_outside_repo": true,
+    "committed_placeholder_input_must_fail": true,
+    "test_fixture_input_must_fail": true,
+    "collector_output_is_digest_only": true,
+    "collector_extracts_or_asserts_provider_facts": false,
+    "collector_determines_legal_subprocessor_status": false,
+    "collector_determines_transfer_legality": false,
+    "collector_determines_contract_sufficiency": false,
+    "collector_determines_retention_sufficiency": false,
+    "collector_can_activate_asaas": false,
+    "collector_accepts_billing_credentials_or_secrets": false,
+    "collector_can_prove_cloudflare_direct_contract": false,
+    "collector_can_make_github_production_authority": false,
+    "independent_legal_privacy_review_required_after_collection": true,
+    "target_open_decision_remains_open_after_collection": true,
+    "network_calls_allowed": false,
+    "provider_calls_allowed": false,
+    "supabase_mutation_allowed": false,
+    "deployment_action_allowed": false,
+    "evidence_ref_creation_allowed": false,
+    "evidence_digest_promotion_allowed": false,
+    "evidence_migration_creation_allowed": false,
+    "gate_promotion_allowed": false,
+    "controlled_launch_promotion_allowed": false,
+    "paid_media_promotion_allowed": false
+  },
+  "scope_separation": {
+    "privacy_provider_terms_evidence": "Stage76 collects digest-bound source artifacts for later legal/privacy review.",
+    "billing_credential_and_checkout_evidence": "Remains exclusively under Stage39/58/59/61/62 billing authorities and must not be substituted by Stage76.",
+    "production_deployment_evidence": "Remains under Stage46/66/70/71 authorities and must not be substituted by Stage76.",
+    "provider_web_research_inside_ci": false
+  },
+  "failure_classes": [
+    "BGF-STAGE76-PLACEHOLDER-PROVIDER-EVIDENCE-FALSE-GREEN-726",
+    "BGF-STAGE76-TEST-FIXTURE-AS-PROVIDER-EVIDENCE-727",
+    "BGF-STAGE76-PROVIDER-EVIDENCE-SECRET-LEAKAGE-728",
+    "BGF-STAGE76-MISSING-PROVIDER-EVIDENCE-FIELD-729",
+    "BGF-STAGE76-PROVIDER-FACT-EXTRACTION-AS-ATTESTATION-730",
+    "BGF-STAGE76-COLLECTION-AS-LEGAL-CLASSIFICATION-731",
+    "BGF-STAGE76-BILLING-CREDENTIAL-EVIDENCE-SCOPE-COLLISION-732",
+    "BGF-STAGE76-CLOUDFLARE-RELATIONSHIP-AUTO-CONCLUSION-733",
+    "BGF-STAGE76-CANDIDATE-AS-GATE-EVIDENCE-734",
+    "BGF-STAGE76-PROVIDER-EVIDENCE-ACQUISITION-GUARD-735"
+  ],
+  "gates": {
+    "stage76_provider_evidence_acquisition": "REPO_ONLY_PENDING_CI",
+    "billing_provider_credentials": "DENIED_AWAITING_REAL_ASAAS_PRODUCTION_OPERATOR_EVIDENCE",
+    "legal_terms_of_use": "DENIED_AWAITING_REAL_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_privacy_notice": "DENIED_AWAITING_REAL_PRIVACY_LEGAL_REVIEW_AND_STABLE_PUBLICATION_EVIDENCE",
+    "legal_role_mapping": "DENIED_AWAITING_REAL_PROCESSING_ROLE_AND_LEGAL_BASIS_REVIEW_EVIDENCE",
+    "data_subject_request_channel": "DENIED_AWAITING_REAL_OPERATIONAL_AND_CONTROLLED_SYNTHETIC_EVIDENCE",
+    "incident_response": "DENIED_AWAITING_REAL_GOVERNANCE_AND_CONTROLLED_TABLETOP_EVIDENCE",
+    "production_deployment": "DENIED_AWAITING_REAL_PRODUCTION_RELEASE_AND_OPERATIONS_EVIDENCE",
+    "controlled_launch": "DENIED",
+    "paid_media": "DENIED",
+    "launch": "DENIED"
+  },
+  "next_after_green": {
+    "safe_internal_work": "Prepare a deterministic multi-provider independent-review packet assembler that consumes only Stage76 digest candidates and still refuses to resolve SUBPROCESSOR_AND_TRANSFER_MAP without an external legal/privacy review result.",
+    "real_provider_artifacts_required_before_any_candidate": true,
+    "target_decision_still_open": true,
+    "evidence_migration_allowed": false
+  }
+}
