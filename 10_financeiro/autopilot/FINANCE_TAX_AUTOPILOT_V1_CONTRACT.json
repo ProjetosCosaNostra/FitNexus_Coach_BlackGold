@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "kind": "NON_ATTESTING_FINANCE_TAX_AUTOPILOT_FOUNDATION",
+  "project": "FitNexus Coach BlackGold",
+  "operator_profile": {
+    "legal_form": "PESSOA_FISICA",
+    "commercial_brand": "FitNexus Coach BlackGold",
+    "mei_or_cnpj_present": false,
+    "sensitive_identifiers_in_repository_allowed": false
+  },
+  "state": "PRE_REVENUE_FOUNDATION_NO_TAX_FILING_NO_PAYMENT_AUTHORITY",
+  "principles": {
+    "zero_fixed_cost_before_revenue": true,
+    "formalize_only_when_economically_supported_or_legally_required": true,
+    "automation_first_manual_only_when_unavoidable": true,
+    "official_authority_required_for_tax_rules": true,
+    "human_confirmation_required_for_irreversible_filing_or_payment": true,
+    "no_secret_values_in_repository": true,
+    "no_tax_rate_hardcoding_without_authority_pack": true,
+    "no_accounting_or_legal_readiness_attested_by_ci": true
+  },
+  "automation_scope": [
+    "revenue_event_ingestion",
+    "provider_fee_reconciliation",
+    "refund_and_chargeback_reconciliation",
+    "operating_cost_ledger",
+    "cashflow_summary",
+    "tax_reserve_estimate_from_reviewed_rule_pack",
+    "monthly_close_candidate",
+    "obligation_calendar_candidate",
+    "receipt_and_evidence_index",
+    "pf_mei_pj_economic_comparison_candidate",
+    "formalization_trigger_candidate",
+    "audit_bundle_generation"
+  ],
+  "later_integrations": {
+    "asaas": "READ_ONLY_FIRST_THEN_SEPARATELY_GATED_AUTOMATION",
+    "bank": "READ_ONLY_RECONCILIATION_WHEN_AUTHORIZED",
+    "government_portals": "NO_AUTONOMOUS_FILING_WITHOUT_EXPLICIT_AUTHORITY_AND_SUPPORTED_INTEGRATION",
+    "accounting_review": "STRUCTURED_EXPORT_AND_EXCEPTION_REVIEW"
+  },
+  "formalization_gate": {
+    "current_state": "NOT_TRIGGERED_PRE_REVENUE",
+    "must_compare": [
+      "current_pf_obligations",
+      "mei_eligibility_if_legally_applicable",
+      "other_cnpj_regime_candidates",
+      "monthly_fixed_compliance_cost",
+      "estimated_tax_cost",
+      "billing_and_invoice_requirements",
+      "revenue_stability",
+      "safety_margin"
+    ],
+    "mei_eligibility_must_not_be_assumed": true,
+    "automatic_cnpj_opening_allowed": false
+  },
+  "monthly_close": {
+    "inputs": [
+      "gross_receipts",
+      "refunds",
+      "chargebacks",
+      "provider_fees",
+      "operating_costs",
+      "owner_contributions",
+      "owner_withdrawals",
+      "reviewed_tax_rule_pack"
+    ],
+    "outputs": [
+      "reconciled_cash_summary",
+      "provisional_tax_reserve",
+      "unresolved_transaction_exceptions",
+      "candidate_due_dates",
+      "evidence_manifest",
+      "human_actions_required"
+    ],
+    "tax_due_is_final_authoritative_calculation": false
+  },
+  "external_authority_pack": {
+    "required_before_tax_estimation": true,
+    "must_include": [
+      "jurisdiction",
+      "calendar_year",
+      "operator_legal_form",
+      "revenue_source_classification",
+      "official_source_urls",
+      "reviewed_rules",
+      "effective_dates",
+      "review_status"
+    ],
+    "must_be_refreshed_when_rules_change": true
+  },
+  "hard_boundaries": {
+    "can_file_tax_return": false,
+    "can_pay_tax": false,
+    "can_open_mei_or_cnpj": false,
+    "can_change_legal_form": false,
+    "can_invent_tax_rule": false,
+    "can_mark_tax_compliance_complete": false,
+    "can_store_cpf_or_cnpj_secret_like_identifiers": false,
+    "can_enable_real_billing": false
+  },
+  "progress_semantics": {
+    "foundation_progress_credit_to_commercial_publication_percent": 0,
+    "reason": "This foundation reduces future manual work but does not itself close legal, tax, billing, deployment or launch gates."
+  }
+}
