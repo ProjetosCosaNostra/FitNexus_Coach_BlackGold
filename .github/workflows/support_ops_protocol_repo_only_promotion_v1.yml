@@ -1,0 +1,54 @@
+name: Support Ops Protocol Repo-Only Promotion V1
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/migrations/20260827190000_support_ops_protocol.sql'
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/operations/SUPPORT_OPS_PROTOCOL_REPO_ONLY_PROMOTION_V1.json'
+      - '04_backend_supabase/operations/SUPPORT_OPS_PROTOCOL_PROMOTION_READINESS_V1.json'
+      - '04_backend_supabase/operations/candidates/SUPPORT_OPS_PROTOCOL_CANDIDATE.sql'
+      - '04_backend_supabase/tools/verify_support_ops_protocol_repo_only_promotion_v1.py'
+      - '.github/workflows/support_ops_protocol_repo_only_promotion_v1.yml'
+  push:
+    branches:
+      - 'blackgold/support-ops-protocol-repo-only-promotion-v1'
+    paths:
+      - '04_backend_supabase/migrations/20260827190000_support_ops_protocol.sql'
+      - '04_backend_supabase/migration_ledger_authority.json'
+      - '04_backend_supabase/operations/SUPPORT_OPS_PROTOCOL_REPO_ONLY_PROMOTION_V1.json'
+      - '04_backend_supabase/operations/SUPPORT_OPS_PROTOCOL_PROMOTION_READINESS_V1.json'
+      - '04_backend_supabase/operations/candidates/SUPPORT_OPS_PROTOCOL_CANDIDATE.sql'
+      - '04_backend_supabase/tools/verify_support_ops_protocol_repo_only_promotion_v1.py'
+      - '.github/workflows/support_ops_protocol_repo_only_promotion_v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v6
+
+      - name: Python syntax preflight
+        run: python -m py_compile 04_backend_supabase/tools/verify_support_ops_protocol_repo_only_promotion_v1.py
+
+      - name: Verify repo-only promotion authority
+        run: python 04_backend_supabase/tools/verify_support_ops_protocol_repo_only_promotion_v1.py
+
+      - name: Preserve zero-side-effect boundary
+        shell: bash
+        run: |
+          grep -q '"remote_supabase_apply_allowed": false' 04_backend_supabase/operations/SUPPORT_OPS_PROTOCOL_REPO_ONLY_PROMOTION_V1.json
+          grep -q '"remote_apply_count": 0' 04_backend_supabase/operations/SUPPORT_OPS_PROTOCOL_REPO_ONLY_PROMOTION_V1.json
+          grep -q '"credit_percent_points": 0' 04_backend_supabase/operations/SUPPORT_OPS_PROTOCOL_REPO_ONLY_PROMOTION_V1.json
+          echo 'REPO_ONLY_PROMOTION=true'
+          echo 'SUPABASE_MUTATION=false'
+          echo 'GMAIL_MUTATION=false'
+          echo 'AUTOMATIC_OUTBOUND_EMAIL=false'
+          echo 'DSR_GATE_CLOSURE=false'
+          echo 'COMMERCIAL_PROGRESS_CREDIT=0'
