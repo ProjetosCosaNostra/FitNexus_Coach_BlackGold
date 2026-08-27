@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "kind": "USER_AUTHORIZED_OPERATOR_PUBLIC_CONTACT_AUTHORITY",
+  "project": "FitNexus Coach BlackGold",
+  "authorization_date": "2026-08-27",
+  "operator": {
+    "legal_form": "PESSOA_FISICA",
+    "commercial_brand": "FitNexus Coach BlackGold",
+    "ownership_model": "SOLE_OWNER",
+    "partners_planned": false
+  },
+  "authorized_public_contact": {
+    "channel_type": "EMAIL",
+    "value": "projetoscosanostra@gmail.com",
+    "authorized_for": [
+      "general_support",
+      "privacy_contact",
+      "data_subject_request_intake",
+      "billing_support"
+    ]
+  },
+  "publication_state": "AUTHORIZED_NOT_YET_PROVEN_PUBLISHED",
+  "protocol_model": {
+    "intake_identifier_required": true,
+    "received_at_timestamp_required": true,
+    "request_classification_required": true,
+    "acknowledgement_receipt_required": true,
+    "status_history_required": true,
+    "resolution_receipt_required": true,
+    "retention_rule_requires_review": true,
+    "response_deadlines_require_current_legal_authority": true
+  },
+  "commercial_readiness_effect": {
+    "contact_choice_resolved": true,
+    "dsr_stable_public_route_closed": false,
+    "legal_entity_identity_closed": false,
+    "progress_points_granted": 0,
+    "reason": "The operator authorized the channel, but publication, protocol handling evidence and independent legal/privacy review are still pending."
+  },
+  "hard_boundaries": {
+    "does_not_publish_terms": true,
+    "does_not_collect_terms_acceptance": true,
+    "does_not_enable_billing": true,
+    "does_not_mutate_supabase": true,
+    "does_not_attest_legal_compliance": true,
+    "does_not_close_dsr_decision": true
+  }
+}
