@@ -1,0 +1,67 @@
+name: Finance Tax Autopilot V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "10_financeiro/autopilot/**"
+      - "04_backend_supabase/tools/FINANCE_TAX_AUTOPILOT_V1.ps1"
+      - "04_backend_supabase/tools/build_finance_tax_autopilot_workspace_v1.py"
+      - ".github/workflows/finance_tax_autopilot_v1.yml"
+  push:
+    branches:
+      - "blackgold/**"
+    paths:
+      - "10_financeiro/autopilot/**"
+      - "04_backend_supabase/tools/FINANCE_TAX_AUTOPILOT_V1.ps1"
+      - "04_backend_supabase/tools/build_finance_tax_autopilot_workspace_v1.py"
+      - ".github/workflows/finance_tax_autopilot_v1.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-finance-tax-autopilot-foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Build external workspace twice deterministically
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/fitnexus-finance-tax/current"
+          FIRST="$RUNNER_TEMP/fitnexus-finance-tax-first"
+          python3 04_backend_supabase/tools/build_finance_tax_autopilot_workspace_v1.py --output-root "$OUT"
+          cp -a "$OUT" "$FIRST"
+          python3 04_backend_supabase/tools/build_finance_tax_autopilot_workspace_v1.py --output-root "$OUT"
+          diff -r "$FIRST" "$OUT"
+
+      - name: Verify hard boundaries
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'fitnexus-finance-tax' / 'current'
+          status = json.loads((root / 'STATUS.json').read_text(encoding='utf-8'))
+          profile = json.loads((root / 'OPERATOR_PROFILE.json').read_text(encoding='utf-8'))
+          authority = json.loads((root / 'TAX_RULE_AUTHORITY_TEMPLATE.json').read_text(encoding='utf-8'))
+          assert profile['operator_legal_form'] == 'PESSOA_FISICA'
+          assert profile['cpf_or_other_sensitive_identifier_present'] is False
+          assert status['real_revenue_ingested'] is False
+          assert status['tax_filing_authorized'] is False
+          assert status['tax_payment_authorized'] is False
+          assert status['commercial_publication_progress_credit'] == 0
+          assert authority['review_status'] == 'NOT_REVIEWED'
+          assert authority['official_source_urls'] == []
+          print('FINANCE_TAX_AUTOPILOT_BOUNDARY=PASS')
+          PY
+
+      - name: Preserve non-attesting semantics
+        run: |
+          echo "FINANCE_TAX_AUTOPILOT_FOUNDATION=PASS"
+          echo "TAX_FILING_AUTHORIZED=false"
+          echo "TAX_PAYMENT_AUTHORIZED=false"
+          echo "AUTOMATIC_CNPJ_OPENING=false"
+          echo "COMMERCIAL_PROGRESS_CREDIT=0"
