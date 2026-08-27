@@ -84,6 +84,25 @@ jobs:
           python3 04_backend_supabase/tools/build_commercial_readiness_external_fact_pack_v1.py --output-root "$OUT"
           diff -r "$FIRST" "$OUT"
 
+      - name: Regress Windows CRLF worktree false drift
+        run: |
+          set -euo pipefail
+          SOURCE="10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
+          HEAD_BLOB="$(git rev-parse "HEAD:$SOURCE")"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json')
+          data = p.read_bytes().replace(b'\r\n', b'\n').replace(b'\n', b'\r\n')
+          p.write_bytes(data)
+          PY
+          WORKTREE_BLOB="$(git hash-object --no-filters "$SOURCE")"
+          test "$WORKTREE_BLOB" != "$HEAD_BLOB"
+          OUT="$RUNNER_TEMP/fitnexus-commercial-readiness-crlf/current"
+          python3 04_backend_supabase/tools/build_commercial_readiness_external_fact_pack_v1.py --output-root "$OUT"
+          OUTPUT_BLOB="$(git hash-object --no-filters "$OUT/sources/COMPLIANCE_OPEN_DECISIONS.json")"
+          test "$OUTPUT_BLOB" = "$HEAD_BLOB"
+          echo "COMMERCIAL_READINESS_WINDOWS_CRLF_REGRESSION=PASS"
+
       - name: Verify external fact pack boundaries
         run: |
           python3 - <<'PY'
@@ -101,6 +120,7 @@ jobs:
           assert manifest['contains_real_reviewer_identity'] is False
           assert manifest['contains_provider_secret'] is False
           assert manifest['contains_real_operational_evidence'] is False
+          assert all(x['copy_source'] == 'COMMITTED_GIT_BLOB_NOT_WORKTREE_BYTES' for x in manifest['entries'])
           print('COMMERCIAL_READINESS_EXTERNAL_FACT_PACK_BOUNDARY=PASS')
           PY
 
