@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "kind": "NON_ATTESTING_SUPPORT_OPS_AUTOPILOT_FOUNDATION",
+  "project": "FitNexus Coach BlackGold",
+  "public_contact": "projetoscosanostra@gmail.com",
+  "state": "SOURCE_PREPARED_NOT_REMOTE_APPLIED_NOT_OPERATIONAL_EVIDENCE",
+  "objective": "Automate intake normalization, triage candidates, protocol numbering, lifecycle tracking and evidence preparation while keeping irreversible or legally sensitive actions separately gated.",
+  "channels": {
+    "email_primary": true,
+    "gmail_ingestion": "READ_ONLY_FIRST_WHEN_SEPARATELY_AUTHORIZED",
+    "app_public_route": "/support",
+    "direct_public_database_intake": false
+  },
+  "categories": [
+    "SUPPORT",
+    "BILLING",
+    "PRIVACY_DATA",
+    "SECURITY",
+    "OTHER"
+  ],
+  "lifecycle": [
+    "RECEIVED",
+    "TRIAGED",
+    "NEEDS_ACTION",
+    "WAITING_REQUESTER",
+    "RESOLVED",
+    "CLOSED"
+  ],
+  "automation_scope": [
+    "deduplicate_source_message",
+    "assign_protocol_number",
+    "classify_category_candidate",
+    "detect_security_or_privacy_attention_candidate",
+    "prepare_acknowledgement_draft",
+    "track_status_events",
+    "prepare_followup_queue",
+    "prepare_evidence_manifest",
+    "prepare_monthly_support_metrics"
+  ],
+  "data_minimization": {
+    "gmail_remains_source_of_truth_for_full_message_body": true,
+    "database_full_message_body_default": "DO_NOT_STORE",
+    "database_minimum_fields": [
+      "source_message_id",
+      "requester_email",
+      "subject",
+      "category",
+      "status",
+      "protocol_number",
+      "triage_summary",
+      "timestamps"
+    ],
+    "secrets_or_authentication_codes_allowed": false
+  },
+  "protocol": {
+    "format": "FNX-YYYYMMDD-NNNNNNNN",
+    "database_sequence_required": true,
+    "source_message_id_unique": true,
+    "idempotent_reingestion_required": true
+  },
+  "security_model": {
+    "tables_private_by_default": true,
+    "rls_enabled": true,
+    "anon_read_allowed": false,
+    "authenticated_read_allowed": false,
+    "service_role_ingestion_only": true,
+    "public_status_lookup": "NOT_IMPLEMENTED_UNTIL_PRIVACY_REVIEW"
+  },
+  "response_model": {
+    "draft_generation_allowed": true,
+    "automatic_send_allowed": false,
+    "reason": "Real outbound responses can create legal, billing, privacy or security commitments and require a separately authorized operational policy."
+  },
+  "legal_deadline_model": {
+    "hardcoded_legal_deadlines_allowed": false,
+    "authority_pack_required_before_deadline_automation": true,
+    "dsr_stable_public_route_state": "OPEN"
+  },
+  "deployment_boundary": {
+    "migration_candidate_created": true,
+    "remote_supabase_apply_allowed_by_this_contract": false,
+    "production_activation_allowed_by_this_contract": false,
+    "gmail_mutation_allowed_by_this_contract": false
+  },
+  "commercial_progress": {
+    "credit_percent_points": 0,
+    "reason": "Source preparation does not prove stable production publication or operational protocol handling."
+  }
+}
