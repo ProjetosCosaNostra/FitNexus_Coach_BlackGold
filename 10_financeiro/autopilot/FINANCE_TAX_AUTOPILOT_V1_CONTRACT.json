@@ -5,7 +5,10 @@
   "operator_profile": {
     "legal_form": "PESSOA_FISICA",
     "commercial_brand": "FitNexus Coach BlackGold",
+    "ownership_model": "SOLE_OWNER",
+    "partners_planned": false,
     "mei_or_cnpj_present": false,
+    "human_accountant_required_by_default": false,
     "sensitive_identifiers_in_repository_allowed": false
   },
   "state": "PRE_REVENUE_FOUNDATION_NO_TAX_FILING_NO_PAYMENT_AUTHORITY",
@@ -15,6 +18,8 @@
     "automation_first_manual_only_when_unavoidable": true,
     "official_authority_required_for_tax_rules": true,
     "human_confirmation_required_for_irreversible_filing_or_payment": true,
+    "external_accountant_is_exception_not_default": true,
+    "external_accountant_only_when_specific_current_rule_or_operational_exception_requires_it": true,
     "no_secret_values_in_repository": true,
     "no_tax_rate_hardcoding_without_authority_pack": true,
     "no_accounting_or_legal_readiness_attested_by_ci": true
@@ -37,20 +42,21 @@
     "asaas": "READ_ONLY_FIRST_THEN_SEPARATELY_GATED_AUTOMATION",
     "bank": "READ_ONLY_RECONCILIATION_WHEN_AUTHORIZED",
     "government_portals": "NO_AUTONOMOUS_FILING_WITHOUT_EXPLICIT_AUTHORITY_AND_SUPPORTED_INTEGRATION",
-    "accounting_review": "STRUCTURED_EXPORT_AND_EXCEPTION_REVIEW"
+    "accounting_review": "EXCEPTION_ONLY_WHEN_CURRENT_RULE_OR_OPERATIONAL_EXCEPTION_REQUIRES_EXTERNAL_REVIEW"
   },
   "formalization_gate": {
     "current_state": "NOT_TRIGGERED_PRE_REVENUE",
     "must_compare": [
       "current_pf_obligations",
       "mei_eligibility_if_legally_applicable",
-      "other_cnpj_regime_candidates",
+      "other_single_owner_cnpj_regime_candidates",
       "monthly_fixed_compliance_cost",
       "estimated_tax_cost",
       "billing_and_invoice_requirements",
       "revenue_stability",
       "safety_margin"
     ],
+    "multi_partner_structure_allowed_by_operator_policy": false,
     "mei_eligibility_must_not_be_assumed": true,
     "automatic_cnpj_opening_allowed": false
   },
