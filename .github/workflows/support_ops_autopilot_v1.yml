@@ -1,0 +1,45 @@
+name: Support Ops Autopilot V1
+
+on:
+  pull_request:
+    paths:
+      - '04_backend_supabase/operations/SUPPORT_OPS_AUTOPILOT_V1_CONTRACT.json'
+      - '04_backend_supabase/migrations/20260827181500_support_ops_protocol_candidate.sql'
+      - '04_backend_supabase/tools/support_ops_autopilot_v1.py'
+      - '04_backend_supabase/tools/SUPPORT_OPS_AUTOPILOT_V1.ps1'
+      - '04_backend_supabase/tools/verify_support_ops_autopilot_v1.py'
+      - '.github/workflows/support_ops_autopilot_v1.yml'
+  push:
+    branches:
+      - main
+      - 'blackgold/**'
+    paths:
+      - '04_backend_supabase/operations/SUPPORT_OPS_AUTOPILOT_V1_CONTRACT.json'
+      - '04_backend_supabase/migrations/20260827181500_support_ops_protocol_candidate.sql'
+      - '04_backend_supabase/tools/support_ops_autopilot_v1.py'
+      - '04_backend_supabase/tools/SUPPORT_OPS_AUTOPILOT_V1.ps1'
+      - '04_backend_supabase/tools/verify_support_ops_autopilot_v1.py'
+      - '.github/workflows/support_ops_autopilot_v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Verify support ops contract and migration boundary
+        run: python 04_backend_supabase/tools/verify_support_ops_autopilot_v1.py
+
+      - name: Run deterministic triage self-test
+        run: python 04_backend_supabase/tools/support_ops_autopilot_v1.py --self-test
+
+      - name: Assert source-only non-attesting state
+        shell: bash
+        run: |
+          grep -q 'SOURCE_PREPARED_NOT_REMOTE_APPLIED_NOT_OPERATIONAL_EVIDENCE' 04_backend_supabase/operations/SUPPORT_OPS_AUTOPILOT_V1_CONTRACT.json
+          grep -q '"automatic_send_allowed": false' 04_backend_supabase/operations/SUPPORT_OPS_AUTOPILOT_V1_CONTRACT.json
+          grep -q '"credit_percent_points": 0' 04_backend_supabase/operations/SUPPORT_OPS_AUTOPILOT_V1_CONTRACT.json
