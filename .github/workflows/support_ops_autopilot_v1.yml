@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - '04_backend_supabase/operations/SUPPORT_OPS_AUTOPILOT_V1_CONTRACT.json'
-      - '04_backend_supabase/migrations/20260827181500_support_ops_protocol_candidate.sql'
+      - '04_backend_supabase/operations/candidates/SUPPORT_OPS_PROTOCOL_CANDIDATE.sql'
       - '04_backend_supabase/tools/support_ops_autopilot_v1.py'
       - '04_backend_supabase/tools/SUPPORT_OPS_AUTOPILOT_V1.ps1'
       - '04_backend_supabase/tools/verify_support_ops_autopilot_v1.py'
@@ -15,7 +15,7 @@ on:
       - 'blackgold/**'
     paths:
       - '04_backend_supabase/operations/SUPPORT_OPS_AUTOPILOT_V1_CONTRACT.json'
-      - '04_backend_supabase/migrations/20260827181500_support_ops_protocol_candidate.sql'
+      - '04_backend_supabase/operations/candidates/SUPPORT_OPS_PROTOCOL_CANDIDATE.sql'
       - '04_backend_supabase/tools/support_ops_autopilot_v1.py'
       - '04_backend_supabase/tools/SUPPORT_OPS_AUTOPILOT_V1.ps1'
       - '04_backend_supabase/tools/verify_support_ops_autopilot_v1.py'
