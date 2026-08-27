@@ -5,25 +5,13 @@ import argparse
 import hashlib
 import json
 import shutil
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT = ROOT / "10_compliance/review/COMMERCIAL_READINESS_EXTERNAL_FACT_PACK_V1_CONTRACT.json"
 MARKER_NAME = ".fitnexus_external_fact_pack_v1"
 MARKER_VALUE = "FITNEXUS_COMMERCIAL_READINESS_EXTERNAL_FACT_PACK_V1\n"
-
-
-def load_json(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def git_blob_sha(path: Path) -> str:
-    data = path.read_bytes()
-    return hashlib.sha1(b"blob " + str(len(data)).encode("ascii") + b"\0" + data).hexdigest()
-
-
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def fail(message: str) -> None:
@@ -33,6 +21,54 @@ def fail(message: str) -> None:
 def require(condition: bool, message: str) -> None:
     if not condition:
         fail(message)
+
+
+def repo_relative(path: Path) -> str:
+    try:
+        return path.resolve().relative_to(ROOT.resolve()).as_posix()
+    except ValueError:
+        fail(f"path is outside repository: {path}")
+
+
+def git(*args: str, binary: bool = False) -> bytes | str:
+    result = subprocess.run(
+        ["git", "-C", str(ROOT), *args],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if result.returncode != 0:
+        stderr = result.stderr.decode("utf-8", errors="replace").strip()
+        fail(f"git command failed ({' '.join(args)}): {stderr}")
+    if binary:
+        return result.stdout
+    return result.stdout.decode("utf-8", errors="strict").strip()
+
+
+def git_blob_sha(path: Path) -> str:
+    rel = repo_relative(path)
+    return str(git("rev-parse", f"HEAD:{rel}"))
+
+
+def committed_bytes(path: Path) -> bytes:
+    blob_sha = git_blob_sha(path)
+    return bytes(git("cat-file", "blob", blob_sha, binary=True))
+
+
+def committed_text(path: Path) -> str:
+    return committed_bytes(path).decode("utf-8", errors="strict")
+
+
+def load_json(path: Path) -> dict:
+    return json.loads(committed_text(path))
+
+
+def sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def default_output_root() -> Path:
@@ -56,8 +92,14 @@ def validate_bound_sources(contract: dict) -> list[dict]:
     for item in contract["bound_sources"]:
         source = ROOT / item["path"]
         require(source.is_file(), f"missing bound source {item['path']}")
+
+        # IMPORTANT: compare against the committed Git object, not worktree bytes.
+        # On Windows, core.autocrlf can materialize CRLF bytes for an LF Git blob.
+        # Hashing the worktree produced false drift even though HEAD was exact.
         actual_blob = git_blob_sha(source)
         require(actual_blob == item["git_blob_sha"], f"git blob drift for {item['path']}: {actual_blob}")
+
+        canonical_bytes = committed_bytes(source)
         name = source.name
         require(name not in seen_names, f"duplicate output basename {name}")
         seen_names.add(name)
@@ -66,8 +108,9 @@ def validate_bound_sources(contract: dict) -> list[dict]:
                 "source_path": item["path"],
                 "role": item["role"],
                 "git_blob_sha": actual_blob,
-                "sha256": sha256(source),
+                "sha256": sha256_bytes(canonical_bytes),
                 "copied_relative_path": f"sources/{name}",
+                "copy_source": "COMMITTED_GIT_BLOB_NOT_WORKTREE_BYTES",
             }
         )
     return manifest_entries
@@ -79,7 +122,7 @@ def validate_fail_closed_source_state() -> dict:
     require(len(unresolved) == 14, f"expected 14 canonical open decisions, got {len(unresolved)}")
     require(all(x.get("state") == "OPEN" for x in unresolved), "a canonical decision is no longer OPEN; rebuild strategy before generating pack")
 
-    terms_text = (ROOT / "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md").read_text(encoding="utf-8")
+    terms_text = committed_text(ROOT / "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md")
     require("DRAFT_UNREVIEWED_NOT_PUBLISHED_NOT_LEGAL_EVIDENCE" in terms_text, "Terms candidate status marker drift")
     require("legal_terms_of_use = BLOCKED" in terms_text, "Terms legal gate marker drift")
 
@@ -104,7 +147,8 @@ def copy_sources(entries: list[dict], output_root: Path) -> None:
     for entry in entries:
         src = ROOT / entry["source_path"]
         dst = output_root / entry["copied_relative_path"]
-        shutil.copyfile(src, dst)
+        canonical_bytes = committed_bytes(src)
+        dst.write_bytes(canonical_bytes)
         require(sha256(dst) == entry["sha256"], f"copy hash mismatch for {entry['source_path']}")
 
 
@@ -219,8 +263,8 @@ def main() -> None:
     (output_root / "README_FIRST.md").write_text(build_readme(), encoding="utf-8", newline="\n")
 
     require(len(list((output_root / "sources").iterdir())) == len(entries), "copied source count mismatch")
-    require(load_json(output_root / "STATUS.json")["canonical_open_decision_count"] == 14, "generated status decision count drift")
-    require(load_json(output_root / "MANIFEST.json")["commercial_progress_credit"] == 0, "generated manifest progress-credit drift")
+    require(json.loads((output_root / "STATUS.json").read_text(encoding="utf-8"))["canonical_open_decision_count"] == 14, "generated status decision count drift")
+    require(json.loads((output_root / "MANIFEST.json").read_text(encoding="utf-8"))["commercial_progress_credit"] == 0, "generated manifest progress-credit drift")
 
     print("COMMERCIAL_READINESS_EXTERNAL_FACT_PACK_V1=PASS")
     print(f"OUTPUT_ROOT={output_root}")
