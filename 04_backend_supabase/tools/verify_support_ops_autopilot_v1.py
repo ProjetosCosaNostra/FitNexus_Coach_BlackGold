@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT = ROOT / "04_backend_supabase/operations/SUPPORT_OPS_AUTOPILOT_V1_CONTRACT.json"
-MIGRATION = ROOT / "04_backend_supabase/migrations/20260827181500_support_ops_protocol_candidate.sql"
+MIGRATION = ROOT / "04_backend_supabase/operations/candidates/SUPPORT_OPS_PROTOCOL_CANDIDATE.sql"
 ENGINE = ROOT / "04_backend_supabase/tools/support_ops_autopilot_v1.py"
 OPEN_DECISIONS = ROOT / "10_compliance/drafts/COMPLIANCE_OPEN_DECISIONS.json"
 
@@ -57,8 +57,6 @@ def main() -> int:
     for marker in forbidden_sql:
         require(marker not in lowered, f"unsafe SQL grant present: {marker}")
 
-    require("full_message_body_persisted\": False" not in engine, "engine source sanity")
-    require("full_message_body_persisted\": false" not in engine.lower(), "engine should express runtime boolean, not static JSON fixture")
     require('"full_message_body_persisted": False' in engine, "engine must omit full body")
     require('"send_authorized": False' in engine, "engine must not authorize outbound send")
     require("--self-test" in engine, "engine self-test missing")
@@ -68,6 +66,7 @@ def main() -> int:
     require(open_map.get("DSR_CONTROLLED_TESTS") == "OPEN", "DSR tests must remain OPEN")
 
     print("SUPPORT_OPS_AUTOPILOT_V1_CONTRACT=PASS")
+    print("CANDIDATE_SQL_LOCATION=OPERATIONS_NOT_MIGRATIONS_LEDGER")
     print("REMOTE_APPLY_ALLOWED=false")
     print("AUTOMATIC_SEND_ALLOWED=false")
     print("DSR_STABLE_PUBLIC_ROUTE=OPEN")
