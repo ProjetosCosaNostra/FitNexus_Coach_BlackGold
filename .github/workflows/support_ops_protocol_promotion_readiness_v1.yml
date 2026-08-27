@@ -1,0 +1,43 @@
+name: Support Ops Protocol Promotion Readiness V1
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '04_backend_supabase/operations/SUPPORT_OPS_PROTOCOL_PROMOTION_READINESS_V1.json'
+      - '04_backend_supabase/operations/candidates/SUPPORT_OPS_PROTOCOL_CANDIDATE.sql'
+      - '04_backend_supabase/tools/verify_support_ops_protocol_promotion_readiness_v1.py'
+      - '.github/workflows/support_ops_protocol_promotion_readiness_v1.yml'
+  push:
+    branches:
+      - 'blackgold/support-ops-protocol-repo-promotion-v1'
+    paths:
+      - '04_backend_supabase/operations/SUPPORT_OPS_PROTOCOL_PROMOTION_READINESS_V1.json'
+      - '04_backend_supabase/operations/candidates/SUPPORT_OPS_PROTOCOL_CANDIDATE.sql'
+      - '04_backend_supabase/tools/verify_support_ops_protocol_promotion_readiness_v1.py'
+      - '.github/workflows/support_ops_protocol_promotion_readiness_v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v6
+
+      - name: Verify promotion readiness authority
+        run: python 04_backend_supabase/tools/verify_support_ops_protocol_promotion_readiness_v1.py
+
+      - name: Preserve no-side-effect boundary
+        shell: bash
+        run: |
+          grep -q '"remote_supabase_apply_allowed": false' 04_backend_supabase/operations/SUPPORT_OPS_PROTOCOL_PROMOTION_READINESS_V1.json
+          grep -q '"remote_apply_count": 0' 04_backend_supabase/operations/SUPPORT_OPS_PROTOCOL_PROMOTION_READINESS_V1.json
+          grep -q '"credit_percent_points": 0' 04_backend_supabase/operations/SUPPORT_OPS_PROTOCOL_PROMOTION_READINESS_V1.json
+          echo 'SUPABASE_MUTATION=false'
+          echo 'GMAIL_MUTATION=false'
+          echo 'AUTOMATIC_OUTBOUND_EMAIL=false'
+          echo 'COMMERCIAL_PROGRESS_CREDIT=0'
