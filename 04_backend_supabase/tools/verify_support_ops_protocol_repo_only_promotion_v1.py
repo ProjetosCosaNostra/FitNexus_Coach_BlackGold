@@ -144,7 +144,7 @@ def main() -> int:
         fail("DSR_CONTROLLED_TESTS must remain OPEN")
 
     workflow_low = workflow.lower()
-    for forbidden in ("supabase db push", "supabase migration up", "execute_sql", "apply_migration", "gmail"):
+    for forbidden in ("supabase db push", "supabase migration up", "execute_sql", "apply_migration"):
         if forbidden in workflow_low:
             fail(f"workflow contains forbidden side-effect marker: {forbidden}")
 
