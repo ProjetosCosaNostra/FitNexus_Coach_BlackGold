@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "kind": "NON_ATTESTING_PUBLIC_CONTACT_DSR_ROUTE_CONTRACT",
+  "project": "FitNexus Coach BlackGold",
+  "operator_model": "SOLE_OWNER_PESSOA_FISICA",
+  "public_contact": {
+    "email": "projetoscosanostra@gmail.com",
+    "authorized_uses": [
+      "product_support",
+      "privacy_and_personal_data_requests",
+      "billing_support",
+      "service_security_reports"
+    ],
+    "authorized_in_chat": true
+  },
+  "application_route": {
+    "path": "/support",
+    "landing_entry_present": true,
+    "route_code_state": "IMPLEMENTED_IN_SOURCE_NOT_YET_PRODUCTION_PUBLISHED"
+  },
+  "intake_guidance": {
+    "requester_should_identify_request_category": true,
+    "requester_should_identify_account_email_when_applicable": true,
+    "requester_should_not_send_passwords_tokens_or_authentication_codes": true,
+    "personal_data_request_examples_are_non_exhaustive": [
+      "access",
+      "correction",
+      "export",
+      "deletion_when_applicable"
+    ]
+  },
+  "protocol_automation": {
+    "state": "NOT_YET_OPERATIONALLY_DEPLOYED",
+    "desired_flow": [
+      "receive_message",
+      "classify_request_without_exposing_secrets",
+      "assign_traceable_protocol",
+      "record_received_at",
+      "track_status_and_required_human_action",
+      "preserve_response_evidence"
+    ],
+    "automatic_reply_or_filing_authority": false
+  },
+  "dsr_gate": {
+    "decision_id": "DSR_STABLE_PUBLIC_ROUTE",
+    "state": "OPEN",
+    "reason": "Source code and authorized public email exist, but the stable route has not yet been deployed and evidenced in production and protocol handling has not yet been exercised/reviewed."
+  },
+  "hard_boundaries": {
+    "this_file_is_legal_review": false,
+    "this_file_is_privacy_policy": false,
+    "this_file_closes_dsr_gate": false,
+    "this_file_authorizes_terms_publication": false,
+    "this_file_authorizes_billing": false,
+    "this_file_authorizes_deployment": false,
+    "this_file_authorizes_paid_media": false
+  },
+  "progress_credit": 0
+}

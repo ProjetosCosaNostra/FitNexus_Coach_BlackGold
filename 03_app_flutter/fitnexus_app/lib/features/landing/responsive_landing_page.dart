@@ -32,6 +32,7 @@ class _ResponsiveLandingPageState extends State<ResponsiveLandingPage> {
   Widget build(BuildContext context) {
     final MediaQueryData media = MediaQuery.of(context);
     final Size size = media.size;
+    final bool mobile = size.width < 720;
     final double logicalHeight = math.max(
       size.height,
       _minimumLogicalHeight(size.width),
@@ -48,8 +49,30 @@ class _ResponsiveLandingPageState extends State<ResponsiveLandingPage> {
       children: <Widget>[
         Positioned.fill(child: landing),
         Positioned(
-          right: size.width < 720 ? 14 : 24,
-          bottom: size.width < 720 ? 14 : 24,
+          left: mobile ? 14 : 24,
+          bottom: mobile ? 74 : 24,
+          child: SafeArea(
+            child: OutlinedButton.icon(
+              key: const ValueKey<String>('public-contact-entry'),
+              onPressed: () => Navigator.of(context).pushNamed('/support'),
+              icon: const Icon(Icons.shield_outlined, size: 18),
+              label: const Text('Atendimento'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFFFD45A),
+                side: const BorderSide(color: Color(0xFF8A7130)),
+                backgroundColor: const Color(0xE6111111),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          right: mobile ? 14 : 24,
+          bottom: mobile ? 14 : 24,
           child: SafeArea(
             child: ElevatedButton.icon(
               key: const ValueKey<String>('public-signup-entry'),
