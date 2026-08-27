@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../features/auth/auth_preview_page.dart';
 import '../features/demo/demo_home_page.dart';
 import '../features/landing/ecosystem_links_page.dart';
+import '../features/landing/public_contact_page.dart';
 import '../features/landing/responsive_landing_page.dart';
 import '../features/professor/authenticated_professor_page.dart';
 import '../features/student/student_experience_page.dart';
@@ -40,6 +41,7 @@ class FitNexusApp extends StatelessWidget {
         '/landing': (_) => const ResponsiveLandingPage(),
         '/': (_) => const ResponsiveLandingPage(),
         '/links': (_) => const EcosystemLinksPage(),
+        '/support': (_) => const PublicContactPage(),
         '/demo': (_) => const DemoHomePage(),
         '/auth': (_) => const AuthPreviewPage(),
         '/start': (_) => const AuthPreviewPage(initialRegisterMode: true),
