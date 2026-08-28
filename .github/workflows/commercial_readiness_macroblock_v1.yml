@@ -8,6 +8,8 @@ on:
       - "10_compliance/COMMERCIAL_READINESS_MACROBLOCK_V1.md"
       - "10_compliance/tools/verify_commercial_readiness_macroblock_v1.py"
       - "10_compliance/review/COMMERCIAL_READINESS_EXTERNAL_FACT_PACK_V1_CONTRACT.json"
+      - "10_compliance/review/COMMERCIAL_READINESS_ZERO_COST_REVIEW_ACCESS_V1.md"
+      - "10_compliance/review/COMMERCIAL_READINESS_REVIEW_REQUEST_TEMPLATE_PTBR.md"
       - "04_backend_supabase/tools/COMMERCIAL_READINESS_MACROBLOCK_V1_CI_SYNC_TRIGGER.txt"
       - "04_backend_supabase/tools/COMMERCIAL_READINESS_EXTERNAL_FACT_PACK_V1.ps1"
       - "04_backend_supabase/tools/build_commercial_readiness_external_fact_pack_v1.py"
@@ -36,6 +38,8 @@ on:
       - "10_compliance/COMMERCIAL_READINESS_MACROBLOCK_V1.md"
       - "10_compliance/tools/verify_commercial_readiness_macroblock_v1.py"
       - "10_compliance/review/COMMERCIAL_READINESS_EXTERNAL_FACT_PACK_V1_CONTRACT.json"
+      - "10_compliance/review/COMMERCIAL_READINESS_ZERO_COST_REVIEW_ACCESS_V1.md"
+      - "10_compliance/review/COMMERCIAL_READINESS_REVIEW_REQUEST_TEMPLATE_PTBR.md"
       - "04_backend_supabase/tools/COMMERCIAL_READINESS_MACROBLOCK_V1_CI_SYNC_TRIGGER.txt"
       - "04_backend_supabase/tools/COMMERCIAL_READINESS_EXTERNAL_FACT_PACK_V1.ps1"
       - "04_backend_supabase/tools/build_commercial_readiness_external_fact_pack_v1.py"
@@ -114,13 +118,22 @@ jobs:
           assert all(x['state'] == 'OPEN' for x in status['canonical_open_decisions'])
           assert status['commercial_publication_management_percent'] == 74
           assert status['progress_credit_from_pack_generation'] == 0
-          assert manifest['entry_count'] == 15
+          assert manifest['entry_count'] == 17
           assert manifest['commercial_progress_credit'] == 0
           assert manifest['contains_real_owner_identity'] is False
           assert manifest['contains_real_reviewer_identity'] is False
           assert manifest['contains_provider_secret'] is False
           assert manifest['contains_real_operational_evidence'] is False
           assert all(x['copy_source'] == 'COMMITTED_GIT_BLOB_NOT_WORKTREE_BYTES' for x in manifest['entries'])
+          copied = {x['copied_relative_path'] for x in manifest['entries']}
+          assert 'sources/COMMERCIAL_READINESS_ZERO_COST_REVIEW_ACCESS_V1.md' in copied
+          assert 'sources/COMMERCIAL_READINESS_REVIEW_REQUEST_TEMPLATE_PTBR.md' in copied
+          access = (root / 'sources' / 'COMMERCIAL_READINESS_ZERO_COST_REVIEW_ACCESS_V1.md').read_text(encoding='utf-8')
+          request = (root / 'sources' / 'COMMERCIAL_READINESS_REVIEW_REQUEST_TEMPLATE_PTBR.md').read_text(encoding='utf-8')
+          assert 'NOT LEGAL ADVICE' in access
+          assert 'reviewer_engaged = false' in access
+          assert 'commercial_progress_credit = 0' in access
+          assert 'TEMPLATE NÃO ENVIADO' in request
           print('COMMERCIAL_READINESS_EXTERNAL_FACT_PACK_BOUNDARY=PASS')
           PY
 
