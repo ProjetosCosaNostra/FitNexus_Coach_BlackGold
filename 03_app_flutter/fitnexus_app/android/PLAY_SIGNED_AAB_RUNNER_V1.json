@@ -1,12 +1,13 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "kind": "NON_ATTESTING_SIGNED_AAB_RUNNER_CONTRACT",
   "project": "FitNexus Coach BlackGold",
   "runner": {
     "path": "tool/FITNEXUS_PLAY_SIGNED_AAB_RUNNER_V1.ps1",
     "single_command_required": true,
     "platform": "Windows PowerShell",
-    "validate_only_mode_required": true
+    "validate_only_mode_required": true,
+    "windows_powershell_5_1_compatibility_required": true
   },
   "secret_boundary": {
     "upload_key_repository_storage_allowed": false,
@@ -25,6 +26,15 @@
     "jarsigner_verification": true,
     "sha256_receipt": true,
     "current_only_receipt_directory": true
+  },
+  "failure_prevention": {
+    "failure_class": "FNX-PS51-GIT-LS-FILES-EXPECTED-MISS-NATIVECOMMANDERROR-144",
+    "observed_on": "2026-08-28",
+    "root_cause": "The runner used git ls-files --error-unmatch to prove android/key.properties was untracked. The expected healthy miss wrote native stderr; Windows PowerShell 5.1 with ErrorActionPreference Stop promoted that stderr into NativeCommandError before the runner could interpret LASTEXITCODE.",
+    "permanent_rule": "Never intentionally provoke native stderr/nonzero exit to prove an expected-negative Git condition in Windows PowerShell 5.1. Use a non-erroring query and inspect returned data.",
+    "regression_required": true,
+    "forbidden_token": "--error-unmatch",
+    "replacement_strategy": "git ls-files -- <path> then exact membership test"
   },
   "publication_boundary": {
     "signed_aab_proof_is_play_upload_authority": false,
