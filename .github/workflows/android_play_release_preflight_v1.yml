@@ -1,0 +1,69 @@
+name: Android Play Release Preflight V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '02_produto/PRODUCT_REVENUE_RELEASE_TRAIN_V1.json'
+      - '03_app_flutter/fitnexus_app/**'
+      - '.github/workflows/android_play_release_preflight_v1.yml'
+  push:
+    branches:
+      - 'blackgold/**'
+    paths:
+      - '02_produto/PRODUCT_REVENUE_RELEASE_TRAIN_V1.json'
+      - '03_app_flutter/fitnexus_app/**'
+      - '.github/workflows/android_play_release_preflight_v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  android-release-preflight:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 03_app_flutter/fitnexus_app
+
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v6
+
+      - name: Set up Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Inventory Play publication blockers
+        run: python tool/verify_play_release_preflight.py --mode inventory
+
+      - name: Static analysis
+        run: flutter analyze
+
+      - name: Widget and unit tests
+        run: flutter test
+
+      - name: Compile Android App Bundle release preview
+        run: flutter build appbundle --release
+
+      - name: Record non-publishable AAB compile receipt
+        run: |
+          set -euo pipefail
+          AAB='build/app/outputs/bundle/release/app-release.aab'
+          test -f "$AAB"
+          echo "ANDROID_AAB_COMPILE=PASS"
+          echo "ANDROID_AAB_BYTES=$(stat -c%s "$AAB")"
+          echo "ANDROID_AAB_SHA256=$(sha256sum "$AAB" | awk '{print $1}')"
+          echo "ANDROID_AAB_PUBLICATION_AUTHORIZED=false"
+          echo "ANDROID_AAB_REASON=package_identity_and_release_signing_and_store_authority_are_separately_gated"
+
+      - name: Preserve Play publication boundary
+        run: |
+          echo "PLAY_UPLOAD_PERFORMED=false"
+          echo "PLAY_PUBLICATION_PERFORMED=false"
+          echo "LIVE_BILLING_ENABLED=false"
+          echo "PAID_MEDIA_ENABLED=false"
