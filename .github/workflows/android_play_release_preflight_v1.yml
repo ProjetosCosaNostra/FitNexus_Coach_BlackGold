@@ -43,6 +43,14 @@ jobs:
       - name: Inventory Play publication blockers
         run: python tool/verify_play_release_preflight.py --mode inventory
 
+      - name: Parse one-command signed AAB runner
+        shell: pwsh
+        run: |
+          $source = Get-Content -LiteralPath 'tool/FITNEXUS_PLAY_SIGNED_AAB_RUNNER_V1.ps1' -Raw
+          $null = [scriptblock]::Create($source)
+          Write-Output 'FITNEXUS_SIGNED_AAB_RUNNER_PARSE=PASS'
+          Write-Output 'SIGNED_AAB_EXECUTION_PERFORMED=false'
+
       - name: Assert signing secrets are absent from CI checkout
         run: |
           set -euo pipefail

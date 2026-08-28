@@ -22,6 +22,18 @@
     "commercial_publication_percent": 74,
     "status": "MANAGEMENT_ESTIMATE_NOT_RELEASE_EVIDENCE"
   },
+  "android_play_progress": {
+    "canonical_package_identity": "REPOSITORY_GREEN_PLAY_CONSOLE_UNIQUENESS_PENDING",
+    "release_signing_architecture": "EXTERNAL_UPLOAD_KEY_WIRING_GREEN",
+    "debug_release_signing": "REMOVED",
+    "signed_aab_one_command_runner": "READY_NOT_EXECUTED",
+    "signed_aab_local_proof": "PENDING_RUNNER_EXECUTION",
+    "play_app_signing_enrollment": "PENDING_EXTERNAL_CONSOLE_FACT",
+    "store_listing_metadata": "PENDING",
+    "data_safety": "PENDING_FINAL_DATA_FLOW_REVIEW",
+    "closed_test_or_production_access": "ACCOUNT_DEPENDENT_PENDING_CONSOLE_VERIFICATION",
+    "public_upload": "DENIED_UNTIL_EXPLICIT_AUTHORITY"
+  },
   "commercial_model_candidate": {
     "free_download_or_web_entry": true,
     "limited_free_experience": {
