@@ -16,6 +16,8 @@ LANDING = ROOT / "lib/features/landing/responsive_landing_page.dart"
 SUBSCRIPTION_REPO = ROOT / "lib/features/professor/professor_subscription_repository.dart"
 SUBSCRIPTION_PAGE = ROOT / "lib/features/professor/professor_subscription_page.dart"
 AUTHORITY = ROOT / "android/PLAY_RELEASE_AUTHORITY_V1.json"
+SIGNED_AAB_CONTRACT = ROOT / "android/PLAY_SIGNED_AAB_RUNNER_V1.json"
+SIGNED_AAB_RUNNER = ROOT / "tool/FITNEXUS_PLAY_SIGNED_AAB_RUNNER_V1.ps1"
 GITIGNORE = REPO_ROOT / ".gitignore"
 
 
@@ -51,6 +53,8 @@ def main() -> None:
     subscription_repo = read(SUBSCRIPTION_REPO)
     subscription_page = read(SUBSCRIPTION_PAGE)
     authority = json.loads(read(AUTHORITY))
+    signed_aab_contract = json.loads(read(SIGNED_AAB_CONTRACT))
+    signed_aab_runner = read(SIGNED_AAB_RUNNER)
     gitignore = read(GITIGNORE)
 
     app_id_match = re.search(r'applicationId\s*=\s*"([^"]+)"', gradle)
@@ -79,6 +83,29 @@ def main() -> None:
     release_train = authority.get("release_train", {})
     authority_version = str(release_train.get("current_version") or "")
     release_signing = authority.get("release_signing", {})
+
+    runner_contract_ready = (
+        signed_aab_contract.get("kind") == "NON_ATTESTING_SIGNED_AAB_RUNNER_CONTRACT"
+        and signed_aab_contract.get("runner", {}).get("single_command_required") is True
+        and signed_aab_contract.get("runner", {}).get("validate_only_mode_required") is True
+        and signed_aab_contract.get("secret_boundary", {}).get("upload_key_repository_storage_allowed") is False
+        and signed_aab_contract.get("secret_boundary", {}).get("plaintext_password_repository_storage_allowed") is False
+        and signed_aab_contract.get("secret_boundary", {}).get("persistent_password_storage") == "WINDOWS_DPAPI_CURRENT_USER"
+        and signed_aab_contract.get("secret_boundary", {}).get("transient_key_properties_cleanup_required") is True
+        and signed_aab_contract.get("publication_boundary", {}).get("play_upload_performed_by_runner") is False
+    )
+    runner_static_ready = all(
+        token in signed_aab_runner
+        for token in (
+            "FITNEXUS_SIGNED_AAB_RUNNER=PASS",
+            "ConvertFrom-SecureString",
+            "flutter build appbundle --release",
+            "jarsigner -verify",
+            "Get-FileHash",
+            "PLAY_UPLOAD_PERFORMED=false",
+            "Remove-Item -LiteralPath $KeyPropertiesFile",
+        )
+    )
 
     activity_path = ROOT / "android/app/src/main/kotlin" / Path(*app_id.split(".")) / "MainActivity.kt"
     activity = read(activity_path) if app_id and activity_path.exists() else ""
@@ -145,6 +172,12 @@ def main() -> None:
             and release_signing.get("external_key_properties_must_remain_untracked") is True
             and release_signing.get("upload_key_material_present_in_repository") is False,
             "Signing properties and keystore material must remain outside Git authority.",
+            blocker=True,
+        ),
+        check(
+            "one_command_signed_aab_runner",
+            runner_contract_ready and runner_static_ready,
+            "One command must create/reuse the external upload key, build a signed AAB, verify it and emit a receipt without uploading it.",
             blocker=True,
         ),
         check(
