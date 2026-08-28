@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "kind": "NON_ATTESTING_PRODUCT_REVENUE_RELEASE_TRAIN",
+  "project": "FitNexus Coach BlackGold",
+  "baseline_main_sha": "9f943ea899ce29ff2257bb368a76b83dfc900c7a",
+  "operating_change": {
+    "external_compliance_monitoring_runs_in_parallel": true,
+    "wait_for_external_reply_before_product_work": false,
+    "priority_order": [
+      "PRODUCT_COMPLETION",
+      "WEB_PWA_PRODUCTION",
+      "ANDROID_PLAY_RELEASE",
+      "BILLING_MONETIZATION",
+      "GROWTH_MEASUREMENT",
+      "PAID_ACQUISITION_AFTER_CONTROLLED_LAUNCH"
+    ],
+    "preparation_only_work_must_not_block_reversible_product_progress": true,
+    "irreversible_external_operations_remain_separately_authorized": true
+  },
+  "current_management_baseline": {
+    "technical_product_percent": 92,
+    "commercial_publication_percent": 74,
+    "status": "MANAGEMENT_ESTIMATE_NOT_RELEASE_EVIDENCE"
+  },
+  "commercial_model_candidate": {
+    "free_download_or_web_entry": true,
+    "limited_free_experience": {
+      "enabled_candidate": true,
+      "purpose": "Let a coach verify UX and core value without receiving enough permanent capacity to replace a paid plan.",
+      "candidate_student_limit": 2,
+      "advanced_intelligence": false,
+      "team_features": false,
+      "advanced_reports_and_exports": false
+    },
+    "full_value_trial_days": 14,
+    "mandatory_acquisition_or_setup_fee": false,
+    "optional_paid_onboarding_service": "CANDIDATE_ONLY_AFTER_REAL_DEMAND",
+    "recurring_plans": [
+      {
+        "code": "SOLO",
+        "monthly_brl_candidate": 39.90,
+        "annual_brl_candidate": 399.00
+      },
+      {
+        "code": "PRO",
+        "monthly_brl_candidate": 79.90,
+        "annual_brl_candidate": 799.00
+      },
+      {
+        "code": "STUDIO",
+        "monthly_brl_candidate": 179.90,
+        "annual_brl_candidate": 1799.00
+      }
+    ],
+    "customer_facing_price_authority": "NOT_PROMOTED",
+    "billing_policy_approval": "PENDING_REAL_PROVIDER_FACTS_AND_INDEPENDENT_REVIEW"
+  },
+  "distribution_sequence": [
+    {
+      "channel": "WEB_PWA",
+      "priority": 1,
+      "reason": "Fastest controlled production path and primary acquisition/subscription surface."
+    },
+    {
+      "channel": "GOOGLE_PLAY",
+      "priority": 2,
+      "reason": "Free Android distribution and retention surface after package, signing, store-policy and testing readiness."
+    },
+    {
+      "channel": "APPLE_APP_STORE",
+      "priority": 3,
+      "reason": "Defer fixed annual developer cost until revenue or a validated demand signal justifies it."
+    }
+  ],
+  "growth_sequence": [
+    "ORGANIC_AND_EXISTING_ECOSYSTEM_BASELINE",
+    "GOOGLE_SEARCH_HIGH_INTENT_AFTER_CONVERSION_TRACKING_GREEN",
+    "META_CREATIVE_AND_RETARGETING_AFTER_INITIAL_FUNNEL_DATA",
+    "GOOGLE_PERFORMANCE_MAX_AFTER_RELIABLE_CONVERSION_SIGNAL"
+  ],
+  "hard_boundaries": {
+    "this_file_authorizes_publication": false,
+    "this_file_authorizes_live_billing": false,
+    "this_file_authorizes_paid_media": false,
+    "this_file_is_legal_review": false,
+    "this_file_changes_open_compliance_decisions": false
+  }
+}
