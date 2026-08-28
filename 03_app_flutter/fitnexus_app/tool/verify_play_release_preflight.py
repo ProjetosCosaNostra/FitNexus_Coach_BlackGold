@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parents[1]
 GRADLE = ROOT / "android/app/build.gradle.kts"
 MANIFEST = ROOT / "android/app/src/main/AndroidManifest.xml"
 PUBSPEC = ROOT / "pubspec.yaml"
@@ -15,12 +16,17 @@ LANDING = ROOT / "lib/features/landing/responsive_landing_page.dart"
 SUBSCRIPTION_REPO = ROOT / "lib/features/professor/professor_subscription_repository.dart"
 SUBSCRIPTION_PAGE = ROOT / "lib/features/professor/professor_subscription_page.dart"
 AUTHORITY = ROOT / "android/PLAY_RELEASE_AUTHORITY_V1.json"
+GITIGNORE = REPO_ROOT / ".gitignore"
 
 
 def read(path: Path) -> str:
     if not path.exists():
-        raise SystemExit(f"PLAY_RELEASE_PREFLIGHT=FAIL::missing::{path.relative_to(ROOT)}")
-    return path.read_text(encoding="utf-8")
+        try:
+            relative = path.relative_to(REPO_ROOT)
+        except ValueError:
+            relative = path
+        raise SystemExit(f"PLAY_RELEASE_PREFLIGHT=FAIL::missing::{relative}")
+    return path.read_text(encoding="utf-8-sig")
 
 
 def check(name: str, ok: bool, detail: str, *, blocker: bool = False) -> dict:
@@ -45,6 +51,7 @@ def main() -> None:
     subscription_repo = read(SUBSCRIPTION_REPO)
     subscription_page = read(SUBSCRIPTION_PAGE)
     authority = json.loads(read(AUTHORITY))
+    gitignore = read(GITIGNORE)
 
     app_id_match = re.search(r'applicationId\s*=\s*"([^"]+)"', gradle)
     app_id = app_id_match.group(1) if app_id_match else ""
@@ -52,6 +59,17 @@ def main() -> None:
     namespace = namespace_match.group(1) if namespace_match else ""
     placeholder_id = (not app_id) or app_id.startswith("com.example")
     debug_release_signing = 'signingConfig = signingConfigs.getByName("debug")' in gradle
+    secure_external_signing_wiring = all(
+        token in gradle
+        for token in (
+            'rootProject.file("key.properties")',
+            "releaseSigningConfigured",
+            'create("release")',
+            'signingConfig = signingConfigs.getByName("release")',
+        )
+    )
+    key_properties_ignored = "**/key.properties" in gitignore or "key.properties" in gitignore.splitlines()
+    keystore_extensions_ignored = "*.jks" in gitignore and "*.keystore" in gitignore
     version_match = re.search(r"^version:\s*([^\s]+)", pubspec, flags=re.MULTILINE)
     version = version_match.group(1) if version_match else "UNKNOWN"
 
@@ -60,6 +78,7 @@ def main() -> None:
     authority_current_id = str(package_authority.get("current_application_id") or "")
     release_train = authority.get("release_train", {})
     authority_version = str(release_train.get("current_version") or "")
+    release_signing = authority.get("release_signing", {})
 
     activity_path = ROOT / "android/app/src/main/kotlin" / Path(*app_id.split(".")) / "MainActivity.kt"
     activity = read(activity_path) if app_id and activity_path.exists() else ""
@@ -106,7 +125,28 @@ def main() -> None:
             "Android application label must expose the production product name.",
             blocker=True,
         ),
-        check("production_release_signing", not debug_release_signing, "Release signing must not use debug keys.", blocker=True),
+        check(
+            "debug_release_signing_removed",
+            not debug_release_signing and release_signing.get("debug_signing_used_for_release") is False,
+            "Release build must never fall back to the Android debug key.",
+            blocker=True,
+        ),
+        check(
+            "external_upload_key_wiring",
+            secure_external_signing_wiring
+            and release_signing.get("current_state") == "EXTERNAL_UPLOAD_KEY_WIRING_READY_CREDENTIALS_ABSENT",
+            "Gradle must consume an external android/key.properties file only when present.",
+            blocker=True,
+        ),
+        check(
+            "signing_secret_hygiene",
+            key_properties_ignored
+            and keystore_extensions_ignored
+            and release_signing.get("external_key_properties_must_remain_untracked") is True
+            and release_signing.get("upload_key_material_present_in_repository") is False,
+            "Signing properties and keystore material must remain outside Git authority.",
+            blocker=True,
+        ),
         check(
             "release_train_version",
             version != "UNKNOWN" and version == authority_version and version != "0.1.0+1",
@@ -125,6 +165,18 @@ def main() -> None:
             blocker=True,
         ),
         check(
+            "signed_aab_attestation",
+            release_signing.get("signed_aab_proof") == "ATTESTED",
+            "A signed AAB produced with the external upload key has not been attested yet.",
+            blocker=True,
+        ),
+        check(
+            "play_app_signing_enrollment",
+            release_signing.get("play_app_signing_enrollment") == "ATTESTED",
+            "Play App Signing enrollment remains an external Play Console fact.",
+            blocker=True,
+        ),
+        check(
             "play_console_uniqueness_attestation",
             package_authority.get("play_console_uniqueness_attested") is True,
             "Repository package selection does not prove Play Console uniqueness/ownership.",
@@ -132,7 +184,7 @@ def main() -> None:
         ),
         check(
             "play_public_upload_authority",
-            authority["release_signing"]["public_upload_authorized"] is True,
+            release_signing.get("public_upload_authorized") is True,
             "Explicit publication authority is required before upload.",
             blocker=True,
         ),

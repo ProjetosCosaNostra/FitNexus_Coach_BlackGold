@@ -26,7 +26,14 @@
     "state": "PRE_RELEASE_CANDIDATE"
   },
   "release_signing": {
-    "current_state": "DEBUG_SIGNING_USED_FOR_RELEASE_PREVIEW",
+    "current_state": "EXTERNAL_UPLOAD_KEY_WIRING_READY_CREDENTIALS_ABSENT",
+    "debug_signing_used_for_release": false,
+    "external_key_properties_path": "android/key.properties",
+    "external_key_properties_must_remain_untracked": true,
+    "upload_key_material_present_in_repository": false,
+    "ci_release_preview_state": "UNSIGNED_WHEN_EXTERNAL_KEY_PROPERTIES_ABSENT",
+    "signed_aab_proof": "PENDING_EXTERNAL_UPLOAD_KEY",
+    "play_app_signing_enrollment": "NOT_ATTESTED",
     "public_release_keystore_required": true,
     "keystore_must_remain_outside_repository": true,
     "public_upload_authorized": false
@@ -41,8 +48,10 @@
   },
   "hard_boundaries": {
     "debug_signed_aab_is_publishable": false,
+    "unsigned_ci_preview_aab_is_publishable": false,
     "placeholder_application_id_is_publishable": false,
     "repository_selected_id_proves_play_availability": false,
+    "external_signing_wiring_proves_signed_aab": false,
     "ci_can_choose_permanent_package_id": false,
     "ci_can_create_play_console_app": false,
     "ci_can_upload_to_play": false,
