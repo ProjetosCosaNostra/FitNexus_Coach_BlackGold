@@ -71,8 +71,16 @@ function Assert-KeyPropertiesGitBoundary {
             Fail 'key_properties_not_gitignored'
         }
 
-        & git ls-files --error-unmatch -- $GitPath 2>$null | Out-Null
-        if ($LASTEXITCODE -eq 0) {
+        # Windows PowerShell 5.1 can promote native stderr from
+        # `git ls-files --error-unmatch` into NativeCommandError when
+        # $ErrorActionPreference='Stop'. Absence from the index is the expected
+        # healthy state here, so use the non-erroring list form and inspect the
+        # returned paths instead of intentionally provoking a Git error.
+        $trackedEntries = @(& git ls-files -- $GitPath)
+        if ($LASTEXITCODE -ne 0) {
+            Fail 'git_ls_files_failed'
+        }
+        if ($trackedEntries -contains $GitPath) {
             Fail 'key_properties_is_tracked'
         }
     }
