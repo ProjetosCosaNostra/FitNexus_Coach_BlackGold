@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "kind": "NON_ATTESTING_EXTERNAL_CONTACT_RECEIPT",
+  "project": "FitNexus Coach BlackGold",
+  "macroblock": "COMMERCIAL_READINESS",
+  "observed_at_utc": "2026-08-28T18:38:24Z",
+  "contact_channel": "EMAIL",
+  "contact_target": {
+    "organization": "SEBRAE GOIAS",
+    "recipient_domain": "sebraego.com.br",
+    "recipient_address_sha256": "c4000180cd71555b39f834c79fcad04cd0905cc153a96972ccbb96859fec654b"
+  },
+  "message_reference": {
+    "gmail_message_id_sha256": "7392a6abc56f8eabfa8e0d90cc34b5133ef88d4f17c09d8bfed19f1a220faa4e",
+    "gmail_thread_id_sha256": "711d4548951304784130fcf35dbb70f7aaf3db7d2dfadc451fcf724d71474eac",
+    "raw_message_body_committed": false,
+    "raw_message_id_committed": false,
+    "raw_thread_id_committed": false
+  },
+  "purpose": "Request guidance on free/low-cost consultation access for pre-launch SaaS, LGPD/privacy, natural-person operation, billing policy review and routing to independent legal review where appropriate.",
+  "state": {
+    "contact_sent": true,
+    "delivery_label_observed_sent": true,
+    "response_received": false,
+    "reviewer_engaged": false,
+    "review_scope_accepted": false,
+    "independent_review_completed": false
+  },
+  "commercial_progress": {
+    "commercial_publication_percent_before": 74,
+    "commercial_publication_percent_after": 74,
+    "technical_product_percent": 92,
+    "progress_credit": 0,
+    "reason": "Contact initiation is a real external fact but does not close any legal/privacy/business decision or attest independent review."
+  },
+  "hard_boundaries": {
+    "legal_review_attested": false,
+    "legal_entity_identity_closed": false,
+    "controller_processor_role_matrix_closed": false,
+    "sensitive_data_treatment_closed": false,
+    "retention_matrix_closed": false,
+    "billing_policy_closed": false,
+    "terms_approved_or_published": false,
+    "supabase_mutation_allowed": false,
+    "billing_activation_allowed": false,
+    "deployment_allowed": false,
+    "controlled_launch_allowed": false,
+    "paid_media_allowed": false
+  },
+  "next_valid_transition": "AWAIT_EXTERNAL_RESPONSE_AND_CAPTURE_ONLY_NON_SENSITIVE_REVIEW_AUTHORITY_METADATA_IF_RECEIVED"
+}
