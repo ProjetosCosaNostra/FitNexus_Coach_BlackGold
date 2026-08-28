@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.fitnexus_app"
+    namespace = "br.com.lafamigliaplayworks.fitnexuscoach"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -15,10 +15,9 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.fitnexus_app"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // Canonical FitNexus Android identity selected in the repository.
+        // Play Console uniqueness/ownership remains an external publication gate.
+        applicationId = "br.com.lafamigliaplayworks.fitnexuscoach"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -27,8 +26,8 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // PREVIEW ONLY: debug signing remains an explicit publication blocker.
+            // Production signing will be wired to an upload key kept outside the repository.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
