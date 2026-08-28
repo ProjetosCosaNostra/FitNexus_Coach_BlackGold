@@ -1,0 +1,51 @@
+name: Android Play Store Publication Pack V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '03_app_flutter/fitnexus_app/android/play_store/**'
+      - '03_app_flutter/fitnexus_app/android/PLAY_RELEASE_AUTHORITY_V1.json'
+      - '03_app_flutter/fitnexus_app/tool/verify_play_store_publication_pack_v1.py'
+      - '.github/workflows/android_play_store_publication_pack_v1.yml'
+      - '03_app_flutter/fitnexus_app/pubspec.yaml'
+      - '03_app_flutter/fitnexus_app/android/app/build.gradle.kts'
+  push:
+    branches:
+      - 'blackgold/**'
+    paths:
+      - '03_app_flutter/fitnexus_app/android/play_store/**'
+      - '03_app_flutter/fitnexus_app/android/PLAY_RELEASE_AUTHORITY_V1.json'
+      - '03_app_flutter/fitnexus_app/tool/verify_play_store_publication_pack_v1.py'
+      - '.github/workflows/android_play_store_publication_pack_v1.yml'
+      - '03_app_flutter/fitnexus_app/pubspec.yaml'
+      - '03_app_flutter/fitnexus_app/android/app/build.gradle.kts'
+
+permissions:
+  contents: read
+
+jobs:
+  publication-pack-contract:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 03_app_flutter/fitnexus_app
+
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v6
+
+      - name: Validate JSON syntax
+        run: python -m json.tool android/play_store/PLAY_STORE_PUBLICATION_PACK_V1.json > /dev/null
+
+      - name: Validate Play Store publication pack
+        run: python tool/verify_play_store_publication_pack_v1.py
+
+      - name: Preserve external publication boundary
+        run: |
+          echo "PLAY_CONSOLE_MUTATION=false"
+          echo "PLAY_STORE_COPY_PUBLISHED=false"
+          echo "PLAY_ASSET_UPLOAD_PERFORMED=false"
+          echo "PLAY_DATA_SAFETY_SUBMITTED=false"
+          echo "PLAY_PRODUCTION_RELEASE_PERFORMED=false"
+          echo "PAID_MEDIA_ENABLED=false"
