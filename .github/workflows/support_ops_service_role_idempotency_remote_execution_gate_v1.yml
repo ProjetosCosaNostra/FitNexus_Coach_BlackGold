@@ -1,0 +1,43 @@
+name: Support Ops Service-Role Idempotency Remote Execution Gate V1
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '04_backend_supabase/operations/SUPPORT_OPS_SERVICE_ROLE_IDEMPOTENCY_REMOTE_EXECUTION_GATE_V1.json'
+      - '04_backend_supabase/tools/verify_support_ops_service_role_idempotency_remote_execution_gate_v1.py'
+      - '.github/workflows/support_ops_service_role_idempotency_remote_execution_gate_v1.yml'
+  push:
+    branches:
+      - 'blackgold/support-ops-service-role-idempotency-remote-execution-gate-v1'
+    paths:
+      - '04_backend_supabase/operations/SUPPORT_OPS_SERVICE_ROLE_IDEMPOTENCY_REMOTE_EXECUTION_GATE_V1.json'
+      - '04_backend_supabase/tools/verify_support_ops_service_role_idempotency_remote_execution_gate_v1.py'
+      - '.github/workflows/support_ops_service_role_idempotency_remote_execution_gate_v1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v6
+
+      - name: Verify remote execution gate authority
+        run: python 04_backend_supabase/tools/verify_support_ops_service_role_idempotency_remote_execution_gate_v1.py
+
+      - name: Preserve no-side-effect gate boundary
+        shell: bash
+        run: |
+          grep -q '"remote_proof_execution_authorized": false' 04_backend_supabase/operations/SUPPORT_OPS_SERVICE_ROLE_IDEMPOTENCY_REMOTE_EXECUTION_GATE_V1.json
+          grep -q '"remote_proof_execution_count": 0' 04_backend_supabase/operations/SUPPORT_OPS_SERVICE_ROLE_IDEMPOTENCY_REMOTE_EXECUTION_GATE_V1.json
+          grep -q '"required_execution_method": "Supabase.apply_migration"' 04_backend_supabase/operations/SUPPORT_OPS_SERVICE_ROLE_IDEMPOTENCY_REMOTE_EXECUTION_GATE_V1.json
+          grep -q '"ad_hoc_execute_sql_allowed": false' 04_backend_supabase/operations/SUPPORT_OPS_SERVICE_ROLE_IDEMPOTENCY_REMOTE_EXECUTION_GATE_V1.json
+          grep -q '"support_ops_primary_migration_must_not_be_reexecuted": true' 04_backend_supabase/operations/SUPPORT_OPS_SERVICE_ROLE_IDEMPOTENCY_REMOTE_EXECUTION_GATE_V1.json
+          echo 'SUPABASE_MUTATION=false'
+          echo 'SYNTHETIC_PROOF_EXECUTION=false'
+          echo 'GMAIL_MUTATION=false'
+          echo 'PRODUCTION_DEPLOYMENT=false'
+          echo 'COMMERCIAL_PROGRESS_CREDIT=0'

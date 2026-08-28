@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "kind": "SUPPORT_OPS_SERVICE_ROLE_IDEMPOTENCY_REMOTE_EXECUTION_GATE",
+  "project": "FitNexus Coach BlackGold",
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "base_main_sha": "ef8e62e5d80fd478f34d5776bb238fff63c46645",
+  "source_repo_only_promotion": {
+    "path": "04_backend_supabase/operations/SUPPORT_OPS_SERVICE_ROLE_IDEMPOTENCY_REPO_ONLY_PROMOTION_V1.json",
+    "git_blob_sha": "f4906148b2ba84dfefdb2cbd0d48548384095801",
+    "source_pr": 196,
+    "source_pr_merge_sha": "ef8e62e5d80fd478f34d5776bb238fff63c46645"
+  },
+  "migration": {
+    "name": "support_ops_service_role_idempotency_proof",
+    "path": "04_backend_supabase/migrations/20260828094000_support_ops_service_role_idempotency_proof.sql",
+    "git_blob_sha": "0e3add60d6d6046ef36da6f7be2d9a6512941778",
+    "repository_promoted": true,
+    "remote_applied": false,
+    "remote_apply_count": 0
+  },
+  "migration_ledger": {
+    "path": "04_backend_supabase/migration_ledger_authority.json",
+    "git_blob_sha": "34540d90dc2618d04eb95ba8166e7eaeb84f64e6",
+    "repo_only_declared": true,
+    "support_ops_primary_remote_row_present": true,
+    "proof_remote_row_absent": true
+  },
+  "fresh_remote_preflight": {
+    "observed_on": "2026-08-28",
+    "source": "Supabase.list_migrations+Supabase.execute_sql_read_only",
+    "query_was_read_only": true,
+    "execution_user": "supabase_read_only_user",
+    "proof_migration_present": false,
+    "synthetic_request_rows": 0,
+    "synthetic_event_rows": 0,
+    "service_role_ingest_execute": true,
+    "service_role_record_execute": true,
+    "anon_ingest_execute": false,
+    "authenticated_ingest_execute": false,
+    "remote_mutation_performed": false
+  },
+  "gate_state": {
+    "gate_prepared": true,
+    "remote_proof_execution_authorized": false,
+    "remote_proof_execution_count": 0,
+    "required_execution_method": "Supabase.apply_migration",
+    "ad_hoc_execute_sql_allowed": false,
+    "exact_migration_blob_required": true,
+    "support_ops_primary_migration_must_not_be_reexecuted": true,
+    "post_apply_migration_readback_required": true,
+    "synthetic_cleanup_readback_required": true,
+    "post_apply_ledger_reconciliation_required": true,
+    "explicit_user_authorization_required_after_green_merge": true
+  },
+  "boundaries": {
+    "gmail_mutation_performed": false,
+    "automatic_outbound_email_performed": false,
+    "terms_publication_performed": false,
+    "billing_activation_performed": false,
+    "production_deployment_performed": false,
+    "dsr_gate_closed": false
+  },
+  "commercial_progress": {
+    "credit_percent_points": 0,
+    "management_estimate_percent": 74
+  },
+  "state": "REMOTE_PROOF_GATE_PREPARED_EXECUTION_NOT_AUTHORIZED",
+  "next_after_green_merge": "Eligible only for explicit one-time remote synthetic proof execution decision using the exact promoted migration through Supabase.apply_migration."
+}
