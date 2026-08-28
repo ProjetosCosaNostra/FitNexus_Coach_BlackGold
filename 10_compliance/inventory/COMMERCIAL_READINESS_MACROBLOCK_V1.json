@@ -43,6 +43,10 @@
     "external_review_contact_receipt": {
       "path": "10_compliance/review/COMMERCIAL_READINESS_EXTERNAL_REVIEW_CONTACT_RECEIPT_V1.json",
       "git_blob_sha": "46521303db459169b31131d872da39739e6a79a1"
+    },
+    "asaas_provider_ack_receipt": {
+      "path": "10_compliance/review/COMMERCIAL_READINESS_ASAAS_PROVIDER_ACK_RECEIPT_V1.json",
+      "git_blob_sha": "d5be71e5a193a789361a7114ebe5f5ccd0bdf05b"
     }
   },
   "management_progress_estimate": {
@@ -88,7 +92,12 @@
     "production_postdeploy_template_prepared": true,
     "external_review_contact_initiated": true,
     "external_review_response_received": false,
-    "independent_review_completed": false
+    "independent_review_completed": false,
+    "billing_provider_contact_initiated": true,
+    "billing_provider_acknowledgement_received": true,
+    "billing_provider_substantive_response_received": false,
+    "billing_provider_live_credentials_present": false,
+    "billing_provider_production_authority_present": false
   },
   "critical_open_decisions": [
     "LEGAL_ENTITY_IDENTITY",
