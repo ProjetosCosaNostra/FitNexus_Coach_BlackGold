@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "kind": "SUPPORT_OPS_SERVICE_ROLE_IDEMPOTENCY_REPO_ONLY_PROMOTION",
+  "project": "FitNexus Coach BlackGold",
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "base_main_sha": "8bd9a93d79a7d66d3100d348cab6a858820bea37",
+  "source_candidate_authority": {
+    "path": "04_backend_supabase/operations/SUPPORT_OPS_SERVICE_ROLE_IDEMPOTENCY_CANDIDATE_V1.json",
+    "git_blob_sha": "7bd272578d459790d35b327d951bb7c52b1a4398",
+    "source_pr": 195,
+    "source_pr_merge_sha": "8bd9a93d79a7d66d3100d348cab6a858820bea37"
+  },
+  "promotion": {
+    "candidate_path": "04_backend_supabase/operations/candidates/SUPPORT_OPS_SERVICE_ROLE_IDEMPOTENCY_PROOF_CANDIDATE.sql",
+    "candidate_git_blob_sha": "0e3add60d6d6046ef36da6f7be2d9a6512941778",
+    "migration_path": "04_backend_supabase/migrations/20260828094000_support_ops_service_role_idempotency_proof.sql",
+    "migration_git_blob_sha": "0e3add60d6d6046ef36da6f7be2d9a6512941778",
+    "migration_name": "support_ops_service_role_idempotency_proof",
+    "byte_identical_to_candidate": true,
+    "repository_promoted": true,
+    "remote_applied": false,
+    "remote_apply_count": 0
+  },
+  "migration_ledger": {
+    "path": "04_backend_supabase/migration_ledger_authority.json",
+    "git_blob_sha_after_promotion": "34540d90dc2618d04eb95ba8166e7eaeb84f64e6",
+    "repo_only_declared": true,
+    "repo_only_name": "support_ops_service_role_idempotency_proof",
+    "historical_stage17_remote_only_required": [
+      "stage17_pricing_guard_indexes_marker",
+      "stage17_pricing_advisor_reconciliation",
+      "stage17_pricing_advisor_guard"
+    ],
+    "support_ops_primary_remote_row_must_remain": true,
+    "proof_remote_row_must_be_absent": true
+  },
+  "proof_boundaries": {
+    "remote_proof_execution_authorized": false,
+    "remote_proof_execution_count": 0,
+    "support_ops_primary_migration_must_not_be_reexecuted": true,
+    "gmail_mutation_allowed": false,
+    "automatic_outbound_email_allowed": false,
+    "terms_publication_allowed": false,
+    "billing_activation_allowed": false,
+    "production_deployment_allowed": false,
+    "dsr_gate_closure_allowed": false
+  },
+  "commercial_progress": {
+    "credit_percent_points": 0,
+    "management_estimate_percent": 74
+  },
+  "next_gate": {
+    "requires_separate_remote_execution_gate": true,
+    "requires_fresh_read_only_preflight": true,
+    "requires_explicit_remote_execution_authorization": true,
+    "remote_execution_method": "Supabase.apply_migration",
+    "ad_hoc_execute_sql_allowed": false,
+    "synthetic_cleanup_must_be_proven": true
+  },
+  "state": "REPO_ONLY_PROMOTED_REMOTE_PROOF_EXECUTION_NOT_AUTHORIZED"
+}
