@@ -12,10 +12,18 @@
     "policy_note": "Digital subscription purchase inside the Play-distributed app remains disabled unless the implemented payment path is proven compliant with current Google Play policy."
   },
   "package_identity": {
-    "current_application_id": "com.example.fitnexus_app",
-    "state": "PLACEHOLDER_BLOCKS_PUBLICATION",
-    "canonical_application_id": null,
-    "decision_required_before_first_play_console_app_creation": true
+    "current_application_id": "br.com.lafamigliaplayworks.fitnexuscoach",
+    "state": "REPOSITORY_CANONICAL_ID_SELECTED_PLAY_CONSOLE_UNIQUENESS_NOT_ATTESTED",
+    "canonical_application_id": "br.com.lafamigliaplayworks.fitnexuscoach",
+    "decision_required_before_first_play_console_app_creation": false,
+    "play_console_uniqueness_attested": false,
+    "reversible_before_first_play_console_app_creation": true,
+    "selection_basis": "BlackGold / La Famiglia PlayWorks namespace convention and FitNexus V3 release strategy."
+  },
+  "release_train": {
+    "current_version": "0.9.0+2",
+    "public_v1_target": "1.0.0",
+    "state": "PRE_RELEASE_CANDIDATE"
   },
   "release_signing": {
     "current_state": "DEBUG_SIGNING_USED_FOR_RELEASE_PREVIEW",
@@ -24,7 +32,7 @@
     "public_upload_authorized": false
   },
   "store_readiness": {
-    "aab_compile_proof": "PENDING_CI_PREFLIGHT",
+    "aab_compile_proof": "CI_PREFLIGHT_AVAILABLE",
     "store_listing_metadata": "PENDING",
     "data_safety_declaration": "PENDING_FINAL_DATA_FLOW_REVIEW",
     "privacy_and_support_surface_source_present": true,
@@ -34,6 +42,7 @@
   "hard_boundaries": {
     "debug_signed_aab_is_publishable": false,
     "placeholder_application_id_is_publishable": false,
+    "repository_selected_id_proves_play_availability": false,
     "ci_can_choose_permanent_package_id": false,
     "ci_can_create_play_console_app": false,
     "ci_can_upload_to_play": false,
