@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "kind": "NON_ATTESTING_BILLING_PROVIDER_ACK_RECEIPT",
+  "project": "FitNexus Coach BlackGold",
+  "macroblock": "COMMERCIAL_READINESS",
+  "provider": {
+    "name": "ASAAS",
+    "provider_domain": "asaas.com.br",
+    "support_sender_domain": "asaas.com.br"
+  },
+  "observed_at_utc": "2026-08-28T19:44:15Z",
+  "response_classification": "AUTOMATED_OR_ROUTING_ACKNOWLEDGEMENT_NOT_SUBSTANTIVE_POLICY_ANSWER",
+  "correlation": {
+    "recipient_address_sha256": "48a987f6761c8ef68e2f146cd061a4c5d1f31038708654c23f42ef446e64eeb3",
+    "sent_message_id_sha256": "7c7bffe063d9b6992ac29b08d4b882d65ce40e6b6c1db787505def1b19ffd1e2",
+    "thread_id_sha256": "71810ce514715000c7efdb4274861aac3e50896f1344b5be8f7b6e11de4ee1bf",
+    "response_message_id_sha256": "de1a87d47653132db47dc6d5c0d7917e57a9e6276a776530f48eb65490a9e034",
+    "provider_protocol_sha256": "b1b4e2c12d4737536978b38442dd036f0535dabc9aadc637d1e82f24e6193b45",
+    "raw_message_body_committed": false,
+    "raw_message_ids_committed": false,
+    "raw_protocol_committed": false
+  },
+  "state": {
+    "provider_contact_sent": true,
+    "provider_acknowledgement_received": true,
+    "provider_request_routed_to_support_teams": true,
+    "provider_substantive_response_received": false,
+    "provider_pf_eligibility_confirmed_for_this_operator": false,
+    "provider_api_or_sandbox_authority_confirmed": false,
+    "provider_live_credentials_present": false,
+    "provider_production_authority_present": false,
+    "billing_policy_review_closed": false
+  },
+  "commercial_progress": {
+    "commercial_publication_percent_before": 74,
+    "commercial_publication_percent_after": 74,
+    "technical_product_percent": 92,
+    "progress_credit": 0,
+    "reason": "A traceable provider acknowledgement is a real external fact, but it does not answer the billing questions or create provider authority."
+  },
+  "hard_boundaries": {
+    "billing_provider_credentials_allowed": false,
+    "billing_activation_allowed": false,
+    "billing_policy_closed": false,
+    "terms_publication_allowed": false,
+    "supabase_mutation_allowed": false,
+    "deployment_allowed": false,
+    "controlled_launch_allowed": false,
+    "paid_media_allowed": false
+  },
+  "next_valid_transition": "AWAIT_SUBSTANTIVE_ASAAS_RESPONSE_AND_CAPTURE_ONLY_NON_SECRET_PROVIDER_AUTHORITY_FACTS"
+}
