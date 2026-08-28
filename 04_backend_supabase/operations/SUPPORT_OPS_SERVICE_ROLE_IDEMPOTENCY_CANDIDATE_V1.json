@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "kind": "SUPPORT_OPS_SERVICE_ROLE_IDEMPOTENCY_CANDIDATE",
+  "project": "FitNexus Coach BlackGold",
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "base_main_sha": "4eb127d6ef1d354e71038d1de318c0074c2d3604",
+  "source_remote_execution": {
+    "path": "04_backend_supabase/operations/SUPPORT_OPS_PROTOCOL_REMOTE_APPLY_EXECUTION_V1.json",
+    "git_blob_sha": "6b06a1dbfa4f008794d4a728f19b00ef183f3bb2",
+    "source_pr": 194,
+    "source_pr_merge_sha": "4eb127d6ef1d354e71038d1de318c0074c2d3604",
+    "support_ops_remote_apply_green": true,
+    "synthetic_idempotency_open": true
+  },
+  "candidate": {
+    "path": "04_backend_supabase/operations/candidates/SUPPORT_OPS_SERVICE_ROLE_IDEMPOTENCY_PROOF_CANDIDATE.sql",
+    "git_blob_sha": "0e3add60d6d6046ef36da6f7be2d9a6512941778",
+    "target_migration_name": "support_ops_service_role_idempotency_proof",
+    "target_repository_path": "04_backend_supabase/migrations/20260828094000_support_ops_service_role_idempotency_proof.sql",
+    "exact_candidate_bytes_required": true
+  },
+  "proof_contract": {
+    "must_enter_actual_database_role": "service_role",
+    "must_assert_current_user_is_service_role": true,
+    "first_ingest_created_new": true,
+    "second_ingest_created_new": false,
+    "second_ingest_must_return_same_request_id": true,
+    "second_ingest_must_return_same_protocol_number": true,
+    "record_event_transition_required": "RECEIVED_TO_TRIAGED",
+    "synthetic_source_message_id": "fitnexus-support-ops-idempotency-v1",
+    "synthetic_email_domain": "invalid.example",
+    "same_migration_cleanup_required": true,
+    "surviving_synthetic_rows_allowed": false
+  },
+  "candidate_safety": {
+    "customer_identity_used": false,
+    "gmail_mutation_allowed": false,
+    "automatic_outbound_email_allowed": false,
+    "terms_publication_allowed": false,
+    "billing_activation_allowed": false,
+    "production_deployment_allowed": false,
+    "dsr_gate_closure_allowed": false
+  },
+  "gate_state": {
+    "candidate_prepared": true,
+    "repository_migration_promoted": false,
+    "remote_proof_execution_authorized": false,
+    "remote_proof_execution_count": 0,
+    "support_ops_primary_migration_must_not_be_reexecuted": true,
+    "requires_separate_repo_promotion_gate": true,
+    "requires_separate_remote_execution_authorization": true
+  },
+  "commercial_progress": {
+    "credit_percent_points": 0,
+    "management_estimate_percent": 74
+  },
+  "next_after_green_merge": {
+    "promote_exact_candidate_bytes_repo_only": true,
+    "remote_execution_still_requires_explicit_authorization": true
+  }
+}
