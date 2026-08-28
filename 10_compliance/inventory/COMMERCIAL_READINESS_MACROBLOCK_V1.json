@@ -39,6 +39,10 @@
     "terms_candidate": {
       "path": "10_compliance/drafts/TERMS_OF_USE_CANDIDATE_PTBR.md",
       "git_blob_sha": "0652fb664db57842a8d9dd5d22f0b0b48d645d2d"
+    },
+    "external_review_contact_receipt": {
+      "path": "10_compliance/review/COMMERCIAL_READINESS_EXTERNAL_REVIEW_CONTACT_RECEIPT_V1.json",
+      "git_blob_sha": "46521303db459169b31131d872da39739e6a79a1"
     }
   },
   "management_progress_estimate": {
@@ -81,7 +85,10 @@
     "independent_terms_review_packet_prepared": true,
     "controlled_exercise_independent_review_intake_prepared": true,
     "production_predeploy_template_prepared": true,
-    "production_postdeploy_template_prepared": true
+    "production_postdeploy_template_prepared": true,
+    "external_review_contact_initiated": true,
+    "external_review_response_received": false,
+    "independent_review_completed": false
   },
   "critical_open_decisions": [
     "LEGAL_ENTITY_IDENTITY",
