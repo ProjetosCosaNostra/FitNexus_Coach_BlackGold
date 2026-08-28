@@ -7,6 +7,7 @@ on:
       - '02_produto/PRODUCT_REVENUE_RELEASE_TRAIN_V1.json'
       - '03_app_flutter/fitnexus_app/**'
       - '.github/workflows/android_play_release_preflight_v1.yml'
+      - '.gitignore'
   push:
     branches:
       - 'blackgold/**'
@@ -14,6 +15,7 @@ on:
       - '02_produto/PRODUCT_REVENUE_RELEASE_TRAIN_V1.json'
       - '03_app_flutter/fitnexus_app/**'
       - '.github/workflows/android_play_release_preflight_v1.yml'
+      - '.gitignore'
 
 permissions:
   contents: read
@@ -41,6 +43,17 @@ jobs:
       - name: Inventory Play publication blockers
         run: python tool/verify_play_release_preflight.py --mode inventory
 
+      - name: Assert signing secrets are absent from CI checkout
+        run: |
+          set -euo pipefail
+          test ! -f android/key.properties
+          if find android -type f \( -name '*.jks' -o -name '*.keystore' \) -print -quit | grep -q .; then
+            echo 'PLAY_SIGNING_SECRET_HYGIENE=FAIL'
+            exit 1
+          fi
+          echo 'PLAY_SIGNING_SECRET_HYGIENE=PASS'
+          echo 'PLAY_CI_SIGNING_MODE=UNSIGNED_RELEASE_PREVIEW'
+
       - name: Static analysis
         run: flutter analyze
 
@@ -58,8 +71,9 @@ jobs:
           echo "ANDROID_AAB_COMPILE=PASS"
           echo "ANDROID_AAB_BYTES=$(stat -c%s "$AAB")"
           echo "ANDROID_AAB_SHA256=$(sha256sum "$AAB" | awk '{print $1}')"
+          echo "ANDROID_AAB_SIGNING_AUTHORITY=EXTERNAL_UPLOAD_KEY_NOT_PRESENT_IN_CI"
           echo "ANDROID_AAB_PUBLICATION_AUTHORIZED=false"
-          echo "ANDROID_AAB_REASON=package_identity_and_release_signing_and_store_authority_are_separately_gated"
+          echo "ANDROID_AAB_REASON=signed_aab_play_app_signing_play_console_uniqueness_and_public_upload_authority_are_separately_gated"
 
       - name: Preserve Play publication boundary
         run: |
