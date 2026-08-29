@@ -34,6 +34,9 @@ if ($patched -eq $source) {
 if ($patched -notmatch '\(\[int\]\$Bytes\[\$Offset \+ 2\]\) -shl 8') {
     throw 'FNX_PLAY_SCREENSHOT_01_PS51_REPAIR_INT_CAST_GUARD_FAILED'
 }
+if ($patched -match 'return \(\(\$Bytes\[\$Offset\] -shl 24\)') {
+    throw 'FNX_PLAY_SCREENSHOT_01_PS51_REPAIR_OLD_PARSER_SURVIVED'
+}
 
 $runtimePath = Join-Path $PSScriptRoot ('FITNEXUS_PLAY_STORE_SCREENSHOT_01_CAPTURE_V1.__ps51_fixed_' + [guid]::NewGuid().ToString('N') + '.ps1')
 $encoding = New-Object System.Text.UTF8Encoding($false)
