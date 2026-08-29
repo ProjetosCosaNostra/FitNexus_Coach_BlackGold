@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "kind": "NON_ATTESTING_SIGNED_AAB_RUNNER_CONTRACT",
   "project": "FitNexus Coach BlackGold",
   "runner": {
@@ -27,15 +27,24 @@
     "sha256_receipt": true,
     "current_only_receipt_directory": true
   },
-  "failure_prevention": {
-    "failure_class": "FNX-PS51-GIT-LS-FILES-EXPECTED-MISS-NATIVECOMMANDERROR-144",
-    "observed_on": "2026-08-28",
-    "root_cause": "The runner used git ls-files --error-unmatch to prove android/key.properties was untracked. The expected healthy miss wrote native stderr; Windows PowerShell 5.1 with ErrorActionPreference Stop promoted that stderr into NativeCommandError before the runner could interpret LASTEXITCODE.",
-    "permanent_rule": "Never intentionally provoke native stderr/nonzero exit to prove an expected-negative Git condition in Windows PowerShell 5.1. Use a non-erroring query and inspect returned data.",
-    "regression_required": true,
-    "forbidden_token": "--error-unmatch",
-    "replacement_strategy": "git ls-files -- <path> then exact membership test"
-  },
+  "failure_prevention": [
+    {
+      "failure_class": "FNX-PS51-GIT-LS-FILES-EXPECTED-MISS-NATIVECOMMANDERROR-144",
+      "observed_on": "2026-08-28",
+      "root_cause": "The runner used git ls-files with an intentional error-on-miss mode to prove android/key.properties was untracked. The expected healthy miss wrote native stderr; Windows PowerShell 5.1 with ErrorActionPreference Stop promoted that stderr into NativeCommandError before the runner could interpret LASTEXITCODE.",
+      "permanent_rule": "Never intentionally provoke native stderr/nonzero exit to prove an expected-negative Git condition in Windows PowerShell 5.1. Use a non-erroring query and inspect returned data.",
+      "regression_required": true,
+      "replacement_strategy": "git ls-files -- <path> then exact membership test"
+    },
+    {
+      "failure_class": "FNX-CI-LEXICAL-COMMENT-FALSE-POSITIVE-145",
+      "observed_on": "2026-08-29",
+      "root_cause": "The first regression gate searched the entire PowerShell source for a forbidden token. The historical explanation comment intentionally contained that token, so CI rejected the repaired runner even though the executable Git command was already safe.",
+      "permanent_rule": "Regression checks for dangerous native-command forms must be command-aware and must not classify comments or documentation as executable behavior.",
+      "regression_required": true,
+      "replacement_strategy": "Inspect executable-looking git ls-files invocation lines and separately assert the safe membership-query form."
+    }
+  ],
   "publication_boundary": {
     "signed_aab_proof_is_play_upload_authority": false,
     "play_console_uniqueness_still_required": true,
