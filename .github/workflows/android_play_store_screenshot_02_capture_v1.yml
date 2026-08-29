@@ -36,9 +36,17 @@ jobs:
           assert data['capture']['real_user_data'] is False
           assert data['capture']['production_ui_widget'] == 'StudentAccessManagementPage'
           assert data['capture']['dart_define_shot'] == '02'
+          visual = data['capture']['visual_evidence']
+          assert visual['content_aware_required'] is True
+          assert visual['minimum_file_bytes_corruption_floor'] == 20000
+          assert visual['pixel_color_diversity_required'] is True
+          assert visual['visible_non_dark_content_required'] is True
+          assert visual['blackgold_signal_required'] is True
+          assert visual['human_visual_review_before_publication'] is True
           for key, value in data['hard_boundaries'].items():
               assert value is False, f'{key} must remain false'
           print('FITNEXUS_PLAY_SCREENSHOT_02_CONTRACT=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_02_CONTENT_AWARE_CONTRACT=PASS')
 
       - name: Validate runner without Android binding
         shell: pwsh
