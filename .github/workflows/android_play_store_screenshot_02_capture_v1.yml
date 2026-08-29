@@ -8,7 +8,9 @@ on:
       - '03_app_flutter/fitnexus_app/lib/features/professor/professor_data_repository.dart'
       - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_CAPTURE_V1.ps1'
       - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_VISUAL_STATE_REPAIR_V1.ps1'
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_VISUAL_STATE_REPAIR_V2.ps1'
       - '18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_COMPRESSED_DARK_UI_FALSE_POSITIVE_20260829.md'
+      - '18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_SPARSE_GRID_COLOR_DIVERSITY_FALSE_POSITIVE_20260829.md'
       - '.github/workflows/android_play_store_screenshot_02_capture_v1.yml'
   workflow_dispatch:
 
@@ -39,26 +41,28 @@ jobs:
           visual = data['capture']['visual_evidence']
           assert visual['content_aware_required'] is True
           assert visual['minimum_file_bytes_corruption_floor'] == 20000
-          assert visual['pixel_color_diversity_required'] is True
+          assert visual['unique_color_count_hard_gate'] is False
           assert visual['visible_non_dark_content_required'] is True
           assert visual['blackgold_signal_required'] is True
+          assert visual['structural_transition_required'] is True
+          assert visual['multi_band_vertical_occupancy_required'] is True
           assert visual['human_visual_review_before_publication'] is True
           for key, value in data['hard_boundaries'].items():
               assert value is False, f'{key} must remain false'
           print('FITNEXUS_PLAY_SCREENSHOT_02_CONTRACT=PASS')
-          print('FITNEXUS_PLAY_SCREENSHOT_02_CONTENT_AWARE_CONTRACT=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_02_STRUCTURAL_VISUAL_CONTRACT=PASS')
 
       - name: Validate runner without Android binding
         shell: pwsh
         run: |
           ./03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_CAPTURE_V1.ps1 -ValidateOnly
 
-      - name: Validate content-aware visual repair without Android binding
+      - name: Validate structural visual repair v2 without Android binding
         shell: pwsh
         run: |
-          ./03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_VISUAL_STATE_REPAIR_V1.ps1 -ValidateOnly
+          ./03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_VISUAL_STATE_REPAIR_V2.ps1 -ValidateOnly
 
-      - name: Guard capture isolation, PS5.1 compatibility and visual evidence
+      - name: Guard capture isolation, PS5.1 compatibility and structural visual evidence
         shell: python
         run: |
           import re
@@ -67,8 +71,9 @@ jobs:
           entry = Path('03_app_flutter/fitnexus_app/lib/store_capture_main.dart').read_text(encoding='utf-8')
           repo = Path('03_app_flutter/fitnexus_app/lib/features/professor/professor_data_repository.dart').read_text(encoding='utf-8')
           runner = Path('03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_CAPTURE_V1.ps1').read_text(encoding='utf-8')
-          repair = Path('03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_VISUAL_STATE_REPAIR_V1.ps1').read_text(encoding='utf-8')
-          failure_record = Path('18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_COMPRESSED_DARK_UI_FALSE_POSITIVE_20260829.md').read_text(encoding='utf-8')
+          repair = Path('03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_VISUAL_STATE_REPAIR_V2.ps1').read_text(encoding='utf-8')
+          failure_record_1 = Path('18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_COMPRESSED_DARK_UI_FALSE_POSITIVE_20260829.md').read_text(encoding='utf-8')
+          failure_record_2 = Path('18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_SPARSE_GRID_COLOR_DIVERSITY_FALSE_POSITIVE_20260829.md').read_text(encoding='utf-8')
 
           assert 'FITNEXUS_STORE_CAPTURE_SHOT' in entry
           assert "fitNexusStoreCaptureShot == '02'" in entry
@@ -96,12 +101,13 @@ jobs:
           assert "'if ($screenshotBytes -lt 60000) {'" in repair
           assert "'if ($screenshotBytes -lt 20000) {'" in repair
           assert 'System.Drawing.Bitmap' in repair
-          assert 'VISUAL_UNIQUE_COLORS=' in repair
-          assert 'VISUAL_MEANINGFUL_SAMPLES=' in repair
-          assert 'VISUAL_BLACKGOLD_SAMPLES=' in repair
+          assert 'VISUAL_STRUCTURAL_TRANSITIONS=' in repair
+          assert 'VISUAL_OCCUPIED_VERTICAL_BANDS=' in repair
+          assert 'UNIQUE_COLOR_COUNT_HARD_GATE=false' in repair
           assert 'RECEIPT_INVALIDATED=true' in repair
           assert 'ARBITRARY_60000_BYTE_GATE=REPLACED_BY_CONTENT_AWARE_GUARD' in repair
-          assert 'FNX-PLAY-SCREENSHOT-02-COMPRESSED-DARK-UI-FILESIZE-FALSE-POSITIVE-003' in failure_record
+          assert 'FNX-PLAY-SCREENSHOT-02-COMPRESSED-DARK-UI-FILESIZE-FALSE-POSITIVE-003' in failure_record_1
+          assert 'FNX-PLAY-SCREENSHOT-02-SPARSE-GRID-UNIQUE-COLOR-FALSE-POSITIVE-004' in failure_record_2
 
           forbidden = ['.ArgumentList', 'ForEach-Object -Parallel', '??', '?.']
           hits = [token for token in forbidden if token in runner or token in repair]
@@ -113,4 +119,4 @@ jobs:
           print('FITNEXUS_PLAY_SCREENSHOT_02_ISOLATION_GUARD=PASS')
           print('FITNEXUS_PLAY_SCREENSHOT_02_PS51_GUARD=PASS')
           print('FITNEXUS_PLAY_SCREENSHOT_02_FAILSAFE_RESTORE_GUARD=PASS')
-          print('FITNEXUS_PLAY_SCREENSHOT_02_CONTENT_AWARE_VISUAL_GUARD=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_02_STRUCTURAL_VISUAL_GUARD=PASS')
