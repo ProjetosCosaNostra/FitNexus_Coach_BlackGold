@@ -62,6 +62,10 @@ jobs:
           assert "'1080x1920'" not in runner or 'TargetWidth = 1080' in runner
           assert 'BUILD_PRODUCTION_RESTORE_APK' in runner
           assert 'RESTORE_PRODUCTION_APK' in runner
+          assert 'FAILSAFE_RESTORE_PRODUCTION_APK' in runner
+          assert 'Assert-CanonicalReleaseInstalled' in runner
+          assert 'FAILSAFE_PRODUCTION_RESTORE=ENABLED' in runner
+          assert '$captureInstalled -and -not $productionRestored' in runner
           assert 'PRODUCTION_RELEASE_RESTORED=' in runner
           assert 'SUPABASE_MUTATION_PERFORMED=false' in runner
           assert 'PLAY_CONSOLE_MUTATION_PERFORMED=false' in runner
@@ -70,10 +74,6 @@ jobs:
           hits = [token for token in forbidden if token in runner]
           assert not hits, f'PowerShell 5.1 incompatible token(s): {hits}'
 
-          # Windows PowerShell 5.1 does not support using an `if` statement as
-          # a parenthesized value expression inside a hashtable assignment such
-          # as `Root = (if (...) { ... })`. That pattern passed the prior PS7
-          # ValidateOnly gate because the resolver was not executed locally.
           inline_if_value = re.compile(r'=\s*\(\s*if\s*\(', re.IGNORECASE)
           assert not inline_if_value.search(runner), (
               'PowerShell 5.1 incompatible parenthesized inline-if value detected'
@@ -83,3 +83,4 @@ jobs:
 
           print('FITNEXUS_PLAY_SCREENSHOT_01_ISOLATION_GUARD=PASS')
           print('FITNEXUS_PLAY_SCREENSHOT_01_PS51_INLINE_IF_GUARD=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_01_FAILSAFE_RESTORE_GUARD=PASS')
