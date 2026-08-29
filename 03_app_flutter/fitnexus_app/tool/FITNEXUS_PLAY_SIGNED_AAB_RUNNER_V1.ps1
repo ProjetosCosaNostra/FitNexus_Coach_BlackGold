@@ -15,11 +15,6 @@ $KeyPropertiesFile = Join-Path $AndroidDir 'key.properties'
 $GitPath = '03_app_flutter/fitnexus_app/android/key.properties'
 $Marker = '# GENERATED_BY=FITNEXUS_PLAY_SIGNED_AAB_RUNNER_V1'
 $UploadAlias = 'fitnexus_upload'
-$ExternalRoot = Join-Path $env:USERPROFILE 'Documents\FitNexus_Coach_BlackGold_EXTERNAL\play_signing'
-$AuthorityDir = Join-Path $ExternalRoot 'authority'
-$CurrentDir = Join-Path $ExternalRoot 'current'
-$KeystoreFile = Join-Path $AuthorityDir 'fitnexus-upload-key.jks'
-$ProtectedSecretFile = Join-Path $AuthorityDir 'upload-key-secret.dpapi'
 
 function Fail([string]$Message) {
     throw "FITNEXUS_SIGNED_AAB_RUNNER=FAIL::$Message"
@@ -71,8 +66,14 @@ function Assert-KeyPropertiesGitBoundary {
             Fail 'key_properties_not_gitignored'
         }
 
-        & git ls-files --error-unmatch -- $GitPath 2>$null | Out-Null
-        if ($LASTEXITCODE -eq 0) {
+        # Windows PowerShell 5.1 can promote expected native stderr into
+        # NativeCommandError when ErrorActionPreference is Stop. Absence from
+        # the index is healthy here, so query without provoking a Git error.
+        $trackedEntries = @(& git ls-files -- $GitPath)
+        if ($LASTEXITCODE -ne 0) {
+            Fail 'git_ls_files_failed'
+        }
+        if ($trackedEntries -contains $GitPath) {
             Fail 'key_properties_is_tracked'
         }
     }
@@ -112,6 +113,17 @@ if ($ValidateOnly) {
 if ($env:OS -ne 'Windows_NT') {
     Fail 'execution_requires_windows_for_dpapi_secret_storage'
 }
+if ([string]::IsNullOrWhiteSpace($env:USERPROFILE)) {
+    Fail 'userprofile_missing_for_external_signing_authority'
+}
+
+# Execution-only Windows authority paths are intentionally bound only after
+# ValidateOnly exits. Validation must remain portable and secret-store agnostic.
+$ExternalRoot = Join-Path $env:USERPROFILE 'Documents\FitNexus_Coach_BlackGold_EXTERNAL\play_signing'
+$AuthorityDir = Join-Path $ExternalRoot 'authority'
+$CurrentDir = Join-Path $ExternalRoot 'current'
+$KeystoreFile = Join-Path $AuthorityDir 'fitnexus-upload-key.jks'
+$ProtectedSecretFile = Join-Path $AuthorityDir 'upload-key-secret.dpapi'
 
 $flutter = Get-Command flutter -ErrorAction SilentlyContinue
 if ($null -eq $flutter) {
