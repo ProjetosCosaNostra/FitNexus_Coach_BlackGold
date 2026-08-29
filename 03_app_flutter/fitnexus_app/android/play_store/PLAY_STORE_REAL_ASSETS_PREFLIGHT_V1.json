@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "kind": "FITNEXUS_PLAY_STORE_REAL_ASSETS_PREFLIGHT",
+  "project": "FitNexus Coach BlackGold",
+  "application_id": "br.com.lafamigliaplayworks.fitnexuscoach",
+  "release_train_version": "0.9.0+2",
+  "purpose": "Fail-closed local preflight before any Google Play screenshot capture. It verifies Android device/emulator readiness, package installation, display metadata and current-only evidence output without mutating Play Console, Supabase or billing.",
+  "requires": {
+    "windows_for_real_run": true,
+    "adb_available": true,
+    "exactly_one_authorized_device": true,
+    "canonical_package_installed": true
+  },
+  "evidence": {
+    "output_root": "%USERPROFILE%/Documents/FitNexus_Coach_BlackGold_EXTERNAL/play_store_assets/current",
+    "receipt": "FITNEXUS_PLAY_STORE_REAL_ASSETS_PREFLIGHT_RECEIPT_V1.json",
+    "current_only": true,
+    "sha256_receipt": true
+  },
+  "hard_boundaries": {
+    "captures_store_screenshots": false,
+    "creates_test_accounts": false,
+    "mutates_supabase": false,
+    "mutates_play_console": false,
+    "uploads_aab": false,
+    "publishes_assets": false,
+    "activates_billing": false
+  },
+  "pass_means": "The local Android surface is technically ready for the next controlled real-app screenshot automation step. PASS does not attest store assets, authentication state, screenshot quality or Play publication authority."
+}
