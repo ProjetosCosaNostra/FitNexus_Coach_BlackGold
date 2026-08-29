@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "kind": "FITNEXUS_PLAY_STORE_SCREENSHOT_01_CAPTURE",
+  "project": "FitNexus Coach BlackGold",
+  "application_id": "br.com.lafamigliaplayworks.fitnexuscoach",
+  "release_train_version": "0.9.0+2",
+  "shot_id": "01_coach_action_center",
+  "shot_goal": "Show the real production Coach Action Center UI with controlled synthetic student data and no debug/demo residue.",
+  "capture": {
+    "target_width_px": 1080,
+    "target_height_px": 1920,
+    "format": "png",
+    "entrypoint": "lib/store_capture_main.dart",
+    "dart_define": "FITNEXUS_STORE_CAPTURE=true",
+    "synthetic_data": true,
+    "production_ui_widget": "ProfessorCoachActionCenterPage"
+  },
+  "evidence": {
+    "output_root": "%USERPROFILE%/Documents/FitNexus_Coach_BlackGold_EXTERNAL/play_store_assets/current",
+    "screenshot": "01_coach_action_center_1080x1920.png",
+    "receipt": "FITNEXUS_PLAY_STORE_SCREENSHOT_01_RECEIPT_V1.json",
+    "current_only": true,
+    "sha256_screenshot": true,
+    "sha256_receipt": true
+  },
+  "hard_boundaries": {
+    "real_user_data": false,
+    "supabase_mutation": false,
+    "play_console_mutation": false,
+    "aab_upload": false,
+    "asset_publication": false,
+    "billing_activation": false,
+    "capture_build_left_installed": false,
+    "secret_material_committed": false
+  },
+  "pass_means": "A raw 1080x1920 device screenshot of the real Coach Action Center widget was captured from an isolated signed release capture build using synthetic data, SHA-256 evidence was emitted, and the normal production release APK was restored on the emulator afterward. PASS does not mean Play Console upload or listing publication occurred."
+}
