@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "NON_ATTESTING_PRODUCT_REVENUE_RELEASE_TRAIN",
   "project": "FitNexus Coach BlackGold",
-  "baseline_main_sha": "9f943ea899ce29ff2257bb368a76b83dfc900c7a",
+  "baseline_main_sha": "2e10e50498b7cee0d853e7cd718a3de2da2b72b6",
   "operating_change": {
     "external_compliance_monitoring_runs_in_parallel": true,
     "wait_for_external_reply_before_product_work": false,
@@ -28,11 +28,23 @@
     "debug_release_signing": "REMOVED",
     "signed_aab_one_command_runner": "READY_NOT_EXECUTED",
     "signed_aab_local_proof": "PENDING_RUNNER_EXECUTION",
+    "store_listing_metadata": "PTBR_ENUS_ES419_CANDIDATE_COPY_READY_VALIDATION_PENDING",
+    "preview_asset_contract": "GOOGLE_PLAY_REQUIREMENTS_BOUND",
+    "screenshot_capture": "SIX_REAL_APP_SHOTS_DEFINED_CAPTURE_PENDING",
+    "data_safety": "NON_ATTESTING_INVENTORY_READY_FINAL_DATA_FLOW_REVIEW_PENDING",
+    "privacy_policy_url": "PENDING_INDEPENDENT_REVIEW_AND_STABLE_PUBLIC_ROUTE",
+    "reviewer_app_access": "PENDING_EXTERNAL_TEST_ACCOUNT_NEVER_COMMIT_SECRET",
     "play_app_signing_enrollment": "PENDING_EXTERNAL_CONSOLE_FACT",
-    "store_listing_metadata": "PENDING",
-    "data_safety": "PENDING_FINAL_DATA_FLOW_REVIEW",
     "closed_test_or_production_access": "ACCOUNT_DEPENDENT_PENDING_CONSOLE_VERIFICATION",
-    "public_upload": "DENIED_UNTIL_EXPLICIT_AUTHORITY"
+    "public_upload": "DENIED_UNTIL_EXPLICIT_AUTHORITY",
+    "next_material_actions": [
+      "EXECUTE_SIGNED_AAB_RUNNER_ON_WINDOWS",
+      "CAPTURE_REAL_PRODUCTION_SWEEP_SCREENSHOTS",
+      "EXPORT_AND_VALIDATE_512_ICON_AND_1024X500_FEATURE_GRAPHIC",
+      "RECONCILE_DATA_SAFETY_WITH_EXACT_RELEASE_CANDIDATE",
+      "VERIFY_PLAY_CONSOLE_ACCOUNT_AND_PACKAGE_FACTS",
+      "START_INTERNAL_OR_CLOSED_TEST_ONLY_AFTER_REQUIRED_GATES"
+    ]
   },
   "commercial_model_candidate": {
     "free_download_or_web_entry": true,

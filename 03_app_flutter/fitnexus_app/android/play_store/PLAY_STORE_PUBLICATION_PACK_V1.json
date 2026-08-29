@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "kind": "NON_ATTESTING_PLAY_STORE_PUBLICATION_PACK",
+  "project": "FitNexus Coach BlackGold",
+  "verified_at_utc": "2026-08-28T22:20:00Z",
+  "application_id": "br.com.lafamigliaplayworks.fitnexuscoach",
+  "release_train_version": "0.9.0+2",
+  "store_model": {
+    "app_price": "FREE_DOWNLOAD",
+    "authenticated_companion": true,
+    "external_provider_checkout_inside_play_app": false,
+    "external_billing_link_inside_play_app": false,
+    "google_play_billing_integrated": false,
+    "category_candidate": "HEALTH_AND_FITNESS",
+    "category_final_selection": "PENDING_PLAY_CONSOLE_REVIEW"
+  },
+  "listing_limits": {
+    "app_name_max_chars": 30,
+    "short_description_max_chars": 80,
+    "full_description_max_chars": 4000
+  },
+  "localized_listing": {
+    "pt-BR": {
+      "app_name": "FitNexus Coach BlackGold",
+      "short_description": "Gestão de alunos, treinos e evolução para personal trainers.",
+      "full_description": "FitNexus Coach BlackGold é um sistema de gestão para personal trainers, coaches e profissionais que acompanham alunos de forma presencial ou online.\n\nCentralize o trabalho diário em um único espaço:\n• organize alunos e acessos;\n• monte e acompanhe planos de treino;\n• receba feedbacks de execução;\n• acompanhe evolução e sinais de atenção;\n• reutilize templates para ganhar consistência;\n• visualize prioridades no Coach Action Center;\n• acompanhe limites e status do plano;\n• ofereça ao aluno uma experiência própria para consultar treinos e enviar feedback.\n\nO FitNexus foi desenhado para reduzir tarefas dispersas e ajudar o profissional a transformar informação em decisão. A proposta é manter aluno, treino, feedback e acompanhamento conectados no mesmo fluxo, sem depender de planilhas e conversas espalhadas.\n\nA experiência do profissional e a experiência do aluno são separadas, com acesso autenticado e regras de permissão aplicadas pelo backend.\n\nRecursos podem variar conforme o plano e o estágio de disponibilidade do serviço. O aplicativo Android funciona como superfície autenticada do ecossistema FitNexus; compras e cobranças externas não são iniciadas dentro do app distribuído pelo Google Play."
+    },
+    "en-US": {
+      "app_name": "FitNexus Coach BlackGold",
+      "short_description": "Manage clients, workouts and progress in one professional coaching workspace.",
+      "full_description": "FitNexus Coach BlackGold is a management system for personal trainers, coaches and professionals who support clients in person or online.\n\nBring daily coaching work into one workspace:\n• organize clients and access;\n• build and follow workout plans;\n• receive workout feedback;\n• monitor progress and attention signals;\n• reuse templates for consistent delivery;\n• review priorities in the Coach Action Center;\n• track plan limits and subscription status;\n• give clients their own experience to view workouts and send feedback.\n\nFitNexus is designed to reduce scattered tasks and help coaches turn information into decisions. The goal is to keep client management, workouts, feedback and follow-up connected in one flow instead of relying on disconnected spreadsheets and conversations.\n\nCoach and client experiences are separated, with authenticated access and backend permission rules.\n\nFeatures may vary by plan and service availability. The Android app works as an authenticated FitNexus companion; external purchases and billing are not initiated inside the Google Play distributed app."
+    },
+    "es-419": {
+      "app_name": "FitNexus Coach BlackGold",
+      "short_description": "Gestiona alumnos, entrenamientos y progreso en un espacio profesional.",
+      "full_description": "FitNexus Coach BlackGold es un sistema de gestión para personal trainers, coaches y profesionales que acompañan alumnos de forma presencial u online.\n\nCentraliza el trabajo diario en un solo espacio:\n• organiza alumnos y accesos;\n• crea y acompaña planes de entrenamiento;\n• recibe feedback de ejecución;\n• sigue el progreso y las señales de atención;\n• reutiliza plantillas para mantener consistencia;\n• revisa prioridades en Coach Action Center;\n• consulta límites y estado del plan;\n• ofrece al alumno una experiencia propia para ver entrenamientos y enviar feedback.\n\nFitNexus está diseñado para reducir tareas dispersas y ayudar al profesional a convertir información en decisiones. La propuesta es mantener alumnos, entrenamientos, feedback y seguimiento conectados en un mismo flujo, sin depender de hojas de cálculo y conversaciones aisladas.\n\nLas experiencias del profesional y del alumno están separadas, con acceso autenticado y reglas de permisos aplicadas por el backend.\n\nLas funciones pueden variar según el plan y la disponibilidad del servicio. La app Android funciona como superficie autenticada de FitNexus; las compras y cobros externos no se inician dentro de la app distribuida por Google Play."
+    }
+  },
+  "preview_assets": {
+    "app_icon": {
+      "required": true,
+      "format": "PNG_32BIT_ALPHA",
+      "width_px": 512,
+      "height_px": 512,
+      "max_bytes": 1048576,
+      "state": "PENDING_FINAL_ASSET_EXPORT_AND_VALIDATION"
+    },
+    "feature_graphic": {
+      "required": true,
+      "format": "JPEG_OR_PNG_24BIT_NO_ALPHA",
+      "width_px": 1024,
+      "height_px": 500,
+      "state": "PENDING_FINAL_ASSET_EXPORT_AND_VALIDATION"
+    },
+    "phone_screenshots": {
+      "minimum_for_publication": 2,
+      "recommended_for_app_discovery": 4,
+      "target_count": 6,
+      "target_orientation": "PORTRAIT_9_16",
+      "target_resolution_px": "1080x1920",
+      "state": "SHOTLIST_READY_REAL_APP_CAPTURE_PENDING"
+    },
+    "preview_video": {
+      "required": false,
+      "state": "DEFER_UNTIL_POST_LAUNCH_ORGANIC_CONVERSION_VALUE_IS_CLEAR"
+    }
+  },
+  "console_declarations": {
+    "privacy_policy_public_url": "PENDING_INDEPENDENT_REVIEW_AND_STABLE_PUBLIC_ROUTE",
+    "data_safety_form": "PENDING_FINAL_DATA_FLOW_REVIEW_AND_CONSOLE_DECLARATION",
+    "app_access_review_credentials": "PENDING_EXTERNAL_TEST_ACCOUNT_NEVER_COMMIT_SECRETS",
+    "content_rating_questionnaire": "PENDING_PLAY_CONSOLE",
+    "target_audience": "PENDING_PLAY_CONSOLE_REVIEW",
+    "ads_declaration": "CURRENT_FLUTTER_DEPENDENCIES_SHOW_NO_AD_SDK_NATIVE_AND_RUNTIME_REVIEW_PENDING",
+    "play_app_signing_enrollment": "NOT_ATTESTED",
+    "package_uniqueness_ownership": "NOT_ATTESTED",
+    "closed_test_requirement": "ACCOUNT_DEPENDENT_VERIFY_IN_PLAY_CONSOLE",
+    "production_access": "NOT_ATTESTED"
+  },
+  "testing_policy_snapshot": {
+    "new_personal_accounts_after_2023_11_13": {
+      "closed_test_minimum_testers": 12,
+      "continuous_days": 14,
+      "applicable_to_this_account": "NOT_ATTESTED"
+    }
+  },
+  "official_sources": [
+    "https://support.google.com/googleplay/android-developer/answer/9859152?hl=pt-BR",
+    "https://support.google.com/googleplay/android-developer/answer/9866151?hl=pt-br",
+    "https://support.google.com/googleplay/android-developer/answer/10787469?hl=pt-BR",
+    "https://support.google.com/googleplay/android-developer/answer/14151465?hl=pt-BR"
+  ],
+  "hard_boundaries": {
+    "pack_authorizes_play_console_mutation": false,
+    "pack_authorizes_upload": false,
+    "pack_is_data_safety_submission": false,
+    "pack_is_privacy_legal_review": false,
+    "candidate_copy_is_published": false,
+    "candidate_category_is_final": false,
+    "asset_shotlist_is_asset_evidence": false
+  }
+}
