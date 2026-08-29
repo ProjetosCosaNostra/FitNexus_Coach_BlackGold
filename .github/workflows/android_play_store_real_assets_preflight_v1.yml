@@ -27,6 +27,8 @@ jobs:
           data = json.loads(path.read_text(encoding='utf-8'))
           assert data['application_id'] == 'br.com.lafamigliaplayworks.fitnexuscoach'
           assert data['evidence']['current_only'] is True
+          assert data['adb_resolution']['self_healing'] is True
+          assert data['adb_resolution']['failure_class'] == 'FNX_PLAY_ASSET_PREFLIGHT_ADB_NOT_FOUND'
           for key, value in data['hard_boundaries'].items():
               assert value is False, f'{key} must remain false in preflight'
           print('FITNEXUS_PLAY_STORE_REAL_ASSETS_CONTRACT=PASS')
@@ -36,7 +38,7 @@ jobs:
         run: |
           ./03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_REAL_ASSETS_PREFLIGHT_V1.ps1 -ValidateOnly
 
-      - name: Guard Windows PowerShell 5.1 compatibility traps
+      - name: Guard Windows PowerShell 5.1 compatibility and ADB resolver regression
         shell: python
         run: |
           from pathlib import Path
@@ -44,7 +46,18 @@ jobs:
           forbidden = ['.ArgumentList', 'ForEach-Object -Parallel', '??', '?.']
           hits = [item for item in forbidden if item in text]
           assert not hits, f'PowerShell 5.1 incompatible token(s): {hits}'
-          assert 'Invoke-NativeCapture' in text
-          assert 'SCREENSHOT_CAPTURE_PERFORMED=false' in text
-          assert 'REMOTE_MUTATION_PERFORMED=false' in text
-          print('FITNEXUS_PLAY_STORE_REAL_ASSETS_PS51_GUARD=PASS')
+          required = [
+              'Invoke-NativeCapture',
+              'Resolve-AdbExecutable',
+              'ANDROID_SDK_ROOT',
+              'ANDROID_HOME',
+              'LOCALAPPDATA',
+              'FLUTTER_DOCTOR_ANDROID_SDK',
+              'FNX_PLAY_ASSET_PREFLIGHT_ADB_UNRESOLVED_AFTER_SDK_DISCOVERY',
+              'ADB_RESOLUTION_SOURCE=',
+              'SCREENSHOT_CAPTURE_PERFORMED=false',
+              'REMOTE_MUTATION_PERFORMED=false',
+          ]
+          missing = [item for item in required if item not in text]
+          assert not missing, f'ADB resolver/preflight regression token(s) missing: {missing}'
+          print('FITNEXUS_PLAY_STORE_REAL_ASSETS_PS51_ADB_RESOLVER_GUARD=PASS')
