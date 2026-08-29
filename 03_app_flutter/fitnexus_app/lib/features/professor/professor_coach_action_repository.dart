@@ -2,6 +2,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../auth/auth_service.dart';
 
+const bool fitNexusStoreCaptureMode = bool.fromEnvironment(
+  'FITNEXUS_STORE_CAPTURE',
+  defaultValue: false,
+);
+
 class CoachActionSummary {
   const CoachActionSummary({
     required this.activeActions,
@@ -187,6 +192,10 @@ class ProfessorCoachActionRepository {
   }
 
   Future<CoachActionSnapshot> fetchActionCenter() async {
+    if (fitNexusStoreCaptureMode) {
+      return _storeCaptureSnapshot();
+    }
+
     final String organizationId = await _organizationId();
     final dynamic response = await _client.rpc(
       'get_coach_action_center',
@@ -196,6 +205,7 @@ class ProfessorCoachActionRepository {
   }
 
   Future<void> completeForToday(CoachActionItem action) async {
+    if (fitNexusStoreCaptureMode) return;
     await _record(action: action, resolution: 'completed');
   }
 
@@ -203,6 +213,8 @@ class ProfessorCoachActionRepository {
     CoachActionItem action, {
     Duration duration = const Duration(days: 1),
   }) async {
+    if (fitNexusStoreCaptureMode) return;
+
     final DateTime until = DateTime.now().toUtc().add(duration);
     await _record(
       action: action,
@@ -229,6 +241,108 @@ class ProfessorCoachActionRepository {
       },
     );
   }
+}
+
+CoachActionSnapshot _storeCaptureSnapshot() {
+  final DateTime generatedAt = DateTime.utc(2026, 8, 29, 15, 0);
+  return CoachActionSnapshot(
+    summary: const CoachActionSummary(
+      activeActions: 3,
+      urgent: 1,
+      attention: 1,
+      setup: 0,
+      monitor: 1,
+      completedToday: 4,
+      snoozed: 1,
+    ),
+    actions: <CoachActionItem>[
+      CoachActionItem(
+        studentId: 'synthetic-marina-alves',
+        studentName: 'Marina Alves',
+        objective: 'Condicionamento',
+        level: 'Intermediário',
+        studentStatus: 'Ativo',
+        adherence: 62,
+        sessions30d: 10,
+        completed30d: 7,
+        lastSessionAt: DateTime.utc(2026, 8, 28, 18, 30),
+        priorityScore: 92,
+        priorityLabel: 'urgent',
+        actionType: 'review_feedback',
+        actionTitle: 'Revisar feedback antes do próximo treino',
+        actionReason:
+            'O último treino teve esforço acima do padrão recente e energia mais baixa. Revise o contexto antes de manter a progressão.',
+        target: 'feedback',
+        actionFingerprint: 'capture-marina-feedback-v1',
+        evidence: CoachActionEvidence(
+          perceivedExertion: 9,
+          energyScore: 2,
+          feedbackSubmittedAt: DateTime.utc(2026, 8, 28, 19, 10),
+          activePlanId: 'synthetic-plan-01',
+          activePlanName: 'Base de força • Semana 4',
+          hasActiveAccess: true,
+        ),
+        humanActionRequired: true,
+      ),
+      CoachActionItem(
+        studentId: 'synthetic-rafael-costa',
+        studentName: 'Rafael Costa',
+        objective: 'Força e consistência',
+        level: 'Avançado',
+        studentStatus: 'Ativo',
+        adherence: 78,
+        sessions30d: 14,
+        completed30d: 11,
+        lastSessionAt: DateTime.utc(2026, 8, 27, 7, 45),
+        priorityScore: 74,
+        priorityLabel: 'attention',
+        actionType: 'review_plan',
+        actionTitle: 'Confirmar continuidade da prescrição',
+        actionReason:
+            'A execução está consistente, mas houve duas sessões não concluídas nesta semana. Confira agenda e ajuste somente se fizer sentido.',
+        target: 'training',
+        actionFingerprint: 'capture-rafael-plan-v1',
+        evidence: const CoachActionEvidence(
+          perceivedExertion: 7,
+          energyScore: 4,
+          activePlanId: 'synthetic-plan-02',
+          activePlanName: 'Força total • Bloco B',
+          hasActiveAccess: true,
+        ),
+        humanActionRequired: true,
+      ),
+      CoachActionItem(
+        studentId: 'synthetic-ana-rocha',
+        studentName: 'Ana Rocha',
+        objective: 'Mobilidade e rotina',
+        level: 'Iniciante',
+        studentStatus: 'Ativo',
+        adherence: 91,
+        sessions30d: 12,
+        completed30d: 11,
+        lastSessionAt: DateTime.utc(2026, 8, 29, 6, 40),
+        priorityScore: 38,
+        priorityLabel: 'monitor',
+        actionType: 'maintain_monitoring',
+        actionTitle: 'Manter acompanhamento',
+        actionReason:
+            'Aderência alta e feedback estável. Nenhuma intervenção é necessária agora; apenas mantenha o acompanhamento.',
+        target: 'progress',
+        actionFingerprint: 'capture-ana-monitor-v1',
+        evidence: const CoachActionEvidence(
+          perceivedExertion: 6,
+          energyScore: 5,
+          activePlanId: 'synthetic-plan-03',
+          activePlanName: 'Mobilidade diária',
+          hasActiveAccess: true,
+        ),
+        humanActionRequired: true,
+      ),
+    ],
+    principle:
+        'O FitNexus prioriza e explica; o professor decide e executa.',
+    generatedAt: generatedAt,
+  );
 }
 
 Map<String, dynamic> _map(dynamic value) {
