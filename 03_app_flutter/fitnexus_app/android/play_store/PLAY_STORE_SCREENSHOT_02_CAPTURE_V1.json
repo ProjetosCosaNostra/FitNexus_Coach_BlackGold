@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "kind": "FITNEXUS_PLAY_STORE_SCREENSHOT_CAPTURE_CONTRACT",
+  "release_train_version": "0.9.0+2",
+  "application_id": "br.com.lafamigliaplayworks.fitnexuscoach",
+  "shot_id": "02_student_management",
+  "capture": {
+    "target_width_px": 1080,
+    "target_height_px": 1920,
+    "synthetic_data": true,
+    "real_user_data": false,
+    "production_ui_widget": "StudentAccessManagementPage",
+    "dart_define_shot": "02",
+    "output_filename": "02_student_management_1080x1920.png"
+  },
+  "evidence": {
+    "current_only_per_shot": true,
+    "sha256_required": true,
+    "receipt_required": true,
+    "production_release_restore_required": true
+  },
+  "hard_boundaries": {
+    "supabase_mutation_allowed": false,
+    "play_console_mutation_allowed": false,
+    "aab_upload_allowed": false,
+    "asset_publication_allowed": false,
+    "billing_activation_allowed": false,
+    "real_user_data_allowed": false
+  },
+  "next_gate": "VISUAL_REVIEW_SCREENSHOT_02_THEN_CAPTURE_03_TRAINING_PRESCRIPTION"
+}
