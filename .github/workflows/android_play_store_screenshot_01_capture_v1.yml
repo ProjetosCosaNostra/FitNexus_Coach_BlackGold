@@ -7,6 +7,7 @@ on:
       - '03_app_flutter/fitnexus_app/lib/store_capture_main.dart'
       - '03_app_flutter/fitnexus_app/lib/features/professor/professor_coach_action_repository.dart'
       - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_01_CAPTURE_V1.ps1'
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_01_PS51_DIMENSION_REPAIR_V1.ps1'
       - '.github/workflows/android_play_store_screenshot_01_capture_v1.yml'
   workflow_dispatch:
 
@@ -51,6 +52,7 @@ jobs:
           entry = Path('03_app_flutter/fitnexus_app/lib/store_capture_main.dart').read_text(encoding='utf-8')
           repo = Path('03_app_flutter/fitnexus_app/lib/features/professor/professor_coach_action_repository.dart').read_text(encoding='utf-8')
           runner = Path('03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_01_CAPTURE_V1.ps1').read_text(encoding='utf-8')
+          repair = Path('03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_01_PS51_DIMENSION_REPAIR_V1.ps1').read_text(encoding='utf-8')
 
           assert 'FITNEXUS_STORE_CAPTURE' in entry
           assert 'fitNexusStoreCaptureMode' in entry
@@ -81,6 +83,17 @@ jobs:
           assert '$localAppDataSdk' in runner
           assert '$userProfileSdk' in runner
 
+          # Windows PowerShell 5.1 preserves [byte] type through shifts in this code path,
+          # which truncates 1080 (0x00000438) to 56 and 1920 (0x00000780) to 128.
+          # The runtime repair must cast every PNG IHDR byte to [int] before shifting.
+          assert 'PS51_PNG_DIMENSION_REPAIR=ACTIVE' in repair
+          assert '([int]$Bytes[$Offset]) -shl 24' in repair
+          assert '([int]$Bytes[$Offset + 1]) -shl 16' in repair
+          assert '([int]$Bytes[$Offset + 2]) -shl 8' in repair
+          assert '([int]$Bytes[$Offset + 3])' in repair
+          assert 'FITNEXUS_PLAY_STORE_SCREENSHOT_01_CAPTURE_V1.__ps51_fixed_' in repair
+
           print('FITNEXUS_PLAY_SCREENSHOT_01_ISOLATION_GUARD=PASS')
           print('FITNEXUS_PLAY_SCREENSHOT_01_PS51_INLINE_IF_GUARD=PASS')
           print('FITNEXUS_PLAY_SCREENSHOT_01_FAILSAFE_RESTORE_GUARD=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_01_PS51_PNG_DIMENSION_GUARD=PASS')
