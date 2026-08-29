@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "kind": "FITNEXUS_PLAY_STORE_REAL_ASSETS_PREFLIGHT",
   "project": "FitNexus Coach BlackGold",
   "application_id": "br.com.lafamigliaplayworks.fitnexuscoach",
@@ -11,11 +11,21 @@
     "exactly_one_authorized_device": true,
     "canonical_package_installed": true
   },
+  "adb_resolution": {
+    "self_healing": true,
+    "failure_class": "FNX_PLAY_ASSET_PREFLIGHT_ADB_NOT_FOUND",
+    "root_cause": "The original runner trusted PATH as the only ADB authority even when Android Studio/SDK and an emulator were already installed and usable outside PATH.",
+    "prevention": "Resolve ADB from PATH, ANDROID_SDK_ROOT, ANDROID_HOME, the standard Windows Android SDK locations under LOCALAPPDATA/USERPROFILE, and Flutter doctor SDK evidence before failing closed.",
+    "regression_guard": "CI requires the resolver function and all canonical discovery sources; future refactors cannot silently return to PATH-only discovery.",
+    "terminal_failure_class": "FNX_PLAY_ASSET_PREFLIGHT_ADB_UNRESOLVED_AFTER_SDK_DISCOVERY"
+  },
   "evidence": {
     "output_root": "%USERPROFILE%/Documents/FitNexus_Coach_BlackGold_EXTERNAL/play_store_assets/current",
     "receipt": "FITNEXUS_PLAY_STORE_REAL_ASSETS_PREFLIGHT_RECEIPT_V1.json",
     "current_only": true,
-    "sha256_receipt": true
+    "sha256_receipt": true,
+    "records_adb_resolution_source": true,
+    "hashes_adb_path_instead_of_storing_plain_path": true
   },
   "hard_boundaries": {
     "captures_store_screenshots": false,
