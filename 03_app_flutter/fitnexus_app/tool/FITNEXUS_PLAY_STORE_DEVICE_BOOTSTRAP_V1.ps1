@@ -63,46 +63,52 @@ function Write-Utf8NoBom {
 }
 
 function Resolve-AdbExecutable {
-    $candidates = New-Object System.Collections.Generic.List[object]
-
-    $pathCommand = Get-Command adb -ErrorAction SilentlyContinue
-    if ($null -ne $pathCommand -and (Test-Path -LiteralPath $pathCommand.Source -PathType Leaf)) {
-        $candidates.Add([pscustomobject]@{ Path = [string]$pathCommand.Source; Source = 'PATH' })
+    $command = Get-Command adb -ErrorAction SilentlyContinue
+    if ($null -ne $command -and -not [string]::IsNullOrWhiteSpace([string]$command.Source) -and (Test-Path -LiteralPath ([string]$command.Source) -PathType Leaf)) {
+        return [pscustomobject]@{ Path = [string]$command.Source; Source = 'PATH' }
     }
 
-    foreach ($rootInfo in @(
-        [pscustomobject]@{ Root = $env:ANDROID_SDK_ROOT; Source = 'ANDROID_SDK_ROOT' },
-        [pscustomobject]@{ Root = $env:ANDROID_HOME; Source = 'ANDROID_HOME' },
-        [pscustomobject]@{ Root = (if ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA 'Android\Sdk' } else { '' }); Source = 'LOCALAPPDATA_STANDARD' },
-        [pscustomobject]@{ Root = (if ($env:USERPROFILE) { Join-Path $env:USERPROFILE 'AppData\Local\Android\Sdk' } else { '' }); Source = 'USERPROFILE_STANDARD' }
-    )) {
-        if (-not [string]::IsNullOrWhiteSpace([string]$rootInfo.Root)) {
-            $candidate = Join-Path ([string]$rootInfo.Root) 'platform-tools\adb.exe'
-            if (Test-Path -LiteralPath $candidate -PathType Leaf) {
-                $candidates.Add([pscustomobject]@{ Path = $candidate; Source = [string]$rootInfo.Source })
-            }
+    $sdkRoots = @()
+    if (-not [string]::IsNullOrWhiteSpace($env:ANDROID_SDK_ROOT)) { $sdkRoots += [string]$env:ANDROID_SDK_ROOT }
+    if (-not [string]::IsNullOrWhiteSpace($env:ANDROID_HOME)) { $sdkRoots += [string]$env:ANDROID_HOME }
+    if (-not [string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) { $sdkRoots += (Join-Path $env:LOCALAPPDATA 'Android\Sdk') }
+    if (-not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) { $sdkRoots += (Join-Path $env:USERPROFILE 'AppData\Local\Android\Sdk') }
+
+    $seen = @{}
+    foreach ($root in $sdkRoots) {
+        if ([string]::IsNullOrWhiteSpace($root)) { continue }
+        $normalized = $root.Trim().TrimEnd('\')
+        $key = $normalized.ToLowerInvariant()
+        if ($seen.ContainsKey($key)) { continue }
+        $seen[$key] = $true
+        $candidate = Join-Path $normalized 'platform-tools\adb.exe'
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+            return [pscustomobject]@{ Path = $candidate; Source = 'ANDROID_SDK_CANDIDATE' }
         }
     }
 
-    if ($candidates.Count -eq 0) {
-        $flutterCommand = Get-Command flutter -ErrorAction SilentlyContinue
-        if ($null -ne $flutterCommand) {
-            $doctor = Invoke-NativeCapture -FilePath $flutterCommand.Source -Arguments @('doctor', '-v')
-            if ($doctor.ExitCode -eq 0 -and $doctor.StdOut -match 'Android SDK at\s+([^\r\n]+)') {
-                $sdk = $Matches[1].Trim()
-                $candidate = Join-Path $sdk 'platform-tools\adb.exe'
-                if (Test-Path -LiteralPath $candidate -PathType Leaf) {
-                    $candidates.Add([pscustomobject]@{ Path = $candidate; Source = 'FLUTTER_DOCTOR_ANDROID_SDK' })
+    $flutterCommand = Get-Command flutter -ErrorAction SilentlyContinue
+    if ($null -ne $flutterCommand -and -not [string]::IsNullOrWhiteSpace([string]$flutterCommand.Source)) {
+        try {
+            $doctor = Invoke-NativeCapture -FilePath ([string]$flutterCommand.Source) -Arguments @('doctor', '-v')
+            if ($doctor.ExitCode -eq 0) {
+                foreach ($line in ($doctor.StdOut -split "`r?`n")) {
+                    if ($line -match 'Android SDK at\s+(.+)$') {
+                        $sdk = ([string]$Matches[1]).Trim()
+                        $candidate = Join-Path $sdk 'platform-tools\adb.exe'
+                        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+                            return [pscustomobject]@{ Path = $candidate; Source = 'FLUTTER_DOCTOR_ANDROID_SDK' }
+                        }
+                    }
                 }
             }
         }
+        catch {
+            # Discovery miss only; final resolver remains fail-closed.
+        }
     }
 
-    if ($candidates.Count -eq 0) {
-        throw 'FNX_PLAY_DEVICE_BOOTSTRAP_ADB_NOT_FOUND'
-    }
-
-    return $candidates[0]
+    throw 'FNX_PLAY_DEVICE_BOOTSTRAP_ADB_NOT_FOUND'
 }
 
 $AppRoot = Split-Path -Parent $PSScriptRoot
@@ -146,6 +152,7 @@ try {
     $adbInfo = Resolve-AdbExecutable
     $Adb = [string]$adbInfo.Path
     $AdbSource = [string]$adbInfo.Source
+    Write-Output ('BOOTSTRAP_ADB_RESOLUTION_SOURCE=' + $AdbSource)
 
     $devicesResult = Invoke-NativeCapture -FilePath $Adb -Arguments @('devices')
     if ($devicesResult.ExitCode -ne 0) {
@@ -169,6 +176,7 @@ try {
     $apkBytes = 0
 
     if (-not $alreadyInstalled) {
+        Write-Output 'BOOTSTRAP_PHASE=PREPARE_SIGNED_RELEASE_APK'
         $flutter = Get-Command flutter -ErrorAction SilentlyContinue
         if ($null -eq $flutter) {
             throw 'FNX_PLAY_DEVICE_BOOTSTRAP_FLUTTER_NOT_FOUND'
@@ -207,11 +215,14 @@ try {
         ) -join [Environment]::NewLine
         Write-Utf8NoBom -Path $KeyPropertiesFile -Content ($keyProperties + [Environment]::NewLine)
 
-        $pubGet = Invoke-NativeCapture -FilePath $flutter.Source -Arguments @('pub', 'get') -WorkingDirectory $AppRoot
+        Write-Output 'BOOTSTRAP_PHASE=FLUTTER_PUB_GET'
+        $pubGet = Invoke-NativeCapture -FilePath ([string]$flutter.Source) -Arguments @('pub', 'get') -WorkingDirectory $AppRoot
         if ($pubGet.ExitCode -ne 0) {
             throw ('FNX_PLAY_DEVICE_BOOTSTRAP_FLUTTER_PUB_GET_EXIT_' + $pubGet.ExitCode)
         }
-        $build = Invoke-NativeCapture -FilePath $flutter.Source -Arguments @('build', 'apk', '--release') -WorkingDirectory $AppRoot
+
+        Write-Output 'BOOTSTRAP_PHASE=BUILD_RELEASE_APK'
+        $build = Invoke-NativeCapture -FilePath ([string]$flutter.Source) -Arguments @('build', 'apk', '--release') -WorkingDirectory $AppRoot
         if ($build.ExitCode -ne 0) {
             throw ('FNX_PLAY_DEVICE_BOOTSTRAP_RELEASE_APK_BUILD_EXIT_' + $build.ExitCode)
         }
@@ -223,6 +234,7 @@ try {
         $apkSha = (Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash.ToLowerInvariant()
         $apkBytes = (Get-Item -LiteralPath $apk).Length
 
+        Write-Output 'BOOTSTRAP_PHASE=INSTALL_RELEASE_APK'
         $install = Invoke-NativeCapture -FilePath $Adb -Arguments @('-s', $Serial, 'install', '-r', $apk)
         if ($install.ExitCode -ne 0 -or $install.StdOut -notmatch 'Success') {
             throw ('FNX_PLAY_DEVICE_BOOTSTRAP_ADB_INSTALL_FAILED_' + $install.ExitCode)
@@ -275,7 +287,6 @@ try {
         installed_version_code = $versionCode
         release_apk_sha256 = $apkSha
         release_apk_bytes = $apkBytes
-        temporary_key_properties_removed = $true
         remote_mutation_performed = $false
         play_console_mutation_performed = $false
         supabase_mutation_performed = $false
