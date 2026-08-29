@@ -166,6 +166,37 @@ function Install-Apk {
     }
 }
 
+function Assert-CanonicalReleaseInstalled {
+    param(
+        [Parameter(Mandatory = $true)][string]$Adb,
+        [Parameter(Mandatory = $true)][string]$Serial,
+        [Parameter(Mandatory = $true)][string]$PackageId,
+        [Parameter(Mandatory = $true)][string]$FailurePrefix
+    )
+
+    $package = Invoke-NativeCapture -FilePath $Adb -Arguments @('-s', $Serial, 'shell', 'pm', 'path', $PackageId)
+    if ($package.ExitCode -ne 0 -or $package.StdOut -notmatch 'package:') {
+        throw ($FailurePrefix + '_PACKAGE_MISSING')
+    }
+
+    $dump = Invoke-NativeCapture -FilePath $Adb -Arguments @('-s', $Serial, 'shell', 'dumpsys', 'package', $PackageId)
+    if ($dump.ExitCode -ne 0) {
+        throw ($FailurePrefix + '_DUMPSYS_EXIT_' + $dump.ExitCode)
+    }
+    $versionName = ''
+    $versionCode = ''
+    if ($dump.StdOut -match 'versionName=([^\s]+)') { $versionName = [string]$Matches[1] }
+    if ($dump.StdOut -match 'versionCode=(\d+)') { $versionCode = [string]$Matches[1] }
+    if ($versionName -ne '0.9.0' -or $versionCode -ne '2') {
+        throw ($FailurePrefix + '_VERSION_MISMATCH_' + $versionName + '_' + $versionCode)
+    }
+
+    return [pscustomobject]@{
+        VersionName = $versionName
+        VersionCode = $versionCode
+    }
+}
+
 $AppRoot = Split-Path -Parent $PSScriptRoot
 $AndroidDir = Join-Path $AppRoot 'android'
 $ContractPath = Join-Path $AndroidDir 'play_store\PLAY_STORE_SCREENSHOT_01_CAPTURE_V1.json'
@@ -219,6 +250,7 @@ if ($ValidateOnly) {
     Write-Output 'TARGET=1080x1920'
     Write-Output 'SYNTHETIC_DATA=true'
     Write-Output 'PRODUCTION_UI_WIDGET=ProfessorCoachActionCenterPage'
+    Write-Output 'FAILSAFE_PRODUCTION_RESTORE=ENABLED'
     Write-Output 'REMOTE_MUTATION_PERFORMED=false'
     exit 0
 }
@@ -230,6 +262,8 @@ $originalOverride = ''
 $displayChanged = $false
 $captureInstalled = $false
 $productionRestored = $false
+$productionApk = $null
+$restoreFailure = $null
 $remoteScreenshot = '/sdcard/Download/fitnexus_play_screenshot_01.png'
 $scratch = Join-Path $env:TEMP ('FNX_PLAY_SCREENSHOT_01_' + [guid]::NewGuid().ToString('N'))
 $failure = $null
@@ -237,6 +271,8 @@ $screenshotPath = $null
 $receiptPath = $null
 $receiptSha = ''
 $screenshotSha = ''
+$versionName = ''
+$versionCode = ''
 
 try {
     if ($env:OS -ne 'Windows_NT') {
@@ -393,29 +429,16 @@ try {
 
     Write-Output 'SCREENSHOT_01_PHASE=RESTORE_PRODUCTION_APK'
     Install-Apk -Adb $adb -Serial $serial -Apk $productionApk -FailureClass 'FNX_PLAY_SCREENSHOT_01_PRODUCTION_RESTORE_FAILED'
+    $restored = Assert-CanonicalReleaseInstalled -Adb $adb -Serial $serial -PackageId $PackageId -FailurePrefix 'FNX_PLAY_SCREENSHOT_01_PRODUCTION_RESTORE'
+    $versionName = [string]$restored.VersionName
+    $versionCode = [string]$restored.VersionCode
     $productionRestored = $true
-
-    $packageAfter = Invoke-NativeCapture -FilePath $adb -Arguments @('-s', $serial, 'shell', 'pm', 'path', $PackageId)
-    if ($packageAfter.ExitCode -ne 0 -or $packageAfter.StdOut -notmatch 'package:') {
-        throw 'FNX_PLAY_SCREENSHOT_01_PRODUCTION_PACKAGE_NOT_RESTORED'
-    }
-
-    $dump = Invoke-NativeCapture -FilePath $adb -Arguments @('-s', $serial, 'shell', 'dumpsys', 'package', $PackageId)
-    $versionName = ''
-    $versionCode = ''
-    if ($dump.ExitCode -eq 0) {
-        if ($dump.StdOut -match 'versionName=([^\s]+)') { $versionName = [string]$Matches[1] }
-        if ($dump.StdOut -match 'versionCode=(\d+)') { $versionCode = [string]$Matches[1] }
-    }
-    if ($versionName -ne '0.9.0' -or $versionCode -ne '2') {
-        throw ('FNX_PLAY_SCREENSHOT_01_RESTORED_VERSION_MISMATCH_' + $versionName + '_' + $versionCode)
-    }
 
     $modelResult = Invoke-NativeCapture -FilePath $adb -Arguments @('-s', $serial, 'shell', 'getprop', 'ro.product.model')
     $model = if ($modelResult.ExitCode -eq 0) { $modelResult.StdOut.Trim() } else { '' }
 
     $receipt = [ordered]@{
-        schema_version = 1
+        schema_version = 2
         kind = 'FITNEXUS_PLAY_STORE_SCREENSHOT_01_RECEIPT'
         generated_at_utc = [DateTime]::UtcNow.ToString('o')
         result = 'PASS'
@@ -438,6 +461,7 @@ try {
         installed_version_code = $versionCode
         capture_build_installed_temporarily = $captureInstalled
         production_release_restored = $productionRestored
+        failsafe_production_restore_enabled = $true
         screenshot_capture_performed = $true
         supabase_mutation_performed = $false
         play_console_mutation_performed = $false
@@ -458,6 +482,20 @@ finally {
             [void](Invoke-NativeCapture -FilePath $adb -Arguments @('-s', $serial, 'shell', 'rm', '-f', $remoteScreenshot))
         }
         catch { }
+
+        if ($captureInstalled -and -not $productionRestored -and -not [string]::IsNullOrWhiteSpace([string]$productionApk) -and (Test-Path -LiteralPath $productionApk -PathType Leaf)) {
+            try {
+                Write-Output 'SCREENSHOT_01_PHASE=FAILSAFE_RESTORE_PRODUCTION_APK'
+                Install-Apk -Adb $adb -Serial $serial -Apk $productionApk -FailureClass 'FNX_PLAY_SCREENSHOT_01_FAILSAFE_RESTORE_INSTALL_FAILED'
+                $failsafeRestored = Assert-CanonicalReleaseInstalled -Adb $adb -Serial $serial -PackageId $PackageId -FailurePrefix 'FNX_PLAY_SCREENSHOT_01_FAILSAFE_RESTORE'
+                $versionName = [string]$failsafeRestored.VersionName
+                $versionCode = [string]$failsafeRestored.VersionCode
+                $productionRestored = $true
+            }
+            catch {
+                $restoreFailure = $_.Exception.Message
+            }
+        }
 
         if ($displayChanged) {
             try {
@@ -484,6 +522,15 @@ finally {
     $plainPassword = $null
 }
 
+if ($null -ne $restoreFailure) {
+    if ($null -eq $failure) {
+        $failure = $restoreFailure
+    }
+    else {
+        $failure = $failure + ';FAILSAFE_RESTORE=' + $restoreFailure
+    }
+}
+
 if ($null -ne $failure) {
     Write-Output 'FITNEXUS_PLAY_STORE_SCREENSHOT_01_CAPTURE=FAIL'
     Write-Output ('FAILURE_CLASS=' + $failure)
@@ -500,6 +547,7 @@ Write-Output 'SCREENSHOT_SIZE=1080x1920'
 Write-Output ('RECEIPT=' + $receiptPath)
 Write-Output ('RECEIPT_SHA256=' + $receiptSha)
 Write-Output ('PRODUCTION_RELEASE_RESTORED=' + $productionRestored.ToString().ToLowerInvariant())
+Write-Output 'FAILSAFE_PRODUCTION_RESTORE=ENABLED'
 Write-Output 'SYNTHETIC_DATA=true'
 Write-Output 'REAL_USER_DATA=false'
 Write-Output 'PLAY_CONSOLE_MUTATION_PERFORMED=false'
