@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "kind": "NON_ATTESTING_SIGNED_AAB_RUNNER_CONTRACT",
   "project": "FitNexus Coach BlackGold",
   "runner": {
@@ -7,6 +7,7 @@
     "single_command_required": true,
     "platform": "Windows PowerShell",
     "validate_only_mode_required": true,
+    "validate_only_platform_neutral_required": true,
     "windows_powershell_5_1_compatibility_required": true
   },
   "secret_boundary": {
@@ -15,7 +16,8 @@
     "key_properties_must_be_gitignored": true,
     "persistent_keystore_location": "%USERPROFILE%/Documents/FitNexus_Coach_BlackGold_EXTERNAL/play_signing/authority",
     "persistent_password_storage": "WINDOWS_DPAPI_CURRENT_USER",
-    "transient_key_properties_cleanup_required": true
+    "transient_key_properties_cleanup_required": true,
+    "execution_only_windows_path_binding_after_validate_only": true
   },
   "build_pipeline": {
     "flutter_pub_get": true,
@@ -43,6 +45,14 @@
       "permanent_rule": "Regression checks for dangerous native-command forms must be command-aware and must not classify comments or documentation as executable behavior.",
       "regression_required": true,
       "replacement_strategy": "Inspect executable-looking git ls-files invocation lines and separately assert the safe membership-query form."
+    },
+    {
+      "failure_class": "FNX-VALIDATEONLY-EAGER-WINDOWS-ENV-BINDING-146",
+      "observed_on": "2026-08-29",
+      "root_cause": "The runner resolved Windows-only external signing authority paths from USERPROFILE before the platform-neutral ValidateOnly early exit. On Linux CI, USERPROFILE was null, so ValidateOnly failed before validation could complete.",
+      "permanent_rule": "Validate-only paths must not touch platform-specific environment variables, secret stores, keystore locations, or execution-only filesystem state. Bind those values only after ValidateOnly exits and after the Windows platform guard.",
+      "regression_required": true,
+      "replacement_strategy": "Execute -ValidateOnly on non-Windows CI and require USERPROFILE-based external signing authority binding to occur after the ValidateOnly exit."
     }
   ],
   "publication_boundary": {
