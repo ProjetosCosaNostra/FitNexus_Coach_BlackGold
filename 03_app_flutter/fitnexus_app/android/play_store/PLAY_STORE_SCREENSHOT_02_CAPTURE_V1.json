@@ -15,9 +15,11 @@
     "visual_evidence": {
       "content_aware_required": true,
       "minimum_file_bytes_corruption_floor": 20000,
-      "pixel_color_diversity_required": true,
+      "unique_color_count_hard_gate": false,
       "visible_non_dark_content_required": true,
       "blackgold_signal_required": true,
+      "structural_transition_required": true,
+      "multi_band_vertical_occupancy_required": true,
       "human_visual_review_before_publication": true
     }
   },
@@ -35,5 +37,5 @@
     "billing_activation_allowed": false,
     "real_user_data_allowed": false
   },
-  "next_gate": "VISUAL_REVIEW_SCREENSHOT_02_THEN_CAPTURE_03_TRAINING_PRESCRIPTION"
+  "next_gate": "HUMAN_VISUAL_REVIEW_SCREENSHOTS_01_02_THEN_CAPTURE_03_TRAINING_PRESCRIPTION"
 }
