@@ -1,0 +1,50 @@
+name: Android Play Store Real Assets Preflight V1
+
+on:
+  pull_request:
+    paths:
+      - '03_app_flutter/fitnexus_app/android/play_store/PLAY_STORE_REAL_ASSETS_PREFLIGHT_V1.json'
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_REAL_ASSETS_PREFLIGHT_V1.ps1'
+      - '.github/workflows/android_play_store_real_assets_preflight_v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate contract structure
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          path = Path('03_app_flutter/fitnexus_app/android/play_store/PLAY_STORE_REAL_ASSETS_PREFLIGHT_V1.json')
+          data = json.loads(path.read_text(encoding='utf-8'))
+          assert data['application_id'] == 'br.com.lafamigliaplayworks.fitnexuscoach'
+          assert data['evidence']['current_only'] is True
+          for key, value in data['hard_boundaries'].items():
+              assert value is False, f'{key} must remain false in preflight'
+          print('FITNEXUS_PLAY_STORE_REAL_ASSETS_CONTRACT=PASS')
+
+      - name: Validate PowerShell runner without Windows or ADB binding
+        shell: pwsh
+        run: |
+          ./03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_REAL_ASSETS_PREFLIGHT_V1.ps1 -ValidateOnly
+
+      - name: Guard Windows PowerShell 5.1 compatibility traps
+        shell: python
+        run: |
+          from pathlib import Path
+          text = Path('03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_REAL_ASSETS_PREFLIGHT_V1.ps1').read_text(encoding='utf-8')
+          forbidden = ['.ArgumentList', 'ForEach-Object -Parallel', '??', '?.']
+          hits = [item for item in forbidden if item in text]
+          assert not hits, f'PowerShell 5.1 incompatible token(s): {hits}'
+          assert 'Invoke-NativeCapture' in text
+          assert 'SCREENSHOT_CAPTURE_PERFORMED=false' in text
+          assert 'REMOTE_MUTATION_PERFORMED=false' in text
+          print('FITNEXUS_PLAY_STORE_REAL_ASSETS_PS51_GUARD=PASS')
