@@ -1,0 +1,70 @@
+name: Android Play Store Screenshot 01 Capture V1
+
+on:
+  pull_request:
+    paths:
+      - '03_app_flutter/fitnexus_app/android/play_store/PLAY_STORE_SCREENSHOT_01_CAPTURE_V1.json'
+      - '03_app_flutter/fitnexus_app/lib/store_capture_main.dart'
+      - '03_app_flutter/fitnexus_app/lib/features/professor/professor_coach_action_repository.dart'
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_01_CAPTURE_V1.ps1'
+      - '.github/workflows/android_play_store_screenshot_01_capture_v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate screenshot contract
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          path = Path('03_app_flutter/fitnexus_app/android/play_store/PLAY_STORE_SCREENSHOT_01_CAPTURE_V1.json')
+          data = json.loads(path.read_text(encoding='utf-8'))
+          assert data['application_id'] == 'br.com.lafamigliaplayworks.fitnexuscoach'
+          assert data['capture']['target_width_px'] == 1080
+          assert data['capture']['target_height_px'] == 1920
+          assert data['capture']['synthetic_data'] is True
+          assert data['capture']['production_ui_widget'] == 'ProfessorCoachActionCenterPage'
+          assert data['evidence']['current_only'] is True
+          for key, value in data['hard_boundaries'].items():
+              assert value is False, f'{key} must remain false'
+          print('FITNEXUS_PLAY_SCREENSHOT_01_CONTRACT=PASS')
+
+      - name: Validate capture runner without local Android binding
+        shell: pwsh
+        run: |
+          ./03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_01_CAPTURE_V1.ps1 -ValidateOnly
+
+      - name: Guard production/capture isolation
+        shell: python
+        run: |
+          from pathlib import Path
+
+          entry = Path('03_app_flutter/fitnexus_app/lib/store_capture_main.dart').read_text(encoding='utf-8')
+          repo = Path('03_app_flutter/fitnexus_app/lib/features/professor/professor_coach_action_repository.dart').read_text(encoding='utf-8')
+          runner = Path('03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_01_CAPTURE_V1.ps1').read_text(encoding='utf-8')
+
+          assert 'FITNEXUS_STORE_CAPTURE' in entry
+          assert 'fitNexusStoreCaptureMode' in entry
+          assert 'Supabase.initialize' not in entry
+          assert "bool.fromEnvironment(" in repo
+          assert "'FITNEXUS_STORE_CAPTURE'" in repo
+          assert 'if (fitNexusStoreCaptureMode)' in repo
+          assert '--dart-define=FITNEXUS_STORE_CAPTURE=true' in runner
+          assert "'1080x1920'" not in runner or 'TargetWidth = 1080' in runner
+          assert 'BUILD_PRODUCTION_RESTORE_APK' in runner
+          assert 'RESTORE_PRODUCTION_APK' in runner
+          assert 'PRODUCTION_RELEASE_RESTORED=' in runner
+          assert 'SUPABASE_MUTATION_PERFORMED=false' in runner
+          assert 'PLAY_CONSOLE_MUTATION_PERFORMED=false' in runner
+          forbidden = ['.ArgumentList', 'ForEach-Object -Parallel', '??', '?.']
+          hits = [token for token in forbidden if token in runner]
+          assert not hits, f'PowerShell 5.1 incompatible token(s): {hits}'
+          print('FITNEXUS_PLAY_SCREENSHOT_01_ISOLATION_GUARD=PASS')
