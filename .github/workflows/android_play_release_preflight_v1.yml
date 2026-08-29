@@ -48,8 +48,14 @@ jobs:
         run: |
           $source = Get-Content -LiteralPath 'tool/FITNEXUS_PLAY_SIGNED_AAB_RUNNER_V1.ps1' -Raw
           $null = [scriptblock]::Create($source)
-          if ($source -match '--error-unmatch') {
-            throw 'FNX-PS51-GIT-LS-FILES-EXPECTED-MISS-NATIVECOMMANDERROR-144 regression: forbidden --error-unmatch token returned.'
+          $sourceLines = @($source -split "`r?`n")
+          $forbiddenNativeInvocations = @(
+            $sourceLines | Where-Object {
+              $_ -match '^\s*&\s+git\s+ls-files\b.*--error-unmatch'
+            }
+          )
+          if ($forbiddenNativeInvocations.Count -gt 0) {
+            throw 'FNX-PS51-GIT-LS-FILES-EXPECTED-MISS-NATIVECOMMANDERROR-144 regression: forbidden native git ls-files error path returned.'
           }
           if ($source -notmatch '\$trackedEntries\s*=\s*@\(& git ls-files -- \$GitPath\)') {
             throw 'PS5.1-safe non-erroring git ls-files membership check is missing.'
@@ -61,6 +67,7 @@ jobs:
           Write-Output 'FITNEXUS_SIGNED_AAB_RUNNER_PARSE=PASS'
           Write-Output 'FITNEXUS_SIGNED_AAB_RUNNER_VALIDATE_ONLY=PASS'
           Write-Output 'PS51_EXPECTED_NEGATIVE_NATIVE_STDERR_REGRESSION=PASS'
+          Write-Output 'CI_COMMAND_AWARE_REGRESSION=PASS'
           Write-Output 'SIGNED_AAB_EXECUTION_PERFORMED=false'
 
       - name: Assert signing secrets are absent from CI checkout
