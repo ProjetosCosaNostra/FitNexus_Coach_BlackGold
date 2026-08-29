@@ -49,6 +49,63 @@ function Get-TextSha256 {
     }
 }
 
+function Resolve-AdbExecutable {
+    $command = Get-Command adb -ErrorAction SilentlyContinue
+    if ($null -ne $command -and -not [string]::IsNullOrWhiteSpace([string]$command.Source) -and (Test-Path -LiteralPath ([string]$command.Source))) {
+        return [pscustomobject]@{
+            Path = [string]$command.Source
+            Source = 'PATH'
+        }
+    }
+
+    $sdkRoots = @()
+    if (-not [string]::IsNullOrWhiteSpace($env:ANDROID_SDK_ROOT)) { $sdkRoots += [string]$env:ANDROID_SDK_ROOT }
+    if (-not [string]::IsNullOrWhiteSpace($env:ANDROID_HOME)) { $sdkRoots += [string]$env:ANDROID_HOME }
+    if (-not [string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) { $sdkRoots += (Join-Path $env:LOCALAPPDATA 'Android\Sdk') }
+    if (-not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) { $sdkRoots += (Join-Path $env:USERPROFILE 'AppData\Local\Android\Sdk') }
+
+    $seen = @{}
+    foreach ($root in $sdkRoots) {
+        if ([string]::IsNullOrWhiteSpace($root)) { continue }
+        $normalized = $root.Trim().TrimEnd('\')
+        if ($seen.ContainsKey($normalized.ToLowerInvariant())) { continue }
+        $seen[$normalized.ToLowerInvariant()] = $true
+        $candidate = Join-Path $normalized 'platform-tools\adb.exe'
+        if (Test-Path -LiteralPath $candidate) {
+            return [pscustomobject]@{
+                Path = $candidate
+                Source = 'ANDROID_SDK_CANDIDATE'
+            }
+        }
+    }
+
+    $flutter = Get-Command flutter -ErrorAction SilentlyContinue
+    if ($null -ne $flutter -and -not [string]::IsNullOrWhiteSpace([string]$flutter.Source)) {
+        try {
+            $doctor = Invoke-NativeCapture -FilePath ([string]$flutter.Source) -Arguments @('doctor', '-v')
+            if ($doctor.ExitCode -eq 0) {
+                foreach ($line in ($doctor.StdOut -split "`r?`n")) {
+                    if ($line -match 'Android SDK at\s+(.+)$') {
+                        $doctorRoot = ([string]$Matches[1]).Trim()
+                        $doctorCandidate = Join-Path $doctorRoot 'platform-tools\adb.exe'
+                        if (Test-Path -LiteralPath $doctorCandidate) {
+                            return [pscustomobject]@{
+                                Path = $doctorCandidate
+                                Source = 'FLUTTER_DOCTOR_ANDROID_SDK'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch {
+            # Expected discovery miss: continue fail-closed without hiding the final resolver outcome.
+        }
+    }
+
+    return $null
+}
+
 $AppRoot = Split-Path -Parent $PSScriptRoot
 $ContractPath = Join-Path $AppRoot 'android\play_store\PLAY_STORE_REAL_ASSETS_PREFLIGHT_V1.json'
 if (-not (Test-Path -LiteralPath $ContractPath)) {
@@ -74,6 +131,7 @@ if ([bool]$Contract.hard_boundaries.captures_store_screenshots -or
 if ($ValidateOnly) {
     Write-Output 'FITNEXUS_PLAY_STORE_REAL_ASSETS_PREFLIGHT_VALIDATE_ONLY=PASS'
     Write-Output ('APPLICATION_ID=' + $PackageId)
+    Write-Output 'ADB_RESOLVER=PATH+ANDROID_SDK_ROOT+ANDROID_HOME+LOCALAPPDATA+USERPROFILE+FLUTTER_DOCTOR'
     Write-Output 'REMOTE_MUTATION_PERFORMED=false'
     Write-Output 'SCREENSHOT_CAPTURE_PERFORMED=false'
     exit 0
@@ -84,11 +142,12 @@ try {
         throw 'FNX_PLAY_ASSET_PREFLIGHT_WINDOWS_REQUIRED'
     }
 
-    $AdbCommand = Get-Command adb -ErrorAction SilentlyContinue
-    if ($null -eq $AdbCommand) {
-        throw 'FNX_PLAY_ASSET_PREFLIGHT_ADB_NOT_FOUND'
+    $AdbResolution = Resolve-AdbExecutable
+    if ($null -eq $AdbResolution) {
+        throw 'FNX_PLAY_ASSET_PREFLIGHT_ADB_UNRESOLVED_AFTER_SDK_DISCOVERY'
     }
-    $Adb = [string]$AdbCommand.Source
+    $Adb = [string]$AdbResolution.Path
+    $AdbResolutionSource = [string]$AdbResolution.Source
 
     $DevicesResult = Invoke-NativeCapture -FilePath $Adb -Arguments @('devices')
     if ($DevicesResult.ExitCode -ne 0) {
@@ -146,12 +205,14 @@ try {
 
     $ReceiptPath = Join-Path $Current 'FITNEXUS_PLAY_STORE_REAL_ASSETS_PREFLIGHT_RECEIPT_V1.json'
     $Receipt = [ordered]@{
-        schema_version = 1
+        schema_version = 2
         kind = 'FITNEXUS_PLAY_STORE_REAL_ASSETS_PREFLIGHT_RECEIPT'
         generated_at_utc = [DateTime]::UtcNow.ToString('o')
         result = 'PASS'
         application_id = $PackageId
         release_train_version = [string]$Contract.release_train_version
+        adb_resolution_source = $AdbResolutionSource
+        adb_path_sha256 = (Get-TextSha256 -Value $Adb)
         device_serial_sha256 = (Get-TextSha256 -Value $Serial)
         device_model = $Model
         display_width_px = $DisplayWidth
@@ -172,6 +233,7 @@ try {
 
     Write-Output 'FITNEXUS_PLAY_STORE_REAL_ASSETS_PREFLIGHT=PASS'
     Write-Output ('APPLICATION_ID=' + $PackageId)
+    Write-Output ('ADB_RESOLUTION_SOURCE=' + $AdbResolutionSource)
     Write-Output ('DEVICE_MODEL=' + $Model)
     Write-Output ('DISPLAY_SIZE=' + $DisplayWidth + 'x' + $DisplayHeight)
     Write-Output ('INSTALLED_VERSION_NAME=' + $VersionName)
