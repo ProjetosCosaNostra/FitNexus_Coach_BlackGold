@@ -11,7 +11,15 @@
     "real_user_data": false,
     "production_ui_widget": "StudentAccessManagementPage",
     "dart_define_shot": "02",
-    "output_filename": "02_student_management_1080x1920.png"
+    "output_filename": "02_student_management_1080x1920.png",
+    "visual_evidence": {
+      "content_aware_required": true,
+      "minimum_file_bytes_corruption_floor": 20000,
+      "pixel_color_diversity_required": true,
+      "visible_non_dark_content_required": true,
+      "blackgold_signal_required": true,
+      "human_visual_review_before_publication": true
+    }
   },
   "evidence": {
     "current_only_per_shot": true,
