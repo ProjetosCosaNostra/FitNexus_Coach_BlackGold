@@ -99,11 +99,20 @@ function Resolve-AdbExecutable {
         $candidates.Add([pscustomobject]@{ Path = [string]$pathCommand.Source; Source = 'PATH' })
     }
 
+    $localAppDataSdk = ''
+    if (-not [string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) {
+        $localAppDataSdk = Join-Path $env:LOCALAPPDATA 'Android\Sdk'
+    }
+    $userProfileSdk = ''
+    if (-not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) {
+        $userProfileSdk = Join-Path $env:USERPROFILE 'AppData\Local\Android\Sdk'
+    }
+
     foreach ($rootInfo in @(
         [pscustomobject]@{ Root = $env:ANDROID_SDK_ROOT; Source = 'ANDROID_SDK_ROOT' },
         [pscustomobject]@{ Root = $env:ANDROID_HOME; Source = 'ANDROID_HOME' },
-        [pscustomobject]@{ Root = (if ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA 'Android\Sdk' } else { '' }); Source = 'LOCALAPPDATA_STANDARD' },
-        [pscustomobject]@{ Root = (if ($env:USERPROFILE) { Join-Path $env:USERPROFILE 'AppData\Local\Android\Sdk' } else { '' }); Source = 'USERPROFILE_STANDARD' }
+        [pscustomobject]@{ Root = $localAppDataSdk; Source = 'LOCALAPPDATA_STANDARD' },
+        [pscustomobject]@{ Root = $userProfileSdk; Source = 'USERPROFILE_STANDARD' }
     )) {
         if (-not [string]::IsNullOrWhiteSpace([string]$rootInfo.Root)) {
             $candidate = Join-Path ([string]$rootInfo.Root) 'platform-tools\adb.exe'
