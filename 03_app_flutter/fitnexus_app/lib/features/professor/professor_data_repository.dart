@@ -2,6 +2,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../auth/auth_service.dart';
 
+const bool fitNexusStoreCaptureDataMode = bool.fromEnvironment(
+  'FITNEXUS_STORE_CAPTURE',
+  defaultValue: false,
+);
+
 class StudentRecord {
   const StudentRecord({
     required this.id,
@@ -107,6 +112,55 @@ class ProfessorDataRepository {
   }
 
   Future<List<StudentRecord>> fetchStudents() async {
+    if (fitNexusStoreCaptureDataMode) {
+      return const <StudentRecord>[
+        StudentRecord(
+          id: 'store-student-01',
+          organizationId: 'store-org',
+          name: 'Marina Costa',
+          objective: 'Hipertrofia',
+          level: 'Intermediário',
+          adherence: 92,
+          status: 'Ativo',
+          lastWorkout: 'Inferiores A',
+          nextSession: 'Hoje • 18:30',
+        ),
+        StudentRecord(
+          id: 'store-student-02',
+          organizationId: 'store-org',
+          name: 'Rafael Lima',
+          objective: 'Condicionamento',
+          level: 'Intermediário',
+          adherence: 86,
+          status: 'Ativo',
+          lastWorkout: 'Full Body',
+          nextSession: 'Amanhã • 07:00',
+        ),
+        StudentRecord(
+          id: 'store-student-03',
+          organizationId: 'store-org',
+          name: 'Camila Rocha',
+          objective: 'Emagrecimento',
+          level: 'Iniciante',
+          adherence: 78,
+          status: 'Ativo',
+          lastWorkout: 'Cardio + Core',
+          nextSession: 'Segunda • 19:00',
+        ),
+        StudentRecord(
+          id: 'store-student-04',
+          organizationId: 'store-org',
+          name: 'Lucas Martins',
+          objective: 'Força',
+          level: 'Avançado',
+          adherence: 95,
+          status: 'Ativo',
+          lastWorkout: 'Upper Strength',
+          nextSession: 'Hoje • 20:00',
+        ),
+      ];
+    }
+
     final String organizationId = await _organizationId();
     final List<dynamic> rows = await _client
         .from('students')
@@ -130,6 +184,7 @@ class ProfessorDataRepository {
     String level = 'Iniciante',
     String? nextSession,
   }) async {
+    _guardStoreCaptureMutation();
     final String organizationId = await _organizationId();
 
     final Map<String, dynamic> row = await _client
@@ -158,6 +213,7 @@ class ProfessorDataRepository {
     String? nextSession,
     String? status,
   }) async {
+    _guardStoreCaptureMutation();
     final String organizationId = await _organizationId();
     final Map<String, dynamic> patch = <String, dynamic>{};
 
@@ -179,6 +235,7 @@ class ProfessorDataRepository {
   }
 
   Future<void> deleteStudent(String studentId) async {
+    _guardStoreCaptureMutation();
     final String organizationId = await _organizationId();
     await _client
         .from('students')
@@ -188,6 +245,42 @@ class ProfessorDataRepository {
   }
 
   Future<List<TrainingPlanRecord>> fetchTrainingPlans({String? studentId}) async {
+    if (fitNexusStoreCaptureDataMode) {
+      const List<TrainingPlanRecord> synthetic = <TrainingPlanRecord>[
+        TrainingPlanRecord(
+          id: 'store-plan-01',
+          organizationId: 'store-org',
+          studentId: 'store-student-01',
+          name: 'Hipertrofia • Bloco 4',
+          nextSession: 'Inferiores B',
+          notes: 'Progressão controlada',
+          isActive: true,
+        ),
+        TrainingPlanRecord(
+          id: 'store-plan-02',
+          organizationId: 'store-org',
+          studentId: 'store-student-02',
+          name: 'Condicionamento • 6 semanas',
+          nextSession: 'Intervalado moderado',
+          notes: 'Volume ajustado por aderência',
+          isActive: true,
+        ),
+        TrainingPlanRecord(
+          id: 'store-plan-03',
+          organizationId: 'store-org',
+          studentId: 'store-student-04',
+          name: 'Força • Ciclo 2',
+          nextSession: 'Lower Strength',
+          notes: 'RPE alvo 8',
+          isActive: true,
+        ),
+      ];
+      if (studentId == null || studentId.isEmpty) return synthetic;
+      return synthetic
+          .where((TrainingPlanRecord plan) => plan.studentId == studentId)
+          .toList(growable: false);
+    }
+
     final String organizationId = await _organizationId();
     var query = _client
         .from('training_plans')
@@ -219,6 +312,7 @@ class ProfessorDataRepository {
     String? decisionIntelligenceRunId,
     String? sourceTemplateId,
   }) async {
+    _guardStoreCaptureMutation();
     if (exercises.isEmpty) {
       throw ArgumentError.value(
         exercises,
@@ -285,6 +379,7 @@ class ProfessorDataRepository {
   }
 
   Future<String> issueStudentAccessToken(String studentId) async {
+    _guardStoreCaptureMutation();
     final dynamic result = await _client.rpc(
       'issue_student_access_token_v2',
       params: <String, dynamic>{'p_student_id': studentId},
@@ -295,6 +390,12 @@ class ProfessorDataRepository {
       throw StateError('O FitNexus não retornou um acesso de aluno válido.');
     }
     return token;
+  }
+
+  void _guardStoreCaptureMutation() {
+    if (fitNexusStoreCaptureDataMode) {
+      throw StateError('STORE_CAPTURE_REMOTE_MUTATION_FORBIDDEN');
+    }
   }
 
   String? _nullable(String? value) {
