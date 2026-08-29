@@ -1,0 +1,60 @@
+name: Android Play Store Device Bootstrap V1
+
+on:
+  pull_request:
+    paths:
+      - '03_app_flutter/fitnexus_app/android/play_store/PLAY_STORE_DEVICE_BOOTSTRAP_V1.json'
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_DEVICE_BOOTSTRAP_V1.ps1'
+      - '.github/workflows/android_play_store_device_bootstrap_v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate device bootstrap contract
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          p = Path('03_app_flutter/fitnexus_app/android/play_store/PLAY_STORE_DEVICE_BOOTSTRAP_V1.json')
+          data = json.loads(p.read_text(encoding='utf-8'))
+          assert data['application_id'] == 'br.com.lafamigliaplayworks.fitnexuscoach'
+          assert data['release_train_version'] == '0.9.0+2'
+          assert data['evidence']['current_only'] is True
+          assert data['local_mutations_allowed']['adb_install_or_replace_canonical_package'] is True
+          for key, value in data['hard_boundaries'].items():
+              assert value is False, f'{key} must remain false'
+          print('FITNEXUS_PLAY_STORE_DEVICE_BOOTSTRAP_CONTRACT=PASS')
+
+      - name: Validate PowerShell bootstrap without Windows mutation
+        shell: pwsh
+        run: |
+          ./03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_DEVICE_BOOTSTRAP_V1.ps1 -ValidateOnly
+
+      - name: Guard PowerShell 5.1 and secret boundaries
+        shell: python
+        run: |
+          from pathlib import Path
+          text = Path('03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_DEVICE_BOOTSTRAP_V1.ps1').read_text(encoding='utf-8')
+          forbidden = ['.ArgumentList', 'ForEach-Object -Parallel', '??', '?.']
+          hits = [token for token in forbidden if token in text]
+          assert not hits, f'PowerShell 5.1 incompatible token(s): {hits}'
+          required = [
+              'Resolve-AdbExecutable',
+              'upload-key-secret.dpapi',
+              "'build', 'apk', '--release'",
+              "'install', '-r'",
+              'DEVICE_INSTALL_PERFORMED=',
+              'REMOTE_MUTATION_PERFORMED=false',
+              'SCREENSHOT_CAPTURE_PERFORMED=false',
+          ]
+          for token in required:
+              assert token in text, f'missing guard token: {token}'
+          assert 'storePassword=$plainPassword' not in text
+          print('FITNEXUS_PLAY_STORE_DEVICE_BOOTSTRAP_PS51_SECRET_GUARD=PASS')
