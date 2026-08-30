@@ -74,7 +74,7 @@ function Get-UiHierarchy {
 }
 
 function Test-AnrDialogPresent {
-    param([Parameter(Mandatory = $true)][string]$Xml)
+    param([Parameter(Mandatory = $true)][AllowEmptyString()][string]$Xml)
     if ([string]::IsNullOrWhiteSpace($Xml)) { return $false }
     return ($Xml -match 'android:id/aerr_close' -or $Xml -match "isn.t responding" -or $Xml -match 'not responding' -or $Xml -match 'n.o est. respondendo' -or $Xml -match 'n.o responde')
 }
@@ -84,6 +84,10 @@ function Dismiss-AnrDialogs {
     $dismissed = 0
     for ($attempt = 1; $attempt -le 4; $attempt++) {
         $xml = Get-UiHierarchy -Adb $Adb -Serial $Serial
+        if ([string]::IsNullOrWhiteSpace([string]$xml)) {
+            Write-Output 'SCREENSHOT_02_V3_UI_HIERARCHY=EMPTY_NO_ANR_ACTION'
+            break
+        }
         if (-not (Test-AnrDialogPresent -Xml $xml)) { break }
 
         $nodeMatch = [regex]::Match($xml, '<node[^>]*(?:resource-id="android:id/aerr_close"|text="(?:Close app|Fechar app)")[^>]*/?>', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
@@ -111,6 +115,7 @@ if ($ValidateOnly) {
     if ($LASTEXITCODE -ne 0) { exit 1 }
     Write-Output 'FITNEXUS_PLAY_STORE_SCREENSHOT_02_FOREGROUND_RECOVERY_V3_VALIDATE_ONLY=PASS'
     Write-Output 'SYSTEM_ANR_DIALOG_GUARD=ENABLED'
+    Write-Output 'EMPTY_UI_HIERARCHY=SAFE_NO_ANR_ACTION'
     Write-Output 'CROSS_PROJECT_FOREGROUND_CONTAMINATION_GUARD=ENABLED'
     Write-Output 'RETRY_ONLY_IF_ANR_DETECTED=true'
     exit 0
@@ -126,7 +131,7 @@ $childExit = $LASTEXITCODE
 
 if ($childExit -ne 0) {
     $xmlAfterFailure = Get-UiHierarchy -Adb $adb -Serial $serial
-    if (Test-AnrDialogPresent -Xml $xmlAfterFailure) {
+    if (-not [string]::IsNullOrWhiteSpace([string]$xmlAfterFailure) -and (Test-AnrDialogPresent -Xml $xmlAfterFailure)) {
         $dismissedAfterFailure = Dismiss-AnrDialogs -Adb $adb -Serial $serial
         $totalDismissed += $dismissedAfterFailure
         if ($dismissedAfterFailure -gt 0) {
