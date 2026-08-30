@@ -13,6 +13,7 @@ on:
       - '18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_COMPRESSED_DARK_UI_FALSE_POSITIVE_20260829.md'
       - '18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_SPARSE_GRID_COLOR_DIVERSITY_FALSE_POSITIVE_20260829.md'
       - '18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_CROSS_PROJECT_ANR_CONTAMINATION_20260830.md'
+      - '18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_EMPTY_UI_HIERARCHY_BINDING_20260830.md'
       - '.github/workflows/android_play_store_screenshot_02_capture_v1.yml'
   workflow_dispatch:
 
@@ -91,6 +92,7 @@ jobs:
           failure_record_1 = Path('18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_COMPRESSED_DARK_UI_FALSE_POSITIVE_20260829.md').read_text(encoding='utf-8')
           failure_record_2 = Path('18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_SPARSE_GRID_COLOR_DIVERSITY_FALSE_POSITIVE_20260829.md').read_text(encoding='utf-8')
           failure_record_3 = Path('18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_CROSS_PROJECT_ANR_CONTAMINATION_20260830.md').read_text(encoding='utf-8')
+          failure_record_4 = Path('18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_EMPTY_UI_HIERARCHY_BINDING_20260830.md').read_text(encoding='utf-8')
           assert 'FITNEXUS_STORE_CAPTURE_SHOT' in entry
           assert "fitNexusStoreCaptureShot == '02'" in entry
           assert 'StudentAccessManagementPage' in entry
@@ -119,12 +121,17 @@ jobs:
           assert 'RECEIPT_INVALIDATED=true' in repair
           assert 'android:id/aerr_close' in foreground
           assert 'uiautomator' in foreground
+          assert '[AllowEmptyString()]' in foreground
+          assert 'SCREENSHOT_02_V3_UI_HIERARCHY=EMPTY_NO_ANR_ACTION' in foreground
+          assert 'IsNullOrWhiteSpace([string]$xml)' in foreground
+          assert 'IsNullOrWhiteSpace([string]$xmlAfterFailure)' in foreground
           assert 'ANR_CLEARED_RETRY_CAPTURE_ONCE' in foreground
           assert 'RETRY_ONLY_IF_ANR_DETECTED=true' in foreground
           assert 'CROSS_PROJECT_FOREGROUND_CONTAMINATION_GUARD=PASS' in foreground
           assert 'FNX-PLAY-SCREENSHOT-02-COMPRESSED-DARK-UI-FILESIZE-FALSE-POSITIVE-003' in failure_record_1
           assert 'FNX-PLAY-SCREENSHOT-02-SPARSE-GRID-UNIQUE-COLOR-FALSE-POSITIVE-004' in failure_record_2
           assert 'FNX-PLAY-SCREENSHOT-02-CROSS-PROJECT-ANR-FOREGROUND-CONTAMINATION-005' in failure_record_3
+          assert 'FNX-PLAY-SCREENSHOT-02-EMPTY-UI-HIERARCHY-BINDING-006' in failure_record_4
           forbidden = ['.ArgumentList', 'ForEach-Object -Parallel', '??', '?.']
           hits = [token for token in forbidden if token in runner or token in repair or token in foreground]
           assert not hits, f'PowerShell 5.1 incompatible token(s): {hits}'
@@ -137,4 +144,5 @@ jobs:
           print('FITNEXUS_PLAY_SCREENSHOT_02_FAILSAFE_RESTORE_GUARD=PASS')
           print('FITNEXUS_PLAY_SCREENSHOT_02_STRUCTURAL_VISUAL_GUARD=PASS')
           print('FITNEXUS_PLAY_SCREENSHOT_02_CROSS_PROJECT_ANR_GUARD=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_02_EMPTY_UI_HIERARCHY_GUARD=PASS')
           print('FITNEXUS_PLAY_SCREENSHOT_02_CI_HOST_SHELL_GUARD=PASS')
