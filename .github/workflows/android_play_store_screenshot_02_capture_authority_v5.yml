@@ -1,0 +1,58 @@
+name: Android Play Store Screenshot 02 Capture Authority V5
+
+on:
+  pull_request:
+    paths:
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_CAPTURE_AUTHORITY_V5.ps1'
+      - '18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_CAPTURE_POINT_FOREGROUND_AUTHORITY_20260830.md'
+      - '.github/workflows/android_play_store_screenshot_02_capture_authority_v5.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse V5 runner
+        shell: pwsh
+        run: |
+          $path = '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_CAPTURE_AUTHORITY_V5.ps1'
+          $text = Get-Content -LiteralPath $path -Raw
+          [void][ScriptBlock]::Create($text)
+          Write-Output 'FITNEXUS_PLAY_SCREENSHOT_02_V5_PARSE=PASS'
+
+      - name: Guard capture-point authority contract
+        shell: python
+        run: |
+          from pathlib import Path
+          runner = Path('03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_CAPTURE_AUTHORITY_V5.ps1').read_text(encoding='utf-8')
+          record = Path('18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_CAPTURE_POINT_FOREGROUND_AUTHORITY_20260830.md').read_text(encoding='utf-8')
+          required = [
+              'dumpsys',
+              'activity',
+              'activities',
+              'window',
+              'windows',
+              'mCurrentFocus=',
+              'foregroundConsecutive -lt 3',
+              'CAPTURE_POINT_FOREGROUND_PROOF=PASS',
+              'CROSS_PROJECT_CAPTURE_CONTAMINATION_GUARD=PASS',
+              'am','force-stop',
+              'APP_DATA_CLEAR_PERFORMED' if False else 'HUMAN_VISUAL_REVIEW_REQUIRED=true',
+          ]
+          for token in required:
+              assert token in runner, token
+          assert "if ($screenshotBytes -lt 20000) {" in runner
+          assert 'if ($screenshotBytes -lt 60000) {' in runner
+          assert '.ArgumentList' not in runner
+          assert 'ForEach-Object -Parallel' not in runner
+          assert '??' not in runner
+          assert '?.' not in runner
+          assert 'FNX-PLAY-SCREENSHOT-02-CAPTURE-POINT-FOREGROUND-OWNERSHIP-NOT-PROVEN-008' in record
+          print('FITNEXUS_PLAY_SCREENSHOT_02_CAPTURE_POINT_AUTHORITY_GUARD=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_02_PS51_GUARD=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_02_V5_BOUNDARIES=PASS')
