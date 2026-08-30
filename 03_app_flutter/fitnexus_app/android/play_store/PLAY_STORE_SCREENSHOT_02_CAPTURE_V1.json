@@ -21,6 +21,12 @@
       "structural_transition_required": true,
       "multi_band_vertical_occupancy_required": true,
       "human_visual_review_before_publication": true
+    },
+    "foreground_guard": {
+      "cross_project_anr_contamination_guard_required": true,
+      "uiautomator_proven_close_action_required": true,
+      "arbitrary_coordinate_tap_forbidden": true,
+      "retry_after_anr_cleanup_maximum": 1
     }
   },
   "evidence": {
