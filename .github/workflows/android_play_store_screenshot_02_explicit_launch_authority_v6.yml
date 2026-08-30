@@ -1,0 +1,31 @@
+name: Android Play Store Screenshot 02 Explicit Launch Authority V6
+
+on:
+  pull_request:
+    paths:
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_EXPLICIT_LAUNCH_AUTHORITY_V6.ps1'
+      - '18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_V5_FOREGROUND_AUTHORITY_NOT_PROVEN_20260830.md'
+      - '.github/workflows/android_play_store_screenshot_02_explicit_launch_authority_v6.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse V6 Windows runner
+        shell: pwsh
+        run: |
+          $path = '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_EXPLICIT_LAUNCH_AUTHORITY_V6.ps1'
+          $text = Get-Content -LiteralPath $path -Raw
+          [void][ScriptBlock]::Create($text)
+          if ($text -notmatch "am','start','-W','-n'") { throw 'EXPLICIT_AM_START_MISSING' }
+          if ($text -notmatch 'pidof') { throw 'PID_AUTHORITY_MISSING' }
+          if ($text -notmatch 'mResumedActivity|topResumedActivity') { throw 'RESUMED_ACTIVITY_AUTHORITY_MISSING' }
+          if ($text -notmatch "dumpsys','window','displays") { throw 'WINDOW_DISPLAY_AUTHORITY_MISSING' }
+          if ($text -notmatch 'SCREENSHOT_02_LOGCAT_DIAGNOSTIC') { throw 'FAILURE_DIAGNOSTIC_MISSING' }
+          if ($text -notmatch 'PRODUCTION_RELEASE_RESTORED_EXPECTED_BY_CHILD=true') { throw 'RESTORE_EXPECTATION_MISSING' }
+          Write-Output 'FITNEXUS_PLAY_SCREENSHOT_02_EXPLICIT_LAUNCH_AUTHORITY_V6_CI=PASS'
