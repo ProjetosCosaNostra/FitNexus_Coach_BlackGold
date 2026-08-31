@@ -12,8 +12,12 @@ if (-not (Test-Path -LiteralPath $V6Path -PathType Leaf)) {
 
 $source = Get-Content -LiteralPath $V6Path -Raw
 
-$sizePatchNeedle = "$source = $source.Replace($sizeNeedle,'if ($screenshotBytes -lt 20000) {')"
-$sizePatchReplacement = "$source = $source.Replace($sizeNeedle,'if ($screenshotBytes -lt 1000) {')"
+$sizePatchNeedle = @'
+$source = $source.Replace($sizeNeedle,'if ($screenshotBytes -lt 20000) {')
+'@.Trim()
+$sizePatchReplacement = @'
+$source = $source.Replace($sizeNeedle,'if ($screenshotBytes -lt 1000) {')
+'@.Trim()
 if (([regex]::Matches($source,[regex]::Escape($sizePatchNeedle))).Count -ne 1) {
     throw 'FNX_PLAY_SCREENSHOT_02_V7_SIZE_PATCH_PATTERN_DRIFT'
 }
@@ -35,7 +39,9 @@ if (([regex]::Matches($source,[regex]::Escape($launchMarker))).Count -ne 1) {
 }
 $source = $source.Replace($launchMarker,$launchWake.TrimEnd())
 
-$readyMarker = "    Write-Output ('SCREENSHOT_02_CAPTURE_POINT_FOREGROUND_PROOF_V6=PASS_ATTEMPTS_' + $foregroundAttempts)"
+$readyMarker = @'
+    Write-Output ('SCREENSHOT_02_CAPTURE_POINT_FOREGROUND_PROOF_V6=PASS_ATTEMPTS_' + $foregroundAttempts)
+'@.TrimEnd()
 $readyBlock = @'
     Write-Output ('SCREENSHOT_02_CAPTURE_POINT_FOREGROUND_PROOF_V6=PASS_ATTEMPTS_' + $foregroundAttempts)
     Write-Output 'SCREENSHOT_02_PHASE=PROVE_FLUTTER_RENDER_READY_V7'
