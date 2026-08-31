@@ -12,9 +12,9 @@ if (-not (Test-Path -LiteralPath $SourcePath -PathType Leaf)) {
 
 $source = Get-Content -LiteralPath $SourcePath -Raw
 
-# Screenshot 02 V1 no longer hardcodes the local PNG filename; it derives it from
-# Contract.capture.output_filename. Screenshot 03 V1 incorrectly kept a stale
-# literal-presence assertion and literal replacement for that old implementation.
+# Screenshot 02 V1 derives the local PNG path from Contract.capture.output_filename.
+# Screenshot 03 V1 still asserted a stale hardcoded Screenshot 02 filename and tried
+# to replace that literal in the base runner. Remove only those stale assumptions.
 $stalePatternEntry = "    '02_student_management_1080x1920.png',`r`n"
 if ($source.IndexOf($stalePatternEntry,[System.StringComparison]::Ordinal) -lt 0) {
     $stalePatternEntry = "    '02_student_management_1080x1920.png',`n"
@@ -24,20 +24,14 @@ if ($source.IndexOf($stalePatternEntry,[System.StringComparison]::Ordinal) -lt 0
 }
 $source = $source.Replace($stalePatternEntry,'')
 
-$staleReplaceLine = "$adaptedBase = $adaptedBase.Replace('02_student_management_1080x1920.png','03_decision_intelligence_1080x1920.png')"
-# The variables above are intentionally literal source text; rebuild without interpolation.
 $staleReplaceLine = '$adaptedBase = $adaptedBase.Replace(''02_student_management_1080x1920.png'',''03_decision_intelligence_1080x1920.png'')'
 if ($source.IndexOf($staleReplaceLine,[System.StringComparison]::Ordinal) -lt 0) {
     throw 'FNX_PLAY_SCREENSHOT_03_V2_STALE_REPLACE_LINE_NOT_FOUND'
 }
-$source = $source.Replace($staleReplaceLine,'# V2: output filename is contract-driven in Screenshot 02 V1; no base literal replacement required.')
+$source = $source.Replace($staleReplaceLine,'# V2: base output filename is contract-driven; no hardcoded local PNG replacement required.')
 
-# Preserve the V6 output-path adaptation: V6 owns a post-capture validator with a
-# concrete Screenshot 02 path and therefore still must be adapted to Screenshot 03.
-if ($source.IndexOf("$adaptedV6 = $v6Text.Replace('02_student_management_1080x1920.png','03_decision_intelligence_1080x1920.png')",[System.StringComparison]::Ordinal) -ge 0) {
-    # interpolation can make this check unreliable on Windows PowerShell 5.1; the
-    # literal check below is the authority.
-}
+# V6 still owns a concrete post-capture validation path and therefore its explicit
+# Screenshot 02 -> Screenshot 03 path adaptation must remain present.
 $requiredV6Literal = '$adaptedV6 = $v6Text.Replace(''02_student_management_1080x1920.png'',''03_decision_intelligence_1080x1920.png'')'
 if ($source.IndexOf($requiredV6Literal,[System.StringComparison]::Ordinal) -lt 0) {
     throw 'FNX_PLAY_SCREENSHOT_03_V2_V6_OUTPUT_ADAPTATION_MISSING'
@@ -53,6 +47,7 @@ Write-Output 'V6_POST_CAPTURE_PATH_ADAPTATION=PRESERVED'
 
 try {
     [void][ScriptBlock]::Create($source)
+
     if ($ValidateOnly) {
         & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $runtimePath -ValidateOnly
         $childExit = $LASTEXITCODE
