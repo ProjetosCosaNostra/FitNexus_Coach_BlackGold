@@ -1,0 +1,37 @@
+name: Android Play Store Screenshot 02 Render Ready V7
+
+on:
+  pull_request:
+    paths:
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_RENDER_READY_AUTHORITY_V7.ps1'
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_EXPLICIT_LAUNCH_AUTHORITY_V6.ps1'
+      - '.github/workflows/android_play_store_screenshot_02_render_ready_v7.yml'
+
+jobs:
+  static-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse PowerShell V7
+        shell: pwsh
+        run: |
+          $p = '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_RENDER_READY_AUTHORITY_V7.ps1'
+          $text = Get-Content -LiteralPath $p -Raw
+          [void][ScriptBlock]::Create($text)
+          $required = @(
+            'WAKE_AND_UNLOCK_DEVICE_V7',
+            'PROVE_FLUTTER_RENDER_READY_V7',
+            'SCREENSHOT_02_FLUTTER_RENDER_READY_V7=PASS',
+            'FITNEXUS_PLAY_STORE_SCREENSHOT_02_RENDER_READY_AUTHORITY_V7=PASS',
+            'HUMAN_VISUAL_REVIEW_REQUIRED=true'
+          )
+          foreach ($marker in $required) {
+            if ($text -notmatch [regex]::Escape($marker)) { throw "Missing marker: $marker" }
+          }
+      - name: Enforce no remote mutation claims
+        shell: bash
+        run: |
+          set -euo pipefail
+          p='03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_RENDER_READY_AUTHORITY_V7.ps1'
+          grep -F "REMOTE_MUTATION_PERFORMED=false" "$p" >/dev/null
+          grep -F "PRODUCTION_RELEASE_RESTORED_EXPECTED_BY_CHILD=true" "$p" >/dev/null
