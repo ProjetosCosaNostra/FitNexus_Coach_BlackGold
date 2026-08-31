@@ -14,10 +14,12 @@ $source = Get-Content -LiteralPath $V6Path -Raw
 
 $sizePatchNeedle = @'
 $source = $source.Replace($sizeNeedle,'if ($screenshotBytes -lt 20000) {')
-'@.Trim()
+'@
+$sizePatchNeedle = $sizePatchNeedle.Trim()
 $sizePatchReplacement = @'
 $source = $source.Replace($sizeNeedle,'if ($screenshotBytes -lt 1000) {')
-'@.Trim()
+'@
+$sizePatchReplacement = $sizePatchReplacement.Trim()
 if (([regex]::Matches($source,[regex]::Escape($sizePatchNeedle))).Count -ne 1) {
     throw 'FNX_PLAY_SCREENSHOT_02_V7_SIZE_PATCH_PATTERN_DRIFT'
 }
@@ -41,7 +43,8 @@ $source = $source.Replace($launchMarker,$launchWake.TrimEnd())
 
 $readyMarker = @'
     Write-Output ('SCREENSHOT_02_CAPTURE_POINT_FOREGROUND_PROOF_V6=PASS_ATTEMPTS_' + $foregroundAttempts)
-'@.TrimEnd()
+'@
+$readyMarker = $readyMarker.TrimEnd()
 $readyBlock = @'
     Write-Output ('SCREENSHOT_02_CAPTURE_POINT_FOREGROUND_PROOF_V6=PASS_ATTEMPTS_' + $foregroundAttempts)
     Write-Output 'SCREENSHOT_02_PHASE=PROVE_FLUTTER_RENDER_READY_V7'
