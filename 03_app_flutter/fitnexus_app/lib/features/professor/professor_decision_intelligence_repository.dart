@@ -260,6 +260,9 @@ class ProfessorDecisionIntelligenceRepository {
   SupabaseClient get _client => Supabase.instance.client;
 
   Future<DecisionIntelligenceBrief> generateBrief(String studentId) async {
+    if (fitNexusStoreCaptureDataMode) {
+      return _storeCaptureBrief(studentId);
+    }
     final dynamic response = await _client.rpc(
       'generate_decision_intelligence_brief',
       params: <String, dynamic>{'p_student_id': studentId},
@@ -271,6 +274,16 @@ class ProfessorDecisionIntelligenceRepository {
     String studentId, {
     int limit = 10,
   }) async {
+    if (fitNexusStoreCaptureDataMode) {
+      final DecisionIntelligenceBrief brief = _storeCaptureBrief(studentId);
+      return <DecisionIntelligenceHistoryItem>[
+        DecisionIntelligenceHistoryItem(
+          runId: brief.runId,
+          createdAt: brief.generatedAt,
+          brief: brief,
+        ),
+      ];
+    }
     final dynamic response = await _client.rpc(
       'get_decision_intelligence_history',
       params: <String, dynamic>{
@@ -294,6 +307,9 @@ class ProfessorDecisionIntelligenceRepository {
     required String outcome,
     String? note,
   }) async {
+    if (fitNexusStoreCaptureDataMode) {
+      throw StateError('STORE_CAPTURE_REMOTE_MUTATION_FORBIDDEN');
+    }
     await _client.rpc(
       'record_decision_intelligence_outcome',
       params: <String, dynamic>{
@@ -305,6 +321,25 @@ class ProfessorDecisionIntelligenceRepository {
   }
 
   Future<DecisionCalibrationSnapshot> fetchCalibration() async {
+    if (fitNexusStoreCaptureDataMode) {
+      return DecisionCalibrationSnapshot(
+        summary: const DecisionCalibrationSummary(
+          totalRuns: 24,
+          resolvedRuns: 21,
+          unresolvedRuns: 3,
+          accepted: 9,
+          modified: 7,
+          rejected: 3,
+          noAction: 2,
+          adoptionRate: 76,
+          exactAcceptanceRate: 43,
+          modificationRate: 33,
+        ),
+        interpretation:
+            'O professor mantém autoridade: 76% dos briefs viraram ação humana consciente, e 33% foram ajustados antes da prescrição final.',
+        generatedAt: DateTime.utc(2026, 8, 31, 14, 0),
+      );
+    }
     final String organizationId =
         await AuthService.instance.ensureProfessorOrganization();
     final dynamic response = await _client.rpc(
@@ -313,6 +348,56 @@ class ProfessorDecisionIntelligenceRepository {
     );
     return DecisionCalibrationSnapshot.fromJson(_map(response));
   }
+}
+
+DecisionIntelligenceBrief _storeCaptureBrief(String studentId) {
+  final bool marina = studentId == 'store-student-01' || studentId.isEmpty;
+  return DecisionIntelligenceBrief(
+    runId: 'store-decision-brief-20260831',
+    studentId: marina ? 'store-student-01' : studentId,
+    studentName: marina ? 'Marina Costa' : 'Aluno BlackGold',
+    objective: marina ? 'Hipertrofia' : 'Condicionamento',
+    level: 'Intermediário',
+    adherence: 92,
+    riskLevel: 'attention',
+    confidenceScore: 91,
+    confidenceLabel: 'high',
+    recommendationType: 'review_progression',
+    recommendationTitle: 'Revisar progressão antes do próximo treino',
+    recommendationReason:
+        'Aderência alta, mas o último feedback trouxe esforço 9/10 e energia 2/5. O FitNexus recomenda revisar a progressão; a decisão continua sendo do professor.',
+    evidence: const <DecisionEvidence>[
+      DecisionEvidence(
+        type: 'latest_feedback',
+        label: 'Feedback mais recente',
+        value: <String, dynamic>{
+          'pain_score': 1,
+          'perceived_exertion': 9,
+          'energy_score': 2,
+        },
+      ),
+      DecisionEvidence(
+        type: 'active_plan',
+        label: 'Treino ativo',
+        value: <String, dynamic>{
+          'plan_name': 'Hipertrofia • Bloco 4',
+          'exercise_count': 7,
+        },
+      ),
+      DecisionEvidence(
+        type: 'adherence',
+        label: 'Aderência 30 dias',
+        value: 92,
+        unit: '%',
+      ),
+    ],
+    candidate: null,
+    candidateBlockReason:
+        'O brief sugere revisão humana antes de qualquer mudança de prescrição.',
+    engineVersion: 'blackgold-decision-v1',
+    engineMode: 'explainable_human_in_loop',
+    generatedAt: DateTime.utc(2026, 8, 31, 13, 52),
+  );
 }
 
 String? _nullable(String? value) {
