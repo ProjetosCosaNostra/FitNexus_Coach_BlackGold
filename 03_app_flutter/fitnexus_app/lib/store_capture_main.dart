@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'features/professor/professor_coach_action_center_page.dart';
 import 'features/professor/professor_coach_action_repository.dart';
+import 'features/professor/professor_decision_intelligence_page.dart';
 import 'features/professor/student_access_management_page.dart';
 
 const String fitNexusStoreCaptureShot = String.fromEnvironment(
@@ -16,7 +17,9 @@ void main() {
       'FITNEXUS_STORE_CAPTURE must be enabled only for controlled store asset builds.',
     );
   }
-  if (fitNexusStoreCaptureShot != '01' && fitNexusStoreCaptureShot != '02') {
+  if (fitNexusStoreCaptureShot != '01' &&
+      fitNexusStoreCaptureShot != '02' &&
+      fitNexusStoreCaptureShot != '03') {
     throw StateError('Unsupported FITNEXUS_STORE_CAPTURE_SHOT.');
   }
   runApp(const _FitNexusStoreCaptureApp());
@@ -28,6 +31,9 @@ class _FitNexusStoreCaptureApp extends StatelessWidget {
   Widget _home() {
     if (fitNexusStoreCaptureShot == '02') {
       return const StudentAccessManagementPage();
+    }
+    if (fitNexusStoreCaptureShot == '03') {
+      return const ProfessorDecisionIntelligencePage();
     }
     return const ProfessorCoachActionCenterPage();
   }
