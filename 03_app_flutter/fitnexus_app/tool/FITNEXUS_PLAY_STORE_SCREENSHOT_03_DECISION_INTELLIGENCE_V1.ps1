@@ -65,7 +65,6 @@ $requiredBasePatterns = @(
     'PLAY_STORE_SCREENSHOT_02_CAPTURE_V1.json',
     "`$ShotDefine = '02'",
     'StudentAccessManagementPage',
-    '02_student_management_1080x1920.png',
     'FITNEXUS_PLAY_STORE_SCREENSHOT_02_RECEIPT_V1.json',
     'fitnexus_play_screenshot_02.png'
 )
@@ -82,12 +81,13 @@ $adaptedBase = $baseText
 $adaptedBase = $adaptedBase.Replace('PLAY_STORE_SCREENSHOT_02_CAPTURE_V1.json','PLAY_STORE_SCREENSHOT_03_CAPTURE_V1.json')
 $adaptedBase = $adaptedBase.Replace("`$ShotDefine = '02'","`$ShotDefine = '03'")
 $adaptedBase = $adaptedBase.Replace('StudentAccessManagementPage','ProfessorDecisionIntelligencePage')
-$adaptedBase = $adaptedBase.Replace('02_student_management_1080x1920.png','03_decision_intelligence_1080x1920.png')
 $adaptedBase = $adaptedBase.Replace('FITNEXUS_PLAY_STORE_SCREENSHOT_02_RECEIPT_V1.json','FITNEXUS_PLAY_STORE_SCREENSHOT_03_RECEIPT_V1.json')
 $adaptedBase = $adaptedBase.Replace('fitnexus_play_screenshot_02.png','fitnexus_play_screenshot_03.png')
 $adaptedBase = $adaptedBase.Replace("Write-Output 'SHOT=02'","Write-Output 'SHOT=03'")
 $adaptedBase = $adaptedBase.Replace("Write-Output 'PRODUCTION_UI_WIDGET=StudentAccessManagementPage'","Write-Output 'PRODUCTION_UI_WIDGET=ProfessorDecisionIntelligencePage'")
 
+# Screenshot 02 V1 derives the local PNG filename from Contract.capture.output_filename.
+# V6 still has a concrete post-capture path, so only V6 needs literal path adaptation.
 $adaptedV6 = $v6Text.Replace('02_student_management_1080x1920.png','03_decision_intelligence_1080x1920.png')
 
 $runtimeRoot = Join-Path $env:TEMP ('FNX_PLAY_SCREENSHOT_03_ADAPTER_' + [guid]::NewGuid().ToString('N'))
@@ -102,9 +102,6 @@ try {
     New-Item -ItemType Directory -Path $runtimeAndroidPlayStore -Force | Out-Null
     New-Item -ItemType Directory -Path $runtimeProfessor -Force | Out-Null
 
-    # The inherited runners resolve AppRoot as parent of PSScriptRoot. Recreate only
-    # the files they validate while all actual Flutter build paths remain patched
-    # back to the authoritative worktree below.
     $encoding = New-Object System.Text.UTF8Encoding($false)
     [System.IO.File]::WriteAllText((Join-Path $runtimeTool 'FITNEXUS_PLAY_STORE_SCREENSHOT_02_CAPTURE_V1.ps1'),$adaptedBase,$encoding)
     [System.IO.File]::WriteAllText((Join-Path $runtimeTool 'FITNEXUS_PLAY_STORE_SCREENSHOT_02_EXPLICIT_LAUNCH_AUTHORITY_V6.ps1'),$adaptedV6,$encoding)
@@ -117,8 +114,6 @@ try {
     Copy-Item -LiteralPath $dataRepo -Destination (Join-Path $runtimeProfessor 'professor_data_repository.dart') -Force
     Copy-Item -LiteralPath $DecisionRepoPath -Destination (Join-Path $runtimeProfessor 'professor_decision_intelligence_repository.dart') -Force
 
-    # Patch the adapted base runner so build/signing operations use the real worktree,
-    # while the temp hierarchy only supplies its inherited dependency names.
     $runtimeBasePath = Join-Path $runtimeTool 'FITNEXUS_PLAY_STORE_SCREENSHOT_02_CAPTURE_V1.ps1'
     $runtimeBaseText = Get-Content -LiteralPath $runtimeBasePath -Raw
     $runtimeBaseText = $runtimeBaseText.Replace("`$AppRoot = Split-Path -Parent `$PSScriptRoot",("`$AppRoot = '" + ($AppRoot -replace "'","''") + "'"))
