@@ -7,6 +7,7 @@ on:
       - '03_app_flutter/fitnexus_app/lib/features/professor/professor_decision_intelligence_repository.dart'
       - '03_app_flutter/fitnexus_app/android/play_store/PLAY_STORE_SCREENSHOT_03_CAPTURE_V1.json'
       - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_03_DECISION_INTELLIGENCE_V1.ps1'
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_03_BASE_PATTERN_REPAIR_V2.ps1'
       - '.github/workflows/android_play_store_screenshot_03_decision_intelligence_v1.yml'
   workflow_dispatch:
 
@@ -26,6 +27,19 @@ jobs:
           grep -F 'fitNexusStoreCaptureDataMode' "$APP/lib/features/professor/professor_decision_intelligence_repository.dart"
           grep -F 'STORE_CAPTURE_REMOTE_MUTATION_FORBIDDEN' "$APP/lib/features/professor/professor_decision_intelligence_repository.dart"
           grep -F 'FITNEXUS_PLAY_STORE_SCREENSHOT_03_DECISION_INTELLIGENCE_V1=PASS' "$APP/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_03_DECISION_INTELLIGENCE_V1.ps1"
+          grep -F 'OUTPUT_PATH_AUTHORITY=CONTRACT_CAPTURE_OUTPUT_FILENAME' "$APP/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_03_BASE_PATTERN_REPAIR_V2.ps1"
+          grep -F 'V6_POST_CAPTURE_PATH_ADAPTATION=PRESERVED' "$APP/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_03_BASE_PATTERN_REPAIR_V2.ps1"
+
+      - name: Reject stale Screenshot 03 base-path assumption
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_03_BASE_PATTERN_REPAIR_V2.ps1')
+          text = p.read_text(encoding='utf-8')
+          assert 'FNX_PLAY_SCREENSHOT_03_V2_STALE_PATTERN_ENTRY_NOT_FOUND' in text
+          assert 'FNX_PLAY_SCREENSHOT_03_V2_V6_OUTPUT_ADAPTATION_MISSING' in text
+          assert 'OUTPUT_PATH_AUTHORITY=CONTRACT_CAPTURE_OUTPUT_FILENAME' in text
+          print('FITNEXUS_PLAY_STORE_SCREENSHOT_03_V2_STATIC_GATE=PASS')
 
       - name: Validate Screenshot 03 JSON boundaries
         shell: python
