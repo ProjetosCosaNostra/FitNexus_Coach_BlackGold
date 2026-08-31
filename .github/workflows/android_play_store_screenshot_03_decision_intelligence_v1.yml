@@ -1,0 +1,46 @@
+name: Android Play Store Screenshot 03 Decision Intelligence V1
+
+on:
+  pull_request:
+    paths:
+      - '03_app_flutter/fitnexus_app/lib/store_capture_main.dart'
+      - '03_app_flutter/fitnexus_app/lib/features/professor/professor_decision_intelligence_repository.dart'
+      - '03_app_flutter/fitnexus_app/android/play_store/PLAY_STORE_SCREENSHOT_03_CAPTURE_V1.json'
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_03_DECISION_INTELLIGENCE_V1.ps1'
+      - '.github/workflows/android_play_store_screenshot_03_decision_intelligence_v1.yml'
+  workflow_dispatch:
+
+jobs:
+  validate-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Screenshot 03 contract and routing
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP='03_app_flutter/fitnexus_app'
+          grep -F "fitNexusStoreCaptureShot == '03'" "$APP/lib/store_capture_main.dart"
+          grep -F 'ProfessorDecisionIntelligencePage' "$APP/lib/store_capture_main.dart"
+          grep -F 'fitNexusStoreCaptureDataMode' "$APP/lib/features/professor/professor_decision_intelligence_repository.dart"
+          grep -F 'STORE_CAPTURE_REMOTE_MUTATION_FORBIDDEN' "$APP/lib/features/professor/professor_decision_intelligence_repository.dart"
+          grep -F 'FITNEXUS_PLAY_STORE_SCREENSHOT_03_DECISION_INTELLIGENCE_V1=PASS' "$APP/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_03_DECISION_INTELLIGENCE_V1.ps1"
+
+      - name: Validate Screenshot 03 JSON boundaries
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          p = Path('03_app_flutter/fitnexus_app/android/play_store/PLAY_STORE_SCREENSHOT_03_CAPTURE_V1.json')
+          data = json.loads(p.read_text(encoding='utf-8'))
+          assert data['application_id'] == 'br.com.lafamigliaplayworks.fitnexuscoach'
+          assert data['capture']['dart_define_shot'] == '03'
+          assert data['capture']['production_ui_widget'] == 'ProfessorDecisionIntelligencePage'
+          assert data['capture']['output_filename'] == '03_decision_intelligence_1080x1920.png'
+          assert data['capture']['target_width_px'] == 1080
+          assert data['capture']['target_height_px'] == 1920
+          assert data['capture']['synthetic_data'] is True
+          assert data['capture']['real_user_data'] is False
+          assert not any(data['hard_boundaries'].values())
+          print('FITNEXUS_PLAY_STORE_SCREENSHOT_03_CONTRACT=PASS')
