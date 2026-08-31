@@ -28,7 +28,8 @@ jobs:
           grep -F 'STORE_CAPTURE_REMOTE_MUTATION_FORBIDDEN' "$APP/lib/features/professor/professor_decision_intelligence_repository.dart"
           grep -F 'FITNEXUS_PLAY_STORE_SCREENSHOT_03_DECISION_INTELLIGENCE_V1=PASS' "$RUNNER"
           grep -F 'Screenshot 02 V1 derives the local PNG filename from Contract.capture.output_filename.' "$RUNNER"
-          grep -F "$adaptedV6 = $v6Text.Replace('02_student_management_1080x1920.png','03_decision_intelligence_1080x1920.png')" "$RUNNER" || grep -F "adaptedV6 =" "$RUNNER"
+          grep -F 'adaptedV6 = $v6Text.Replace' "$RUNNER"
+          grep -F '03_decision_intelligence_1080x1920.png' "$RUNNER"
 
       - name: Validate Screenshot 03 JSON boundaries
         shell: python
