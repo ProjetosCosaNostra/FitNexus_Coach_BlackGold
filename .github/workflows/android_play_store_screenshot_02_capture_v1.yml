@@ -1,0 +1,148 @@
+name: Android Play Store Screenshot 02 Capture V1
+
+on:
+  pull_request:
+    paths:
+      - '03_app_flutter/fitnexus_app/android/play_store/PLAY_STORE_SCREENSHOT_02_CAPTURE_V1.json'
+      - '03_app_flutter/fitnexus_app/lib/store_capture_main.dart'
+      - '03_app_flutter/fitnexus_app/lib/features/professor/professor_data_repository.dart'
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_CAPTURE_V1.ps1'
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_VISUAL_STATE_REPAIR_V1.ps1'
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_VISUAL_STATE_REPAIR_V2.ps1'
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_FOREGROUND_RECOVERY_V3.ps1'
+      - '18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_COMPRESSED_DARK_UI_FALSE_POSITIVE_20260829.md'
+      - '18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_SPARSE_GRID_COLOR_DIVERSITY_FALSE_POSITIVE_20260829.md'
+      - '18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_CROSS_PROJECT_ANR_CONTAMINATION_20260830.md'
+      - '18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_EMPTY_UI_HIERARCHY_BINDING_20260830.md'
+      - '.github/workflows/android_play_store_screenshot_02_capture_v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate screenshot 02 contract
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          path = Path('03_app_flutter/fitnexus_app/android/play_store/PLAY_STORE_SCREENSHOT_02_CAPTURE_V1.json')
+          data = json.loads(path.read_text(encoding='utf-8'))
+          assert data['application_id'] == 'br.com.lafamigliaplayworks.fitnexuscoach'
+          assert data['capture']['target_width_px'] == 1080
+          assert data['capture']['target_height_px'] == 1920
+          assert data['capture']['synthetic_data'] is True
+          assert data['capture']['real_user_data'] is False
+          assert data['capture']['production_ui_widget'] == 'StudentAccessManagementPage'
+          assert data['capture']['dart_define_shot'] == '02'
+          visual = data['capture']['visual_evidence']
+          assert visual['content_aware_required'] is True
+          assert visual['minimum_file_bytes_corruption_floor'] == 20000
+          assert visual['unique_color_count_hard_gate'] is False
+          assert visual['visible_non_dark_content_required'] is True
+          assert visual['blackgold_signal_required'] is True
+          assert visual['structural_transition_required'] is True
+          assert visual['multi_band_vertical_occupancy_required'] is True
+          assert visual['human_visual_review_before_publication'] is True
+          fg = data['capture']['foreground_guard']
+          assert fg['cross_project_anr_contamination_guard_required'] is True
+          assert fg['uiautomator_proven_close_action_required'] is True
+          assert fg['arbitrary_coordinate_tap_forbidden'] is True
+          assert fg['retry_after_anr_cleanup_maximum'] == 1
+          for key, value in data['hard_boundaries'].items():
+              assert value is False, f'{key} must remain false'
+          print('FITNEXUS_PLAY_SCREENSHOT_02_CONTRACT=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_02_STRUCTURAL_VISUAL_CONTRACT=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_02_FOREGROUND_GUARD_CONTRACT=PASS')
+
+      - name: Validate base runner without Android binding
+        shell: pwsh
+        run: |
+          ./03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_CAPTURE_V1.ps1 -ValidateOnly
+
+      - name: Parse Windows-only repair runners on CI host
+        shell: pwsh
+        run: |
+          $paths = @(
+            '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_VISUAL_STATE_REPAIR_V2.ps1',
+            '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_FOREGROUND_RECOVERY_V3.ps1'
+          )
+          foreach ($path in $paths) {
+            $text = Get-Content -LiteralPath $path -Raw
+            [void][ScriptBlock]::Create($text)
+            Write-Output ("POWERSHELL_PARSE_PASS=" + $path)
+          }
+          Write-Output 'WINDOWS_ONLY_CHILD_EXECUTION_NOT_FAKED_ON_UBUNTU=true'
+
+      - name: Guard capture isolation, PS5.1 compatibility, visual evidence and foreground recovery
+        shell: python
+        run: |
+          import re
+          from pathlib import Path
+          entry = Path('03_app_flutter/fitnexus_app/lib/store_capture_main.dart').read_text(encoding='utf-8')
+          repo = Path('03_app_flutter/fitnexus_app/lib/features/professor/professor_data_repository.dart').read_text(encoding='utf-8')
+          runner = Path('03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_CAPTURE_V1.ps1').read_text(encoding='utf-8')
+          repair = Path('03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_VISUAL_STATE_REPAIR_V2.ps1').read_text(encoding='utf-8')
+          foreground = Path('03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_FOREGROUND_RECOVERY_V3.ps1').read_text(encoding='utf-8')
+          failure_record_1 = Path('18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_COMPRESSED_DARK_UI_FALSE_POSITIVE_20260829.md').read_text(encoding='utf-8')
+          failure_record_2 = Path('18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_SPARSE_GRID_COLOR_DIVERSITY_FALSE_POSITIVE_20260829.md').read_text(encoding='utf-8')
+          failure_record_3 = Path('18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_CROSS_PROJECT_ANR_CONTAMINATION_20260830.md').read_text(encoding='utf-8')
+          failure_record_4 = Path('18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_EMPTY_UI_HIERARCHY_BINDING_20260830.md').read_text(encoding='utf-8')
+          assert 'FITNEXUS_STORE_CAPTURE_SHOT' in entry
+          assert "fitNexusStoreCaptureShot == '02'" in entry
+          assert 'StudentAccessManagementPage' in entry
+          assert 'Supabase.initialize' not in entry
+          assert 'fitNexusStoreCaptureDataMode' in repo
+          assert "'FITNEXUS_STORE_CAPTURE'" in repo
+          assert 'STORE_CAPTURE_REMOTE_MUTATION_FORBIDDEN' in repo
+          assert 'store-student-01' in repo
+          assert '--dart-define=FITNEXUS_STORE_CAPTURE=true' in runner
+          assert '--dart-define=FITNEXUS_STORE_CAPTURE_SHOT=02' in runner
+          assert 'FAILSAFE_RESTORE_PRODUCTION_APK' in runner
+          assert 'Assert-CanonicalReleaseInstalled' in runner
+          assert 'PRODUCTION_RELEASE_RESTORED=' in runner
+          assert 'SUPABASE_MUTATION_PERFORMED=false' in runner
+          assert 'PLAY_CONSOLE_MUTATION_PERFORMED=false' in runner
+          assert '[int]($Bytes[$Offset])' in runner
+          assert '[int]($Bytes[$Offset + 1])' in runner
+          assert '[int]($Bytes[$Offset + 2])' in runner
+          assert '[int]($Bytes[$Offset + 3])' in runner
+          assert "'if ($screenshotBytes -lt 60000) {'" in repair
+          assert "'if ($screenshotBytes -lt 20000) {'" in repair
+          assert 'System.Drawing.Bitmap' in repair
+          assert 'VISUAL_STRUCTURAL_TRANSITIONS=' in repair
+          assert 'VISUAL_OCCUPIED_VERTICAL_BANDS=' in repair
+          assert 'UNIQUE_COLOR_COUNT_HARD_GATE=false' in repair
+          assert 'RECEIPT_INVALIDATED=true' in repair
+          assert 'android:id/aerr_close' in foreground
+          assert 'uiautomator' in foreground
+          assert '[AllowEmptyString()]' in foreground
+          assert 'SCREENSHOT_02_V3_UI_HIERARCHY=EMPTY_NO_ANR_ACTION' in foreground
+          assert 'IsNullOrWhiteSpace([string]$xml)' in foreground
+          assert 'IsNullOrWhiteSpace([string]$xmlAfterFailure)' in foreground
+          assert 'ANR_CLEARED_RETRY_CAPTURE_ONCE' in foreground
+          assert 'RETRY_ONLY_IF_ANR_DETECTED=true' in foreground
+          assert 'CROSS_PROJECT_FOREGROUND_CONTAMINATION_GUARD=PASS' in foreground
+          assert 'FNX-PLAY-SCREENSHOT-02-COMPRESSED-DARK-UI-FILESIZE-FALSE-POSITIVE-003' in failure_record_1
+          assert 'FNX-PLAY-SCREENSHOT-02-SPARSE-GRID-UNIQUE-COLOR-FALSE-POSITIVE-004' in failure_record_2
+          assert 'FNX-PLAY-SCREENSHOT-02-CROSS-PROJECT-ANR-FOREGROUND-CONTAMINATION-005' in failure_record_3
+          assert 'FNX-PLAY-SCREENSHOT-02-EMPTY-UI-HIERARCHY-BINDING-006' in failure_record_4
+          forbidden = ['.ArgumentList', 'ForEach-Object -Parallel', '??', '?.']
+          hits = [token for token in forbidden if token in runner or token in repair or token in foreground]
+          assert not hits, f'PowerShell 5.1 incompatible token(s): {hits}'
+          inline_if_value = re.compile(r'=\s*\(\s*if\s*\(', re.IGNORECASE)
+          assert not inline_if_value.search(runner)
+          assert not inline_if_value.search(repair)
+          assert not inline_if_value.search(foreground)
+          print('FITNEXUS_PLAY_SCREENSHOT_02_ISOLATION_GUARD=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_02_PS51_GUARD=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_02_FAILSAFE_RESTORE_GUARD=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_02_STRUCTURAL_VISUAL_GUARD=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_02_CROSS_PROJECT_ANR_GUARD=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_02_EMPTY_UI_HIERARCHY_GUARD=PASS')
+          print('FITNEXUS_PLAY_SCREENSHOT_02_CI_HOST_SHELL_GUARD=PASS')

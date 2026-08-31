@@ -1,0 +1,50 @@
+name: Android Play Store Screenshot 02 Capture Session Quarantine V4
+
+on:
+  pull_request:
+    paths:
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_CAPTURE_SESSION_QUARANTINE_V4.ps1'
+      - '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_FOREGROUND_RECOVERY_V3.ps1'
+      - '18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_CAPTURE_SESSION_QUARANTINE_STRATEGY_20260830.md'
+      - '.github/workflows/android_play_store_screenshot_02_capture_session_quarantine_v4.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse PowerShell 5.1 compatible quarantine runner
+        shell: pwsh
+        run: |
+          $path = '03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_CAPTURE_SESSION_QUARANTINE_V4.ps1'
+          $text = Get-Content -LiteralPath $path -Raw
+          [void][ScriptBlock]::Create($text)
+          Write-Output 'FITNEXUS_PLAY_SCREENSHOT_02_QUARANTINE_V4_PARSE=PASS'
+
+      - name: Guard deterministic emulator capture session
+        shell: python
+        run: |
+          import re
+          from pathlib import Path
+          runner = Path('03_app_flutter/fitnexus_app/tool/FITNEXUS_PLAY_STORE_SCREENSHOT_02_CAPTURE_SESSION_QUARANTINE_V4.ps1').read_text(encoding='utf-8')
+          record = Path('18_logs_decisoes/FNX_PLAY_SCREENSHOT_02_CAPTURE_SESSION_QUARANTINE_STRATEGY_20260830.md').read_text(encoding='utf-8')
+          assert "pm','list','packages','-3" in runner
+          assert "'am','force-stop',$pkg" in runner
+          assert "$pkg -ne $PackageId" in runner
+          assert 'UNINSTALL_PERFORMED=false' in runner
+          assert 'APP_DATA_CLEAR_PERFORMED=false' in runner
+          assert 'REMOTE_MUTATION_PERFORMED=false' in runner
+          assert 'FITNEXUS_PLAY_STORE_SCREENSHOT_02_CAPTURE_SESSION_QUARANTINE_V4=PASS' in runner
+          assert 'FNX-PLAY-SCREENSHOT-02-SHARED-EMULATOR-CROSS-PROJECT-STATE-QUARANTINE-007' in record
+          forbidden = ['pm uninstall', 'pm clear', '.ArgumentList', 'ForEach-Object -Parallel', '??', '?.']
+          hits = [token for token in forbidden if token in runner]
+          assert not hits, f'forbidden token(s): {hits}'
+          inline_if_value = re.compile(r'=\s*\(\s*if\s*\(', re.IGNORECASE)
+          assert not inline_if_value.search(runner)
+          print('FITNEXUS_PLAY_SCREENSHOT_02_QUARANTINE_V4_GUARD=PASS')
+          print('SHARED_EMULATOR_CROSS_PROJECT_PROCESS_ISOLATION=PASS')
