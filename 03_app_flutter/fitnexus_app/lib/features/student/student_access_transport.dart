@@ -15,16 +15,11 @@ import 'student_access_transport_contract.dart';
 /// repositories continue to use [instance].
 class StudentAccessTransport {
   StudentAccessTransport._({
-    SupabaseClient? clientOverride,
-    StudentAccessTransportMode? configuredModeOverride,
-    bool? explicitRollbackRequestedOverride,
-    bool? explicitRollbackAuthorizedOverride,
-  })  : _clientOverride = clientOverride,
-        _configuredModeOverride = configuredModeOverride,
-        _explicitRollbackRequestedOverride =
-            explicitRollbackRequestedOverride,
-        _explicitRollbackAuthorizedOverride =
-            explicitRollbackAuthorizedOverride;
+    this._clientOverride,
+    this._configuredModeOverride,
+    this._explicitRollbackRequestedOverride,
+    this._explicitRollbackAuthorizedOverride,
+  });
 
   static final StudentAccessTransport instance = StudentAccessTransport._();
 

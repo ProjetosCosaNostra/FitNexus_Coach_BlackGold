@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "package_name": "br.com.lafamigliaplayworks.fitnexuscoach",
+  "billing_authority": "google_play",
+  "products": [
+    {
+      "plan_code": "solo",
+      "product_id": "fitnexus_solo",
+      "base_plans": [
+        {"billing_interval": "month", "base_plan_id": "monthly", "auto_renewing": true},
+        {"billing_interval": "year", "base_plan_id": "annual", "auto_renewing": true}
+      ]
+    },
+    {
+      "plan_code": "pro",
+      "product_id": "fitnexus_pro",
+      "base_plans": [
+        {"billing_interval": "month", "base_plan_id": "monthly", "auto_renewing": true},
+        {"billing_interval": "year", "base_plan_id": "annual", "auto_renewing": true}
+      ]
+    },
+    {
+      "plan_code": "studio",
+      "product_id": "fitnexus_studio",
+      "base_plans": [
+        {"billing_interval": "month", "base_plan_id": "monthly", "auto_renewing": true},
+        {"billing_interval": "year", "base_plan_id": "annual", "auto_renewing": true}
+      ]
+    }
+  ],
+  "cross_platform_entitlement": {
+    "android_purchase_channel": "google_play_billing",
+    "web_purchase_channel": "disabled_for_v1",
+    "windows_purchase_channel": "disabled_for_v1",
+    "web_and_windows_use_account_entitlement": true
+  },
+  "server_verification": {
+    "endpoint": "play-billing-verify",
+    "google_api": "purchases.subscriptionsv2.get",
+    "requires_service_account": true,
+    "raw_purchase_token_persisted": false
+  },
+  "publication_blockers": [
+    "create_products_and_base_plans_in_play_console",
+    "set_play_console_regional_prices",
+    "configure_google_play_developer_api_service_account",
+    "upload_signed_aab_to_internal_or_closed_track",
+    "complete_real_google_play_test_purchase"
+  ]
+}
