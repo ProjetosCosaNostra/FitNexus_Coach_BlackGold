@@ -49,6 +49,13 @@ jobs:
           grep -F 'ASAAS_API_KEY' "$EDGE"
           grep -F 'ASAAS_ENVIRONMENT' "$EDGE"
           grep -F 'payment_confirmation_authority: "webhook"' "$EDGE"
+          grep -F 'resolveHostedCheckoutUrl' "$EDGE"
+          grep -F 'addCalendarMonthsUtc' "$EDGE"
+          grep -F 'https://sandbox.asaas.com/checkoutSession/show/' "$EDGE"
+          grep -F 'https://asaas.com/checkoutSession/show?id=' "$EDGE"
+          grep -F 'parsed.hostname === "asaas.com"' "$EDGE"
+          grep -F 'parsed.hostname.endsWith(".asaas.com")' "$EDGE"
+          grep -F 'billingInterval === "year" ? 12 : 1' "$EDGE"
           grep -F "_client.functions.invoke(" "$FLUTTER"
           grep -F "'billing-checkout'" "$FLUTTER"
           grep -F "'plan_code': planCode" "$FLUTTER"
@@ -58,3 +65,5 @@ jobs:
             exit 1
           fi
           echo 'BILLING_CHECKOUT_SERVER_AUTHORITY=PASS'
+          echo 'ASAAS_HOSTED_CHECKOUT_LINK_CONTRACT=PASS'
+          echo 'ASAAS_RECURRING_PERIOD_DATE_CONTRACT=PASS'
