@@ -1,0 +1,60 @@
+name: Billing Checkout Quality Gate
+
+on:
+  pull_request:
+    paths:
+      - '03_app_flutter/fitnexus_app/lib/features/professor/professor_billing_repository.dart'
+      - '03_app_flutter/fitnexus_app/lib/features/professor/professor_checkout_page.dart'
+      - '03_app_flutter/fitnexus_app/lib/features/professor/authenticated_professor_page.dart'
+      - '04_backend_supabase/functions/billing-checkout/**'
+      - '.github/workflows/billing_checkout_quality_gate.yml'
+  push:
+    branches:
+      - main
+      - 'blackgold/**'
+    paths:
+      - '03_app_flutter/fitnexus_app/lib/features/professor/professor_billing_repository.dart'
+      - '03_app_flutter/fitnexus_app/lib/features/professor/professor_checkout_page.dart'
+      - '03_app_flutter/fitnexus_app/lib/features/professor/authenticated_professor_page.dart'
+      - '04_backend_supabase/functions/billing-checkout/**'
+      - '.github/workflows/billing_checkout_quality_gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  billing-checkout-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Typecheck billing checkout Edge Function
+        run: deno check 04_backend_supabase/functions/billing-checkout/index.ts
+
+      - name: Fail closed contract guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          EDGE='04_backend_supabase/functions/billing-checkout/index.ts'
+          FLUTTER='03_app_flutter/fitnexus_app/lib/features/professor/professor_billing_repository.dart'
+          PAGE='03_app_flutter/fitnexus_app/lib/features/professor/professor_checkout_page.dart'
+          grep -F 'create_billing_checkout_intent' "$EDGE"
+          grep -F 'attach_billing_provider_checkout' "$EDGE"
+          grep -F 'ASAAS_API_KEY' "$EDGE"
+          grep -F 'ASAAS_ENVIRONMENT' "$EDGE"
+          grep -F 'payment_confirmation_authority: "webhook"' "$EDGE"
+          grep -F "_client.functions.invoke(" "$FLUTTER"
+          grep -F "'billing-checkout'" "$FLUTTER"
+          grep -F "'plan_code': planCode" "$FLUTTER"
+          grep -F "'billing_interval': billingInterval" "$FLUTTER"
+          if grep -Eq "amount_minor|ASAAS_API_KEY" "$PAGE"; then
+            echo 'BILLING_CLIENT_AUTHORITY_LEAK=FAIL'
+            exit 1
+          fi
+          echo 'BILLING_CHECKOUT_SERVER_AUTHORITY=PASS'
