@@ -233,10 +233,7 @@ Wait-NewEmulatorRegistered -Adb $Adb -Serial $Serial -EmulatorProcess $EmulatorP
 Write-Output 'PHASE=WAIT_NEW_EMULATOR_BOOT'
 Wait-NewEmulatorBooted -Adb $Adb -Serial $Serial -EmulatorProcess $EmulatorProcess
 
-$ExternalRoot = Join-Path $env:USERPROFILE 'Documents\FitNexus_Coach_BlGold_EXTERNAL\play_signing'
-if (-not (Test-Path -LiteralPath $ExternalRoot -PathType Container)) {
-    $ExternalRoot = Join-Path $env:USERPROFILE 'Documents\FitNexus_Coach_BlackGold_EXTERNAL\play_signing'
-}
+$ExternalRoot = Join-Path $env:USERPROFILE 'Documents\FitNexus_Coach_BlackGold_EXTERNAL\play_signing'
 $AuthorityDir = Join-Path $ExternalRoot 'authority'
 $KeystoreFile = Join-Path $AuthorityDir 'fitnexus-upload-key.jks'
 $ProtectedSecretFile = Join-Path $AuthorityDir 'upload-key-secret.dpapi'
