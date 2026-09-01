@@ -1,8 +1,7 @@
--- PROMOTED: remote migration 20260901004224_stage92_billing_checkout_webhook_authority.
--- Canonical migration: migrations/20260901004224_stage92_billing_checkout_webhook_authority.sql
--- This operations copy is retained as historical candidate evidence only.
+-- Remote promotion ledger version: 20260901004224
+-- Migration name: stage92_billing_checkout_webhook_authority
+-- Source candidate: operations/billing_checkout_webhook_authority_v1.sql
 --
--- BGF-BILLING-CHECKOUT-WEBHOOK-AUTHORITY-V1
 -- Provider webhooks may only mutate checkout/subscription state through this
 -- narrow service-role-only command. Browser callbacks never call this path.
 
