@@ -8,7 +8,8 @@ ROOT = Path(__file__).resolve().parents[2]
 MIGRATION = ROOT / "04_backend_supabase" / "migrations" / "20260819060000_stage19_public_funnel_capture.sql"
 APP = ROOT / "03_app_flutter" / "fitnexus_app" / "lib"
 TELEMETRY = APP / "features" / "growth" / "public_funnel_telemetry.dart"
-LANDING = APP / "features" / "landing" / "responsive_landing_page.dart"
+LANDING_ENTRY = APP / "features" / "landing" / "responsive_landing_page.dart"
+LANDING_UI = APP / "features" / "landing" / "premium_landing_page.dart"
 AUTH = APP / "features" / "auth" / "auth_preview_page.dart"
 ROUTES = APP / "app" / "fitnexus_app.dart"
 
@@ -57,7 +58,9 @@ def declared_columns(create_table_body: str) -> set[str]:
 def main() -> int:
     migration = read(MIGRATION, "BGF-PUBLIC-FUNNEL-FILE-MISSING-116").lower()
     telemetry = read(TELEMETRY, "BGF-PUBLIC-FUNNEL-FILE-MISSING-116")
-    landing = read(LANDING, "BGF-PUBLIC-FUNNEL-FILE-MISSING-116")
+    landing_entry = read(LANDING_ENTRY, "BGF-PUBLIC-FUNNEL-FILE-MISSING-116")
+    landing_ui = read(LANDING_UI, "BGF-PUBLIC-FUNNEL-FILE-MISSING-116")
+    landing = landing_entry + "\n" + landing_ui
     auth = read(AUTH, "BGF-PUBLIC-FUNNEL-FILE-MISSING-116")
     routes = read(ROUTES, "BGF-PUBLIC-FUNNEL-FILE-MISSING-116")
 
@@ -86,9 +89,9 @@ def main() -> int:
         (telemetry, "SharedPreferences", "BGF-PUBLIC-FUNNEL-VISITOR-STABILITY-125", "anonymous visitor key lost bounded persistence"),
         (telemetry, "math.Random.secure()", "BGF-PUBLIC-FUNNEL-VISITOR-STABILITY-125", "visitor key generation lost cryptographic randomness"),
         (telemetry, "Public funnel telemetry failed without blocking navigation or signup.", "BGF-PUBLIC-FUNNEL-FAILOPEN-126", "public telemetry must remain observable and fail-open"),
-        (landing, "captureLandingView", "BGF-PUBLIC-FUNNEL-LANDING-ENTRY-127", "landing route no longer emits landing_view"),
-        (landing, "public-signup-entry", "BGF-PUBLIC-FUNNEL-SIGNUP-ENTRY-128", "explicit online signup CTA disappeared"),
-        (landing, "pushNamed('/start')", "BGF-PUBLIC-FUNNEL-SIGNUP-ENTRY-128", "public signup CTA no longer enters the tracked signup route"),
+        (landing_entry, "captureLandingView", "BGF-PUBLIC-FUNNEL-LANDING-ENTRY-127", "landing route no longer emits landing_view"),
+        (landing_ui, "public-signup-entry", "BGF-PUBLIC-FUNNEL-SIGNUP-ENTRY-128", "explicit online signup CTA disappeared"),
+        (landing_ui, "pushNamed('/start')", "BGF-PUBLIC-FUNNEL-SIGNUP-ENTRY-128", "public signup CTA no longer enters the tracked signup route"),
         (auth, "initialRegisterMode", "BGF-PUBLIC-FUNNEL-SIGNUP-ENTRY-128", "explicit signup route no longer opens registration mode"),
         (auth, "captureSignupStarted", "BGF-PUBLIC-FUNNEL-SIGNUP-ENTRY-128", "registration mode lost signup_started capture"),
         (routes, "'/start': (_) => const AuthPreviewPage(initialRegisterMode: true)", "BGF-PUBLIC-FUNNEL-SIGNUP-ENTRY-128", "tracked public signup route disappeared"),
@@ -160,6 +163,7 @@ def main() -> int:
     print("PUBLIC_FUNNEL_CAPTURE_CONTRACT_GATE=PASS")
     print("LANDING_VIEW=ACTIVE_PUBLIC_CAPTURE")
     print("SIGNUP_STARTED=ACTIVE_PUBLIC_CAPTURE")
+    print("LANDING_UI_MODULE=PREMIUM_LANDING_PAGE")
     print("RAW_VISITOR_KEY_STORED=NO")
     print("ARBITRARY_QUERY_PAYLOAD_STORED=NO")
     print("PUBLIC_ROW_DIRECT_MUTATION=DENIED")
