@@ -221,6 +221,9 @@ jobs:
       - name: Stage 35 controlled fixture migration promotion guard
         run: python ../../04_backend_supabase/tools/verify_stage35_alert_controlled_fixture_migration_promotion.py
 
+      - name: Stage 31 client Edge live proof candidate guard
+        run: python ../../04_backend_supabase/tools/verify_student_access_stage31_live_proof_candidate.py
+
       - name: Student client Edge runtime smoke lifecycle guard
         run: python ../../04_backend_supabase/tools/verify_stage35_fixture_promotion_historical_compat.py smoke
 
