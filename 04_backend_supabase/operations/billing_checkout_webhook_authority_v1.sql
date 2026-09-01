@@ -1,5 +1,6 @@
--- Candidate authority for promotion after PR validation.
--- No remote migration is performed by this file alone.
+-- PROMOTED: remote migration 20260901004224_stage92_billing_checkout_webhook_authority.
+-- Canonical migration: migrations/20260901004224_stage92_billing_checkout_webhook_authority.sql
+-- This operations copy is retained as historical candidate evidence only.
 --
 -- BGF-BILLING-CHECKOUT-WEBHOOK-AUTHORITY-V1
 -- Provider webhooks may only mutate checkout/subscription state through this
