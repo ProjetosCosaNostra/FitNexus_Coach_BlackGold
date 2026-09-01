@@ -86,10 +86,10 @@ function pemToBytes(pem: string): Uint8Array {
 }
 
 async function sha256Hex(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(value),
-  );
+  const encoded = new TextEncoder().encode(value);
+  const digestInput = new Uint8Array(encoded.byteLength);
+  digestInput.set(encoded);
+  const digest = await crypto.subtle.digest("SHA-256", digestInput.buffer);
   return Array.from(new Uint8Array(digest))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
