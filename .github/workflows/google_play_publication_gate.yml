@@ -83,12 +83,13 @@ jobs:
         run: flutter pub get
 
       - name: Verify Play Billing dependency generation
-        working-directory: 03_app_flutter/fitnexus_app/android
         shell: bash
         run: |
           set -euo pipefail
-          ./gradlew app:dependencies --configuration releaseRuntimeClasspath > /tmp/fitnexus_android_deps.txt
-          grep -E 'com\.android\.billingclient:billing(-ktx)?:([89])\.' /tmp/fitnexus_android_deps.txt
+          PLUGIN_GRADLE="$(find "$PUB_CACHE/hosted" -path '*/in_app_purchase_android-0.5.3/android/build.gradle*' -type f -print -quit)"
+          test -n "$PLUGIN_GRADLE"
+          echo "PLAY_BILLING_PLUGIN_GRADLE=$PLUGIN_GRADLE"
+          grep -E 'com\.android\.billingclient:billing(-ktx)?:[89]\.' "$PLUGIN_GRADLE"
           echo 'PLAY_BILLING_LIBRARY_SUPPORTED=PASS'
 
       - name: Flutter analyze
