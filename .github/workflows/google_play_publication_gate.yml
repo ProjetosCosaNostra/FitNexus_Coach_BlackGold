@@ -1,0 +1,114 @@
+name: Google Play Publication Gate
+
+on:
+  pull_request:
+    paths:
+      - '03_app_flutter/fitnexus_app/**'
+      - '04_backend_supabase/functions/play-billing-verify/**'
+      - '04_backend_supabase/operations/google_play_subscription_authority_v1.sql'
+      - '.github/workflows/google_play_publication_gate.yml'
+  push:
+    branches:
+      - main
+      - 'blackgold/**'
+    paths:
+      - '03_app_flutter/fitnexus_app/**'
+      - '04_backend_supabase/functions/play-billing-verify/**'
+      - '04_backend_supabase/operations/google_play_subscription_authority_v1.sql'
+      - '.github/workflows/google_play_publication_gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  play-publication-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Static Play publication contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP='03_app_flutter/fitnexus_app/android/app/build.gradle.kts'
+          PUB='03_app_flutter/fitnexus_app/pubspec.yaml'
+          PLAY='03_app_flutter/fitnexus_app/lib/features/professor/play_billing_service.dart'
+          PAGE='03_app_flutter/fitnexus_app/lib/features/professor/professor_checkout_page.dart'
+          SQL='04_backend_supabase/operations/google_play_subscription_authority_v1.sql'
+          EDGE='04_backend_supabase/functions/play-billing-verify/index.ts'
+          grep -F 'compileSdk = 36' "$APP"
+          grep -F 'targetSdk = 36' "$APP"
+          grep -F 'in_app_purchase: ^3.3.0' "$PUB"
+          grep -F "fitnexus_solo" "$PLAY"
+          grep -F "fitnexus_pro" "$PLAY"
+          grep -F "fitnexus_studio" "$PLAY"
+          grep -F "monthlyBasePlanId = 'monthly'" "$PLAY"
+          grep -F "annualBasePlanId = 'annual'" "$PLAY"
+          grep -F "play-billing-verify" "$PLAY"
+          grep -F 'Google Play Billing' "$PAGE"
+          if grep -Fq 'createHostedCheckout(' "$PAGE"; then
+            echo 'ANDROID_UI_EXTERNAL_CHECKOUT_LEAK=FAIL'
+            exit 1
+          fi
+          grep -F 'create or replace function public.apply_google_play_subscription_verification' "$SQL"
+          grep -F 'GOOGLE_PLAY_SERVICE_ACCOUNT_JSON' "$EDGE"
+          grep -F 'purchases/subscriptionsv2/tokens/' "$EDGE"
+          grep -F 'GOOGLE_PLAY_ACCOUNT_BINDING_MISMATCH' "$EDGE"
+          echo 'GOOGLE_PLAY_PUBLICATION_CONTRACT=PASS'
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Typecheck Play verification function
+        run: deno check 04_backend_supabase/functions/play-billing-verify/index.ts
+
+      - name: Set up Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install Android 16 SDK
+        shell: bash
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36'
+
+      - name: Resolve Flutter dependencies
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter pub get
+
+      - name: Verify Play Billing dependency generation
+        working-directory: 03_app_flutter/fitnexus_app/android
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./gradlew app:dependencies --configuration releaseRuntimeClasspath > /tmp/fitnexus_android_deps.txt
+          grep -E 'com\.android\.billingclient:billing(-ktx)?:([89])\.' /tmp/fitnexus_android_deps.txt
+          echo 'PLAY_BILLING_LIBRARY_SUPPORTED=PASS'
+
+      - name: Flutter analyze
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter analyze
+
+      - name: Flutter tests
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter test
+
+      - name: Android App Bundle preflight
+        working-directory: 03_app_flutter/fitnexus_app
+        run: flutter build appbundle --release --no-pub
+
+      - name: AAB publication receipt
+        working-directory: 03_app_flutter/fitnexus_app
+        shell: bash
+        run: |
+          set -euo pipefail
+          AAB='build/app/outputs/bundle/release/app-release.aab'
+          test -s "$AAB"
+          sha256sum "$AAB"
+          echo 'GOOGLE_PLAY_AAB_PREFLIGHT=PASS'
