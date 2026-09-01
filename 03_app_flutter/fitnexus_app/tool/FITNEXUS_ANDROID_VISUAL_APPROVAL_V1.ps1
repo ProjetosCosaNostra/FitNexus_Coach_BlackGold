@@ -225,15 +225,18 @@ $EmulatorProcess = Start-Process -FilePath $Emulator -ArgumentList $emulatorArgs
 if ($null -eq $EmulatorProcess) { Fail 'NEW_EMULATOR_START_PROCESS_FAILED' }
 Write-Output ('NEW_EMULATOR_PID=' + $EmulatorProcess.Id)
 
-# Critical isolation fix: do not address emulator-PORT until ADB itself lists it.
-# A newly launched emulator legitimately returns "device not found" for a few
-# seconds; querying it early caused Windows PowerShell to abort the prior run.
+# Never query emulator-PORT directly until ADB lists that serial. A new emulator
+# legitimately needs time to bind console/ADB ports; the old implementation
+# treated that normal startup window as a fatal NativeCommandError.
 Write-Output 'PHASE=WAIT_NEW_EMULATOR_REGISTRATION'
 Wait-NewEmulatorRegistered -Adb $Adb -Serial $Serial -EmulatorProcess $EmulatorProcess
 Write-Output 'PHASE=WAIT_NEW_EMULATOR_BOOT'
 Wait-NewEmulatorBooted -Adb $Adb -Serial $Serial -EmulatorProcess $EmulatorProcess
 
-$ExternalRoot = Join-Path $env:USERPROFILE 'Documents\FitNexus_Coach_BlackGold_EXTERNAL\play_signing'
+$ExternalRoot = Join-Path $env:USERPROFILE 'Documents\FitNexus_Coach_BlGold_EXTERNAL\play_signing'
+if (-not (Test-Path -LiteralPath $ExternalRoot -PathType Container)) {
+    $ExternalRoot = Join-Path $env:USERPROFILE 'Documents\FitNexus_Coach_BlackGold_EXTERNAL\play_signing'
+}
 $AuthorityDir = Join-Path $ExternalRoot 'authority'
 $KeystoreFile = Join-Path $AuthorityDir 'fitnexus-upload-key.jks'
 $ProtectedSecretFile = Join-Path $AuthorityDir 'upload-key-secret.dpapi'
