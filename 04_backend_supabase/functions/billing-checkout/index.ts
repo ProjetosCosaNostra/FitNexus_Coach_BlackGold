@@ -32,6 +32,11 @@ type ServiceCredential = {
   authorization?: string;
 };
 
+type AsaasEnvironment = {
+  baseUrl: string;
+  environment: "sandbox" | "production";
+};
+
 function corsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("origin")?.trim() ?? "";
   const allowed = ALLOWED_BROWSER_ORIGINS.has(origin)
@@ -121,7 +126,7 @@ function errorCode(data: unknown): string {
   return hint || "BILLING_BACKEND_REQUEST_FAILED";
 }
 
-function asaasEnvironment(): { baseUrl: string; environment: "sandbox" | "production" } | null {
+function asaasEnvironment(): AsaasEnvironment | null {
   const raw = (Deno.env.get("ASAAS_ENVIRONMENT") ?? "sandbox").trim().toLowerCase();
   if (raw === "sandbox") {
     return { baseUrl: "https://api-sandbox.asaas.com/v3", environment: "sandbox" };
@@ -156,6 +161,45 @@ function callbackBaseUrl(): string | null {
 function asAsaasDateTime(value: Date): string {
   const pad = (number: number) => String(number).padStart(2, "0");
   return `${value.getUTCFullYear()}-${pad(value.getUTCMonth() + 1)}-${pad(value.getUTCDate())} ${pad(value.getUTCHours())}:${pad(value.getUTCMinutes())}:${pad(value.getUTCSeconds())}`;
+}
+
+function addCalendarMonthsUtc(source: Date, months: number): Date {
+  const result = new Date(source.getTime());
+  const originalDay = result.getUTCDate();
+  result.setUTCDate(1);
+  result.setUTCMonth(result.getUTCMonth() + months);
+  const lastDay = new Date(Date.UTC(
+    result.getUTCFullYear(),
+    result.getUTCMonth() + 1,
+    0,
+  )).getUTCDate();
+  result.setUTCDate(Math.min(originalDay, lastDay));
+  return result;
+}
+
+function resolveHostedCheckoutUrl(
+  data: JsonObject,
+  checkoutId: string,
+  environment: "sandbox" | "production",
+): string | null {
+  const rawLink = typeof data.link === "string" ? data.link.trim() : "";
+  if (rawLink) {
+    try {
+      const parsed = new URL(rawLink);
+      const trustedHost = parsed.hostname === "asaas.com"
+        || parsed.hostname.endsWith(".asaas.com");
+      if (parsed.protocol === "https:" && trustedHost) {
+        return parsed.toString();
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  const encodedId = encodeURIComponent(checkoutId);
+  return environment === "sandbox"
+    ? `https://sandbox.asaas.com/checkoutSession/show/${encodedId}`
+    : `https://asaas.com/checkoutSession/show?id=${encodedId}`;
 }
 
 async function handlePost(req: Request): Promise<Response> {
@@ -202,8 +246,6 @@ async function handlePost(req: Request): Promise<Response> {
     return json(req, 503, { ok: false, error: "BILLING_SERVER_AUTHORITY_UNAVAILABLE" });
   }
 
-  // The client never provides price or provider. PostgreSQL resolves both from
-  // the currently promoted pricing decision and active provider selection.
   const intentResult = await rpc(
     supabaseUrl,
     "create_billing_checkout_intent",
@@ -268,7 +310,10 @@ async function handlePost(req: Request): Promise<Response> {
     });
   }
 
-  const nextDueDate = new Date(Date.now() + 10 * 60 * 1000);
+  const nextDueDate = addCalendarMonthsUtc(
+    new Date(),
+    billingInterval === "year" ? 12 : 1,
+  );
   const cycle = billingInterval === "year" ? "YEARLY" : "MONTHLY";
   const planName = PLAN_NAMES[planCode] ?? `FitNexus ${planCode}`;
 
@@ -330,9 +375,16 @@ async function handlePost(req: Request): Promise<Response> {
   }
 
   const providerCheckoutRef = typeof asaasData.id === "string" ? asaasData.id.trim() : "";
-  const checkoutUrl = typeof asaasData.link === "string" ? asaasData.link.trim() : "";
-  if (!providerCheckoutRef || !checkoutUrl.startsWith("https://")) {
+  if (!providerCheckoutRef) {
     return json(req, 502, { ok: false, error: "ASAAS_CHECKOUT_RESPONSE_INVALID" });
+  }
+  const checkoutUrl = resolveHostedCheckoutUrl(
+    asaasData,
+    providerCheckoutRef,
+    environment.environment,
+  );
+  if (!checkoutUrl) {
+    return json(req, 502, { ok: false, error: "ASAAS_CHECKOUT_LINK_INVALID" });
   }
 
   const serviceHeaders: Record<string, string> = { apikey: service.apiKey };
