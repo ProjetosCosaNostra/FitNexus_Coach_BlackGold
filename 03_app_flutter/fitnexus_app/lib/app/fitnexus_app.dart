@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 import '../features/auth/auth_preview_page.dart';
 import '../features/demo/demo_home_page.dart';
 import '../features/landing/ecosystem_links_page.dart';
+import '../features/landing/landing_page.dart';
 import '../features/landing/public_contact_page.dart';
-import '../features/landing/responsive_landing_page.dart';
 import '../features/professor/authenticated_professor_page.dart';
 import '../features/student/student_experience_page.dart';
 
 Map<String, WidgetBuilder> buildFitNexusRoutes({required bool includeDemo}) {
   return <String, WidgetBuilder>{
-    '/landing': (_) => const ResponsiveLandingPage(),
-    '/': (_) => const ResponsiveLandingPage(),
+    '/landing': (_) => const LandingPage(),
+    '/': (_) => const LandingPage(),
     '/links': (_) => const EcosystemLinksPage(),
     '/support': (_) => const PublicContactPage(),
     if (includeDemo) '/demo': (_) => const DemoHomePage(),
