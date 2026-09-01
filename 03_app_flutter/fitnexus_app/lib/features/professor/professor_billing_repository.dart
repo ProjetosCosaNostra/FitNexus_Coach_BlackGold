@@ -235,6 +235,45 @@ class PricingCatalogSnapshot {
   }
 }
 
+class HostedBillingCheckout {
+  const HostedBillingCheckout({
+    required this.checkoutIntentId,
+    required this.providerCode,
+    required this.planCode,
+    required this.billingInterval,
+    required this.checkoutUrl,
+    required this.environment,
+  });
+
+  final String checkoutIntentId;
+  final String providerCode;
+  final String planCode;
+  final String billingInterval;
+  final Uri checkoutUrl;
+  final String environment;
+
+  factory HostedBillingCheckout.fromJson(Map<String, dynamic> json) {
+    final String rawUrl = json['checkout_url'] as String? ?? '';
+    final Uri? uri = Uri.tryParse(rawUrl);
+    if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
+      throw StateError('BILLING_CHECKOUT_URL_INVALID');
+    }
+    final String intentId = json['checkout_intent_id'] as String? ?? '';
+    final String provider = json['provider_code'] as String? ?? '';
+    if (intentId.isEmpty || provider.isEmpty) {
+      throw StateError('BILLING_CHECKOUT_RESPONSE_INVALID');
+    }
+    return HostedBillingCheckout(
+      checkoutIntentId: intentId,
+      providerCode: provider,
+      planCode: json['plan_code'] as String? ?? '',
+      billingInterval: json['billing_interval'] as String? ?? '',
+      checkoutUrl: uri,
+      environment: json['environment'] as String? ?? 'unknown',
+    );
+  }
+}
+
 class ProfessorBillingRepository {
   ProfessorBillingRepository._();
 
@@ -262,6 +301,38 @@ class ProfessorBillingRepository {
       params: <String, dynamic>{'p_currency': currency},
     );
     return PricingCatalogSnapshot.fromJson(_map(response));
+  }
+
+  Future<HostedBillingCheckout> createHostedCheckout({
+    required String planCode,
+    required String billingInterval,
+  }) async {
+    if (!const <String>{'solo', 'pro', 'studio'}.contains(planCode)) {
+      throw ArgumentError.value(planCode, 'planCode', 'INVALID_PLAN_CODE');
+    }
+    if (!const <String>{'month', 'year'}.contains(billingInterval)) {
+      throw ArgumentError.value(
+        billingInterval,
+        'billingInterval',
+        'INVALID_BILLING_INTERVAL',
+      );
+    }
+
+    final String organizationId =
+        await AuthService.instance.ensureProfessorOrganization();
+    final FunctionResponse response = await _client.functions.invoke(
+      'billing-checkout',
+      body: <String, dynamic>{
+        'organization_id': organizationId,
+        'plan_code': planCode,
+        'billing_interval': billingInterval,
+      },
+    );
+    final Map<String, dynamic> data = _map(response.data);
+    if (data['ok'] != true) {
+      throw StateError(data['error']?.toString() ?? 'BILLING_CHECKOUT_FAILED');
+    }
+    return HostedBillingCheckout.fromJson(data);
   }
 }
 
