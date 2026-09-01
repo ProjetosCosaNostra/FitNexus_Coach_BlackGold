@@ -5,6 +5,7 @@ on:
     paths:
       - '04_backend_supabase/functions/billing-webhook/**'
       - '04_backend_supabase/operations/billing_checkout_webhook_authority_v1.sql'
+      - '04_backend_supabase/operations/billing_recurring_lifecycle_authority_v1.sql'
       - '.github/workflows/billing_webhook_quality_gate.yml'
   push:
     branches:
@@ -13,6 +14,7 @@ on:
     paths:
       - '04_backend_supabase/functions/billing-webhook/**'
       - '04_backend_supabase/operations/billing_checkout_webhook_authority_v1.sql'
+      - '04_backend_supabase/operations/billing_recurring_lifecycle_authority_v1.sql'
       - '.github/workflows/billing_webhook_quality_gate.yml'
 
 permissions:
@@ -38,19 +40,46 @@ jobs:
         run: |
           set -euo pipefail
           EDGE='04_backend_supabase/functions/billing-webhook/index.ts'
-          SQL='04_backend_supabase/operations/billing_checkout_webhook_authority_v1.sql'
+          CHECKOUT_SQL='04_backend_supabase/operations/billing_checkout_webhook_authority_v1.sql'
+          RECURRING_SQL='04_backend_supabase/operations/billing_recurring_lifecycle_authority_v1.sql'
+
           grep -F 'asaas-access-token' "$EDGE"
           grep -F 'record_billing_webhook_receipt' "$EDGE"
           grep -F 'apply_billing_checkout_webhook_event' "$EDGE"
+          grep -F 'bind_billing_provider_subscription' "$EDGE"
+          grep -F 'apply_billing_subscription_lifecycle_event' "$EDGE"
           grep -F 'mark_billing_webhook_receipt' "$EDGE"
           grep -F 'CHECKOUT_PAID' "$EDGE"
+          grep -F 'SUBSCRIPTION_CREATED' "$EDGE"
+          grep -F 'SUBSCRIPTION_INACTIVATED' "$EDGE"
+          grep -F 'PAYMENT_CONFIRMED' "$EDGE"
+          grep -F 'PAYMENT_RECEIVED' "$EDGE"
+          grep -F 'PAYMENT_OVERDUE' "$EDGE"
+          grep -F 'PAYMENT_REFUNDED' "$EDGE"
+          grep -F 'PAYMENT_CHARGEBACK_REQUESTED' "$EDGE"
+          grep -F 'PAYMENT_NOT_LINKED_TO_SUBSCRIPTION' "$EDGE"
           grep -F 'browser_callback_can_activate_subscription: false' "$EDGE"
-          grep -F 'create or replace function public.apply_billing_checkout_webhook_event' "$SQL"
-          grep -F "'provider_webhook'" "$SQL"
-          grep -F 'public.apply_subscription_authority_event' "$SQL"
-          grep -F 'grant execute on function public.apply_billing_checkout_webhook_event' "$SQL"
-          if grep -Eq 'grant .*authenticated|grant .*anon' "$SQL"; then
+          grep -F 'recurring_financial_authority: "provider_webhook"' "$EDGE"
+
+          grep -F 'create or replace function public.apply_billing_checkout_webhook_event' "$CHECKOUT_SQL"
+          grep -F "'provider_webhook'" "$CHECKOUT_SQL"
+          grep -F 'public.apply_subscription_authority_event' "$CHECKOUT_SQL"
+          grep -F 'grant execute on function public.apply_billing_checkout_webhook_event' "$CHECKOUT_SQL"
+
+          grep -F 'add column if not exists billing_interval text' "$RECURRING_SQL"
+          grep -F 'create or replace function public.bind_billing_provider_subscription' "$RECURRING_SQL"
+          grep -F 'SUBSCRIPTION_BINDING_AMBIGUOUS' "$RECURRING_SQL"
+          grep -F 'create or replace function public.apply_billing_subscription_lifecycle_event' "$RECURRING_SQL"
+          grep -F 'HISTORICAL_PAYMENT_EVENT_IGNORED' "$RECURRING_SQL"
+          grep -F 'HISTORICAL_REVERSAL_DOES_NOT_REVOKE_CURRENT_PERIOD' "$RECURRING_SQL"
+          grep -F 'PRE_DUE_PAYMENT_FAILURE_DOES_NOT_REVOKE_ACCESS' "$RECURRING_SQL"
+          grep -F 'public.apply_subscription_authority_event' "$RECURRING_SQL"
+          grep -F 'grant execute on function public.bind_billing_provider_subscription' "$RECURRING_SQL"
+          grep -F 'grant execute on function public.apply_billing_subscription_lifecycle_event' "$RECURRING_SQL"
+
+          if grep -Eq 'grant .*authenticated|grant .*anon' "$CHECKOUT_SQL" "$RECURRING_SQL"; then
             echo 'BILLING_WEBHOOK_PRIVILEGE_LEAK=FAIL'
             exit 1
           fi
           echo 'BILLING_WEBHOOK_AUTHORITY=PASS'
+          echo 'BILLING_RECURRING_LIFECYCLE_AUTHORITY=PASS'

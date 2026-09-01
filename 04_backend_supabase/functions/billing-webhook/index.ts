@@ -5,11 +5,28 @@ const JSON_HEADERS = {
   "cache-control": "no-store",
 };
 
-const SUPPORTED_CHECKOUT_EVENTS = new Set([
+const CHECKOUT_EVENTS = new Set([
   "CHECKOUT_CREATED",
   "CHECKOUT_PAID",
   "CHECKOUT_CANCELED",
   "CHECKOUT_EXPIRED",
+]);
+
+const SUBSCRIPTION_EVENTS = new Set([
+  "SUBSCRIPTION_CREATED",
+  "SUBSCRIPTION_UPDATED",
+  "SUBSCRIPTION_INACTIVATED",
+  "SUBSCRIPTION_DELETED",
+]);
+
+const STATEFUL_PAYMENT_EVENTS = new Set([
+  "PAYMENT_CONFIRMED",
+  "PAYMENT_RECEIVED",
+  "PAYMENT_OVERDUE",
+  "PAYMENT_REFUNDED",
+  "PAYMENT_CHARGEBACK_REQUESTED",
+  "PAYMENT_CREDIT_CARD_CAPTURE_REFUSED",
+  "PAYMENT_REPROVED_BY_RISK_ANALYSIS",
 ]);
 
 type JsonObject = Record<string, unknown>;
@@ -28,6 +45,10 @@ function json(status: number, body: unknown): Response {
 
 function isObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function optionalString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
 function serviceCredential(): ServiceCredential | null {
@@ -68,9 +89,6 @@ function secureEqual(left: string, right: string): boolean {
 }
 
 async function sha256Hex(bytes: Uint8Array): Promise<string> {
-  // Deno 2.9's WebCrypto typings require an ArrayBuffer-backed view rather
-  // than Uint8Array<ArrayBufferLike>. Copying is intentional and bounded by
-  // the webhook payload limit below.
   const digestInput = new Uint8Array(bytes.byteLength);
   digestInput.set(bytes);
   const digest = await crypto.subtle.digest("SHA-256", digestInput.buffer);
@@ -114,6 +132,7 @@ async function markReceipt(
   providerEventId: string,
   processingStatus: "applied" | "ignored" | "failed",
   organizationId: string | null,
+  providerSubscriptionRef: string | null,
 ): Promise<void> {
   await rpc(
     supabaseUrl,
@@ -123,7 +142,7 @@ async function markReceipt(
       p_provider_event_id: providerEventId,
       p_processing_status: processingStatus,
       p_organization_id: organizationId,
-      p_provider_subscription_ref: null,
+      p_provider_subscription_ref: providerSubscriptionRef,
     },
     headers,
   );
@@ -168,19 +187,32 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json(400, { ok: false, error: "INVALID_WEBHOOK_PAYLOAD" });
   }
 
-  const providerEventId = typeof payload.id === "string" ? payload.id.trim() : "";
-  const eventType = typeof payload.event === "string" ? payload.event.trim() : "";
-  const checkout = isObject(payload.checkout) ? payload.checkout : null;
-  const providerCheckoutRef = checkout && typeof checkout.id === "string"
-    ? checkout.id.trim()
-    : "";
-  const providerCustomerRef = checkout && typeof checkout.customer === "string"
-    ? checkout.customer.trim()
-    : null;
-
+  const providerEventId = optionalString(payload.id) ?? "";
+  const eventType = (optionalString(payload.event) ?? "").toUpperCase();
   if (!providerEventId || !eventType) {
     return json(400, { ok: false, error: "WEBHOOK_EVENT_ID_AND_TYPE_REQUIRED" });
   }
+
+  const checkout = isObject(payload.checkout) ? payload.checkout : null;
+  const subscription = isObject(payload.subscription) ? payload.subscription : null;
+  const payment = isObject(payload.payment) ? payload.payment : null;
+
+  const providerCheckoutRef = checkout ? optionalString(checkout.id) : null;
+  const checkoutCustomerRef = checkout ? optionalString(checkout.customer) : null;
+  const subscriptionRefFromSubscription = subscription
+    ? optionalString(subscription.id)
+    : null;
+  const subscriptionRefFromPayment = payment
+    ? optionalString(payment.subscription)
+    : null;
+  const providerSubscriptionRef = subscriptionRefFromSubscription
+    ?? subscriptionRefFromPayment;
+  const subscriptionCustomerRef = subscription
+    ? optionalString(subscription.customer)
+    : null;
+  const providerCycle = subscription ? optionalString(subscription.cycle) : null;
+  const nextDueDate = subscription ? optionalString(subscription.nextDueDate) : null;
+  const paymentDueDate = payment ? optionalString(payment.dueDate) : null;
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim();
   const service = serviceCredential();
@@ -201,7 +233,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       p_payload_sha256: payloadSha256,
       p_auth_verified: true,
       p_organization_id: null,
-      p_provider_subscription_ref: null,
+      p_provider_subscription_ref: providerSubscriptionRef,
     },
     serviceHeaders,
   );
@@ -210,49 +242,150 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json(503, { ok: false, error: "WEBHOOK_RECEIPT_PERSIST_FAILED" });
   }
 
-  // Unknown future events are persisted and ignored. This prevents schema
-  // additions by the provider from interrupting the webhook queue.
-  if (!SUPPORTED_CHECKOUT_EVENTS.has(eventType)) {
+  let applied: { ok: boolean; status: number; data: unknown } | null = null;
+  let resourceRef: string | null = null;
+
+  if (CHECKOUT_EVENTS.has(eventType)) {
+    if (!providerCheckoutRef) {
+      await markReceipt(
+        supabaseUrl,
+        serviceHeaders,
+        providerEventId,
+        "failed",
+        null,
+        null,
+      );
+      return json(503, { ok: false, error: "CHECKOUT_ID_REQUIRED", retryable: true });
+    }
+    resourceRef = providerCheckoutRef;
+    applied = await rpc(
+      supabaseUrl,
+      "apply_billing_checkout_webhook_event",
+      {
+        p_provider_code: "asaas",
+        p_provider_checkout_ref: providerCheckoutRef,
+        p_provider_event_id: providerEventId,
+        p_event_type: eventType,
+        p_payload_sha256: payloadSha256,
+        p_effective_at: new Date().toISOString(),
+        p_provider_customer_ref: checkoutCustomerRef,
+      },
+      serviceHeaders,
+    );
+  } else if (eventType === "SUBSCRIPTION_CREATED") {
+    if (!providerSubscriptionRef || !subscriptionCustomerRef || !providerCycle) {
+      await markReceipt(
+        supabaseUrl,
+        serviceHeaders,
+        providerEventId,
+        "failed",
+        null,
+        providerSubscriptionRef,
+      );
+      return json(503, {
+        ok: false,
+        error: "SUBSCRIPTION_BINDING_FIELDS_REQUIRED",
+        retryable: true,
+      });
+    }
+    resourceRef = providerSubscriptionRef;
+    applied = await rpc(
+      supabaseUrl,
+      "bind_billing_provider_subscription",
+      {
+        p_provider_code: "asaas",
+        p_provider_subscription_ref: providerSubscriptionRef,
+        p_provider_customer_ref: subscriptionCustomerRef,
+        p_provider_event_id: providerEventId,
+        p_payload_sha256: payloadSha256,
+        p_provider_cycle: providerCycle,
+        p_next_due_date: nextDueDate,
+      },
+      serviceHeaders,
+    );
+  } else if (SUBSCRIPTION_EVENTS.has(eventType)) {
+    if (!providerSubscriptionRef) {
+      await markReceipt(
+        supabaseUrl,
+        serviceHeaders,
+        providerEventId,
+        "failed",
+        null,
+        null,
+      );
+      return json(503, {
+        ok: false,
+        error: "SUBSCRIPTION_ID_REQUIRED",
+        retryable: true,
+      });
+    }
+    resourceRef = providerSubscriptionRef;
+    applied = await rpc(
+      supabaseUrl,
+      "apply_billing_subscription_lifecycle_event",
+      {
+        p_provider_code: "asaas",
+        p_provider_subscription_ref: providerSubscriptionRef,
+        p_provider_event_id: providerEventId,
+        p_event_type: eventType,
+        p_payload_sha256: payloadSha256,
+        p_payment_due_date: null,
+        p_next_due_date: nextDueDate,
+      },
+      serviceHeaders,
+    );
+  } else if (STATEFUL_PAYMENT_EVENTS.has(eventType)) {
+    if (!providerSubscriptionRef) {
+      // The account may legitimately receive unrelated non-subscription
+      // payments through the same webhook endpoint. Persist and ignore them.
+      await markReceipt(
+        supabaseUrl,
+        serviceHeaders,
+        providerEventId,
+        "ignored",
+        null,
+        null,
+      );
+      return json(200, {
+        ok: true,
+        ignored: true,
+        reason: "PAYMENT_NOT_LINKED_TO_SUBSCRIPTION",
+        event_id: providerEventId,
+        event_type: eventType,
+      });
+    }
+    resourceRef = providerSubscriptionRef;
+    applied = await rpc(
+      supabaseUrl,
+      "apply_billing_subscription_lifecycle_event",
+      {
+        p_provider_code: "asaas",
+        p_provider_subscription_ref: providerSubscriptionRef,
+        p_provider_event_id: providerEventId,
+        p_event_type: eventType,
+        p_payload_sha256: payloadSha256,
+        p_payment_due_date: paymentDueDate,
+        p_next_due_date: null,
+      },
+      serviceHeaders,
+    );
+  } else {
     await markReceipt(
       supabaseUrl,
       serviceHeaders,
       providerEventId,
       "ignored",
       null,
+      providerSubscriptionRef,
     );
     return json(200, {
       ok: true,
       ignored: true,
+      reason: "EVENT_NOT_REQUIRED_BY_FITNEXUS",
       event_id: providerEventId,
       event_type: eventType,
     });
   }
-
-  if (!providerCheckoutRef) {
-    await markReceipt(
-      supabaseUrl,
-      serviceHeaders,
-      providerEventId,
-      "failed",
-      null,
-    );
-    return json(400, { ok: false, error: "CHECKOUT_ID_REQUIRED" });
-  }
-
-  const applied = await rpc(
-    supabaseUrl,
-    "apply_billing_checkout_webhook_event",
-    {
-      p_provider_code: "asaas",
-      p_provider_checkout_ref: providerCheckoutRef,
-      p_provider_event_id: providerEventId,
-      p_event_type: eventType,
-      p_payload_sha256: payloadSha256,
-      p_effective_at: new Date().toISOString(),
-      p_provider_customer_ref: providerCustomerRef,
-    },
-    serviceHeaders,
-  );
 
   if (!applied.ok || !isObject(applied.data)) {
     await markReceipt(
@@ -261,19 +394,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
       providerEventId,
       "failed",
       null,
+      providerSubscriptionRef,
     );
-    // Non-2xx intentionally asks Asaas to retry. The receipt makes the retry
-    // idempotent and auditable.
     return json(503, {
       ok: false,
-      error: "CHECKOUT_WEBHOOK_RECONCILIATION_FAILED",
+      error: "BILLING_WEBHOOK_RECONCILIATION_FAILED",
+      event_type: eventType,
       retryable: true,
     });
   }
 
-  const organizationId = typeof applied.data.organization_id === "string"
-    ? applied.data.organization_id
-    : null;
+  const organizationId = optionalString(applied.data.organization_id);
   const ignored = applied.data.ignored === true;
   await markReceipt(
     supabaseUrl,
@@ -281,16 +412,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
     providerEventId,
     ignored ? "ignored" : "applied",
     organizationId,
+    providerSubscriptionRef,
   );
 
   return json(200, {
     ok: true,
     event_id: providerEventId,
     event_type: eventType,
-    checkout_id: providerCheckoutRef,
+    resource_ref: resourceRef,
     organization_id: organizationId,
     processing_status: ignored ? "ignored" : "applied",
     idempotency_authority: "provider_event_id",
     browser_callback_can_activate_subscription: false,
+    recurring_financial_authority: "provider_webhook",
   });
 });
