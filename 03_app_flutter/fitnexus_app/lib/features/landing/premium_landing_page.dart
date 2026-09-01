@@ -63,7 +63,7 @@ class _HeroSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double width = MediaQuery.sizeOf(context).width;
-    final bool mobile = width < 760;
+    final bool mobile = width < 850;
 
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -192,7 +192,7 @@ class _HeroCopy extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double width = MediaQuery.sizeOf(context).width;
-    final bool mobile = width < 760;
+    final bool mobile = width < 850;
     final double titleSize = width < 370 ? 35 : mobile ? 42 : 58;
 
     return Column(
