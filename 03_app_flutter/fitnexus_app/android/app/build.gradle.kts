@@ -17,7 +17,10 @@ if (releaseSigningConfigured) {
 
 android {
     namespace = "br.com.lafamigliaplayworks.fitnexuscoach"
-    compileSdk = flutter.compileSdkVersion
+    // Google Play requires new submissions/updates to target Android 16 / API 36
+    // from 2026-08-31. Keep compile/target explicit so Flutter defaults cannot
+    // silently regress the publication contract.
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -26,11 +29,10 @@ android {
     }
 
     defaultConfig {
-        // Canonical FitNexus Android identity selected in the repository.
-        // Play Console uniqueness/ownership remains an external publication gate.
         applicationId = "br.com.lafamigliaplayworks.fitnexuscoach"
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        // Current Flutter in_app_purchase Android support starts at SDK 24.
+        minSdk = maxOf(flutter.minSdkVersion, 24)
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
