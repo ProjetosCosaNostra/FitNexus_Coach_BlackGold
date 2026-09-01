@@ -29,11 +29,15 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('FitNexus Coach'), findsOneWidget);
+    expect(find.textContaining('Treinos, alunos e evolução.'), findsOneWidget);
     expect(
-      find.text('Treinos digitais profissionais para personal, professor e academia.'),
+      find.byKey(const ValueKey<String>('public-signup-entry')),
       findsOneWidget,
     );
-    expect(find.text('Ver painel do professor'), findsWidgets);
+    expect(
+      find.byKey(const ValueKey<String>('public-login-entry')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('FitNexus landing renders without overflow on mobile',
@@ -45,7 +49,9 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('FitNexus Coach'), findsOneWidget);
-    expect(find.text('Como funciona'), findsOneWidget);
+    expect(find.textContaining('Treinos, alunos e evolução.'), findsOneWidget);
+    expect(find.text('Começar grátis'), findsOneWidget);
+    expect(find.text('Já tenho conta'), findsOneWidget);
   });
 
   testWidgets('Student screen fails closed when access token is missing',
