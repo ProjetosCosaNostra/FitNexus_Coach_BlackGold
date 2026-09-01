@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'play_billing_service.dart';
 import 'professor_billing_repository.dart';
 
 class ProfessorCheckoutPage extends StatefulWidget {
@@ -12,33 +15,50 @@ class ProfessorCheckoutPage extends StatefulWidget {
 
 class _ProfessorCheckoutPageState extends State<ProfessorCheckoutPage> {
   final ProfessorBillingRepository _billing = ProfessorBillingRepository.instance;
+  final PlayBillingService _play = PlayBillingService.instance;
 
-  BillingProviderReadiness? _readiness;
   PricingCatalogSnapshot? _pricing;
+  Map<String, PlaySubscriptionOffer> _playOffers =
+      <String, PlaySubscriptionOffer>{};
+  StreamSubscription<PlayBillingEvent>? _playEventSubscription;
   bool _loading = true;
   String? _error;
+  String? _notice;
   String? _busyKey;
+
+  bool get _androidPlay => _play.isAndroidPlayRuntime;
 
   @override
   void initState() {
     super.initState();
+    _playEventSubscription = _play.events.listen(_onPlayEvent);
     _reload();
+  }
+
+  @override
+  void dispose() {
+    _playEventSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _reload() async {
     setState(() {
       _loading = true;
       _error = null;
+      _notice = null;
     });
     try {
-      final List<Object> result = await Future.wait<Object>(<Future<Object>>[
-        _billing.fetchReadiness(),
-        _billing.fetchPricingCatalog(),
-      ]);
+      final PricingCatalogSnapshot pricing =
+          await _billing.fetchPricingCatalog();
+      Map<String, PlaySubscriptionOffer> playOffers =
+          <String, PlaySubscriptionOffer>{};
+      if (_androidPlay) {
+        playOffers = await _play.loadOffers();
+      }
       if (!mounted) return;
       setState(() {
-        _readiness = result[0] as BillingProviderReadiness;
-        _pricing = result[1] as PricingCatalogSnapshot;
+        _pricing = pricing;
+        _playOffers = playOffers;
       });
     } catch (error) {
       if (!mounted) return;
@@ -48,15 +68,28 @@ class _ProfessorCheckoutPageState extends State<ProfessorCheckoutPage> {
     }
   }
 
-  Future<void> _startCheckout(
+  void _onPlayEvent(PlayBillingEvent event) {
+    if (!mounted) return;
+    setState(() {
+      _busyKey = null;
+      if (event.type == PlayBillingEventType.error) {
+        _error = event.message;
+        _notice = null;
+      } else {
+        _error = null;
+        _notice = event.message;
+      }
+    });
+  }
+
+  Future<void> _startPlayPurchase(
     PricingCatalogOffer offer,
     String interval,
   ) async {
-    final BillingProviderReadiness? readiness = _readiness;
-    if (readiness == null || !readiness.checkout.ready) {
+    if (!_androidPlay) {
       setState(() {
-        _error = 'O checkout ainda está em homologação. Assim que credenciais e preços '
-            'estiverem autorizados pelo servidor, a assinatura será liberada aqui.';
+        _error = 'A compra da assinatura é feita pelo app Android no Google Play. '
+            'Depois de assinar, a mesma conta pode usar o FitNexus no Web e no PC.';
       });
       return;
     }
@@ -65,61 +98,81 @@ class _ProfessorCheckoutPageState extends State<ProfessorCheckoutPage> {
     setState(() {
       _busyKey = key;
       _error = null;
+      _notice = null;
     });
     try {
-      final HostedBillingCheckout checkout = await _billing.createHostedCheckout(
+      await _play.buy(
         planCode: offer.planCode,
         billingInterval: interval,
       );
-      final bool opened = await launchUrl(
-        checkout.checkoutUrl,
-        mode: LaunchMode.platformDefault,
-      );
-      if (!opened) {
-        throw StateError('CHECKOUT_BROWSER_OPEN_FAILED');
-      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _busyKey = null;
+        _error = _friendlyError(error);
+      });
+    }
+  }
+
+  Future<void> _restorePurchases() async {
+    if (!_androidPlay) return;
+    setState(() {
+      _error = null;
+      _notice = 'Consultando suas assinaturas no Google Play...';
+    });
+    try {
+      await _play.restore();
     } catch (error) {
       if (!mounted) return;
       setState(() => _error = _friendlyError(error));
-    } finally {
-      if (mounted) setState(() => _busyKey = null);
+    }
+  }
+
+  Future<void> _manageSubscription() async {
+    final Uri uri = Uri.parse(
+      'https://play.google.com/store/account/subscriptions'
+      '?package=br.com.lafamigliaplayworks.fitnexuscoach',
+    );
+    if (!await launchUrl(uri, mode: LaunchMode.platformDefault)) {
+      if (!mounted) return;
+      setState(() => _error = 'Não foi possível abrir a central de assinaturas do Google Play.');
     }
   }
 
   String _friendlyError(Object error) {
     final String text = error.toString();
-    if (text.contains('BILLING_PROVIDER_CREDENTIALS_NOT_READY') ||
-        text.contains('BILLING_PROVIDER_EXTERNAL_CREDENTIAL_PENDING') ||
-        text.contains('ASAAS_ENVIRONMENT_CREDENTIAL_MISMATCH')) {
-      return 'A cobrança online ainda está em homologação segura. Nenhuma cobrança foi criada.';
+    if (text.contains('GOOGLE_PLAY_PRODUCTS_NOT_CONFIGURED') ||
+        text.contains('GOOGLE_PLAY_BASE_PLAN_NOT_CONFIGURED')) {
+      return 'Os produtos da assinatura ainda precisam ser ativados no Play Console. '
+          'O app já está preparado e não cria cobrança fora do Google Play.';
     }
-    if (text.contains('COMMERCIAL_PRICE_NOT_PROMOTED') ||
-        text.contains('SERVER_PRICE_AUTHORITY_MISSING') ||
-        text.contains('PRICING_DECISION_NOT_CURRENT')) {
-      return 'Os preços comerciais ainda não foram promovidos pelo servidor. Nenhum valor será inventado pelo aplicativo.';
+    if (text.contains('GOOGLE_PLAY_BILLING_UNAVAILABLE')) {
+      return 'O Google Play Billing não está disponível neste dispositivo. '
+          'Use uma instalação do FitNexus entregue pelo Google Play.';
     }
-    if (text.contains('ASAAS_CHECKOUT_CREATE_FAILED') ||
-        text.contains('ASAAS_CHECKOUT_NETWORK_FAILURE')) {
-      return 'O provedor de pagamento não conseguiu abrir o checkout agora. Tente novamente em instantes.';
+    if (text.contains('GOOGLE_PLAY_PRODUCT_QUERY_FAILED')) {
+      return 'O Google Play não conseguiu carregar os planos agora. Tente novamente.';
     }
-    if (text.contains('CHECKOUT_BROWSER_OPEN_FAILED')) {
-      return 'O checkout foi preparado, mas o navegador não pôde ser aberto neste dispositivo.';
+    if (text.contains('GOOGLE_PLAY_BILLING_FLOW_NOT_LAUNCHED')) {
+      return 'O Google Play não conseguiu abrir a compra. Tente novamente.';
+    }
+    if (text.contains('GOOGLE_PLAY_BILLING_ANDROID_ONLY')) {
+      return 'A assinatura é comprada pelo app Android no Google Play. '
+          'A mesma conta continua disponível no Web e no PC.';
     }
     return 'Não foi possível iniciar a assinatura agora. Tente novamente.';
   }
 
   @override
   Widget build(BuildContext context) {
-    final BillingProviderReadiness? readiness = _readiness;
     final PricingCatalogSnapshot? pricing = _pricing;
-    final bool checkoutReady = readiness?.checkout.ready ?? false;
 
     return Scaffold(
       backgroundColor: const Color(0xFF050505),
       appBar: AppBar(
         backgroundColor: const Color(0xFF050505),
         foregroundColor: Colors.white,
-        title: const Text('Assinar FitNexus'),
+        title: const Text('Planos FitNexus'),
       ),
       body: RefreshIndicator(
         color: const Color(0xFFE1B92F),
@@ -129,7 +182,7 @@ class _ProfessorCheckoutPageState extends State<ProfessorCheckoutPage> {
           padding: const EdgeInsets.fromLTRB(20, 14, 20, 80),
           children: <Widget>[
             const Text(
-              'BLACKGOLD BILLING',
+              'FITNEXUS PREMIUM',
               style: TextStyle(
                 color: Color(0xFFFFD45A),
                 fontSize: 11,
@@ -138,9 +191,11 @@ class _ProfessorCheckoutPageState extends State<ProfessorCheckoutPage> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Escolha a capacidade. O preço vem do servidor.',
-              style: TextStyle(
+            Text(
+              _androidPlay
+                  ? 'Assine com segurança pelo Google Play.'
+                  : 'O mesmo FitNexus no Web e no PC.',
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 28,
                 height: 1.06,
@@ -148,45 +203,63 @@ class _ProfessorCheckoutPageState extends State<ProfessorCheckoutPage> {
               ),
             ),
             const SizedBox(height: 9),
-            const Text(
-              'O FitNexus não recebe dados de cartão. O pagamento abre no checkout hospedado do provedor e a assinatura só muda depois da confirmação financeira no backend.',
-              style: TextStyle(color: Color(0xFFAAAAAA), height: 1.45),
+            Text(
+              _androidPlay
+                  ? 'Preço, renovação, pagamento, cancelamento e recibo são gerenciados pelo Google Play. O FitNexus só libera recursos premium depois da validação da compra.'
+                  : 'Use a mesma conta e os mesmos recursos no navegador ou no aplicativo para PC. A compra da assinatura é feita no app Android pelo Google Play e o acesso premium acompanha a conta.',
+              style: const TextStyle(color: Color(0xFFAAAAAA), height: 1.45),
             ),
             const SizedBox(height: 18),
+            _PlayAuthorityBanner(androidPlay: _androidPlay),
+            if (_error != null) ...<Widget>[
+              const SizedBox(height: 12),
+              _Notice(text: _error!, error: true),
+            ],
+            if (_notice != null) ...<Widget>[
+              const SizedBox(height: 12),
+              _Notice(text: _notice!, error: false),
+            ],
+            const SizedBox(height: 16),
             if (_loading && pricing == null)
               const SizedBox(
                 height: 320,
                 child: Center(child: CircularProgressIndicator()),
               )
-            else ...<Widget>[
-              _CheckoutReadinessBanner(
-                readiness: readiness,
-                ready: checkoutReady,
+            else if (pricing == null || pricing.offers.isEmpty)
+              const _Notice(
+                text: 'O catálogo de planos ainda não está disponível.',
+                error: true,
+              )
+            else
+              ...pricing.offers.map((PricingCatalogOffer offer) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: _OfferCard(
+                    offer: offer,
+                    androidPlay: _androidPlay,
+                    monthlyPlayOffer: _playOffers['${offer.planCode}:month'],
+                    annualPlayOffer: _playOffers['${offer.planCode}:year'],
+                    busyKey: _busyKey,
+                    onCheckout: _startPlayPurchase,
+                  ),
+                );
+              }),
+            const SizedBox(height: 6),
+            if (_androidPlay) ...<Widget>[
+              OutlinedButton.icon(
+                onPressed: _busyKey == null ? _restorePurchases : null,
+                icon: const Icon(Icons.restore_rounded),
+                label: const Text('Restaurar assinatura'),
               ),
-              if (_error != null) ...<Widget>[
-                const SizedBox(height: 12),
-                _Notice(text: _error!),
-              ],
-              const SizedBox(height: 16),
-              if (pricing == null || pricing.offers.isEmpty)
-                const _Notice(
-                  text: 'O catálogo comercial ainda não está disponível no servidor.',
-                )
-              else
-                ...pricing.offers.map((PricingCatalogOffer offer) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: _OfferCard(
-                      offer: offer,
-                      checkoutReady: checkoutReady,
-                      busyKey: _busyKey,
-                      onCheckout: _startCheckout,
-                    ),
-                  );
-                }),
-              const SizedBox(height: 6),
-              const _SecurityNote(),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: _manageSubscription,
+                icon: const Icon(Icons.open_in_new_rounded),
+                label: const Text('Gerenciar ou cancelar no Google Play'),
+              ),
+              const SizedBox(height: 12),
             ],
+            const _SecurityNote(),
           ],
         ),
       ),
@@ -194,19 +267,16 @@ class _ProfessorCheckoutPageState extends State<ProfessorCheckoutPage> {
   }
 }
 
-class _CheckoutReadinessBanner extends StatelessWidget {
-  const _CheckoutReadinessBanner({
-    required this.readiness,
-    required this.ready,
-  });
+class _PlayAuthorityBanner extends StatelessWidget {
+  const _PlayAuthorityBanner({required this.androidPlay});
 
-  final BillingProviderReadiness? readiness;
-  final bool ready;
+  final bool androidPlay;
 
   @override
   Widget build(BuildContext context) {
-    final Color color = ready ? const Color(0xFF75E39B) : const Color(0xFFFFC85A);
-    final String provider = readiness?.provider.displayName ?? 'Provedor';
+    final Color color = androidPlay
+        ? const Color(0xFF75E39B)
+        : const Color(0xFF8EBBFF);
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
@@ -218,7 +288,7 @@ class _CheckoutReadinessBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Icon(
-            ready ? Icons.verified_rounded : Icons.engineering_rounded,
+            androidPlay ? Icons.shop_rounded : Icons.devices_rounded,
             color: color,
           ),
           const SizedBox(width: 11),
@@ -227,14 +297,14 @@ class _CheckoutReadinessBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  ready ? 'Checkout autorizado' : 'Checkout em homologação',
+                  androidPlay ? 'Google Play Billing' : 'Conta multiplataforma',
                   style: TextStyle(color: color, fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  ready
-                      ? '$provider está liberado pelos gates do servidor.'
-                      : 'A tela já está pronta, mas nenhuma cobrança será criada antes dos gates externos ficarem verdes.',
+                  androidPlay
+                      ? 'A cobrança acontece somente dentro do fluxo oficial do Google Play.'
+                      : 'Web e PC usam o mesmo SaaS e o mesmo acesso premium da conta.',
                   style: const TextStyle(color: Color(0xFFBBBBBB), height: 1.35),
                 ),
               ],
@@ -249,13 +319,17 @@ class _CheckoutReadinessBanner extends StatelessWidget {
 class _OfferCard extends StatelessWidget {
   const _OfferCard({
     required this.offer,
-    required this.checkoutReady,
+    required this.androidPlay,
+    required this.monthlyPlayOffer,
+    required this.annualPlayOffer,
     required this.busyKey,
     required this.onCheckout,
   });
 
   final PricingCatalogOffer offer;
-  final bool checkoutReady;
+  final bool androidPlay;
+  final PlaySubscriptionOffer? monthlyPlayOffer;
+  final PlaySubscriptionOffer? annualPlayOffer;
   final String? busyKey;
   final Future<void> Function(PricingCatalogOffer offer, String interval) onCheckout;
 
@@ -303,9 +377,11 @@ class _OfferCard extends StatelessWidget {
           const SizedBox(height: 18),
           _PriceLine(
             label: 'Mensal',
-            price: '${_brl(offer.monthlyAmountMinor)}/mês',
+            price: androidPlay
+                ? (monthlyPlayOffer?.displayPrice ?? 'Configurar no Play Console')
+                : 'Disponível pelo app Android',
             child: FilledButton(
-              onPressed: !checkoutReady || anyBusy
+              onPressed: !androidPlay || monthlyPlayOffer == null || anyBusy
                   ? null
                   : () => onCheckout(offer, 'month'),
               style: FilledButton.styleFrom(
@@ -318,18 +394,17 @@ class _OfferCard extends StatelessWidget {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Assinar mensal'),
+                  : Text(androidPlay ? 'Assinar mensal' : 'Google Play'),
             ),
           ),
           const Divider(height: 24, color: Color(0xFF2B2B2B)),
           _PriceLine(
             label: 'Anual',
-            price: '${_brl(offer.annualAmountMinor)}/ano',
-            detail: offer.annualMonthlyEquivalentMinor > 0
-                ? 'equivale a ${_brl(offer.annualMonthlyEquivalentMinor)}/mês'
-                : null,
+            price: androidPlay
+                ? (annualPlayOffer?.displayPrice ?? 'Configurar no Play Console')
+                : 'Disponível pelo app Android',
             child: FilledButton.tonal(
-              onPressed: !checkoutReady || anyBusy
+              onPressed: !androidPlay || annualPlayOffer == null || anyBusy
                   ? null
                   : () => onCheckout(offer, 'year'),
               child: annualBusy
@@ -338,20 +413,9 @@ class _OfferCard extends StatelessWidget {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Assinar anual'),
+                  : Text(androidPlay ? 'Assinar anual' : 'Google Play'),
             ),
           ),
-          if (offer.annualSavingsMinor > 0) ...<Widget>[
-            const SizedBox(height: 10),
-            Text(
-              'Economia anual: ${_brl(offer.annualSavingsMinor)}',
-              style: const TextStyle(
-                color: Color(0xFF75E39B),
-                fontWeight: FontWeight.w800,
-                fontSize: 12,
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -363,12 +427,10 @@ class _PriceLine extends StatelessWidget {
     required this.label,
     required this.price,
     required this.child,
-    this.detail,
   });
 
   final String label;
   final String price;
-  final String? detail;
   final Widget child;
 
   @override
@@ -389,11 +451,6 @@ class _PriceLine extends StatelessWidget {
                 fontWeight: FontWeight.w900,
               ),
             ),
-            if (detail != null)
-              Text(
-                detail!,
-                style: const TextStyle(color: Color(0xFF999999), fontSize: 11),
-              ),
           ],
         );
         if (compact) {
@@ -430,7 +487,7 @@ class _SecurityNote extends StatelessWidget {
         SizedBox(width: 9),
         Expanded(
           child: Text(
-            'Preço, plano, provedor e ativação são validados no backend. O retorno do navegador não ativa a assinatura; a confirmação financeira é assíncrona.',
+            'No Android, o FitNexus não recebe dados de cartão. A compra é processada pelo Google Play e o acesso premium só é reconhecido depois da validação da transação.',
             style: TextStyle(color: Color(0xFF8E8E8E), fontSize: 12, height: 1.4),
           ),
         ),
@@ -440,28 +497,33 @@ class _SecurityNote extends StatelessWidget {
 }
 
 class _Notice extends StatelessWidget {
-  const _Notice({required this.text});
+  const _Notice({required this.text, required this.error});
 
   final String text;
+  final bool error;
 
   @override
   Widget build(BuildContext context) {
+    final Color background = error
+        ? const Color(0xFF2A1711)
+        : const Color(0xFF102219);
+    final Color border = error
+        ? const Color(0xFF704327)
+        : const Color(0xFF315E43);
+    final Color foreground = error
+        ? const Color(0xFFFFC995)
+        : const Color(0xFF9FE7B7);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A1711),
+        color: background,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF704327)),
+        border: Border.all(color: border),
       ),
       child: Text(
         text,
-        style: const TextStyle(color: Color(0xFFFFC995), height: 1.4),
+        style: TextStyle(color: foreground, height: 1.4),
       ),
     );
   }
-}
-
-String _brl(int minor) {
-  final String decimal = (minor / 100).toStringAsFixed(2).replaceAll('.', ',');
-  return 'R\$ $decimal';
 }
