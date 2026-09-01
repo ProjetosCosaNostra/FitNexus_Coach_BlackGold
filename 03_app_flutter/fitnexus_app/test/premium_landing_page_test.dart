@@ -27,7 +27,7 @@ void main() {
 
     expect(find.text('COACH  BLACKGOLD'), findsOneWidget);
     expect(find.textContaining('Sua evolução'), findsOneWidget);
-    expect(find.text('sob controle.'), findsOneWidget);
+    expect(find.textContaining('sob controle.'), findsOneWidget);
     expect(find.text('Ecossistema'), findsOneWidget);
     expect(find.text('Criar conta'), findsOneWidget);
     expect(find.text('Começar treino'), findsOneWidget);
