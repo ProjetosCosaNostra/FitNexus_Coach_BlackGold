@@ -68,7 +68,12 @@ function secureEqual(left: string, right: string): boolean {
 }
 
 async function sha256Hex(bytes: Uint8Array): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  // Deno 2.9's WebCrypto typings require an ArrayBuffer-backed view rather
+  // than Uint8Array<ArrayBufferLike>. Copying is intentional and bounded by
+  // the webhook payload limit below.
+  const digestInput = new Uint8Array(bytes.byteLength);
+  digestInput.set(bytes);
+  const digest = await crypto.subtle.digest("SHA-256", digestInput.buffer);
   return Array.from(new Uint8Array(digest))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
