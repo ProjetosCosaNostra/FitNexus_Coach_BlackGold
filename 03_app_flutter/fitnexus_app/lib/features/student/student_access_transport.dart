@@ -31,10 +31,10 @@ class StudentAccessTransport {
     required StudentAccessTransportMode configuredMode,
   }) {
     return StudentAccessTransport._(
-      _clientOverride: client,
-      _configuredModeOverride: configuredMode,
-      _explicitRollbackRequestedOverride: false,
-      _explicitRollbackAuthorizedOverride: false,
+      clientOverride: client,
+      configuredModeOverride: configuredMode,
+      explicitRollbackRequestedOverride: false,
+      explicitRollbackAuthorizedOverride: false,
     );
   }
 
@@ -49,10 +49,10 @@ class StudentAccessTransport {
     required SupabaseClient client,
   }) {
     return StudentAccessTransport._(
-      _clientOverride: client,
-      _configuredModeOverride: StudentAccessTransportMode.edgeGateway,
-      _explicitRollbackRequestedOverride: true,
-      _explicitRollbackAuthorizedOverride: true,
+      clientOverride: client,
+      configuredModeOverride: StudentAccessTransportMode.edgeGateway,
+      explicitRollbackRequestedOverride: true,
+      explicitRollbackAuthorizedOverride: true,
     );
   }
 
