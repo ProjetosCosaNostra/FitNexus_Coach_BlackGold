@@ -15,16 +15,11 @@ import 'student_access_transport_contract.dart';
 /// repositories continue to use [instance].
 class StudentAccessTransport {
   StudentAccessTransport._({
-    SupabaseClient? clientOverride,
-    StudentAccessTransportMode? configuredModeOverride,
-    bool? explicitRollbackRequestedOverride,
-    bool? explicitRollbackAuthorizedOverride,
-  })  : _clientOverride = clientOverride,
-        _configuredModeOverride = configuredModeOverride,
-        _explicitRollbackRequestedOverride =
-            explicitRollbackRequestedOverride,
-        _explicitRollbackAuthorizedOverride =
-            explicitRollbackAuthorizedOverride;
+    this._clientOverride,
+    this._configuredModeOverride,
+    this._explicitRollbackRequestedOverride,
+    this._explicitRollbackAuthorizedOverride,
+  });
 
   static final StudentAccessTransport instance = StudentAccessTransport._();
 
@@ -36,10 +31,10 @@ class StudentAccessTransport {
     required StudentAccessTransportMode configuredMode,
   }) {
     return StudentAccessTransport._(
-      clientOverride: client,
-      configuredModeOverride: configuredMode,
-      explicitRollbackRequestedOverride: false,
-      explicitRollbackAuthorizedOverride: false,
+      _clientOverride: client,
+      _configuredModeOverride: configuredMode,
+      _explicitRollbackRequestedOverride: false,
+      _explicitRollbackAuthorizedOverride: false,
     );
   }
 
@@ -54,10 +49,10 @@ class StudentAccessTransport {
     required SupabaseClient client,
   }) {
     return StudentAccessTransport._(
-      clientOverride: client,
-      configuredModeOverride: StudentAccessTransportMode.edgeGateway,
-      explicitRollbackRequestedOverride: true,
-      explicitRollbackAuthorizedOverride: true,
+      _clientOverride: client,
+      _configuredModeOverride: StudentAccessTransportMode.edgeGateway,
+      _explicitRollbackRequestedOverride: true,
+      _explicitRollbackAuthorizedOverride: true,
     );
   }
 
