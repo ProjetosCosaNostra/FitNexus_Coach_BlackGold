@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../auth/auth_gate.dart';
 import '../auth/auth_service.dart';
+import 'professor_checkout_page.dart';
 import 'professor_coach_action_center_page.dart';
 import 'professor_decision_intelligence_page.dart';
 import 'professor_feedback_page.dart';
@@ -55,6 +56,14 @@ class _AuthenticatedProfessorPageState
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => const ProfessorSubscriptionPage(),
+      ),
+    );
+  }
+
+  void _openCheckout(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const ProfessorCheckoutPage(),
       ),
     );
   }
@@ -163,6 +172,18 @@ class _AuthenticatedProfessorPageState
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: <Widget>[
                       FloatingActionButton.extended(
+                        heroTag: 'fitnexus_checkout',
+                        onPressed: () => _openCheckout(context),
+                        backgroundColor: const Color(0xFFE1B92F),
+                        foregroundColor: Colors.black,
+                        icon: const Icon(Icons.payments_rounded),
+                        label: const Text(
+                          'Assinar',
+                          style: TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      FloatingActionButton.extended(
                         heroTag: 'fitnexus_subscription',
                         onPressed: () => _openSubscription(context),
                         backgroundColor: const Color(0xFF171717),
@@ -201,8 +222,8 @@ class _AuthenticatedProfessorPageState
                       FloatingActionButton.extended(
                         heroTag: 'fitnexus_logout',
                         onPressed: () => _signOut(context),
-                        backgroundColor: const Color(0xFFE1B92F),
-                        foregroundColor: Colors.black,
+                        backgroundColor: const Color(0xFF2A2A2A),
+                        foregroundColor: Colors.white,
                         icon: const Icon(Icons.logout_rounded),
                         label: const Text(
                           'Sair',
