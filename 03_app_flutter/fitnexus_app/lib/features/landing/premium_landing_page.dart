@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 
+const Color _canvasColor = Color(0xFF050505);
+const Color surface = Color(0xFF0E0E0E);
+const Color surfaceRaised = Color(0xFF151515);
+const Color line = Color(0xFF4A3510);
+const Color muted = Color(0xFFB8B8B8);
+const Color gold = Color(0xFFE5A91B);
+const Color goldSoft = Color(0xFFFFD261);
+const Color success = Color(0xFF21D07A);
+
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
 
-  static const Color canvas = Color(0xFF050505);
-  static const Color surface = Color(0xFF0E0E0E);
-  static const Color surfaceRaised = Color(0xFF151515);
-  static const Color line = Color(0xFF4A3510);
-  static const Color muted = Color(0xFFB8B8B8);
-  static const Color gold = Color(0xFFE5A91B);
-  static const Color goldSoft = Color(0xFFFFD261);
-  static const Color success = Color(0xFF21D07A);
+  static const Color canvas = _canvasColor;
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +76,7 @@ class _TopBar extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: () => Navigator.of(context).pushNamed('/links'),
               icon: const Icon(Icons.hub_outlined, size: 17),
-              label: Text(compact ? 'Ecossistema' : 'Ecossistema'),
+              label: const Text('Ecossistema'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: goldSoft,
                 side: const BorderSide(color: gold, width: 1.1),
