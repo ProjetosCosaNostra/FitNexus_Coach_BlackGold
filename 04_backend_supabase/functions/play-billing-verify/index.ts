@@ -321,14 +321,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
   }
 
-  const lineItems = Array.isArray(playData.lineItems)
-    ? playData.lineItems as unknown[]
-    : <unknown>[];
+  const rawLineItems = playData.lineItems;
+  const lineItems: unknown[] = Array.isArray(rawLineItems)
+    ? rawLineItems
+    : [];
   if (lineItems.length === 0) {
     return json(400, { ok: false, error: "GOOGLE_PLAY_SUBSCRIPTION_LINE_ITEMS_MISSING" });
   }
   const productMatch = lineItems.some(
-    (raw) => isObject(raw) && requiredString(raw.productId) === productId,
+    (raw: unknown) => isObject(raw) && requiredString(raw.productId) === productId,
   );
   if (!productMatch) {
     return json(409, { ok: false, error: "GOOGLE_PLAY_PRODUCT_TOKEN_MISMATCH" });
