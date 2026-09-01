@@ -1,0 +1,56 @@
+name: Billing Webhook Quality Gate
+
+on:
+  pull_request:
+    paths:
+      - '04_backend_supabase/functions/billing-webhook/**'
+      - '04_backend_supabase/operations/billing_checkout_webhook_authority_v1.sql'
+      - '.github/workflows/billing_webhook_quality_gate.yml'
+  push:
+    branches:
+      - main
+      - 'blackgold/**'
+    paths:
+      - '04_backend_supabase/functions/billing-webhook/**'
+      - '04_backend_supabase/operations/billing_checkout_webhook_authority_v1.sql'
+      - '.github/workflows/billing_webhook_quality_gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  webhook-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Typecheck Asaas billing webhook
+        run: deno check 04_backend_supabase/functions/billing-webhook/index.ts
+
+      - name: Webhook authority contract guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          EDGE='04_backend_supabase/functions/billing-webhook/index.ts'
+          SQL='04_backend_supabase/operations/billing_checkout_webhook_authority_v1.sql'
+          grep -F 'asaas-access-token' "$EDGE"
+          grep -F 'record_billing_webhook_receipt' "$EDGE"
+          grep -F 'apply_billing_checkout_webhook_event' "$EDGE"
+          grep -F 'mark_billing_webhook_receipt' "$EDGE"
+          grep -F 'CHECKOUT_PAID' "$EDGE"
+          grep -F 'browser_callback_can_activate_subscription: false' "$EDGE"
+          grep -F 'create or replace function public.apply_billing_checkout_webhook_event' "$SQL"
+          grep -F "'provider_webhook'" "$SQL"
+          grep -F 'public.apply_subscription_authority_event' "$SQL"
+          grep -F 'grant execute on function public.apply_billing_checkout_webhook_event' "$SQL"
+          if grep -Eq 'grant .*authenticated|grant .*anon' "$SQL"; then
+            echo 'BILLING_WEBHOOK_PRIVILEGE_LEAK=FAIL'
+            exit 1
+          fi
+          echo 'BILLING_WEBHOOK_AUTHORITY=PASS'
