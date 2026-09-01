@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "project": "FitNexus Coach BlackGold",
+  "package_name": "br.com.lafamigliaplayworks.fitnexuscoach",
+  "release": {
+    "version_name": "0.9.0",
+    "version_code": 3
+  },
+  "billing_provider": "GOOGLE_PLAY_BILLING",
+  "pricing_source": "BR_V1_PRICING_EXPERIMENT_001",
+  "currency": "BRL",
+  "products": [
+    {
+      "product_id": "fitnexus_solo",
+      "plan_code": "solo",
+      "display_name": "Coach Solo",
+      "student_limit": 30,
+      "member_limit": 1,
+      "base_plans": [
+        {
+          "base_plan_id": "monthly",
+          "billing_period": "P1M",
+          "auto_renewing": true,
+          "target_brazil_price_minor": 3990,
+          "target_brazil_price": "R$ 39,90"
+        },
+        {
+          "base_plan_id": "annual",
+          "billing_period": "P1Y",
+          "auto_renewing": true,
+          "target_brazil_price_minor": 39900,
+          "target_brazil_price": "R$ 399,00"
+        }
+      ]
+    },
+    {
+      "product_id": "fitnexus_pro",
+      "plan_code": "pro",
+      "display_name": "Coach Pro",
+      "student_limit": 100,
+      "member_limit": 3,
+      "base_plans": [
+        {
+          "base_plan_id": "monthly",
+          "billing_period": "P1M",
+          "auto_renewing": true,
+          "target_brazil_price_minor": 7990,
+          "target_brazil_price": "R$ 79,90"
+        },
+        {
+          "base_plan_id": "annual",
+          "billing_period": "P1Y",
+          "auto_renewing": true,
+          "target_brazil_price_minor": 79900,
+          "target_brazil_price": "R$ 799,00"
+        }
+      ]
+    },
+    {
+      "product_id": "fitnexus_studio",
+      "plan_code": "studio",
+      "display_name": "Studio",
+      "student_limit": 300,
+      "member_limit": 10,
+      "base_plans": [
+        {
+          "base_plan_id": "monthly",
+          "billing_period": "P1M",
+          "auto_renewing": true,
+          "target_brazil_price_minor": 17990,
+          "target_brazil_price": "R$ 179,90"
+        },
+        {
+          "base_plan_id": "annual",
+          "billing_period": "P1Y",
+          "auto_renewing": true,
+          "target_brazil_price_minor": 179900,
+          "target_brazil_price": "R$ 1.799,00"
+        }
+      ]
+    }
+  ],
+  "play_console_required_actions": [
+    "create each subscription product using the exact product_id",
+    "create monthly and annual auto-renewing base plans using the exact base_plan_id",
+    "set Brazil prices from this contract and review Google-generated regional prices",
+    "activate every base plan before purchase testing",
+    "configure Google Play Developer API access for server-side verification",
+    "upload the signed versionCode 3 AAB to an internal test track"
+  ],
+  "publication_media_policy": "Real store screenshots are captured only at the final Play Console publication step after the Android app is opened in the PC emulator and visually approved.",
+  "notes": [
+    "Google Play may apply taxes, exchange rates and local price templates outside Brazil; generated regional prices must be reviewed in Play Console.",
+    "Web and desktop do not initiate Google Play purchases; they consume the same authenticated FitNexus account entitlement after Android purchase verification."
+  ]
+}
