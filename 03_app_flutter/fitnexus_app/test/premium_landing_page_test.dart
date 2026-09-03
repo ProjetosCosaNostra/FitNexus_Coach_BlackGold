@@ -15,6 +15,11 @@ MaterialApp _testApp() {
   );
 }
 
+Future<void> _systemBack(WidgetTester tester) async {
+  await tester.binding.handlePopRoute();
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('approved BlackGold home fits 360x800 without render errors', (
     WidgetTester tester,
@@ -55,20 +60,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('links'), findsOneWidget);
 
-    await tester.pageBack();
-    await tester.pumpAndSettle();
+    await _systemBack(tester);
     await tester.tap(find.byKey(const ValueKey<String>('public-signup-entry')));
     await tester.pumpAndSettle();
     expect(find.text('start'), findsOneWidget);
 
-    await tester.pageBack();
-    await tester.pumpAndSettle();
+    await _systemBack(tester);
     await tester.tap(find.byKey(const ValueKey<String>('public-login-entry')));
     await tester.pumpAndSettle();
     expect(find.text('auth'), findsOneWidget);
 
-    await tester.pageBack();
-    await tester.pumpAndSettle();
+    await _systemBack(tester);
     await tester.ensureVisible(find.text('Falar com coach'));
     await tester.tap(find.text('Falar com coach'));
     await tester.pumpAndSettle();
