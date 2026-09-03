@@ -1,0 +1,139 @@
+name: Android Visual Approval Emulator V1
+
+on:
+  push:
+    branches:
+      - blackgold/mobile-home-premium-redesign-v1
+    paths:
+      - '03_app_flutter/fitnexus_app/**'
+      - '.github/workflows/android_visual_approval_emulator_v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-emulator-proof:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 03_app_flutter/fitnexus_app
+
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Prepare ephemeral visual-only release signing
+        shell: bash
+        run: |
+          set -euo pipefail
+          PASSWORD="$(openssl rand -hex 24)"
+          KEYSTORE="android/visual-approval-ci.jks"
+          keytool -genkeypair \
+            -keystore "$KEYSTORE" \
+            -storepass "$PASSWORD" \
+            -keypass "$PASSWORD" \
+            -alias visual_approval \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 30 \
+            -dname 'CN=FitNexus Visual Approval,O=BlackGold,C=BR' \
+            -noprompt >/dev/null 2>&1
+          {
+            echo "storePassword=$PASSWORD"
+            echo "keyPassword=$PASSWORD"
+            echo 'keyAlias=visual_approval'
+            echo 'storeFile=visual-approval-ci.jks'
+          } > android/key.properties
+          echo 'VISUAL_SIGNING_MODE=EPHEMERAL_CI_RELEASE_KEY'
+          echo 'PLAY_UPLOAD_KEY_USED=false'
+
+      - name: Build exact-SHA release APK
+        run: flutter build apk --release
+
+      - name: Remove ephemeral signing material
+        if: always()
+        shell: bash
+        run: |
+          rm -f android/key.properties android/visual-approval-ci.jks
+
+      - name: Boot isolated emulator, install release APK and capture home
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          force-avd-creation: true
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          working-directory: 03_app_flutter/fitnexus_app
+          script: |
+            set -euo pipefail
+            PACKAGE='br.com.lafamigliaplayworks.fitnexuscoach'
+            APK='build/app/outputs/flutter-apk/app-release.apk'
+            OUT='build/emulator_visual'
+            mkdir -p "$OUT"
+            adb wait-for-device
+            adb shell settings put system accelerometer_rotation 0 || true
+            adb shell settings put system user_rotation 0 || true
+            adb shell wm size 1080x1920
+            adb shell wm density 420
+            adb install -r "$APK"
+            adb shell am force-stop "$PACKAGE" || true
+            adb shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
+            sleep 10
+            adb exec-out screencap -p > "$OUT/FITNEXUS_HOME_EXACT_SHA.png"
+            adb shell uiautomator dump /sdcard/fitnexus_ui.xml || true
+            adb pull /sdcard/fitnexus_ui.xml "$OUT/FITNEXUS_HOME_UI.xml" || true
+            adb logcat -d -t 500 > "$OUT/FITNEXUS_HOME_LOGCAT.txt" || true
+            adb shell dumpsys package "$PACKAGE" > "$OUT/FITNEXUS_PACKAGE_DUMPSYS.txt" || true
+            python - <<'PY'
+            import hashlib, json, os, struct
+            from pathlib import Path
+
+            png = Path('build/emulator_visual/FITNEXUS_HOME_EXACT_SHA.png')
+            data = png.read_bytes()
+            if len(data) < 24 or data[:8] != b'\x89PNG\r\n\x1a\n':
+                raise SystemExit('FITNEXUS_EMULATOR_SCREENSHOT_INVALID_PNG')
+            width, height = struct.unpack('>II', data[16:24])
+            receipt = {
+                'schema_version': 1,
+                'kind': 'FITNEXUS_ANDROID_ISOLATED_EMULATOR_VISUAL_PROOF',
+                'source_commit_sha': os.environ['GITHUB_SHA'],
+                'github_run_id': os.environ['GITHUB_RUN_ID'],
+                'application_id': 'br.com.lafamigliaplayworks.fitnexuscoach',
+                'build_mode': 'release',
+                'emulator_api_level': 35,
+                'requested_viewport': '1080x1920',
+                'captured_width': width,
+                'captured_height': height,
+                'screenshot_sha256': hashlib.sha256(data).hexdigest(),
+                'play_publication_performed': False,
+                'purpose': 'exact_sha_premerge_visual_approval',
+            }
+            Path('build/emulator_visual/FITNEXUS_EMULATOR_VISUAL_RECEIPT_V1.json').write_text(
+                json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+            )
+            print('FITNEXUS_ISOLATED_EMULATOR_VISUAL_PROOF=PASS')
+            print(f'CAPTURED_SIZE={width}x{height}')
+            print('SCREENSHOT_SHA256=' + receipt['screenshot_sha256'])
+            PY
+
+      - name: Upload isolated emulator proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: FITNEXUS_EMULATOR_VISUAL_${{ github.sha }}
+          path: 03_app_flutter/fitnexus_app/build/emulator_visual/
+          if-no-files-found: error
+          retention-days: 7
