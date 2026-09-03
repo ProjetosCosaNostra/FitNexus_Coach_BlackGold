@@ -295,7 +295,7 @@ class _HeroPanel extends StatelessWidget {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final bool narrow = constraints.maxWidth < 410;
-        final double height = narrow ? 385 : constraints.maxWidth < 620 ? 410 : 445;
+        final double height = narrow ? 520 : constraints.maxWidth < 620 ? 410 : 445;
 
         return Container(
           height: height,
