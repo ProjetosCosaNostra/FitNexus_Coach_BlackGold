@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
-import 'premium_landing_page.dart' as premium;
+import 'blackgold_contract_landing_page.dart' as premium;
 
 /// Public landing entry with an explicit compact-tablet composition band.
 ///
-/// The premium surface switches its primary hero at 760 px, while several
-/// internal grids stack below roughly 700 px after page padding. A viewport in
-/// the 760-899 px range can therefore be wide enough to request the desktop
-/// hero but too narrow for every desktop row. Keep that intermediate band on a
-/// single compact content rail so the whole page uses one coherent layout
-/// class instead of allowing isolated RenderFlex overflows.
+/// The BlackGold contract uses the approved mobile composition below 900 px
+/// and the desktop cockpit at 900 px and above. The 760-899 px band remains
+/// constrained to a stable mobile/tablet rail so intermediate widths cannot
+/// produce a half-desktop layout or RenderFlex drift.
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
 
