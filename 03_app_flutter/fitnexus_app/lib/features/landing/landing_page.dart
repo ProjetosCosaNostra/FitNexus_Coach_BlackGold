@@ -1,39 +1,51 @@
 import 'package:flutter/material.dart';
 
 import 'blackgold_contract_landing_page.dart' as premium;
+import 'blackgold_desktop_home.dart';
 
-/// Public landing entry with an explicit compact-tablet composition band.
-///
-/// The BlackGold contract uses the approved mobile composition below 900 px
-/// and the desktop cockpit at 900 px and above. The 760-899 px band remains
-/// constrained to a stable mobile/tablet rail so intermediate widths cannot
-/// produce a half-desktop layout or RenderFlex drift.
+/// Public entry that preserves the frozen BlackGold mobile contract and uses
+/// a purpose-built desktop cockpit at 900 px and above.
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
 
   static const double _compactTabletWidth = 759;
+  static const double _desktopBreakpoint = 900;
+  static const double _visualTextScale = .95;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final double width = constraints.maxWidth;
-        final bool compactTablet = width >= 760 && width < 900;
 
-        if (!compactTablet) {
-          return const premium.LandingPage();
+        if (width >= _desktopBreakpoint) {
+          return const BlackGoldDesktopHome();
         }
 
         final MediaQueryData media = MediaQuery.of(context);
+        final bool compactTablet = width >= 760;
+        final MediaQueryData stableMedia = media.copyWith(
+          size: Size(
+            compactTablet ? _compactTabletWidth : media.size.width,
+            media.size.height,
+          ),
+          textScaler: const TextScaler.linear(_visualTextScale),
+        );
+
+        if (!compactTablet) {
+          return MediaQuery(
+            data: stableMedia,
+            child: const premium.LandingPage(),
+          );
+        }
+
         return ColoredBox(
           color: premium.LandingPage.canvas,
           child: Center(
             child: SizedBox(
               width: _compactTabletWidth,
               child: MediaQuery(
-                data: media.copyWith(
-                  size: Size(_compactTabletWidth, media.size.height),
-                ),
+                data: stableMedia,
                 child: const premium.LandingPage(),
               ),
             ),
