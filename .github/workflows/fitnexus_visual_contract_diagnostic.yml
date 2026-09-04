@@ -1,0 +1,43 @@
+name: FitNexus Visual Contract Diagnostic
+
+on:
+  push:
+    branches:
+      - blackgold/mobile-home-premium-redesign-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  visual-tests:
+    name: visual-${{ matrix.test_name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - test_name: contract
+            test_file: test/blackgold_visual_contract_test.dart
+          - test_name: premium
+            test_file: test/premium_landing_page_test.dart
+          - test_name: widget
+            test_file: test/widget_test.dart
+    defaults:
+      run:
+        working-directory: 03_app_flutter/fitnexus_app
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Run isolated visual test
+        run: flutter test --no-pub -r expanded "${{ matrix.test_file }}"
