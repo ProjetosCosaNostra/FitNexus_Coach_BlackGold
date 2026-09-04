@@ -21,8 +21,6 @@ jobs:
             test_file: test/blackgold_visual_contract_test.dart
           - test_name: premium
             test_file: test/premium_landing_page_test.dart
-          - test_name: widget
-            test_file: test/widget_test.dart
     defaults:
       run:
         working-directory: 03_app_flutter/fitnexus_app
@@ -39,5 +37,27 @@ jobs:
       - name: Resolve dependencies
         run: flutter pub get
 
-      - name: Run isolated visual test
-        run: flutter test --no-pub -r expanded "${{ matrix.test_file }}"
+      - name: Run isolated visual test and preserve diagnostics
+        id: visual_test
+        shell: bash
+        run: |
+          mkdir -p diagnostic_logs
+          set +e
+          flutter test --no-pub -r expanded "${{ matrix.test_file }}" 2>&1 | tee "diagnostic_logs/${{ matrix.test_name }}.log"
+          code=${PIPESTATUS[0]}
+          {
+            echo '### FitNexus visual test: ${{ matrix.test_name }}'
+            echo '```text'
+            tail -n 180 "diagnostic_logs/${{ matrix.test_name }}.log"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$code"
+
+      - name: Upload diagnostic log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fitnexus-visual-diagnostic-${{ matrix.test_name }}
+          path: 03_app_flutter/fitnexus_app/diagnostic_logs/${{ matrix.test_name }}.log
+          if-no-files-found: error
+          retention-days: 3
