@@ -83,7 +83,7 @@ if ($Patched -eq $Source) {
 # Ensure PowerShell 7 does not promote native-process exit handling into the
 # PowerShell error-action pipeline. The runner itself checks $LASTEXITCODE and
 # remains fail-closed on non-zero native exits.
-$Needle = "$ErrorActionPreference = 'Stop'"
+$Needle = "`$ErrorActionPreference = 'Stop'"
 $Insert = @"
 `$ErrorActionPreference = 'Stop'
 if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue) {
