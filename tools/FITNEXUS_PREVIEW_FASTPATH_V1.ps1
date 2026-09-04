@@ -32,7 +32,7 @@ function Get-WebRootFromArtifact {
   $index = Get-ChildItem -LiteralPath $Root -Filter index.html -Recurse -File -ErrorAction SilentlyContinue |
     Where-Object { $_.FullName -match '[\\/]03_app_flutter[\\/]fitnexus_app[\\/]build[\\/]web[\\/]index\.html$' } |
     Select-Object -First 1
-  if ($index) { return $index.Directory.FullName }
+  if ($index) { return [string]$index.Directory.FullName }
   return $null
 }
 
@@ -40,33 +40,60 @@ function Build-LocalFallback {
   Write-Host 'DOWNLOAD_UNAVAILABLE -> FALLBACK_LOCAL_BUILD'
   $git = (Get-Command git -ErrorAction Stop).Source
   $flutter = (Get-Command flutter -ErrorAction Stop).Source
-  & $git -C $RepoRoot fetch origin blackgold/mobile-home-premium-redesign-v1
+
+  Write-Host 'FITNEXUS_FASTPATH_STAGE=FETCH_CANDIDATE'
+  $null = & $git -C $RepoRoot fetch origin blackgold/mobile-home-premium-redesign-v1
   if ($LASTEXITCODE -ne 0) { throw 'git fetch failed' }
-  & $git -C $RepoRoot cat-file -e "$CandidateSha^{commit}"
+  $null = & $git -C $RepoRoot cat-file -e "$CandidateSha^{commit}"
   if ($LASTEXITCODE -ne 0) { throw "Candidate SHA not available locally: $CandidateSha" }
 
   $wt = Join-Path $env:TEMP ('FitNexusPreview_' + $CandidateSha.Substring(0,12))
   if (Test-Path -LiteralPath $wt) {
-    try { & $git -C $RepoRoot worktree remove --force $wt | Out-Null } catch {}
+    try { $null = & $git -C $RepoRoot worktree remove --force $wt } catch {}
     Remove-Item -LiteralPath $wt -Recurse -Force -ErrorAction SilentlyContinue
   }
-  & $git -C $RepoRoot worktree add --detach $wt $CandidateSha
+
+  Write-Host 'FITNEXUS_FASTPATH_STAGE=CREATE_ISOLATED_WORKTREE'
+  $null = & $git -C $RepoRoot worktree add --detach $wt $CandidateSha
   if ($LASTEXITCODE -ne 0) { throw 'git worktree add failed' }
+
   try {
     $app = Join-Path $wt '03_app_flutter\fitnexus_app'
+    if (-not (Test-Path -LiteralPath (Join-Path $app 'pubspec.yaml'))) {
+      throw "Flutter app not found in isolated worktree: $app"
+    }
+
     Push-Location $app
     try {
-      & $flutter pub get
+      Write-Host 'FITNEXUS_FASTPATH_STAGE=FLUTTER_PUB_GET'
+      $null = & $flutter pub get
       if ($LASTEXITCODE -ne 0) { throw 'flutter pub get failed' }
-      & $flutter build web --release
+
+      Write-Host 'FITNEXUS_FASTPATH_STAGE=BUILD_WEB_RELEASE'
+      $null = & $flutter build web --release --no-wasm-dry-run
       if ($LASTEXITCODE -ne 0) { throw 'flutter build web --release failed' }
-    } finally { Pop-Location }
+    }
+    finally {
+      Pop-Location
+    }
+
+    $builtWeb = Join-Path $app 'build\web'
+    if (-not (Test-Path -LiteralPath (Join-Path $builtWeb 'index.html'))) {
+      throw 'LOCAL_BUILD_WEB_INDEX_NOT_FOUND'
+    }
+
     $dest = Join-Path $PreviewRoot 'local_build_web'
-    Copy-Item -LiteralPath (Join-Path $app 'build\web') -Destination $dest -Recurse -Force
-    return $dest
+    if (Test-Path -LiteralPath $dest) {
+      Remove-Item -LiteralPath $dest -Recurse -Force
+    }
+    Copy-Item -LiteralPath $builtWeb -Destination $dest -Recurse -Force
+
+    # IMPORTANT: all native command output above is consumed into $null, so the
+    # function emits exactly one scalar value: the web root path.
+    return [string]$dest
   }
   finally {
-    try { & $git -C $RepoRoot worktree remove --force $wt | Out-Null } catch {}
+    try { $null = & $git -C $RepoRoot worktree remove --force $wt } catch {}
     Remove-Item -LiteralPath $wt -Recurse -Force -ErrorAction SilentlyContinue
   }
 }
@@ -79,7 +106,7 @@ Write-Host 'FITNEXUS_FASTPATH_STAGE=DOWNLOAD_COMPILED_ARTIFACT'
 $curl = Get-Command curl.exe -ErrorAction SilentlyContinue
 $downloadOk = $false
 if ($curl) {
-  & $curl.Source -L --fail --silent --show-error -H 'Accept: application/vnd.github+json' -H 'X-GitHub-Api-Version: 2022-11-28' $ArtifactUrl -o $ZipPath
+  $null = & $curl.Source -L --fail --silent --show-error -H 'Accept: application/vnd.github+json' -H 'X-GitHub-Api-Version: 2022-11-28' $ArtifactUrl -o $ZipPath
   if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $ZipPath) -and ((Get-Item $ZipPath).Length -gt 1000000)) {
     try {
       Expand-Archive -LiteralPath $ZipPath -DestinationPath $ExtractRoot -Force
@@ -90,11 +117,15 @@ if ($curl) {
 }
 
 if (-not $downloadOk) {
-  $WebRoot = Build-LocalFallback
+  $WebRoot = [string](Build-LocalFallback)
 }
 
-if (-not $WebRoot -or -not (Test-Path -LiteralPath (Join-Path $WebRoot 'index.html'))) {
-  throw 'WEB_PREVIEW_ROOT_NOT_FOUND'
+if ([string]::IsNullOrWhiteSpace([string]$WebRoot)) {
+  throw 'WEB_PREVIEW_ROOT_EMPTY'
+}
+$IndexPath = Join-Path -Path ([string]$WebRoot) -ChildPath 'index.html'
+if (-not (Test-Path -LiteralPath $IndexPath)) {
+  throw "WEB_PREVIEW_ROOT_NOT_FOUND: $WebRoot"
 }
 
 Write-Host "FITNEXUS_FASTPATH_WEBROOT=$WebRoot"
@@ -104,9 +135,9 @@ $py = Get-Command py.exe -ErrorAction SilentlyContinue
 if (-not $python -and -not $py) { throw 'Python was not found for the local preview server.' }
 
 if ($python) {
-  $server = Start-Process -FilePath $python.Source -ArgumentList @('-m','http.server',"$Port",'--bind','127.0.0.1','--directory',$WebRoot) -WindowStyle Hidden -PassThru
+  $server = Start-Process -FilePath $python.Source -ArgumentList @('-m','http.server',"$Port",'--bind','127.0.0.1','--directory',([string]$WebRoot)) -WindowStyle Hidden -PassThru
 } else {
-  $server = Start-Process -FilePath $py.Source -ArgumentList @('-3','-m','http.server',"$Port",'--bind','127.0.0.1','--directory',$WebRoot) -WindowStyle Hidden -PassThru
+  $server = Start-Process -FilePath $py.Source -ArgumentList @('-3','-m','http.server',"$Port",'--bind','127.0.0.1','--directory',([string]$WebRoot)) -WindowStyle Hidden -PassThru
 }
 Set-Content -LiteralPath $PidFile -Value $server.Id -Encoding Ascii
 
