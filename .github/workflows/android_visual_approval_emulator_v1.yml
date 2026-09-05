@@ -78,56 +78,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           working-directory: 03_app_flutter/fitnexus_app
           script: |
-            set -eu
-            PACKAGE='br.com.lafamigliaplayworks.fitnexuscoach'
-            APK='build/app/outputs/flutter-apk/app-release.apk'
-            OUT='build/emulator_visual'
-            mkdir -p "$OUT"
-            adb wait-for-device
-            adb shell settings put system accelerometer_rotation 0 || true
-            adb shell settings put system user_rotation 0 || true
-            adb shell wm size 1080x1920
-            adb shell wm density 420
-            adb install -r "$APK"
-            adb shell am force-stop "$PACKAGE" || true
-            adb shell monkey -p "$PACKAGE" -c android.intent.category.LAUNCHER 1
-            sleep 10
-            adb exec-out screencap -p > "$OUT/FITNEXUS_HOME_EXACT_SHA.png"
-            adb shell uiautomator dump /sdcard/fitnexus_ui.xml || true
-            adb pull /sdcard/fitnexus_ui.xml "$OUT/FITNEXUS_HOME_UI.xml" || true
-            adb logcat -d -t 500 > "$OUT/FITNEXUS_HOME_LOGCAT.txt" || true
-            adb shell dumpsys package "$PACKAGE" > "$OUT/FITNEXUS_PACKAGE_DUMPSYS.txt" || true
-            python - <<'PY'
-            import hashlib, json, os, struct
-            from pathlib import Path
-
-            png = Path('build/emulator_visual/FITNEXUS_HOME_EXACT_SHA.png')
-            data = png.read_bytes()
-            if len(data) < 24 or data[:8] != b'\x89PNG\r\n\x1a\n':
-                raise SystemExit('FITNEXUS_EMULATOR_SCREENSHOT_INVALID_PNG')
-            width, height = struct.unpack('>II', data[16:24])
-            receipt = {
-                'schema_version': 1,
-                'kind': 'FITNEXUS_ANDROID_ISOLATED_EMULATOR_VISUAL_PROOF',
-                'source_commit_sha': os.environ['GITHUB_SHA'],
-                'github_run_id': os.environ['GITHUB_RUN_ID'],
-                'application_id': 'br.com.lafamigliaplayworks.fitnexuscoach',
-                'build_mode': 'release',
-                'emulator_api_level': 35,
-                'requested_viewport': '1080x1920',
-                'captured_width': width,
-                'captured_height': height,
-                'screenshot_sha256': hashlib.sha256(data).hexdigest(),
-                'play_publication_performed': False,
-                'purpose': 'exact_sha_premerge_visual_approval',
-            }
-            Path('build/emulator_visual/FITNEXUS_EMULATOR_VISUAL_RECEIPT_V1.json').write_text(
-                json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
-            )
-            print('FITNEXUS_ISOLATED_EMULATOR_VISUAL_PROOF=PASS')
-            print(f'CAPTURED_SIZE={width}x{height}')
-            print('SCREENSHOT_SHA256=' + receipt['screenshot_sha256'])
-            PY
+            set -eu; mkdir -p build/emulator_visual; adb wait-for-device; adb shell settings put system accelerometer_rotation 0 || true; adb shell settings put system user_rotation 0 || true; adb shell wm size 1080x1920; adb shell wm density 420; adb install -r build/app/outputs/flutter-apk/app-release.apk; adb shell am force-stop br.com.lafamigliaplayworks.fitnexuscoach || true; adb shell monkey -p br.com.lafamigliaplayworks.fitnexuscoach -c android.intent.category.LAUNCHER 1; sleep 10; adb exec-out screencap -p > build/emulator_visual/FITNEXUS_HOME_EXACT_SHA.png; adb shell uiautomator dump /sdcard/fitnexus_ui.xml || true; adb pull /sdcard/fitnexus_ui.xml build/emulator_visual/FITNEXUS_HOME_UI.xml || true; adb logcat -d -t 500 > build/emulator_visual/FITNEXUS_HOME_LOGCAT.txt || true; adb shell dumpsys package br.com.lafamigliaplayworks.fitnexuscoach > build/emulator_visual/FITNEXUS_PACKAGE_DUMPSYS.txt || true; python -c 'import hashlib,json,os,struct; from pathlib import Path; p=Path("build/emulator_visual/FITNEXUS_HOME_EXACT_SHA.png"); data=p.read_bytes(); assert len(data)>=24 and data[:8]==b"\x89PNG\r\n\x1a\n", "FITNEXUS_EMULATOR_SCREENSHOT_INVALID_PNG"; width,height=struct.unpack(">II",data[16:24]); receipt={"schema_version":1,"kind":"FITNEXUS_ANDROID_ISOLATED_EMULATOR_VISUAL_PROOF","source_commit_sha":os.environ["GITHUB_SHA"],"github_run_id":os.environ["GITHUB_RUN_ID"],"application_id":"br.com.lafamigliaplayworks.fitnexuscoach","build_mode":"release","emulator_api_level":35,"requested_viewport":"1080x1920","captured_width":width,"captured_height":height,"screenshot_sha256":hashlib.sha256(data).hexdigest(),"play_publication_performed":False,"purpose":"exact_sha_premerge_visual_approval"}; Path("build/emulator_visual/FITNEXUS_EMULATOR_VISUAL_RECEIPT_V1.json").write_text(json.dumps(receipt,ensure_ascii=False,indent=2)+"\n",encoding="utf-8"); print("FITNEXUS_ISOLATED_EMULATOR_VISUAL_PROOF=PASS"); print(f"CAPTURED_SIZE={width}x{height}"); print("SCREENSHOT_SHA256="+receipt["screenshot_sha256"])'
 
       - name: Upload isolated emulator proof
         if: always()
