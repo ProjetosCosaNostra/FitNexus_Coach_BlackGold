@@ -308,6 +308,7 @@ class BlackGoldEcosystemEntry {
     if (values.containsKey(localeTag)) return values[localeTag]!;
     final language = localeTag.split('-').first;
     if (values.containsKey(language)) return values[language]!;
-    return values['en'] ?? values.values.firstOrNull ?? '';
+    if (values.containsKey('en')) return values['en']!;
+    return values.isEmpty ? '' : values.values.first;
   }
 }
