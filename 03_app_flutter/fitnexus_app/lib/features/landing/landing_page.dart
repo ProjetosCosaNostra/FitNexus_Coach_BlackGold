@@ -11,6 +11,7 @@ class LandingPage extends StatelessWidget {
   static const double _compactTabletWidth = 759;
   static const double _desktopBreakpoint = 900;
   static const double _visualTextScale = .95;
+  static const double _compactTabletTextScale = .90;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +30,9 @@ class LandingPage extends StatelessWidget {
             compactTablet ? _compactTabletWidth : media.size.width,
             media.size.height,
           ),
-          textScaler: const TextScaler.linear(_visualTextScale),
+          textScaler: TextScaler.linear(
+            compactTablet ? _compactTabletTextScale : _visualTextScale,
+          ),
         );
 
         if (!compactTablet) {
