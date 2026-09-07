@@ -757,12 +757,14 @@ class _ErrorPanel extends StatelessWidget {
             children: <Widget>[
               Icon(Icons.error_outline_rounded, color: AppColors.danger),
               SizedBox(width: BlackGoldSpace.sm),
-              Text(
-                'Não foi possível carregar o acompanhamento',
-                style: TextStyle(
-                  color: AppColors.text,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
+              Expanded(
+                child: Text(
+                  'Não foi possível carregar o acompanhamento',
+                  style: TextStyle(
+                    color: AppColors.text,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
             ],
@@ -847,7 +849,8 @@ String _initials(String name) {
       .toList(growable: false);
   if (parts.isEmpty) return 'AL';
   if (parts.length == 1) {
-    return parts.first.substring(0, parts.first.length.clamp(1, 2)).toUpperCase();
+    final int end = parts.first.length >= 2 ? 2 : 1;
+    return parts.first.substring(0, end).toUpperCase();
   }
   return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
 }
