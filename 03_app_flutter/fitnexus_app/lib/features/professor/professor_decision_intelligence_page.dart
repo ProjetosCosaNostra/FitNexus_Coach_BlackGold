@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/blackgold_tokens.dart';
 import 'professor_data_repository.dart';
 import 'professor_decision_intelligence_repository.dart';
 import 'professor_lineage_repository.dart';
@@ -37,10 +39,12 @@ class _ProfessorDecisionIntelligencePageState
   }
 
   Future<void> _bootstrap() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    if (mounted) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
       final List<StudentRecord> students = await _data.fetchStudents();
       if (!mounted) return;
@@ -170,12 +174,41 @@ class _ProfessorDecisionIntelligencePageState
     final bool rejected = outcome == 'rejected';
     return await showDialog<bool>(
           context: context,
+          barrierColor: Colors.black.withValues(alpha: 0.78),
           builder: (BuildContext dialogContext) => AlertDialog(
-            title: Text(rejected ? 'Descartar sugestão?' : 'Manter treino atual?'),
+            title: Row(
+              children: <Widget>[
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: BlackGoldEffects.goldGradient,
+                    borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+                  ),
+                  child: Icon(
+                    rejected
+                        ? Icons.close_rounded
+                        : Icons.pause_circle_outline_rounded,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(width: BlackGoldSpace.sm),
+                Expanded(
+                  child: Text(
+                    rejected ? 'Descartar sugestão?' : 'Manter treino atual?',
+                    style: const TextStyle(
+                      color: AppColors.text,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             content: Text(
               rejected
                   ? 'A análise ficará registrada como rejeitada. Nenhuma prescrição será alterada.'
                   : 'A análise ficará registrada como “sem ação”. O treino atual será preservado.',
+              style: const TextStyle(color: AppColors.muted, height: 1.45),
             ),
             actions: <Widget>[
               TextButton(
@@ -206,96 +239,190 @@ class _ProfessorDecisionIntelligencePageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF050505),
-      body: SafeArea(
-        child: RefreshIndicator(
-          color: const Color(0xFFE1B92F),
-          onRefresh: _refreshCurrent,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 120),
-            children: <Widget>[
-              const Text(
-                'DECISION INTELLIGENCE',
-                style: TextStyle(
-                  color: Color(0xFFFFD45A),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.1,
+      backgroundColor: AppColors.black,
+      body: Stack(
+        children: <Widget>[
+          const Positioned.fill(child: _DecisionAtmosphere()),
+          SafeArea(
+            child: RefreshIndicator(
+              color: AppColors.gold,
+              onRefresh: _refreshCurrent,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(
+                  BlackGoldSpace.lg,
+                  BlackGoldSpace.xl,
+                  BlackGoldSpace.lg,
+                  120,
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Sinais viram recomendações explicáveis — e decisões humanas viram calibração',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  height: 1.08,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 7),
-              const Text(
-                'O motor cruza aderência, execuções, feedback, treino ativo e Smart Templates. A construção agora também mede se o professor aceitou, modificou, rejeitou ou decidiu não agir — sem autoalterar regras nem prescrições.',
-                style: TextStyle(color: Color(0xFFAAAAAA), height: 1.45),
-              ),
-              const SizedBox(height: 20),
-              if (_loading)
-                const SizedBox(
-                  height: 260,
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (_students.isEmpty)
-                const _Notice(
-                  icon: Icons.groups_outlined,
-                  title: 'Nenhum aluno cadastrado',
-                  text: 'Cadastre um aluno para gerar o primeiro Decision Brief.',
-                )
-              else ...<Widget>[
-                if (_calibration != null) ...<Widget>[
-                  _CalibrationCard(snapshot: _calibration!),
-                  const SizedBox(height: 18),
+                children: <Widget>[
+                  const _DecisionHeader(),
+                  const SizedBox(height: BlackGoldSpace.lg),
+                  if (_loading)
+                    const _LoadingPanel()
+                  else if (_students.isEmpty)
+                    const _Notice(
+                      icon: Icons.groups_outlined,
+                      title: 'Nenhum aluno cadastrado',
+                      text:
+                          'Cadastre um aluno para gerar o primeiro Decision Brief.',
+                    )
+                  else ...<Widget>[
+                    if (_calibration != null) ...<Widget>[
+                      _CalibrationCard(snapshot: _calibration!),
+                      const SizedBox(height: BlackGoldSpace.lg),
+                    ],
+                    _Controls(
+                      students: _students,
+                      studentId: _studentId,
+                      generating: _generating || _resolving,
+                      onStudentChanged: (String? value) async {
+                        if (value == null) return;
+                        setState(() {
+                          _studentId = value;
+                          _brief = null;
+                          _error = null;
+                        });
+                        await _loadHistory(value);
+                      },
+                      onGenerate: _generate,
+                    ),
+                    if (_error != null) ...<Widget>[
+                      const SizedBox(height: BlackGoldSpace.sm),
+                      _Notice(
+                        icon: Icons.error_outline_rounded,
+                        title: 'Operação indisponível',
+                        text: _error!,
+                        error: true,
+                      ),
+                    ],
+                    if (_brief != null) ...<Widget>[
+                      const SizedBox(height: BlackGoldSpace.lg),
+                      _BriefCard(
+                        brief: _brief!,
+                        busy: _resolving,
+                        onOpenStudio: () => _openStudio(_brief!),
+                        onReject: () => _recordOutcome(_brief!, 'rejected'),
+                        onNoAction: () => _recordOutcome(_brief!, 'no_action'),
+                      ),
+                    ],
+                    const SizedBox(height: BlackGoldSpace.lg),
+                    _HistoryCard(history: _history),
+                  ],
                 ],
-                _Controls(
-                  students: _students,
-                  studentId: _studentId,
-                  generating: _generating || _resolving,
-                  onStudentChanged: (String? value) async {
-                    if (value == null) return;
-                    setState(() {
-                      _studentId = value;
-                      _brief = null;
-                      _error = null;
-                    });
-                    await _loadHistory(value);
-                  },
-                  onGenerate: _generate,
-                ),
-                if (_error != null) ...<Widget>[
-                  const SizedBox(height: 14),
-                  _Notice(
-                    icon: Icons.error_outline_rounded,
-                    title: 'Operação indisponível',
-                    text: _error!,
-                    error: true,
-                  ),
-                ],
-                if (_brief != null) ...<Widget>[
-                  const SizedBox(height: 18),
-                  _BriefCard(
-                    brief: _brief!,
-                    busy: _resolving,
-                    onOpenStudio: () => _openStudio(_brief!),
-                    onReject: () => _recordOutcome(_brief!, 'rejected'),
-                    onNoAction: () => _recordOutcome(_brief!, 'no_action'),
-                  ),
-                ],
-                const SizedBox(height: 18),
-                _HistoryCard(history: _history),
-              ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DecisionAtmosphere extends StatelessWidget {
+  const _DecisionAtmosphere();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: const Alignment(0.7, -0.95),
+            radius: 1.2,
+            colors: <Color>[
+              AppColors.gold.withValues(alpha: 0.07),
+              Colors.transparent,
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DecisionHeader extends StatelessWidget {
+  const _DecisionHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(BlackGoldSpace.xl),
+      decoration: BoxDecoration(
+        gradient: BlackGoldEffects.panelGradient,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.hero),
+        border: Border.all(color: AppColors.borderGold),
+        boxShadow: BlackGoldEffects.cardShadow,
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            'DECISION INTELLIGENCE',
+            style: TextStyle(
+              color: AppColors.goldSoft,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.15,
+            ),
+          ),
+          SizedBox(height: BlackGoldSpace.xs),
+          Text(
+            'Sinais viram recomendações explicáveis',
+            style: TextStyle(
+              color: AppColors.text,
+              fontSize: 30,
+              height: 1.06,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.7,
+            ),
+          ),
+          SizedBox(height: BlackGoldSpace.sm),
+          Text(
+            'Aderência, execuções, feedback, treino ativo e Smart Templates entram na análise. A decisão humana continua sendo a autoridade final — e também vira evidência de calibração.',
+            style: TextStyle(
+              color: AppColors.muted,
+              height: 1.5,
+              fontSize: 14,
+            ),
+          ),
+          SizedBox(height: BlackGoldSpace.md),
+          _HumanAuthorityStrip(),
+        ],
+      ),
+    );
+  }
+}
+
+class _HumanAuthorityStrip extends StatelessWidget {
+  const _HumanAuthorityStrip();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(BlackGoldSpace.sm),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(Icons.verified_user_rounded, color: AppColors.goldSoft, size: 18),
+          SizedBox(width: BlackGoldSpace.sm),
+          Expanded(
+            child: Text(
+              'O motor explica e propõe; o professor decide. Nenhuma prescrição é alterada automaticamente.',
+              style: TextStyle(
+                color: AppColors.text,
+                fontSize: 12,
+                height: 1.4,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -309,62 +436,45 @@ class _CalibrationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final DecisionCalibrationSummary summary = snapshot.summary;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF10141A),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF8EBBFF).withValues(alpha: 0.30)),
-      ),
+    final List<_MetricData> metrics = <_MetricData>[
+      _MetricData('Briefs', '${summary.totalRuns}'),
+      _MetricData('Resolvidos', '${summary.resolvedRuns}'),
+      _MetricData('Pendentes', '${summary.unresolvedRuns}'),
+      _MetricData('Adoção', '${summary.adoptionRate}%'),
+      _MetricData('Aceitos', '${summary.exactAcceptanceRate}%'),
+      _MetricData('Modificados', '${summary.modificationRate}%'),
+    ];
+
+    return _Panel(
+      icon: Icons.tune_rounded,
+      eyebrow: 'CALIBRAÇÃO HUMANA',
+      title: 'Como as recomendações estão sendo usadas',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          const Text(
-            'CALIBRAÇÃO HUMANA',
-            style: TextStyle(
-              color: Color(0xFF8EBBFF),
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.0,
-            ),
-          ),
-          const SizedBox(height: 5),
-          const Text(
-            'Como as recomendações estão sendo usadas',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 19,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 12),
           Wrap(
-            spacing: 9,
-            runSpacing: 9,
-            children: <Widget>[
-              _Metric(label: 'Briefs', value: '${summary.totalRuns}'),
-              _Metric(label: 'Resolvidos', value: '${summary.resolvedRuns}'),
-              _Metric(label: 'Pendentes', value: '${summary.unresolvedRuns}'),
-              _Metric(label: 'Adoção', value: '${summary.adoptionRate}%'),
-              _Metric(
-                label: 'Aceitos sem editar',
-                value: '${summary.exactAcceptanceRate}%',
-              ),
-              _Metric(
-                label: 'Modificados',
-                value: '${summary.modificationRate}%',
-              ),
-            ],
+            spacing: BlackGoldSpace.xs,
+            runSpacing: BlackGoldSpace.xs,
+            children: metrics
+                .map((metric) => _Metric(data: metric))
+                .toList(growable: false),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: BlackGoldSpace.sm),
           Text(
             'Aceitos ${summary.accepted} • modificados ${summary.modified} • rejeitados ${summary.rejected} • sem ação ${summary.noAction}',
-            style: const TextStyle(color: Color(0xFFB8C7DB), fontSize: 12),
+            style: const TextStyle(
+              color: AppColors.muted,
+              fontSize: 12,
+            ),
           ),
-          const SizedBox(height: 7),
+          const SizedBox(height: BlackGoldSpace.xs),
           Text(
             snapshot.interpretation,
-            style: const TextStyle(color: Color(0xFF7F8FA5), fontSize: 11, height: 1.35),
+            style: const TextStyle(
+              color: AppColors.mutedSoft,
+              fontSize: 11,
+              height: 1.4,
+            ),
           ),
         ],
       ),
@@ -372,33 +482,43 @@ class _CalibrationCard extends StatelessWidget {
   }
 }
 
-class _Metric extends StatelessWidget {
-  const _Metric({required this.label, required this.value});
+class _MetricData {
+  const _MetricData(this.label, this.value);
 
   final String label;
   final String value;
+}
+
+class _Metric extends StatelessWidget {
+  const _Metric({required this.data});
+
+  final _MetricData data;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
       decoration: BoxDecoration(
-        color: const Color(0xFF171C24),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.cardRaised,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+        border: Border.all(color: AppColors.border),
       ),
       child: Text.rich(
         TextSpan(
           children: <InlineSpan>[
             TextSpan(
-              text: '$value ',
+              text: '${data.value} ',
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.text,
                 fontWeight: FontWeight.w900,
               ),
             ),
             TextSpan(
-              text: label,
-              style: const TextStyle(color: Color(0xFF8EA0B8), fontSize: 11),
+              text: data.label,
+              style: const TextStyle(
+                color: AppColors.muted,
+                fontSize: 11,
+              ),
             ),
           ],
         ),
@@ -424,21 +544,16 @@ class _Controls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF111111),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF2C2A22)),
-      ),
+    return _Panel(
+      icon: Icons.psychology_alt_rounded,
+      eyebrow: 'NOVO BRIEF',
+      title: 'Escolha o aluno e gere uma análise',
       child: LayoutBuilder(
         builder: (BuildContext buildContext, BoxConstraints constraints) {
           final Widget selector = DropdownButtonFormField<String>(
             initialValue: studentId,
-            decoration: const InputDecoration(
-              labelText: 'Aluno',
-              border: OutlineInputBorder(),
-            ),
+            dropdownColor: AppColors.cardRaised,
+            decoration: const InputDecoration(labelText: 'Aluno'),
             items: students
                 .map(
                   (StudentRecord student) => DropdownMenuItem<String>(
@@ -452,12 +567,6 @@ class _Controls extends StatelessWidget {
 
           final Widget button = FilledButton.icon(
             onPressed: generating ? null : onGenerate,
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFE1B92F),
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
-              textStyle: const TextStyle(fontWeight: FontWeight.w900),
-            ),
             icon: generating
                 ? const SizedBox(
                     width: 18,
@@ -471,13 +580,18 @@ class _Controls extends StatelessWidget {
           if (constraints.maxWidth < 720) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[selector, const SizedBox(height: 12), button],
+              children: <Widget>[
+                selector,
+                const SizedBox(height: BlackGoldSpace.sm),
+                button,
+              ],
             );
           }
+
           return Row(
             children: <Widget>[
               Expanded(child: selector),
-              const SizedBox(width: 12),
+              const SizedBox(width: BlackGoldSpace.sm),
               button,
             ],
           );
@@ -508,58 +622,69 @@ class _BriefCard extends StatelessWidget {
     final DecisionCandidate? candidate = brief.candidate;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(BlackGoldSpace.lg),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F0F0F),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: risk.color.withValues(alpha: 0.45)),
+        gradient: BlackGoldEffects.panelGradient,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+        border: Border.all(color: risk.color.withValues(alpha: 0.48)),
+        boxShadow: <BoxShadow>[
+          ...BlackGoldEffects.cardShadow,
+          BoxShadow(
+            color: risk.color.withValues(alpha: 0.07),
+            blurRadius: 30,
+            spreadRadius: -8,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: BlackGoldSpace.xs,
+            runSpacing: BlackGoldSpace.xs,
             children: <Widget>[
               _Tag(label: risk.label, color: risk.color),
               _Tag(
                 label: 'Confiança ${brief.confidenceScore}%',
-                color: const Color(0xFFFFD45A),
+                color: AppColors.goldSoft,
               ),
               _Tag(
                 label: brief.engineMode == 'deterministic_fallback'
                     ? 'Motor determinístico'
                     : brief.engineMode,
-                color: const Color(0xFF8EBBFF),
+                color: AppColors.gold,
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: BlackGoldSpace.md),
           Text(
             brief.recommendationTitle,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.text,
               fontSize: 24,
               fontWeight: FontWeight.w900,
+              height: 1.08,
             ),
           ),
-          const SizedBox(height: 7),
+          const SizedBox(height: BlackGoldSpace.xs),
           Text(
             brief.recommendationReason,
-            style: const TextStyle(color: Color(0xFFCCCCCC), height: 1.45),
+            style: const TextStyle(color: AppColors.muted, height: 1.45),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: BlackGoldSpace.md),
           const Text(
-            'Evidências usadas',
+            'EVIDÊNCIAS USADAS',
             style: TextStyle(
-              color: Color(0xFFFFD45A),
+              color: AppColors.goldSoft,
+              fontSize: 11,
               fontWeight: FontWeight.w900,
+              letterSpacing: 0.8,
             ),
           ),
-          const SizedBox(height: 9),
+          const SizedBox(height: BlackGoldSpace.xs),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: BlackGoldSpace.xs,
+            runSpacing: BlackGoldSpace.xs,
             children: brief.evidence
                 .map(
                   (DecisionEvidence item) => _EvidenceChip(
@@ -569,16 +694,14 @@ class _BriefCard extends StatelessWidget {
                 )
                 .toList(growable: false),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: BlackGoldSpace.lg),
           if (candidate != null) ...<Widget>[
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(BlackGoldSpace.md),
               decoration: BoxDecoration(
-                color: const Color(0xFF161306),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: const Color(0xFFE1B92F).withValues(alpha: 0.35),
-                ),
+                color: AppColors.gold.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+                border: Border.all(color: AppColors.borderGold),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -586,31 +709,25 @@ class _BriefCard extends StatelessWidget {
                   Text(
                     'Candidato: ${candidate.templateName}',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.text,
                       fontWeight: FontWeight.w900,
                       fontSize: 18,
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: BlackGoldSpace.xxs),
                   Text(
                     '${candidate.objective} • ${candidate.level} • ${candidate.exercises.length} exercícios',
-                    style: const TextStyle(color: Color(0xFFAAAAAA)),
+                    style: const TextStyle(color: AppColors.muted),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: BlackGoldSpace.sm),
                   _DiffSummary(diff: candidate.diff),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: BlackGoldSpace.md),
                   FilledButton.icon(
                     onPressed: busy ? null : onOpenStudio,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFE1B92F),
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      textStyle: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
                     icon: const Icon(Icons.rule_rounded),
                     label: const Text('Levar candidato ao Decision Studio'),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: BlackGoldSpace.xs),
                   OutlinedButton.icon(
                     onPressed: busy ? null : onReject,
                     icon: const Icon(Icons.close_rounded),
@@ -625,17 +742,47 @@ class _BriefCard extends StatelessWidget {
               title: 'Sem candidato automático',
               text: _blockReason(brief.candidateBlockReason),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: BlackGoldSpace.sm),
             OutlinedButton.icon(
               onPressed: busy ? null : onNoAction,
               icon: const Icon(Icons.pause_circle_outline_rounded),
               label: const Text('Registrar sem mudança de treino'),
             ),
           ],
-          const SizedBox(height: 14),
-          const Text(
-            'Learning Loop BlackGold: a decisão humana vira evidência de calibração, nunca permissão para o motor editar regras ou prescrições sozinho.',
-            style: TextStyle(color: Color(0xFF888888), fontSize: 11, height: 1.4),
+          const SizedBox(height: BlackGoldSpace.md),
+          const _LearningLoopNote(),
+        ],
+      ),
+    );
+  }
+}
+
+class _LearningLoopNote extends StatelessWidget {
+  const _LearningLoopNote();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(BlackGoldSpace.sm),
+      decoration: BoxDecoration(
+        color: AppColors.blackSoft,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(Icons.loop_rounded, color: AppColors.goldSoft, size: 18),
+          SizedBox(width: BlackGoldSpace.sm),
+          Expanded(
+            child: Text(
+              'Learning Loop BlackGold: a decisão humana vira evidência de calibração, nunca permissão para o motor editar regras ou prescrições sozinho.',
+              style: TextStyle(
+                color: AppColors.muted,
+                fontSize: 11,
+                height: 1.4,
+              ),
+            ),
           ),
         ],
       ),
@@ -654,41 +801,41 @@ class _DiffSummary extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: BlackGoldSpace.xs,
+          runSpacing: BlackGoldSpace.xs,
           children: <Widget>[
             _Tag(
               label: '+${diff.added.length} adicionados',
-              color: const Color(0xFF75E39B),
+              color: AppColors.success,
             ),
             _Tag(
               label: '-${diff.removed.length} removidos',
-              color: const Color(0xFFFF7474),
+              color: AppColors.danger,
             ),
             _Tag(
               label: '${diff.changed.length} alterados',
-              color: const Color(0xFFFFC85A),
+              color: AppColors.warning,
             ),
           ],
         ),
         if (diff.hasChanges) ...<Widget>[
-          const SizedBox(height: 10),
+          const SizedBox(height: BlackGoldSpace.sm),
           ...diff.added.take(3).map(
                 (String item) => Text(
                   '+ $item',
-                  style: const TextStyle(color: Color(0xFF9DE6B4)),
+                  style: const TextStyle(color: AppColors.success),
                 ),
               ),
           ...diff.removed.take(3).map(
                 (String item) => Text(
                   '- $item',
-                  style: const TextStyle(color: Color(0xFFFF9A9A)),
+                  style: const TextStyle(color: AppColors.danger),
                 ),
               ),
           ...diff.changed.take(3).map(
                 (String item) => Text(
                   '~ $item',
-                  style: const TextStyle(color: Color(0xFFFFD58A)),
+                  style: const TextStyle(color: AppColors.warning),
                 ),
               ),
         ],
@@ -704,75 +851,68 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF111111),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF2C2A22)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          const Text(
-            'Histórico de análises',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 5),
-          const Text(
-            'Cada geração fica registrada como evidência de decisão; nenhuma delas altera a prescrição.',
-            style: TextStyle(color: Color(0xFF999999), fontSize: 12),
-          ),
-          const SizedBox(height: 14),
-          if (history.isEmpty)
-            const Text(
+    return _Panel(
+      icon: Icons.history_rounded,
+      eyebrow: 'AUDITORIA',
+      title: 'Histórico de análises',
+      child: history.isEmpty
+          ? const Text(
               'Nenhum Decision Brief gerado ainda.',
-              style: TextStyle(color: Color(0xFF888888)),
+              style: TextStyle(color: AppColors.muted),
             )
-          else
-            ...history.map(
-              (DecisionIntelligenceHistoryItem item) => Padding(
-                padding: const EdgeInsets.only(bottom: 9),
-                child: Row(
-                  children: <Widget>[
-                    Icon(
-                      _riskVisual(item.brief.riskLevel).icon,
-                      color: _riskVisual(item.brief.riskLevel).color,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 9),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            item.brief.recommendationTitle,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 12,
+          : Column(
+              children: history
+                  .map(
+                    (DecisionIntelligenceHistoryItem item) => Padding(
+                      padding:
+                          const EdgeInsets.only(bottom: BlackGoldSpace.xs),
+                      child: Container(
+                        padding: const EdgeInsets.all(BlackGoldSpace.sm),
+                        decoration: BoxDecoration(
+                          color: AppColors.cardRaised,
+                          borderRadius:
+                              BorderRadius.circular(BlackGoldRadius.control),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Icon(
+                              _riskVisual(item.brief.riskLevel).icon,
+                              color: _riskVisual(item.brief.riskLevel).color,
+                              size: 18,
                             ),
-                          ),
-                          Text(
-                            '${_formatDate(item.createdAt)} • confiança ${item.brief.confidenceScore}% • run ${_short(item.runId)}',
-                            style: const TextStyle(
-                              color: Color(0xFF888888),
-                              fontSize: 11,
+                            const SizedBox(width: BlackGoldSpace.sm),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    item.brief.recommendationTitle,
+                                    style: const TextStyle(
+                                      color: AppColors.text,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${_formatDate(item.createdAt)} • confiança ${item.brief.confidenceScore}% • run ${_short(item.runId)}',
+                                    style: const TextStyle(
+                                      color: AppColors.mutedSoft,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ],
-                ),
-              ),
+                  )
+                  .toList(growable: false),
             ),
-        ],
-      ),
     );
   }
 }
@@ -788,10 +928,18 @@ class _EvidenceChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF191919),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.cardRaised,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+        border: Border.all(color: AppColors.border),
       ),
-      child: Text('$label: $value'),
+      child: Text(
+        '$label: $value',
+        style: const TextStyle(
+          color: AppColors.text,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
@@ -808,7 +956,7 @@ class _Tag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.pill),
         border: Border.all(color: color.withValues(alpha: 0.28)),
       ),
       child: Text(
@@ -818,6 +966,81 @@ class _Tag extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w900,
         ),
+      ),
+    );
+  }
+}
+
+class _Panel extends StatelessWidget {
+  const _Panel({
+    required this.icon,
+    required this.eyebrow,
+    required this.title,
+    required this.child,
+  });
+
+  final IconData icon;
+  final String eyebrow;
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(BlackGoldSpace.lg),
+      decoration: BoxDecoration(
+        gradient: BlackGoldEffects.panelGradient,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+        border: Border.all(color: AppColors.borderGold),
+        boxShadow: BlackGoldEffects.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.09),
+                  borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Icon(icon, color: AppColors.goldSoft, size: 20),
+              ),
+              const SizedBox(width: BlackGoldSpace.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      eyebrow,
+                      style: const TextStyle(
+                        color: AppColors.goldSoft,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.9,
+                      ),
+                    ),
+                    const SizedBox(height: BlackGoldSpace.xxs),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: AppColors.text,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: BlackGoldSpace.md),
+          child,
+        ],
       ),
     );
   }
@@ -838,20 +1061,19 @@ class _Notice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color color = error ? AppColors.danger : AppColors.gold;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(BlackGoldSpace.md),
       decoration: BoxDecoration(
-        color: error ? const Color(0xFF351515) : const Color(0xFF111111),
-        borderRadius: BorderRadius.circular(16),
+        color: color.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+        border: Border.all(color: color.withValues(alpha: 0.30)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Icon(
-            icon,
-            color: error ? const Color(0xFFFF9A9A) : const Color(0xFFFFD45A),
-          ),
-          const SizedBox(width: 10),
+          Icon(icon, color: color),
+          const SizedBox(width: BlackGoldSpace.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -859,21 +1081,49 @@ class _Notice extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.text,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: BlackGoldSpace.xxs),
                 Text(
                   text,
                   style: const TextStyle(
-                    color: Color(0xFFBBBBBB),
+                    color: AppColors.muted,
                     height: 1.4,
                     fontSize: 12,
                   ),
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LoadingPanel extends StatelessWidget {
+  const _LoadingPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 260,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          CircularProgressIndicator(color: AppColors.gold),
+          SizedBox(height: BlackGoldSpace.md),
+          Text(
+            'Carregando sinais e calibração…',
+            style: TextStyle(color: AppColors.muted),
           ),
         ],
       ),
@@ -892,13 +1142,13 @@ class _RiskVisual {
 _RiskVisual _riskVisual(String level) {
   return switch (level) {
     'high' => const _RiskVisual(
-        'PRIORIDADE ALTA', Color(0xFFFF7474), Icons.priority_high_rounded),
+        'PRIORIDADE ALTA', AppColors.danger, Icons.priority_high_rounded),
     'medium' => const _RiskVisual(
-        'ATENÇÃO', Color(0xFFFFC85A), Icons.visibility_rounded),
-    'low' => const _RiskVisual('SINAL SAUDÁVEL', Color(0xFF75E39B),
+        'ATENÇÃO', AppColors.warning, Icons.visibility_rounded),
+    'low' => const _RiskVisual('SINAL SAUDÁVEL', AppColors.success,
         Icons.check_circle_outline_rounded),
     _ => const _RiskVisual(
-        'NOVO', Color(0xFF8EBBFF), Icons.fiber_new_rounded),
+        'NOVO', AppColors.goldSoft, Icons.fiber_new_rounded),
   };
 }
 
@@ -916,7 +1166,8 @@ String _blockReason(String? reason) {
       'Não existe Smart Template profissional compatível com objetivo e nível para propor um diff seguro.',
     'NO_CHANGE_SIGNAL' =>
       'Os dados atuais favorecem manutenção e acompanhamento, sem motivo suficiente para propor mudança.',
-    _ => 'Nenhum candidato de alteração foi liberado pelos guardrails desta análise.',
+    _ =>
+      'Nenhum candidato de alteração foi liberado pelos guardrails desta análise.',
   };
 }
 
