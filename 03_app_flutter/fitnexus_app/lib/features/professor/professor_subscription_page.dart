@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/blackgold_tokens.dart';
 import 'professor_billing_repository.dart';
 import 'professor_subscription_repository.dart';
 
@@ -30,10 +32,12 @@ class _ProfessorSubscriptionPageState extends State<ProfessorSubscriptionPage> {
   }
 
   Future<void> _reload() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    if (mounted) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
     try {
       final List<Object> result = await Future.wait<Object>(<Future<Object>>[
         _repository.fetchSnapshot(),
@@ -68,73 +72,179 @@ class _ProfessorSubscriptionPageState extends State<ProfessorSubscriptionPage> {
   @override
   Widget build(BuildContext context) {
     final SubscriptionEntitlementSnapshot? snapshot = _snapshot;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF050505),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF050505),
-        foregroundColor: Colors.white,
-        title: const Text('Plano & assinatura'),
+      backgroundColor: AppColors.black,
+      body: Stack(
+        children: <Widget>[
+          const Positioned.fill(child: _CommercialAtmosphere()),
+          SafeArea(
+            child: RefreshIndicator(
+              color: AppColors.gold,
+              onRefresh: _reload,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(
+                  BlackGoldSpace.lg,
+                  BlackGoldSpace.xl,
+                  BlackGoldSpace.lg,
+                  120,
+                ),
+                children: <Widget>[
+                  _CommercialHeader(
+                    loading: _loading,
+                    onRefresh: _reload,
+                  ),
+                  const SizedBox(height: BlackGoldSpace.lg),
+                  if (_loading && snapshot == null)
+                    const _LoadingPanel()
+                  else if (_error != null && snapshot == null)
+                    _Notice(text: _error!, error: true)
+                  else if (snapshot != null) ...<Widget>[
+                    _PlanHero(snapshot: snapshot),
+                    const SizedBox(height: BlackGoldSpace.lg),
+                    _CommercialSummary(
+                      snapshot: snapshot,
+                      readiness: _billingReadiness,
+                    ),
+                    const SizedBox(height: BlackGoldSpace.lg),
+                    if (_billingReadiness != null) ...<Widget>[
+                      _BillingReadinessCard(readiness: _billingReadiness!),
+                      const SizedBox(height: BlackGoldSpace.lg),
+                    ],
+                    _UsageCard(snapshot: snapshot),
+                    const SizedBox(height: BlackGoldSpace.lg),
+                    _FeaturesCard(snapshot: snapshot),
+                    const SizedBox(height: BlackGoldSpace.lg),
+                    _AuthorityCard(snapshot: snapshot),
+                    const SizedBox(height: BlackGoldSpace.lg),
+                    _CatalogCard(
+                      catalog: _catalog,
+                      currentCode: snapshot.plan.code,
+                    ),
+                    if (_error != null) ...<Widget>[
+                      const SizedBox(height: BlackGoldSpace.md),
+                      _Notice(text: _error!, error: true),
+                    ],
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
-      body: RefreshIndicator(
-        color: const Color(0xFFE1B92F),
-        onRefresh: _reload,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-          children: <Widget>[
-            const Text(
-              'BLACKGOLD COMMERCIAL CORE',
-              style: TextStyle(
-                color: Color(0xFFFFD45A),
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Capacidade, trial e recursos do seu espaço FitNexus',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 27,
-                fontWeight: FontWeight.w900,
-                height: 1.08,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Os limites, o provedor e a prontidão do checkout vêm do servidor. O aplicativo não escolhe preço, não guarda segredo do provedor e não ativa cobrança sozinho.',
-              style: TextStyle(color: Color(0xFFAAAAAA), height: 1.45),
-            ),
-            const SizedBox(height: 20),
-            if (_loading && snapshot == null)
-              const SizedBox(
-                height: 300,
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (_error != null && snapshot == null)
-              _Notice(text: _error!, error: true)
-            else if (snapshot != null) ...<Widget>[
-              _PlanHero(snapshot: snapshot),
-              const SizedBox(height: 16),
-              if (_billingReadiness != null) ...<Widget>[
-                _BillingReadinessCard(readiness: _billingReadiness!),
-                const SizedBox(height: 16),
-              ],
-              _UsageCard(snapshot: snapshot),
-              const SizedBox(height: 16),
-              _FeaturesCard(snapshot: snapshot),
-              const SizedBox(height: 16),
-              _AuthorityCard(snapshot: snapshot),
-              const SizedBox(height: 20),
-              _CatalogCard(catalog: _catalog, currentCode: snapshot.plan.code),
-              if (_error != null) ...<Widget>[
-                const SizedBox(height: 14),
-                _Notice(text: _error!, error: true),
-              ],
+    );
+  }
+}
+
+class _CommercialAtmosphere extends StatelessWidget {
+  const _CommercialAtmosphere();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: const Alignment(0.72, -0.95),
+            radius: 1.2,
+            colors: <Color>[
+              AppColors.gold.withValues(alpha: 0.075),
+              Colors.transparent,
             ],
-          ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+class _CommercialHeader extends StatelessWidget {
+  const _CommercialHeader({required this.loading, required this.onRefresh});
+
+  final bool loading;
+  final Future<void> Function() onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(BlackGoldSpace.xl),
+      decoration: BoxDecoration(
+        gradient: BlackGoldEffects.panelGradient,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.hero),
+        border: Border.all(color: AppColors.borderGold),
+        boxShadow: BlackGoldEffects.cardShadow,
+      ),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final bool compact = constraints.maxWidth < BlackGoldBreakpoints.tablet;
+          final Widget copy = const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                'BLACKGOLD COMMERCIAL CORE',
+                style: TextStyle(
+                  color: AppColors.goldSoft,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.25,
+                ),
+              ),
+              SizedBox(height: BlackGoldSpace.xs),
+              Text(
+                'Plano, capacidade e autoridade comercial',
+                style: TextStyle(
+                  color: AppColors.text,
+                  fontSize: 30,
+                  height: 1.06,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.7,
+                ),
+              ),
+              SizedBox(height: BlackGoldSpace.sm),
+              Text(
+                'Limites, preço, provedor e prontidão do checkout vêm do servidor. O aplicativo não inventa valores, não guarda segredos do provedor e não concede plano por interface.',
+                style: TextStyle(
+                  color: AppColors.muted,
+                  height: 1.5,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          );
+
+          final Widget refresh = IconButton.outlined(
+            tooltip: 'Atualizar assinatura',
+            onPressed: loading ? null : onRefresh,
+            icon: loading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh_rounded),
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                copy,
+                const SizedBox(height: BlackGoldSpace.md),
+                Align(alignment: Alignment.centerLeft, child: refresh),
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Expanded(child: copy),
+              const SizedBox(width: BlackGoldSpace.lg),
+              refresh,
+            ],
+          );
+        },
       ),
     );
   }
@@ -154,56 +264,249 @@ class _PlanHero extends StatelessWidget {
         : visual.subtitle;
 
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(BlackGoldSpace.xl),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          colors: <Color>[Color(0xFF171205), Color(0xFF0C0C0C)],
-        ),
-        border: Border.all(color: visual.color.withValues(alpha: 0.35)),
+        gradient: BlackGoldEffects.panelGradient,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.hero),
+        border: Border.all(color: visual.color.withValues(alpha: 0.42)),
+        boxShadow: <BoxShadow>[
+          ...BlackGoldEffects.cardShadow,
+          BoxShadow(
+            color: visual.color.withValues(alpha: 0.08),
+            blurRadius: 28,
+            spreadRadius: -8,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Column(
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final Widget copy = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    snapshot.plan.displayName,
+                    style: const TextStyle(
+                      color: AppColors.text,
+                      fontSize: 27,
+                      height: 1.05,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: BlackGoldSpace.xs),
+                  Text(
+                    trialText,
+                    style: TextStyle(
+                      color: visual.color,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              );
+
+              if (constraints.maxWidth < BlackGoldBreakpoints.mobile) {
+                return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(
-                      snapshot.plan.displayName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 25,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      trialText,
-                      style: TextStyle(color: visual.color, fontWeight: FontWeight.w800),
-                    ),
+                    copy,
+                    const SizedBox(height: BlackGoldSpace.sm),
+                    _Pill(label: visual.label, color: visual.color),
                   ],
-                ),
-              ),
-              _Pill(label: visual.label, color: visual.color),
-            ],
+                );
+              }
+
+              return Row(
+                children: <Widget>[
+                  Expanded(child: copy),
+                  _Pill(label: visual.label, color: visual.color),
+                ],
+              );
+            },
           ),
-          const SizedBox(height: 16),
-          Text(
-            state.writeEnabled
-                ? 'Novas operações comerciais estão liberadas pelos gates do servidor.'
-                : 'Novas operações comerciais estão bloqueadas pelo estado atual da assinatura. Seus dados continuam preservados.',
-            style: const TextStyle(color: Color(0xFFBBBBBB), height: 1.4),
+          const SizedBox(height: BlackGoldSpace.md),
+          Container(
+            padding: const EdgeInsets.all(BlackGoldSpace.md),
+            decoration: BoxDecoration(
+              color: AppColors.blackSoft,
+              borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Icon(
+                  state.writeEnabled
+                      ? Icons.lock_open_rounded
+                      : Icons.lock_outline_rounded,
+                  color: state.writeEnabled
+                      ? AppColors.success
+                      : AppColors.warning,
+                  size: 20,
+                ),
+                const SizedBox(width: BlackGoldSpace.sm),
+                Expanded(
+                  child: Text(
+                    state.writeEnabled
+                        ? 'Novas operações comerciais estão liberadas pelos gates do servidor.'
+                        : 'Novas operações comerciais estão bloqueadas pelo estado atual da assinatura. Seus dados continuam preservados.',
+                    style: const TextStyle(
+                      color: AppColors.muted,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           if (state.trialEndsAt != null && state.effectiveStatus == 'trialing') ...<Widget>[
-            const SizedBox(height: 8),
+            const SizedBox(height: BlackGoldSpace.sm),
             Text(
               'Trial até ${_formatDate(state.trialEndsAt!)}',
-              style: const TextStyle(color: Color(0xFF888888), fontSize: 12),
+              style: const TextStyle(
+                color: AppColors.mutedSoft,
+                fontSize: 12,
+              ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _CommercialSummary extends StatelessWidget {
+  const _CommercialSummary({required this.snapshot, required this.readiness});
+
+  final SubscriptionEntitlementSnapshot snapshot;
+  final BillingProviderReadiness? readiness;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<_SummaryData> items = <_SummaryData>[
+      _SummaryData(
+        Icons.groups_rounded,
+        '${snapshot.usage.students}/${snapshot.usage.studentLimit}',
+        'Alunos',
+        '${snapshot.usage.studentRemaining} disponíveis',
+      ),
+      _SummaryData(
+        Icons.badge_rounded,
+        '${snapshot.usage.members}/${snapshot.usage.memberLimit}',
+        'Equipe',
+        '${snapshot.usage.memberRemaining} disponíveis',
+      ),
+      _SummaryData(
+        Icons.workspace_premium_rounded,
+        snapshot.subscription.effectiveStatus.toUpperCase(),
+        'Entitlement',
+        snapshot.subscription.writeEnabled ? 'escrita liberada' : 'escrita bloqueada',
+      ),
+      _SummaryData(
+        Icons.payments_rounded,
+        readiness?.checkout.ready == true ? 'PRONTO' : 'BLOQUEADO',
+        'Checkout',
+        readiness?.provider.displayName ?? 'aguardando leitura',
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final int columns = constraints.maxWidth >= 1040
+            ? 4
+            : constraints.maxWidth >= BlackGoldBreakpoints.mobile
+                ? 2
+                : 1;
+        const double gap = BlackGoldSpace.sm;
+        final double width =
+            (constraints.maxWidth - gap * (columns - 1)) / columns;
+
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: items
+              .map((item) => SizedBox(width: width, child: _SummaryCard(data: item)))
+              .toList(growable: false),
+        );
+      },
+    );
+  }
+}
+
+class _SummaryData {
+  const _SummaryData(this.icon, this.value, this.label, this.caption);
+
+  final IconData icon;
+  final String value;
+  final String label;
+  final String caption;
+}
+
+class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({required this.data});
+
+  final _SummaryData data;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(BlackGoldSpace.md),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+        border: Border.all(color: AppColors.border),
+        boxShadow: BlackGoldEffects.cardShadow,
+      ),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Icon(data.icon, color: AppColors.goldSoft),
+          ),
+          const SizedBox(width: BlackGoldSpace.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  data.value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.text,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: BlackGoldSpace.xxs),
+                Text(
+                  data.label,
+                  style: const TextStyle(
+                    color: AppColors.goldSoft,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  data.caption,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.mutedSoft,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -223,40 +526,61 @@ class _BillingReadinessCard extends StatelessWidget {
     final bool checkoutReady = readiness.checkout.ready;
 
     return _Card(
+      icon: Icons.account_balance_wallet_rounded,
       title: 'Cobrança online',
-      subtitle: 'Provedor selecionado e gates que ainda precisam estar verdes',
+      subtitle: 'Provedor selecionado e gates de prontidão',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Column(
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final Widget providerCopy = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    provider.displayName,
+                    style: const TextStyle(
+                      color: AppColors.text,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: BlackGoldSpace.xxs),
+                  Text(
+                    '${readiness.scope} • evidência ${provider.evidenceVersion}',
+                    style: const TextStyle(
+                      color: AppColors.mutedSoft,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              );
+
+              final Widget pill = _Pill(
+                label: checkoutReady ? 'CHECKOUT PRONTO' : 'AINDA BLOQUEADO',
+                color: checkoutReady ? AppColors.success : AppColors.warning,
+              );
+
+              if (constraints.maxWidth < BlackGoldBreakpoints.mobile) {
+                return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(
-                      provider.displayName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${readiness.scope} • evidência ${provider.evidenceVersion}',
-                      style: const TextStyle(color: Color(0xFF888888), fontSize: 11),
-                    ),
+                    providerCopy,
+                    const SizedBox(height: BlackGoldSpace.sm),
+                    pill,
                   ],
-                ),
-              ),
-              _Pill(
-                label: checkoutReady ? 'CHECKOUT PRONTO' : 'AINDA BLOQUEADO',
-                color: checkoutReady ? const Color(0xFF75E39B) : const Color(0xFFFFC85A),
-              ),
-            ],
+                );
+              }
+
+              return Row(
+                children: <Widget>[
+                  Expanded(child: providerCopy),
+                  pill,
+                ],
+              );
+            },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: BlackGoldSpace.md),
           _GateLine(
             label: 'Seleção do provedor',
             passed: provider.selectionState == 'active',
@@ -264,7 +588,7 @@ class _BillingReadinessCard extends StatelessWidget {
                 ? 'Autoridade externa verificada e ativada.'
                 : 'Selecionado para o Brasil, aguardando a fronteira externa de credenciais.',
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: BlackGoldSpace.sm),
           _GateLine(
             label: 'Credenciais',
             passed: credentialsReady,
@@ -272,7 +596,7 @@ class _BillingReadinessCard extends StatelessWidget {
                 ? 'Credencial externa validada sem exposição ao Flutter.'
                 : 'Pendente. Nenhum segredo foi exposto ao aplicativo.',
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: BlackGoldSpace.sm),
           _GateLine(
             label: 'Preço comercial',
             passed: pricingReady,
@@ -280,7 +604,7 @@ class _BillingReadinessCard extends StatelessWidget {
                 ? '${readiness.pricing.activePriceCount} preço(s) promovido(s) pelo servidor.'
                 : 'UNFROZEN — nenhum valor será inventado nem enviado pelo cliente.',
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: BlackGoldSpace.sm),
           _GateLine(
             label: 'Checkout',
             passed: checkoutReady,
@@ -288,10 +612,10 @@ class _BillingReadinessCard extends StatelessWidget {
                 ? 'Checkout autorizado pelos gates de provedor + preço.'
                 : 'Bloqueado até credencial e preço terem autoridade comprovada.',
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: BlackGoldSpace.md),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: BlackGoldSpace.xs,
+            runSpacing: BlackGoldSpace.xs,
             children: <Widget>[
               if (provider.capability('recurring_subscriptions'))
                 const _Capability(label: 'Recorrência'),
@@ -306,17 +630,19 @@ class _BillingReadinessCard extends StatelessWidget {
               if (provider.capability('webhooks')) const _Capability(label: 'Webhooks'),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: BlackGoldSpace.md),
           const _AuthorityLine(
             icon: Icons.price_check_rounded,
-            text: 'O valor da cobrança vem somente do preço promovido no banco. O Flutter não pode informar o valor ao checkout.',
+            text:
+                'O valor da cobrança vem somente do preço promovido no banco. O Flutter não pode informar o valor ao checkout.',
           ),
-          const SizedBox(height: 9),
+          const SizedBox(height: BlackGoldSpace.xs),
           const _AuthorityLine(
             icon: Icons.key_off_rounded,
-            text: 'Segredos do provedor ficam fora do aplicativo. A ativação exige uma autoridade externa verificada.',
+            text:
+                'Segredos do provedor ficam fora do aplicativo. A ativação exige uma autoridade externa verificada.',
           ),
-          const SizedBox(height: 9),
+          const SizedBox(height: BlackGoldSpace.xs),
           const _AuthorityLine(
             icon: Icons.swap_horiz_rounded,
             text: 'Não existe fallback silencioso para outro provedor de pagamento.',
@@ -340,33 +666,48 @@ class _GateLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color color = passed ? const Color(0xFF75E39B) : const Color(0xFFFFC85A);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Icon(
-          passed ? Icons.check_circle_rounded : Icons.hourglass_top_rounded,
-          color: color,
-          size: 19,
-        ),
-        const SizedBox(width: 9),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                label,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                detail,
-                style: const TextStyle(color: Color(0xFF999999), fontSize: 12, height: 1.35),
-              ),
-            ],
+    final Color color = passed ? AppColors.success : AppColors.warning;
+    return Container(
+      padding: const EdgeInsets.all(BlackGoldSpace.sm),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.055),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(
+            passed ? Icons.check_circle_rounded : Icons.hourglass_top_rounded,
+            color: color,
+            size: 19,
           ),
-        ),
-      ],
+          const SizedBox(width: BlackGoldSpace.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: AppColors.text,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: BlackGoldSpace.xxs),
+                Text(
+                  detail,
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -381,14 +722,14 @@ class _Capability extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: const Color(0xFF101B23),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFF29475F)),
+        color: AppColors.gold.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.pill),
+        border: Border.all(color: AppColors.border),
       ),
       child: Text(
         label,
         style: const TextStyle(
-          color: Color(0xFF9CCEFF),
+          color: AppColors.goldSoft,
           fontSize: 11,
           fontWeight: FontWeight.w800,
         ),
@@ -409,7 +750,7 @@ class _Pill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.pill),
         border: Border.all(color: color.withValues(alpha: 0.30)),
       ),
       child: Text(
@@ -433,6 +774,7 @@ class _UsageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final SubscriptionUsageInfo usage = snapshot.usage;
     return _Card(
+      icon: Icons.bar_chart_rounded,
       title: 'Uso e limites',
       subtitle: 'Capacidade validada diretamente pelo backend',
       child: Column(
@@ -444,7 +786,7 @@ class _UsageCard extends StatelessWidget {
             remaining: usage.studentRemaining,
             ratio: usage.studentRatio,
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: BlackGoldSpace.lg),
           _UsageLine(
             label: 'Equipe',
             used: usage.members,
@@ -483,27 +825,38 @@ class _UsageLine extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
+                style: const TextStyle(
+                  color: AppColors.text,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
             ),
             Text(
               '$used / $limit',
-              style: const TextStyle(color: Color(0xFFFFD45A), fontWeight: FontWeight.w900),
+              style: const TextStyle(
+                color: AppColors.goldSoft,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        LinearProgressIndicator(
-          value: ratio,
-          minHeight: 8,
-          borderRadius: BorderRadius.circular(999),
-          backgroundColor: const Color(0xFF262626),
-          color: const Color(0xFFE1B92F),
+        const SizedBox(height: BlackGoldSpace.xs),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(BlackGoldRadius.pill),
+          child: LinearProgressIndicator(
+            value: ratio,
+            minHeight: 8,
+            backgroundColor: AppColors.cardSoft,
+            color: AppColors.gold,
+          ),
         ),
-        const SizedBox(height: 7),
+        const SizedBox(height: BlackGoldSpace.xs),
         Text(
           '$remaining disponível${remaining == 1 ? '' : 'is'}',
-          style: const TextStyle(color: Color(0xFF888888), fontSize: 11),
+          style: const TextStyle(
+            color: AppColors.mutedSoft,
+            fontSize: 11,
+          ),
         ),
       ],
     );
@@ -525,18 +878,21 @@ class _FeaturesCard extends StatelessWidget {
       'student_feedback': 'Feedback do aluno',
     };
     return _Card(
+      icon: Icons.extension_rounded,
       title: 'Recursos liberados',
       subtitle: 'Entitlements atuais do seu plano',
       child: Wrap(
-        spacing: 9,
-        runSpacing: 9,
+        spacing: BlackGoldSpace.xs,
+        runSpacing: BlackGoldSpace.xs,
         children: labels.entries.map((MapEntry<String, String> entry) {
           final bool enabled = snapshot.featureEnabled(entry.key);
+          final Color color = enabled ? AppColors.success : AppColors.danger;
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
             decoration: BoxDecoration(
-              color: enabled ? const Color(0xFF102018) : const Color(0xFF211313),
-              borderRadius: BorderRadius.circular(12),
+              color: color.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+              border: Border.all(color: color.withValues(alpha: 0.20)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -544,10 +900,17 @@ class _FeaturesCard extends StatelessWidget {
                 Icon(
                   enabled ? Icons.check_circle_rounded : Icons.block_rounded,
                   size: 16,
-                  color: enabled ? const Color(0xFF75E39B) : const Color(0xFFFF8B8B),
+                  color: color,
                 ),
-                const SizedBox(width: 7),
-                Text(entry.value),
+                const SizedBox(width: BlackGoldSpace.xs),
+                Text(
+                  entry.value,
+                  style: const TextStyle(
+                    color: AppColors.text,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
             ),
           );
@@ -565,6 +928,7 @@ class _AuthorityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Card(
+      icon: Icons.verified_user_rounded,
       title: 'Autoridade comercial',
       subtitle: 'O cliente não pode se conceder plano ou limite pelo aplicativo',
       child: Column(
@@ -574,12 +938,12 @@ class _AuthorityCard extends StatelessWidget {
             icon: Icons.shield_outlined,
             text: 'Limites de alunos e equipe são impostos no PostgreSQL.',
           ),
-          const SizedBox(height: 9),
+          const SizedBox(height: BlackGoldSpace.xs),
           const _AuthorityLine(
             icon: Icons.lock_outline_rounded,
             text: 'Mudança direta de assinatura pelo Flutter é proibida.',
           ),
-          const SizedBox(height: 9),
+          const SizedBox(height: BlackGoldSpace.xs),
           _AuthorityLine(
             icon: Icons.sync_alt_rounded,
             text: snapshot.providerBound
@@ -603,12 +967,12 @@ class _AuthorityLine extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Icon(icon, color: const Color(0xFF8EBBFF), size: 19),
-        const SizedBox(width: 9),
+        Icon(icon, color: AppColors.goldSoft, size: 19),
+        const SizedBox(width: BlackGoldSpace.sm),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(color: Color(0xFFBBBBBB), height: 1.4),
+            style: const TextStyle(color: AppColors.muted, height: 1.45),
           ),
         ),
       ],
@@ -627,71 +991,101 @@ class _CatalogCard extends StatelessWidget {
     final List<SubscriptionPlanCatalogItem> paid = catalog
         .where((SubscriptionPlanCatalogItem item) => item.code != 'trial')
         .toList(growable: false);
+
     return _Card(
+      icon: Icons.view_carousel_rounded,
       title: 'Capacidades comerciais',
       subtitle: 'A camada de preço continua desacoplada do domínio de entitlement',
       child: paid.isEmpty
           ? const Text(
               'Nenhum plano comercial disponível.',
-              style: TextStyle(color: Color(0xFF888888)),
+              style: TextStyle(color: AppColors.muted),
             )
-          : Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: paid.map((SubscriptionPlanCatalogItem item) {
-                final bool current = item.code == currentCode;
-                return Container(
-                  width: 220,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: current ? const Color(0xFF1B1708) : const Color(0xFF151515),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: current ? const Color(0xFFE1B92F) : const Color(0xFF2D2D2D),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        item.displayName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 7),
-                      Text(
-                        'Até ${item.studentLimit} alunos • ${item.memberLimit} usuário${item.memberLimit == 1 ? '' : 's'} de equipe',
-                        style: const TextStyle(
-                          color: Color(0xFFAAAAAA),
-                          fontSize: 12,
-                          height: 1.4,
-                        ),
-                      ),
-                      if (current) ...<Widget>[
-                        const SizedBox(height: 9),
-                        const Text(
-                          'PLANO ATUAL',
-                          style: TextStyle(
-                            color: Color(0xFFFFD45A),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
+          : LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                final int columns = constraints.maxWidth >= 900
+                    ? 3
+                    : constraints.maxWidth >= BlackGoldBreakpoints.mobile
+                        ? 2
+                        : 1;
+                const double gap = BlackGoldSpace.sm;
+                final double width =
+                    (constraints.maxWidth - gap * (columns - 1)) / columns;
+
+                return Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  children: paid.map((SubscriptionPlanCatalogItem item) {
+                    final bool current = item.code == currentCode;
+                    return SizedBox(
+                      width: width,
+                      child: Container(
+                        padding: const EdgeInsets.all(BlackGoldSpace.md),
+                        decoration: BoxDecoration(
+                          color: current
+                              ? AppColors.gold.withValues(alpha: 0.07)
+                              : AppColors.cardRaised,
+                          borderRadius:
+                              BorderRadius.circular(BlackGoldRadius.card),
+                          border: Border.all(
+                            color: current
+                                ? AppColors.borderGold
+                                : AppColors.border,
                           ),
                         ),
-                      ],
-                    ],
-                  ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              item.displayName,
+                              style: const TextStyle(
+                                color: AppColors.text,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: BlackGoldSpace.xs),
+                            Text(
+                              'Até ${item.studentLimit} alunos • ${item.memberLimit} usuário${item.memberLimit == 1 ? '' : 's'} de equipe',
+                              style: const TextStyle(
+                                color: AppColors.muted,
+                                fontSize: 12,
+                                height: 1.4,
+                              ),
+                            ),
+                            if (current) ...<Widget>[
+                              const SizedBox(height: BlackGoldSpace.sm),
+                              const Text(
+                                'PLANO ATUAL',
+                                style: TextStyle(
+                                  color: AppColors.goldSoft,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.6,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(growable: false),
                 );
-              }).toList(growable: false),
+              },
             ),
     );
   }
 }
 
 class _Card extends StatelessWidget {
-  const _Card({required this.title, required this.subtitle, required this.child});
+  const _Card({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.child,
+  });
 
+  final IconData icon;
   final String title;
   final String subtitle;
   final Widget child;
@@ -699,29 +1093,57 @@ class _Card extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(BlackGoldSpace.lg),
       decoration: BoxDecoration(
-        color: const Color(0xFF111111),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF2C2A22)),
+        gradient: BlackGoldEffects.panelGradient,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+        border: Border.all(color: AppColors.borderGold),
+        boxShadow: BlackGoldEffects.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.09),
+                  borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Icon(icon, color: AppColors.goldSoft, size: 20),
+              ),
+              const SizedBox(width: BlackGoldSpace.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: AppColors.text,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: BlackGoldSpace.xxs),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: AppColors.mutedSoft,
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: const TextStyle(color: Color(0xFF888888), fontSize: 12),
-          ),
-          const SizedBox(height: 15),
+          const SizedBox(height: BlackGoldSpace.md),
           child,
         ],
       ),
@@ -737,15 +1159,57 @@ class _Notice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color color = error ? AppColors.danger : AppColors.gold;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(BlackGoldSpace.md),
       decoration: BoxDecoration(
-        color: error ? const Color(0xFF351515) : const Color(0xFF111111),
-        borderRadius: BorderRadius.circular(16),
+        color: color.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
-      child: Text(
-        text,
-        style: const TextStyle(color: Colors.white, height: 1.4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(
+            error ? Icons.error_outline_rounded : Icons.info_outline_rounded,
+            color: color,
+          ),
+          const SizedBox(width: BlackGoldSpace.sm),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(color: AppColors.text, height: 1.45),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LoadingPanel extends StatelessWidget {
+  const _LoadingPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 300,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          CircularProgressIndicator(color: AppColors.gold),
+          SizedBox(height: BlackGoldSpace.md),
+          Text(
+            'Consultando autoridade comercial…',
+            style: TextStyle(color: AppColors.muted),
+          ),
+        ],
       ),
     );
   }
@@ -762,19 +1226,19 @@ class _StateVisual {
 _StateVisual _stateVisual(String state) {
   return switch (state) {
     'trialing' => const _StateVisual(
-        'TRIAL', 'Período de avaliação ativo', Color(0xFF8EBBFF)),
+        'TRIAL', 'Período de avaliação ativo', AppColors.goldSoft),
     'active' => const _StateVisual(
-        'ATIVO', 'Assinatura ativa', Color(0xFF75E39B)),
+        'ATIVO', 'Assinatura ativa', AppColors.success),
     'grace' => const _StateVisual(
-        'TOLERÂNCIA', 'Período de tolerância ativo', Color(0xFFFFC85A)),
+        'TOLERÂNCIA', 'Período de tolerância ativo', AppColors.warning),
     'past_due' => const _StateVisual(
-        'PENDENTE', 'Pagamento pendente', Color(0xFFFF9B6A)),
+        'PENDENTE', 'Pagamento pendente', AppColors.warning),
     'canceled' => const _StateVisual(
-        'CANCELADO', 'Assinatura cancelada', Color(0xFFFF8B8B)),
+        'CANCELADO', 'Assinatura cancelada', AppColors.danger),
     'expired' => const _StateVisual(
-        'EXPIRADO', 'Período disponível encerrado', Color(0xFFFF8B8B)),
+        'EXPIRADO', 'Período disponível encerrado', AppColors.danger),
     _ => const _StateVisual(
-        'INDISPONÍVEL', 'Estado comercial indisponível', Color(0xFFAAAAAA)),
+        'INDISPONÍVEL', 'Estado comercial indisponível', AppColors.muted),
   };
 }
 
