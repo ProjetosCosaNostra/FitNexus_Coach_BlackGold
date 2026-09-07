@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/blackgold_tokens.dart';
+import '../shared/fitnexus_ui.dart';
 import 'professor_progress_repository.dart';
 
 class ProfessorProgressPage extends StatefulWidget {
@@ -48,38 +51,62 @@ class _ProfessorProgressPageState extends State<ProfessorProgressPage> {
   Widget build(BuildContext context) {
     final ProfessorProgressSnapshot? snapshot = _snapshot;
 
-    return Scaffold(
-      backgroundColor: _ProgressColors.black,
-      body: SafeArea(
+    return Material(
+      color: AppColors.black,
+      child: SafeArea(
+        bottom: false,
         child: RefreshIndicator(
-          color: _ProgressColors.gold,
+          color: AppColors.gold,
+          backgroundColor: AppColors.cardRaised,
           onRefresh: _reload,
-          child: SingleChildScrollView(
+          child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 120),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1420),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    _Header(loading: _loading, onRefresh: _reload),
-                    const SizedBox(height: 22),
-                    if (_error != null)
-                      _ErrorPanel(message: _error!, onRetry: _reload)
-                    else if (_loading && snapshot == null)
-                      const _LoadingPanel()
-                    else if (snapshot != null) ...<Widget>[
-                      _SummaryGrid(summary: snapshot.summary),
-                      const SizedBox(height: 22),
-                      _RiskRadar(students: snapshot.students),
-                      const SizedBox(height: 22),
-                      _RecentSessions(sessions: snapshot.recentSessions),
-                    ],
-                  ],
+            slivers: <Widget>[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  BlackGoldSpace.lg,
+                  BlackGoldSpace.lg,
+                  BlackGoldSpace.lg,
+                  120,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1360),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          FitPageTitle(
+                            eyebrow: 'Acompanhamento inteligente',
+                            title: 'Progresso, risco e próxima ação',
+                            description:
+                                'O FitNexus transforma as execuções dos alunos em sinais claros para o professor agir.',
+                            trailing: _RefreshButton(
+                              loading: _loading,
+                              onRefresh: _reload,
+                            ),
+                          ),
+                          const SizedBox(height: BlackGoldSpace.xl),
+                          if (_error != null && snapshot == null)
+                            _ErrorPanel(message: _error!, onRetry: _reload)
+                          else if (_loading && snapshot == null)
+                            const _LoadingPanel()
+                          else if (snapshot != null) ...<Widget>[
+                            _SummaryGrid(summary: snapshot.summary),
+                            const SizedBox(height: BlackGoldSpace.xl),
+                            _RiskRadar(students: snapshot.students),
+                            const SizedBox(height: BlackGoldSpace.xl),
+                            _RecentSessions(sessions: snapshot.recentSessions),
+                            const SizedBox(height: BlackGoldSpace.md),
+                            _GeneratedAt(generatedAt: snapshot.generatedAt),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -87,64 +114,27 @@ class _ProfessorProgressPageState extends State<ProfessorProgressPage> {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.loading, required this.onRefresh});
+class _RefreshButton extends StatelessWidget {
+  const _RefreshButton({required this.loading, required this.onRefresh});
 
   final bool loading;
   final Future<void> Function() onRefresh;
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 14,
-      alignment: WrapAlignment.spaceBetween,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: <Widget>[
-        const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'ACOMPANHAMENTO INTELIGENTE',
-              style: TextStyle(
-                color: _ProgressColors.goldSoft,
-                fontWeight: FontWeight.w900,
-                fontSize: 12,
-                letterSpacing: 1.1,
+    return OutlinedButton.icon(
+      onPressed: loading ? null : onRefresh,
+      icon: loading
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.goldSoft,
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Progresso, risco e próxima ação',
-              style: TextStyle(
-                color: _ProgressColors.text,
-                fontSize: 30,
-                height: 1.08,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            SizedBox(height: 7),
-            Text(
-              'O FitNexus transforma as execuções dos alunos em sinais claros para o professor agir.',
-              style: TextStyle(
-                color: _ProgressColors.muted,
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
-        IconButton.filledTonal(
-          tooltip: 'Atualizar acompanhamento',
-          onPressed: loading ? null : onRefresh,
-          icon: loading
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.refresh_rounded),
-        ),
-      ],
+            )
+          : const Icon(Icons.refresh_rounded, size: 18),
+      label: Text(loading ? 'Atualizando' : 'Atualizar'),
     );
   }
 }
@@ -158,40 +148,40 @@ class _SummaryGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final int columns = constraints.maxWidth >= 1080
+        final int columns = constraints.maxWidth >= 1050
             ? 4
             : constraints.maxWidth >= 620
                 ? 2
                 : 1;
-        const double gap = 12;
+        const double gap = BlackGoldSpace.sm;
         final double width =
-            (constraints.maxWidth - (gap * (columns - 1))) / columns;
+            (constraints.maxWidth - gap * (columns - 1)) / columns;
 
         final List<Widget> cards = <Widget>[
-          _SummaryCard(
+          FitMetricCard(
             icon: Icons.groups_rounded,
-            label: 'Alunos',
+            label: 'Alunos ativos',
             value: '${summary.students}',
-            caption: '${summary.activePlans} com treino ativo',
+            detail: '${summary.activePlans} com treino ativo',
           ),
-          _SummaryCard(
+          FitMetricCard(
             icon: Icons.monitor_heart_rounded,
             label: 'Aderência média',
             value: '${summary.averageAdherence}%',
-            caption: 'Baseada nas execuções registradas',
+            detail: 'Baseada nas execuções registradas',
           ),
-          _SummaryCard(
-            icon: Icons.check_circle_rounded,
+          FitMetricCard(
+            icon: Icons.check_circle_outline_rounded,
             label: 'Conclusão — 7 dias',
             value: '${summary.completionRate7d}%',
-            caption:
+            detail:
                 '${summary.completed7d} concluídos de ${summary.sessions7d} iniciados',
           ),
-          _SummaryCard(
+          FitMetricCard(
             icon: Icons.radar_rounded,
-            label: 'Radar',
+            label: 'Radar de atenção',
             value: '${summary.highRisk + summary.mediumRisk}',
-            caption:
+            detail:
                 '${summary.highRisk} alto • ${summary.mediumRisk} médio • ${summary.newStudents} novos',
           ),
         ];
@@ -208,73 +198,6 @@ class _SummaryGrid extends StatelessWidget {
   }
 }
 
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.caption,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final String caption;
-
-  @override
-  Widget build(BuildContext context) {
-    return _Panel(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: _ProgressColors.gold.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: _ProgressColors.goldSoft),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  value,
-                  style: const TextStyle(
-                    color: _ProgressColors.text,
-                    fontSize: 27,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: _ProgressColors.goldSoft,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  caption,
-                  style: const TextStyle(
-                    color: _ProgressColors.muted,
-                    fontSize: 12,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _RiskRadar extends StatelessWidget {
   const _RiskRadar({required this.students});
 
@@ -282,28 +205,32 @@ class _RiskRadar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _Panel(
+    return FitCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const _PanelTitle(
-            title: 'Risk Radar',
+          const _PanelHeading(
+            icon: Icons.radar_rounded,
+            title: 'Radar de atenção',
             subtitle:
-                'Priorização determinística e explicável — o professor continua decidindo.',
+                'Priorização explicável. O sistema organiza os sinais; a decisão continua sendo do professor.',
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: BlackGoldSpace.lg),
           if (students.isEmpty)
             const _EmptyState(
               icon: Icons.radar_rounded,
               title: 'Sem alunos para analisar',
-              text: 'Cadastre alunos e as primeiras execuções aparecerão aqui.',
+              text:
+                  'Cadastre alunos e as primeiras execuções aparecerão neste radar.',
             )
           else
             Column(
               children: students
                   .map(
                     (StudentProgressRecord student) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.only(
+                        bottom: BlackGoldSpace.sm,
+                      ),
                       child: _RiskRow(student: student),
                     ),
                   )
@@ -322,46 +249,57 @@ class _RiskRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _RiskVisual visual = _riskVisual(student.riskLevel);
+    final _RiskMeta meta = _riskMeta(student.riskLevel);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(BlackGoldSpace.md),
       decoration: BoxDecoration(
-        color: _ProgressColors.cardSoft,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: visual.color.withValues(alpha: 0.45)),
+        color: AppColors.cardRaised,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+        border: Border.all(
+          color: meta.color.withValues(alpha: 0.42),
+          width: BlackGoldStroke.hairline,
+        ),
       ),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           final Widget identity = Row(
             children: <Widget>[
               CircleAvatar(
-                backgroundColor: visual.color.withValues(alpha: 0.16),
-                foregroundColor: visual.color,
+                radius: 21,
+                backgroundColor: AppColors.gold.withValues(alpha: 0.10),
+                foregroundColor: AppColors.goldSoft,
                 child: Text(
                   _initials(student.name),
-                  style: const TextStyle(fontWeight: FontWeight.w900),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: BlackGoldSpace.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
                       student.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: _ProgressColors.text,
+                        color: AppColors.text,
+                        fontSize: 15,
                         fontWeight: FontWeight.w900,
-                        fontSize: 16,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       '${student.objective} • ${student.level}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: _ProgressColors.muted,
-                        fontSize: 12,
+                        color: AppColors.muted,
+                        fontSize: 11.5,
                       ),
                     ),
                   ],
@@ -371,34 +309,34 @@ class _RiskRow extends StatelessWidget {
           );
 
           final Widget metrics = Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: BlackGoldSpace.xs,
+            runSpacing: BlackGoldSpace.xs,
             children: <Widget>[
-              _Chip(label: '${student.adherence}% aderência'),
-              _Chip(label: '${student.sessions30d} sessões / 30d'),
-              _Chip(label: '${student.completionRate30d}% conclusão'),
+              _MetricChip('${student.adherence}% aderência'),
+              _MetricChip('${student.sessions30d} sessões / 30d'),
+              _MetricChip('${student.completionRate30d}% conclusão'),
             ],
           );
 
           final Widget action = Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(BlackGoldSpace.sm),
             decoration: BoxDecoration(
-              color: visual.color.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(14),
+              color: meta.color.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(BlackGoldRadius.control),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Row(
                   children: <Widget>[
-                    Icon(visual.icon, size: 17, color: visual.color),
-                    const SizedBox(width: 7),
+                    Icon(meta.icon, size: 16, color: meta.color),
+                    const SizedBox(width: 6),
                     Text(
-                      visual.label,
+                      meta.label,
                       style: TextStyle(
-                        color: visual.color,
+                        color: meta.color,
+                        fontSize: 11,
                         fontWeight: FontWeight.w900,
-                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -407,17 +345,18 @@ class _RiskRow extends StatelessWidget {
                 Text(
                   student.riskReason,
                   style: const TextStyle(
-                    color: _ProgressColors.text,
-                    fontWeight: FontWeight.w700,
+                    color: AppColors.text,
                     fontSize: 12,
+                    height: 1.35,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 4),
                 Text(
                   'Próxima ação: ${student.nextBestAction}',
                   style: const TextStyle(
-                    color: _ProgressColors.muted,
-                    fontSize: 12,
+                    color: AppColors.muted,
+                    fontSize: 11.5,
                     height: 1.35,
                   ),
                 ),
@@ -430,9 +369,9 @@ class _RiskRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 identity,
-                const SizedBox(height: 12),
+                const SizedBox(height: BlackGoldSpace.sm),
                 metrics,
-                const SizedBox(height: 12),
+                const SizedBox(height: BlackGoldSpace.sm),
                 action,
               ],
             );
@@ -442,9 +381,9 @@ class _RiskRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               Expanded(flex: 3, child: identity),
-              const SizedBox(width: 16),
+              const SizedBox(width: BlackGoldSpace.md),
               Expanded(flex: 3, child: metrics),
-              const SizedBox(width: 16),
+              const SizedBox(width: BlackGoldSpace.md),
               Expanded(flex: 4, child: action),
             ],
           );
@@ -461,27 +400,31 @@ class _RecentSessions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _Panel(
+    return FitCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const _PanelTitle(
+          const _PanelHeading(
+            icon: Icons.history_rounded,
             title: 'Execuções recentes',
             subtitle: 'O que realmente aconteceu nos treinos mais recentes.',
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: BlackGoldSpace.lg),
           if (sessions.isEmpty)
             const _EmptyState(
               icon: Icons.history_rounded,
               title: 'Nenhuma execução registrada',
-              text: 'Quando um aluno iniciar um treino pelo link/QR, ele aparecerá aqui.',
+              text:
+                  'Quando um aluno iniciar um treino pelo link ou QR, ele aparecerá aqui.',
             )
           else
             Column(
               children: sessions
                   .map(
                     (RecentWorkoutSessionRecord session) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.only(
+                        bottom: BlackGoldSpace.sm,
+                      ),
                       child: _SessionRow(session: session),
                     ),
                   )
@@ -501,15 +444,17 @@ class _SessionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool completed = session.status == 'completed';
-    final Color stateColor =
-        completed ? const Color(0xFF6FE39A) : _ProgressColors.goldSoft;
+    final Color stateColor = completed ? AppColors.success : AppColors.goldSoft;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(BlackGoldSpace.md),
       decoration: BoxDecoration(
-        color: _ProgressColors.cardSoft,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _ProgressColors.border),
+        color: AppColors.cardRaised,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+        border: Border.all(
+          color: AppColors.borderGold.withValues(alpha: 0.56),
+          width: BlackGoldStroke.hairline,
+        ),
       ),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
@@ -519,25 +464,25 @@ class _SessionRow extends StatelessWidget {
               Text(
                 session.studentName,
                 style: const TextStyle(
-                  color: _ProgressColors.text,
+                  color: AppColors.text,
+                  fontSize: 14,
                   fontWeight: FontWeight.w900,
-                  fontSize: 15,
                 ),
               ),
               const SizedBox(height: 3),
               Text(
                 session.planName,
                 style: const TextStyle(
-                  color: _ProgressColors.muted,
-                  fontSize: 12,
+                  color: AppColors.muted,
+                  fontSize: 11.5,
                 ),
               ),
               const SizedBox(height: 5),
               Text(
                 _formatDate(session.startedAt),
                 style: const TextStyle(
-                  color: _ProgressColors.muted,
-                  fontSize: 11,
+                  color: AppColors.mutedSoft,
+                  fontSize: 10.5,
                 ),
               ),
             ],
@@ -550,20 +495,23 @@ class _SessionRow extends StatelessWidget {
                 children: <Widget>[
                   Expanded(
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(
+                        BlackGoldRadius.pill,
+                      ),
                       child: LinearProgressIndicator(
                         value: session.completionPercent / 100,
-                        minHeight: 8,
-                        backgroundColor: _ProgressColors.border,
+                        minHeight: 7,
+                        backgroundColor: AppColors.border,
                         valueColor: AlwaysStoppedAnimation<Color>(stateColor),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: BlackGoldSpace.sm),
                   Text(
                     '${session.completionPercent}%',
                     style: TextStyle(
                       color: stateColor,
+                      fontSize: 12,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -571,31 +519,40 @@ class _SessionRow extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                '${session.completedExercises}/${session.totalExercises} exercícios • ${completed ? 'Concluído' : 'Em andamento'}',
+                '${session.completedExercises}/${session.totalExercises} exercícios',
                 style: const TextStyle(
-                  color: _ProgressColors.muted,
+                  color: AppColors.muted,
                   fontSize: 11,
                 ),
               ),
             ],
           );
 
-          if (constraints.maxWidth < 620) {
+          final Widget status = _StatusPill(
+            text: completed ? 'Concluído' : 'Em andamento',
+            color: stateColor,
+          );
+
+          if (constraints.maxWidth < 680) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 description,
-                const SizedBox(height: 12),
+                const SizedBox(height: BlackGoldSpace.sm),
                 progress,
+                const SizedBox(height: BlackGoldSpace.sm),
+                Align(alignment: Alignment.centerLeft, child: status),
               ],
             );
           }
 
           return Row(
             children: <Widget>[
-              Expanded(flex: 4, child: description),
-              const SizedBox(width: 18),
-              Expanded(flex: 6, child: progress),
+              Expanded(flex: 3, child: description),
+              const SizedBox(width: BlackGoldSpace.lg),
+              Expanded(flex: 4, child: progress),
+              const SizedBox(width: BlackGoldSpace.lg),
+              status,
             ],
           );
         },
@@ -604,77 +561,51 @@ class _SessionRow extends StatelessWidget {
   }
 }
 
-class _Chip extends StatelessWidget {
-  const _Chip({required this.label});
+class _PanelHeading extends StatelessWidget {
+  const _PanelHeading({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
 
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: _ProgressColors.black,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: _ProgressColors.border),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: _ProgressColors.muted,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class _Panel extends StatelessWidget {
-  const _Panel({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: _ProgressColors.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _ProgressColors.border),
-      ),
-      child: child,
-    );
-  }
-}
-
-class _PanelTitle extends StatelessWidget {
-  const _PanelTitle({required this.title, required this.subtitle});
-
+  final IconData icon;
   final String title;
   final String subtitle;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          title,
-          style: const TextStyle(
-            color: _ProgressColors.text,
-            fontSize: 21,
-            fontWeight: FontWeight.w900,
+        Container(
+          width: 38,
+          height: 38,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.gold.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+            border: Border.all(
+              color: AppColors.gold.withValues(alpha: 0.35),
+              width: BlackGoldStroke.hairline,
+            ),
           ),
+          child: Icon(icon, color: AppColors.goldSoft, size: 19),
         ),
-        const SizedBox(height: 4),
-        Text(
-          subtitle,
-          style: const TextStyle(
-            color: _ProgressColors.muted,
-            fontSize: 12,
-            height: 1.35,
+        const SizedBox(width: BlackGoldSpace.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
           ),
         ),
       ],
@@ -682,49 +613,68 @@ class _PanelTitle extends StatelessWidget {
   }
 }
 
-class _LoadingPanel extends StatelessWidget {
-  const _LoadingPanel();
+class _MetricChip extends StatelessWidget {
+  const _MetricChip(this.text);
+
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    return const _Panel(
-      child: Padding(
-        padding: EdgeInsets.all(38),
-        child: Center(
-          child: CircularProgressIndicator(color: _ProgressColors.gold),
+    return Container(
+      constraints: const BoxConstraints(minHeight: 32),
+      padding: const EdgeInsets.symmetric(
+        horizontal: BlackGoldSpace.sm,
+        vertical: 7,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.pill),
+        border: Border.all(
+          color: AppColors.borderGold.withValues(alpha: 0.55),
+          width: BlackGoldStroke.hairline,
+        ),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: AppColors.muted,
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
   }
 }
 
-class _ErrorPanel extends StatelessWidget {
-  const _ErrorPanel({required this.message, required this.onRetry});
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.text, required this.color});
 
-  final String message;
-  final Future<void> Function() onRetry;
+  final String text;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF351313),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+      constraints: const BoxConstraints(minHeight: 32),
+      padding: const EdgeInsets.symmetric(
+        horizontal: BlackGoldSpace.sm,
+        vertical: 7,
       ),
-      child: Row(
-        children: <Widget>[
-          const Icon(Icons.error_outline_rounded, color: Colors.redAccent),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(color: _ProgressColors.text),
-            ),
-          ),
-          TextButton(onPressed: onRetry, child: const Text('Tentar novamente')),
-        ],
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.pill),
+        border: Border.all(
+          color: color.withValues(alpha: 0.42),
+          width: BlackGoldStroke.hairline,
+        ),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 10.5,
+          fontWeight: FontWeight.w900,
+        ),
       ),
     );
   }
@@ -743,97 +693,169 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 30),
-        child: Column(
-          children: <Widget>[
-            Icon(icon, color: _ProgressColors.goldSoft, size: 42),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: _ProgressColors.text,
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              text,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: _ProgressColors.muted,
-                height: 1.4,
-              ),
-            ),
-          ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(BlackGoldSpace.xl),
+      decoration: BoxDecoration(
+        color: AppColors.cardRaised,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+        border: Border.all(
+          color: AppColors.borderGold.withValues(alpha: 0.44),
+          width: BlackGoldStroke.hairline,
+        ),
+      ),
+      child: Column(
+        children: <Widget>[
+          Icon(icon, color: AppColors.goldSoft, size: 30),
+          const SizedBox(height: BlackGoldSpace.sm),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: BlackGoldSpace.xs),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LoadingPanel extends StatelessWidget {
+  const _LoadingPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return const FitCard(
+      child: SizedBox(
+        height: 260,
+        child: Center(
+          child: CircularProgressIndicator(color: AppColors.gold),
         ),
       ),
     );
   }
 }
 
-class _RiskVisual {
-  const _RiskVisual(this.label, this.color, this.icon);
+class _ErrorPanel extends StatelessWidget {
+  const _ErrorPanel({required this.message, required this.onRetry});
 
-  final String label;
-  final Color color;
-  final IconData icon;
+  final String message;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return FitCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Row(
+            children: <Widget>[
+              Icon(Icons.error_outline_rounded, color: AppColors.danger),
+              SizedBox(width: BlackGoldSpace.sm),
+              Text(
+                'Não foi possível carregar o acompanhamento',
+                style: TextStyle(
+                  color: AppColors.text,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: BlackGoldSpace.sm),
+          Text(
+            message,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: BlackGoldSpace.md),
+          OutlinedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Tentar novamente'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-_RiskVisual _riskVisual(String level) {
-  switch (level) {
+class _GeneratedAt extends StatelessWidget {
+  const _GeneratedAt({required this.generatedAt});
+
+  final DateTime generatedAt;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'Atualizado em ${_formatDate(generatedAt)}',
+      textAlign: TextAlign.right,
+      style: const TextStyle(
+        color: AppColors.mutedSoft,
+        fontSize: 10.5,
+      ),
+    );
+  }
+}
+
+class _RiskMeta {
+  const _RiskMeta(this.label, this.icon, this.color);
+
+  final String label;
+  final IconData icon;
+  final Color color;
+}
+
+_RiskMeta _riskMeta(String level) {
+  switch (level.toLowerCase()) {
     case 'high':
-      return const _RiskVisual(
-        'RISCO ALTO',
-        Color(0xFFFF6B6B),
+      return const _RiskMeta(
+        'ATENÇÃO ALTA',
         Icons.priority_high_rounded,
+        AppColors.danger,
       );
     case 'medium':
-      return const _RiskVisual(
+      return const _RiskMeta(
         'ATENÇÃO',
-        Color(0xFFFFC857),
         Icons.warning_amber_rounded,
+        AppColors.warning,
       );
     case 'low':
-      return const _RiskVisual(
-        'SAUDÁVEL',
-        Color(0xFF6FE39A),
-        Icons.check_circle_outline_rounded,
+      return const _RiskMeta(
+        'EM EVOLUÇÃO',
+        Icons.trending_up_rounded,
+        AppColors.success,
       );
     default:
-      return const _RiskVisual(
-        'NOVO',
-        Color(0xFF8DB7FF),
+      return const _RiskMeta(
+        'NOVO SINAL',
         Icons.auto_awesome_rounded,
+        AppColors.goldSoft,
       );
   }
 }
 
 String _initials(String name) {
-  return name
+  final List<String> parts = name
+      .trim()
       .split(RegExp(r'\s+'))
       .where((String part) => part.isNotEmpty)
-      .take(2)
-      .map((String part) => part[0].toUpperCase())
-      .join();
+      .toList(growable: false);
+  if (parts.isEmpty) return 'AL';
+  if (parts.length == 1) {
+    return parts.first.substring(0, parts.first.length.clamp(1, 2)).toUpperCase();
+  }
+  return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
 }
 
 String _formatDate(DateTime date) {
-  final DateTime local = date.toLocal();
-  String two(int value) => value.toString().padLeft(2, '0');
-  return '${two(local.day)}/${two(local.month)} • ${two(local.hour)}:${two(local.minute)}';
-}
-
-class _ProgressColors {
-  static const Color black = Color(0xFF050505);
-  static const Color card = Color(0xFF101010);
-  static const Color cardSoft = Color(0xFF171717);
-  static const Color border = Color(0xFF2C2A22);
-  static const Color gold = Color(0xFFE1B92F);
-  static const Color goldSoft = Color(0xFFFFD45A);
-  static const Color text = Color(0xFFF7F7F7);
-  static const Color muted = Color(0xFFB7B7B7);
+  final String day = date.day.toString().padLeft(2, '0');
+  final String month = date.month.toString().padLeft(2, '0');
+  final String hour = date.hour.toString().padLeft(2, '0');
+  final String minute = date.minute.toString().padLeft(2, '0');
+  return '$day/$month/${date.year} • $hour:$minute';
 }
