@@ -873,9 +873,9 @@ class _EmptyTemplates extends StatelessWidget {
             ),
           ),
           const SizedBox(height: BlackGoldSpace.xs),
-          const ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 620),
-            child: Text(
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 620),
+            child: const Text(
               'Transforme seus melhores treinos em uma biblioteca reutilizável sem perder a individualização do aluno.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.muted, height: 1.45),
