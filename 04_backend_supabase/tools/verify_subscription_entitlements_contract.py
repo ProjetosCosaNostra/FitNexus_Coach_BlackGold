@@ -70,7 +70,7 @@ def main() -> int:
         (migrations, "apply_subscription_authority_event", "BGF-SUBSCRIPTION-PROVIDER-EVENT-058", "controlled provider authority event command disappeared"),
         (migrations, "idempotent_replay", "BGF-SUBSCRIPTION-EVENT-IDEMPOTENCY-059", "provider event replay protection disappeared"),
         (repository, "get_subscription_entitlement_snapshot", "BGF-SUBSCRIPTION-FLUTTER-BINDING-060", "Flutter subscription snapshot RPC binding disappeared"),
-        (page, "Plano & assinatura", "BGF-SUBSCRIPTION-WORKSPACE-061", "professor subscription workspace disappeared"),
+        (page, "BLACKGOLD COMMERCIAL CORE", "BGF-SUBSCRIPTION-WORKSPACE-061", "professor subscription workspace disappeared"),
         (shell, "ProfessorSubscriptionPage()", "BGF-SUBSCRIPTION-ENTRYPOINT-062", "subscription workspace entrypoint disappeared"),
     ]
 
