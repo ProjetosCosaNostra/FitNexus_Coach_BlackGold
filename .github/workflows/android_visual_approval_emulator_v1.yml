@@ -96,7 +96,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           working-directory: 03_app_flutter/fitnexus_app
           script: |
-            set -euo pipefail
+            set -eu
             OUT='build/emulator_visual'
             PACKAGE='br.com.lafamigliaplayworks.fitnexuscoach'
             mkdir -p "$OUT"
