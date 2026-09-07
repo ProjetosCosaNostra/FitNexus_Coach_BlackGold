@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/blackgold_tokens.dart';
 import 'professor_data_repository.dart';
 import 'professor_template_repository.dart';
 
@@ -59,7 +61,7 @@ class _ProfessorTemplatesPageState extends State<ProfessorTemplatesPage> {
   Future<void> _createTemplate() async {
     final _TemplateInput? input = await showDialog<_TemplateInput>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.72),
+      barrierColor: Colors.black.withValues(alpha: 0.78),
       builder: (_) => const _TemplateDialog(),
     );
 
@@ -90,7 +92,7 @@ class _ProfessorTemplatesPageState extends State<ProfessorTemplatesPage> {
 
     final _AssignmentInput? input = await showDialog<_AssignmentInput>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.72),
+      barrierColor: Colors.black.withValues(alpha: 0.78),
       builder: (_) => _AssignmentDialog(
         template: template,
         students: _students,
@@ -107,8 +109,7 @@ class _ProfessorTemplatesPageState extends State<ProfessorTemplatesPage> {
       );
       await _reload();
       if (!mounted) return;
-      final String studentName = _studentName(input.studentId);
-      _toast('${template.name} aplicado para $studentName.');
+      _toast('${template.name} aplicado para ${_studentName(input.studentId)}.');
     } catch (error) {
       if (!mounted) return;
       _toast('Não foi possível aplicar o modelo: $error', error: true);
@@ -123,7 +124,7 @@ class _ProfessorTemplatesPageState extends State<ProfessorTemplatesPage> {
 
     final _PlanTemplateInput? input = await showDialog<_PlanTemplateInput>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.72),
+      barrierColor: Colors.black.withValues(alpha: 0.78),
       builder: (_) => _PlanTemplateDialog(
         plans: _plans,
         students: _students,
@@ -156,52 +157,106 @@ class _ProfessorTemplatesPageState extends State<ProfessorTemplatesPage> {
   void _toast(String message, {bool error = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: error ? const Color(0xFF5A1919) : _TemplateColors.card,
+        backgroundColor: error
+            ? AppColors.danger.withValues(alpha: 0.24)
+            : AppColors.cardRaised,
         content: Text(message),
       ),
     );
   }
 
+  int get _exerciseCount => _items.fold<int>(
+        0,
+        (int total, TrainingTemplateRecord item) =>
+            total + item.exercises.length,
+      );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _TemplateColors.black,
-      body: SafeArea(
-        child: RefreshIndicator(
-          color: _TemplateColors.gold,
-          onRefresh: _reload,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 120),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1420),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    _Header(
-                      loading: _loading,
-                      onRefresh: _reload,
-                      onCreate: _createTemplate,
-                      onCreateFromPlan: _createFromPlan,
+      backgroundColor: AppColors.black,
+      body: Stack(
+        children: <Widget>[
+          const Positioned.fill(child: _PageAtmosphere()),
+          SafeArea(
+            child: RefreshIndicator(
+              color: AppColors.gold,
+              onRefresh: _reload,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(
+                  BlackGoldSpace.lg,
+                  BlackGoldSpace.xl,
+                  BlackGoldSpace.lg,
+                  132,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1420),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        _HeroHeader(
+                          loading: _loading,
+                          onRefresh: _reload,
+                          onCreate: _createTemplate,
+                          onCreateFromPlan: _createFromPlan,
+                        ),
+                        const SizedBox(height: BlackGoldSpace.lg),
+                        _LibrarySummary(
+                          templates: _items.length,
+                          exercises: _exerciseCount,
+                          students: _students.length,
+                          activePlans: _plans.where((plan) => plan.isActive).length,
+                        ),
+                        const SizedBox(height: BlackGoldSpace.lg),
+                        if (_error != null)
+                          _ErrorPanel(message: _error!, onRetry: _reload)
+                        else if (_loading && _items.isEmpty)
+                          const _LoadingPanel()
+                        else if (_items.isEmpty)
+                          _EmptyTemplates(onCreate: _createTemplate)
+                        else ...<Widget>[
+                          const _SectionHeading(
+                            eyebrow: 'BIBLIOTECA PROFISSIONAL',
+                            title: 'Modelos prontos para individualizar',
+                            subtitle:
+                                'Reutilize a estrutura, preserve a decisão do professor e gere uma nova prescrição para cada aluno.',
+                          ),
+                          const SizedBox(height: BlackGoldSpace.md),
+                          _TemplateGrid(
+                            templates: _items,
+                            onAssign: _assignTemplate,
+                          ),
+                        ],
+                      ],
                     ),
-                    const SizedBox(height: 22),
-                    if (_error != null)
-                      _ErrorPanel(message: _error!, onRetry: _reload)
-                    else if (_loading && _items.isEmpty)
-                      const _LoadingPanel()
-                    else if (_items.isEmpty)
-                      _EmptyTemplates(onCreate: _createTemplate)
-                    else
-                      _TemplateGrid(
-                        templates: _items,
-                        onAssign: _assignTemplate,
-                      ),
-                  ],
+                  ),
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PageAtmosphere extends StatelessWidget {
+  const _PageAtmosphere();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: const Alignment(0.82, -0.92),
+            radius: 1.15,
+            colors: <Color>[
+              AppColors.gold.withValues(alpha: 0.08),
+              Colors.transparent,
+            ],
           ),
         ),
       ),
@@ -209,8 +264,8 @@ class _ProfessorTemplatesPageState extends State<ProfessorTemplatesPage> {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({
+class _HeroHeader extends StatelessWidget {
+  const _HeroHeader({
     required this.loading,
     required this.onRefresh,
     required this.onCreate,
@@ -225,75 +280,101 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(26),
+      padding: const EdgeInsets.all(BlackGoldSpace.xl),
       decoration: BoxDecoration(
-        color: _TemplateColors.card,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: _TemplateColors.border),
+        gradient: BlackGoldEffects.panelGradient,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.hero),
+        border: Border.all(
+          color: AppColors.borderGold,
+          width: BlackGoldStroke.hairline,
+        ),
+        boxShadow: BlackGoldEffects.cardShadow,
       ),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
-          final Widget copy = const Column(
+          final bool compact = constraints.maxWidth < BlackGoldBreakpoints.tablet;
+
+          final Widget copy = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(
-                'SMART TEMPLATES',
+              Row(
+                children: <Widget>[
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      gradient: BlackGoldEffects.goldGradient,
+                      borderRadius:
+                          BorderRadius.circular(BlackGoldRadius.card),
+                      boxShadow: BlackGoldEffects.goldGlow,
+                    ),
+                    child: const Icon(
+                      Icons.auto_awesome_rounded,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(width: BlackGoldSpace.md),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'SMART TEMPLATES',
+                          style: TextStyle(
+                            color: AppColors.goldSoft,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.25,
+                          ),
+                        ),
+                        SizedBox(height: BlackGoldSpace.xs),
+                        Text(
+                          'Biblioteca inteligente de prescrição',
+                          style: TextStyle(
+                            color: AppColors.text,
+                            fontSize: 30,
+                            height: 1.05,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.7,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: BlackGoldSpace.md),
+              const Text(
+                'Transforme treinos já validados em modelos reutilizáveis, aplique com contexto e mantenha o histórico individual do aluno intacto.',
                 style: TextStyle(
-                  color: _TemplateColors.goldSoft,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.1,
-                  fontSize: 12,
+                  color: AppColors.muted,
+                  height: 1.5,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              SizedBox(height: 9),
-              Text(
-                'Prescreva rápido sem transformar o treino em receita cega.',
-                style: TextStyle(
-                  color: _TemplateColors.text,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 28,
-                  height: 1.1,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Crie modelos reutilizáveis ou transforme um treino já validado em template. Ao aplicar, o FitNexus cria um novo treino individual e preserva o histórico anterior.',
-                style: TextStyle(
-                  color: _TemplateColors.muted,
-                  height: 1.45,
-                ),
-              ),
+              const SizedBox(height: BlackGoldSpace.md),
+              const _PrincipleStrip(),
             ],
           );
 
           final Widget actions = Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: BlackGoldSpace.sm,
+            runSpacing: BlackGoldSpace.sm,
             children: <Widget>[
               FilledButton.icon(
+                key: const ValueKey<String>('templates-create-primary'),
                 onPressed: onCreate,
                 icon: const Icon(Icons.add_rounded),
                 label: const Text('Novo modelo'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _TemplateColors.gold,
-                  foregroundColor: Colors.black,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
-                  textStyle: const TextStyle(fontWeight: FontWeight.w900),
-                ),
               ),
               OutlinedButton.icon(
+                key: const ValueKey<String>('templates-create-from-plan'),
                 onPressed: onCreateFromPlan,
                 icon: const Icon(Icons.bookmark_add_rounded),
                 label: const Text('Salvar treino como modelo'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: _TemplateColors.text,
-                  side: const BorderSide(color: _TemplateColors.border),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
-                ),
               ),
-              IconButton.filledTonal(
+              IconButton.outlined(
                 tooltip: 'Atualizar modelos',
                 onPressed: loading ? null : onRefresh,
                 icon: loading
@@ -307,26 +388,230 @@ class _Header extends StatelessWidget {
             ],
           );
 
-          if (constraints.maxWidth < 820) {
+          if (compact) {
             return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 copy,
-                const SizedBox(height: 20),
+                const SizedBox(height: BlackGoldSpace.lg),
                 actions,
               ],
             );
           }
 
           return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Expanded(child: copy),
-              const SizedBox(width: 24),
-              actions,
+              Expanded(flex: 7, child: copy),
+              const SizedBox(width: BlackGoldSpace.xxl),
+              Flexible(flex: 5, child: actions),
             ],
           );
         },
       ),
+    );
+  }
+}
+
+class _PrincipleStrip extends StatelessWidget {
+  const _PrincipleStrip();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: BlackGoldSpace.md,
+        vertical: BlackGoldSpace.sm,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(Icons.verified_user_rounded, color: AppColors.goldSoft, size: 18),
+          SizedBox(width: BlackGoldSpace.sm),
+          Expanded(
+            child: Text(
+              'O modelo acelera o trabalho; a decisão final continua sendo do professor.',
+              style: TextStyle(
+                color: AppColors.text,
+                fontSize: 12,
+                height: 1.4,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LibrarySummary extends StatelessWidget {
+  const _LibrarySummary({
+    required this.templates,
+    required this.exercises,
+    required this.students,
+    required this.activePlans,
+  });
+
+  final int templates;
+  final int exercises;
+  final int students;
+  final int activePlans;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final int columns = constraints.maxWidth >= 1040
+            ? 4
+            : constraints.maxWidth >= BlackGoldBreakpoints.mobile
+                ? 2
+                : 1;
+        const double gap = BlackGoldSpace.sm;
+        final double width =
+            (constraints.maxWidth - (gap * (columns - 1))) / columns;
+
+        final List<_MetricData> metrics = <_MetricData>[
+          _MetricData(Icons.auto_awesome_rounded, '$templates', 'Modelos', 'na biblioteca'),
+          _MetricData(Icons.fitness_center_rounded, '$exercises', 'Exercícios', 'catalogados'),
+          _MetricData(Icons.groups_rounded, '$students', 'Alunos', 'disponíveis'),
+          _MetricData(Icons.assignment_turned_in_rounded, '$activePlans', 'Treinos ativos', 'em acompanhamento'),
+        ];
+
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: metrics
+              .map((metric) => SizedBox(width: width, child: _MetricCard(data: metric)))
+              .toList(growable: false),
+        );
+      },
+    );
+  }
+}
+
+class _MetricData {
+  const _MetricData(this.icon, this.value, this.label, this.caption);
+
+  final IconData icon;
+  final String value;
+  final String label;
+  final String caption;
+}
+
+class _MetricCard extends StatelessWidget {
+  const _MetricCard({required this.data});
+
+  final _MetricData data;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(BlackGoldSpace.md),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+        border: Border.all(color: AppColors.border),
+        boxShadow: BlackGoldEffects.cardShadow,
+      ),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Icon(data.icon, color: AppColors.goldSoft),
+          ),
+          const SizedBox(width: BlackGoldSpace.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  data.value,
+                  style: const TextStyle(
+                    color: AppColors.text,
+                    fontSize: 24,
+                    height: 1,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: BlackGoldSpace.xxs),
+                Text(
+                  data.label,
+                  style: const TextStyle(
+                    color: AppColors.goldSoft,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  data.caption,
+                  style: const TextStyle(
+                    color: AppColors.mutedSoft,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionHeading extends StatelessWidget {
+  const _SectionHeading({
+    required this.eyebrow,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final String eyebrow;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          eyebrow,
+          style: const TextStyle(
+            color: AppColors.goldSoft,
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: BlackGoldSpace.xs),
+        Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.text,
+            fontSize: 24,
+            height: 1.08,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: BlackGoldSpace.xs),
+        Text(
+          subtitle,
+          style: const TextStyle(color: AppColors.muted, height: 1.45),
+        ),
+      ],
     );
   }
 }
@@ -349,7 +634,7 @@ class _TemplateGrid extends StatelessWidget {
             : constraints.maxWidth >= 700
                 ? 2
                 : 1;
-        const double gap = 14;
+        const double gap = BlackGoldSpace.sm;
         final double width =
             (constraints.maxWidth - gap * (columns - 1)) / columns;
 
@@ -382,30 +667,33 @@ class _TemplateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(BlackGoldSpace.lg),
       decoration: BoxDecoration(
-        color: _TemplateColors.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _TemplateColors.border),
+        gradient: BlackGoldEffects.panelGradient,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+        border: Border.all(color: AppColors.borderGold),
+        boxShadow: BlackGoldEffects.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Container(
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: _TemplateColors.gold.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(13),
+                  gradient: BlackGoldEffects.goldGradient,
+                  borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+                  boxShadow: BlackGoldEffects.goldGlow,
                 ),
                 child: const Icon(
                   Icons.auto_awesome_rounded,
-                  color: _TemplateColors.goldSoft,
+                  color: Colors.black,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: BlackGoldSpace.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -413,46 +701,53 @@ class _TemplateCard extends StatelessWidget {
                     Text(
                       template.name,
                       style: const TextStyle(
-                        color: _TemplateColors.text,
+                        color: AppColors.text,
                         fontWeight: FontWeight.w900,
                         fontSize: 18,
+                        height: 1.12,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: BlackGoldSpace.xxs),
                     Text(
                       '${template.objective} • ${template.level}',
                       style: const TextStyle(
-                        color: _TemplateColors.muted,
+                        color: AppColors.muted,
                         fontSize: 12,
                       ),
                     ),
                   ],
                 ),
               ),
+              _CountPill(count: template.exercises.length),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: BlackGoldSpace.md),
+          const Divider(height: 1),
+          const SizedBox(height: BlackGoldSpace.md),
           ...template.exercises.take(5).map(
                 (TrainingTemplateExerciseRecord exercise) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: BlackGoldSpace.xs),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      const Icon(
-                        Icons.check_circle_outline_rounded,
-                        color: _TemplateColors.goldSoft,
-                        size: 16,
+                      const Padding(
+                        padding: EdgeInsets.only(top: 1),
+                        child: Icon(
+                          Icons.check_circle_outline_rounded,
+                          color: AppColors.goldSoft,
+                          size: 16,
+                        ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: BlackGoldSpace.xs),
                       Expanded(
                         child: Text(
                           exercise.prescription.isEmpty
                               ? exercise.name
                               : '${exercise.name} — ${exercise.prescription}',
                           style: const TextStyle(
-                            color: _TemplateColors.muted,
+                            color: AppColors.muted,
                             fontSize: 12,
-                            height: 1.35,
+                            height: 1.4,
                           ),
                         ),
                       ),
@@ -462,41 +757,72 @@ class _TemplateCard extends StatelessWidget {
               ),
           if (template.exercises.length > 5)
             Text(
-              '+ ${template.exercises.length - 5} exercícios',
+              '+ ${template.exercises.length - 5} exercícios adicionais',
               style: const TextStyle(
-                color: _TemplateColors.goldSoft,
+                color: AppColors.goldSoft,
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
               ),
             ),
-          if ((template.notes ?? '').isNotEmpty) ...<Widget>[
-            const SizedBox(height: 10),
-            Text(
-              template.notes!,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: _TemplateColors.muted,
-                fontSize: 11,
-                height: 1.35,
+          if ((template.notes ?? '').trim().isNotEmpty) ...<Widget>[
+            const SizedBox(height: BlackGoldSpace.sm),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(BlackGoldSpace.sm),
+              decoration: BoxDecoration(
+                color: AppColors.blackSoft,
+                borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Text(
+                template.notes!,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 11,
+                  height: 1.4,
+                ),
               ),
             ),
           ],
-          const SizedBox(height: 18),
+          const SizedBox(height: BlackGoldSpace.lg),
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: onAssign,
               icon: const Icon(Icons.person_add_alt_1_rounded),
               label: const Text('Aplicar a um aluno'),
-              style: FilledButton.styleFrom(
-                backgroundColor: _TemplateColors.gold,
-                foregroundColor: Colors.black,
-                textStyle: const TextStyle(fontWeight: FontWeight.w900),
-              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CountPill extends StatelessWidget {
+  const _CountPill({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.pill),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Text(
+        '$count EX.',
+        style: const TextStyle(
+          color: AppColors.goldSoft,
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
@@ -510,36 +836,52 @@ class _EmptyTemplates extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 55, horizontal: 20),
+      padding: const EdgeInsets.symmetric(
+        vertical: BlackGoldSpace.section,
+        horizontal: BlackGoldSpace.lg,
+      ),
       decoration: BoxDecoration(
-        color: _TemplateColors.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _TemplateColors.border),
+        gradient: BlackGoldEffects.panelGradient,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+        border: Border.all(color: AppColors.borderGold),
+        boxShadow: BlackGoldEffects.cardShadow,
       ),
       child: Column(
         children: <Widget>[
-          const Icon(
-            Icons.auto_awesome_rounded,
-            color: _TemplateColors.goldSoft,
-            size: 46,
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              gradient: BlackGoldEffects.goldGradient,
+              borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+              boxShadow: BlackGoldEffects.goldGlow,
+            ),
+            child: const Icon(
+              Icons.auto_awesome_rounded,
+              color: Colors.black,
+              size: 30,
+            ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: BlackGoldSpace.md),
           const Text(
             'Nenhum modelo criado ainda',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: _TemplateColors.text,
-              fontSize: 20,
+              color: AppColors.text,
+              fontSize: 21,
               fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 7),
-          const Text(
-            'Transforme seus melhores treinos em uma biblioteca reutilizável sem perder a individualização do aluno.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: _TemplateColors.muted, height: 1.4),
+          const SizedBox(height: BlackGoldSpace.xs),
+          const ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 620),
+            child: Text(
+              'Transforme seus melhores treinos em uma biblioteca reutilizável sem perder a individualização do aluno.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.muted, height: 1.45),
+            ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: BlackGoldSpace.lg),
           FilledButton.icon(
             onPressed: onCreate,
             icon: const Icon(Icons.add_rounded),
@@ -614,24 +956,43 @@ class _TemplateDialogState extends State<_TemplateDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: _TemplateColors.card,
-      title: const Text('Novo Smart Template'),
+      title: const _DialogTitle(
+        icon: Icons.auto_awesome_rounded,
+        eyebrow: 'SMART TEMPLATE',
+        title: 'Novo modelo profissional',
+      ),
       content: SizedBox(
-        width: 620,
+        width: 650,
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                _Field(controller: _name, label: 'Nome do modelo *', validator: _required),
-                const SizedBox(height: 10),
-                _Field(controller: _objective, label: 'Objetivo *', validator: _required),
-                const SizedBox(height: 10),
-                _Field(controller: _level, label: 'Nível *', validator: _required),
-                const SizedBox(height: 10),
-                _Field(controller: _notes, label: 'Orientações do modelo', maxLines: 2),
-                const SizedBox(height: 10),
+                _Field(
+                  controller: _name,
+                  label: 'Nome do modelo *',
+                  validator: _required,
+                ),
+                const SizedBox(height: BlackGoldSpace.sm),
+                _Field(
+                  controller: _objective,
+                  label: 'Objetivo *',
+                  validator: _required,
+                ),
+                const SizedBox(height: BlackGoldSpace.sm),
+                _Field(
+                  controller: _level,
+                  label: 'Nível *',
+                  validator: _required,
+                ),
+                const SizedBox(height: BlackGoldSpace.sm),
+                _Field(
+                  controller: _notes,
+                  label: 'Orientações do modelo',
+                  maxLines: 2,
+                ),
+                const SizedBox(height: BlackGoldSpace.sm),
                 _Field(
                   controller: _exercises,
                   label: 'Exercícios — nome | prescrição *',
@@ -658,7 +1019,7 @@ class _TemplateDialogState extends State<_TemplateDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancelar'),
         ),
-        FilledButton(
+        FilledButton.icon(
           onPressed: () {
             if (!(_formKey.currentState?.validate() ?? false)) return;
             Navigator.pop(
@@ -672,7 +1033,8 @@ class _TemplateDialogState extends State<_TemplateDialog> {
               ),
             );
           },
-          child: const Text('Criar modelo'),
+          icon: const Icon(Icons.check_rounded),
+          label: const Text('Criar modelo'),
         ),
       ],
     );
@@ -713,16 +1075,19 @@ class _AssignmentDialogState extends State<_AssignmentDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: _TemplateColors.card,
-      title: Text('Aplicar ${widget.template.name}'),
+      title: _DialogTitle(
+        icon: Icons.person_add_alt_1_rounded,
+        eyebrow: 'INDIVIDUALIZAÇÃO',
+        title: 'Aplicar ${widget.template.name}',
+      ),
       content: SizedBox(
-        width: 520,
+        width: 540,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             DropdownButtonFormField<String>(
               initialValue: _studentId,
-              dropdownColor: _TemplateColors.card,
+              dropdownColor: AppColors.cardRaised,
               decoration: const InputDecoration(labelText: 'Aluno'),
               items: widget.students
                   .map(
@@ -736,12 +1101,12 @@ class _AssignmentDialogState extends State<_AssignmentDialog> {
                 if (value != null) setState(() => _studentId = value);
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: BlackGoldSpace.sm),
             _Field(controller: _next, label: 'Próxima sessão'),
-            const SizedBox(height: 12),
-            const Text(
-              'O treino ativo anterior será preservado no histórico e este modelo criará uma nova prescrição individual.',
-              style: TextStyle(color: _TemplateColors.muted, height: 1.4),
+            const SizedBox(height: BlackGoldSpace.md),
+            const _SafetyNote(
+              text:
+                  'O treino ativo anterior será preservado no histórico. Este modelo cria uma nova prescrição individual para o aluno selecionado.',
             ),
           ],
         ),
@@ -751,7 +1116,7 @@ class _AssignmentDialogState extends State<_AssignmentDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancelar'),
         ),
-        FilledButton(
+        FilledButton.icon(
           onPressed: () => Navigator.pop(
             context,
             _AssignmentInput(
@@ -759,7 +1124,8 @@ class _AssignmentDialogState extends State<_AssignmentDialog> {
               nextSession: _next.text.trim(),
             ),
           ),
-          child: const Text('Aplicar modelo'),
+          icon: const Icon(Icons.person_add_alt_1_rounded),
+          label: const Text('Aplicar modelo'),
         ),
       ],
     );
@@ -803,16 +1169,19 @@ class _PlanTemplateDialogState extends State<_PlanTemplateDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: _TemplateColors.card,
-      title: const Text('Salvar treino como modelo'),
+      title: const _DialogTitle(
+        icon: Icons.bookmark_add_rounded,
+        eyebrow: 'REAPROVEITAR COM CONTROLE',
+        title: 'Salvar treino como modelo',
+      ),
       content: SizedBox(
-        width: 560,
+        width: 590,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             DropdownButtonFormField<String>(
               initialValue: _planId,
-              dropdownColor: _TemplateColors.card,
+              dropdownColor: AppColors.cardRaised,
               decoration: const InputDecoration(labelText: 'Treino existente'),
               items: widget.plans
                   .map(
@@ -826,10 +1195,15 @@ class _PlanTemplateDialogState extends State<_PlanTemplateDialog> {
                 if (value != null) setState(() => _planId = value);
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: BlackGoldSpace.sm),
             _Field(
               controller: _name,
               label: 'Novo nome do modelo (opcional)',
+            ),
+            const SizedBox(height: BlackGoldSpace.md),
+            const _SafetyNote(
+              text:
+                  'A cópia vira um modelo reutilizável; o treino original e seu histórico continuam preservados.',
             ),
           ],
         ),
@@ -839,7 +1213,7 @@ class _PlanTemplateDialogState extends State<_PlanTemplateDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancelar'),
         ),
-        FilledButton(
+        FilledButton.icon(
           onPressed: () => Navigator.pop(
             context,
             _PlanTemplateInput(
@@ -847,9 +1221,102 @@ class _PlanTemplateDialogState extends State<_PlanTemplateDialog> {
               name: _name.text.trim(),
             ),
           ),
-          child: const Text('Salvar modelo'),
+          icon: const Icon(Icons.bookmark_added_rounded),
+          label: const Text('Salvar modelo'),
         ),
       ],
+    );
+  }
+}
+
+class _DialogTitle extends StatelessWidget {
+  const _DialogTitle({
+    required this.icon,
+    required this.eyebrow,
+    required this.title,
+  });
+
+  final IconData icon;
+  final String eyebrow;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            gradient: BlackGoldEffects.goldGradient,
+            borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+          ),
+          child: Icon(icon, color: Colors.black, size: 21),
+        ),
+        const SizedBox(width: BlackGoldSpace.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                eyebrow,
+                style: const TextStyle(
+                  color: AppColors.goldSoft,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: BlackGoldSpace.xxs),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: AppColors.text,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SafetyNote extends StatelessWidget {
+  const _SafetyNote({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(BlackGoldSpace.sm),
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Icon(Icons.shield_outlined, color: AppColors.goldSoft, size: 18),
+          const SizedBox(width: BlackGoldSpace.sm),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: AppColors.muted,
+                fontSize: 12,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -873,13 +1340,8 @@ class _Field extends StatelessWidget {
       controller: controller,
       validator: validator,
       maxLines: maxLines,
-      style: const TextStyle(color: _TemplateColors.text),
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: _TemplateColors.cardSoft,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-      ),
+      style: const TextStyle(color: AppColors.text),
+      decoration: InputDecoration(labelText: label),
     );
   }
 }
@@ -889,10 +1351,25 @@ class _LoadingPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(50),
-      child: Center(
-        child: CircularProgressIndicator(color: _TemplateColors.gold),
+    return Container(
+      padding: const EdgeInsets.all(BlackGoldSpace.section),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            CircularProgressIndicator(color: AppColors.gold),
+            SizedBox(height: BlackGoldSpace.md),
+            Text(
+              'Atualizando biblioteca inteligente…',
+              style: TextStyle(color: AppColors.muted),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -907,36 +1384,54 @@ class _ErrorPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(BlackGoldSpace.md),
       decoration: BoxDecoration(
-        color: const Color(0xFF351313),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+        color: AppColors.danger.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+        border: Border.all(color: AppColors.danger.withValues(alpha: 0.48)),
       ),
-      child: Row(
-        children: <Widget>[
-          const Icon(Icons.error_outline_rounded, color: Colors.redAccent),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(color: _TemplateColors.text),
-            ),
-          ),
-          TextButton(onPressed: onRetry, child: const Text('Tentar novamente')),
-        ],
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final Widget messageBlock = Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const Icon(Icons.error_outline_rounded, color: AppColors.danger),
+              const SizedBox(width: BlackGoldSpace.sm),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(color: AppColors.text, height: 1.4),
+                ),
+              ),
+            ],
+          );
+
+          final Widget action = TextButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Tentar novamente'),
+          );
+
+          if (constraints.maxWidth < BlackGoldBreakpoints.mobile) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                messageBlock,
+                const SizedBox(height: BlackGoldSpace.sm),
+                action,
+              ],
+            );
+          }
+
+          return Row(
+            children: <Widget>[
+              Expanded(child: messageBlock),
+              const SizedBox(width: BlackGoldSpace.md),
+              action,
+            ],
+          );
+        },
       ),
     );
   }
-}
-
-class _TemplateColors {
-  static const Color black = Color(0xFF050505);
-  static const Color card = Color(0xFF101010);
-  static const Color cardSoft = Color(0xFF171717);
-  static const Color border = Color(0xFF2C2A22);
-  static const Color gold = Color(0xFFE1B92F);
-  static const Color goldSoft = Color(0xFFFFD45A);
-  static const Color text = Color(0xFFF7F7F7);
-  static const Color muted = Color(0xFFB7B7B7);
 }
