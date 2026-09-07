@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../core/theme/app_theme.dart';
 import '../features/auth/auth_preview_page.dart';
 import '../features/demo/demo_home_page.dart';
 import '../features/landing/ecosystem_links_page.dart';
@@ -42,16 +43,7 @@ class FitNexusApp extends StatelessWidget {
     return MaterialApp(
       title: 'FitNexus Coach BlackGold',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF050505),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFE1B92F),
-          secondary: Color(0xFFFFD45A),
-          surface: Color(0xFF101010),
-        ),
-      ),
+      theme: AppTheme.dark,
       routes: buildFitNexusRoutes(includeDemo: !kReleaseMode),
       onGenerateRoute: _onGenerateRoute,
     );
