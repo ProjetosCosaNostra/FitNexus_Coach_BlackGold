@@ -85,14 +85,19 @@ class _AuthenticatedProfessorPageState
     switch (action) {
       case _ProfessorQuickAction.checkout:
         _openCheckout(context);
+        return;
       case _ProfessorQuickAction.subscription:
         _openSubscription(context);
+        return;
       case _ProfessorQuickAction.intelligence:
         _openDecisionIntelligence(context);
+        return;
       case _ProfessorQuickAction.lineage:
         _openLineage(context);
+        return;
       case _ProfessorQuickAction.logout:
         await _signOut(context);
+        return;
     }
   }
 
@@ -461,7 +466,11 @@ class _QuickMenuRow extends StatelessWidget {
     final Color color = danger ? AppColors.danger : AppColors.text;
     return Row(
       children: <Widget>[
-        Icon(icon, color: danger ? AppColors.danger : AppColors.goldSoft, size: 19),
+        Icon(
+          icon,
+          color: danger ? AppColors.danger : AppColors.goldSoft,
+          size: 19,
+        ),
         const SizedBox(width: BlackGoldSpace.sm),
         Text(
           label,
