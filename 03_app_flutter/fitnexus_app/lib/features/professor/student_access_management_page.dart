@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/blackgold_tokens.dart';
+import '../shared/fitnexus_ui.dart';
 import 'professor_data_repository.dart';
 
 class StudentAccessManagementPage extends StatefulWidget {
@@ -28,10 +31,12 @@ class _StudentAccessManagementPageState
   }
 
   Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    if (mounted) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
 
     try {
       final List<StudentRecord> students = await _repository.fetchStudents();
@@ -60,7 +65,7 @@ class _StudentAccessManagementPageState
       final String link = _studentLink(token);
       await showDialog<void>(
         context: context,
-        barrierColor: Colors.black.withValues(alpha: 0.76),
+        barrierColor: Colors.black.withValues(alpha: 0.78),
         builder: (BuildContext context) => _AccessDialog(
           studentName: student.name,
           link: link,
@@ -70,8 +75,7 @@ class _StudentAccessManagementPageState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: const Color(0xFF5A1919),
+          backgroundColor: AppColors.danger,
           content: Text('Não foi possível gerar o acesso: $error'),
         ),
       );
@@ -82,113 +86,178 @@ class _StudentAccessManagementPageState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _AccessColors.black,
-      appBar: AppBar(
-        backgroundColor: _AccessColors.black,
-        foregroundColor: _AccessColors.text,
-        title: const Text(
-          'Acesso dos alunos',
-          style: TextStyle(fontWeight: FontWeight.w900),
+    return Material(
+      color: AppColors.black,
+      child: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          color: AppColors.gold,
+          backgroundColor: AppColors.cardRaised,
+          onRefresh: _load,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: <Widget>[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  BlackGoldSpace.lg,
+                  BlackGoldSpace.lg,
+                  BlackGoldSpace.lg,
+                  120,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1080),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          FitPageTitle(
+                            eyebrow: 'Acesso individual',
+                            title: 'Link + QR privado para cada aluno',
+                            description:
+                                'Cada acesso pertence a um único aluno, expira em 30 dias e revoga o anterior quando uma nova chave é emitida.',
+                            trailing: OutlinedButton.icon(
+                              onPressed: _loading ? null : _load,
+                              icon: _loading
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.goldSoft,
+                                      ),
+                                    )
+                                  : const Icon(Icons.refresh_rounded, size: 18),
+                              label: const Text('Atualizar'),
+                            ),
+                          ),
+                          const SizedBox(height: BlackGoldSpace.xl),
+                          const _SecurityCallout(),
+                          const SizedBox(height: BlackGoldSpace.lg),
+                          if (_loading && _students.isEmpty)
+                            const _LoadingPanel()
+                          else if (_error != null)
+                            _MessageCard(
+                              icon: Icons.error_outline_rounded,
+                              title: 'Não foi possível carregar os alunos',
+                              text: _error!,
+                              action: OutlinedButton.icon(
+                                onPressed: _load,
+                                icon: const Icon(Icons.refresh_rounded),
+                                label: const Text('Tentar novamente'),
+                              ),
+                              error: true,
+                            )
+                          else if (_students.isEmpty)
+                            const _MessageCard(
+                              icon: Icons.group_off_rounded,
+                              title: 'Nenhum aluno disponível',
+                              text:
+                                  'Cadastre um aluno no painel antes de gerar um acesso individual.',
+                            )
+                          else ...<Widget>[
+                            _StudentCount(count: _students.length),
+                            const SizedBox(height: BlackGoldSpace.md),
+                            ..._students.map(
+                              (StudentRecord student) => Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: BlackGoldSpace.sm,
+                                ),
+                                child: _StudentAccessRow(
+                                  student: student,
+                                  busy: _issuingStudentId == student.id,
+                                  onGenerate: () => _issue(student),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        actions: <Widget>[
-          IconButton(
-            tooltip: 'Atualizar',
-            onPressed: _loading ? null : _load,
-            icon: const Icon(Icons.refresh_rounded),
+      ),
+    );
+  }
+}
+
+class _SecurityCallout extends StatelessWidget {
+  const _SecurityCallout();
+
+  @override
+  Widget build(BuildContext context) {
+    return FitCard(
+      highlight: true,
+      padding: const EdgeInsets.all(BlackGoldSpace.md),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.09),
+              borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+            ),
+            child: const Icon(
+              Icons.shield_outlined,
+              color: AppColors.goldSoft,
+              size: 21,
+            ),
+          ),
+          const SizedBox(width: BlackGoldSpace.sm),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  'ACESSO PRIVADO E REVOGÁVEL',
+                  style: TextStyle(
+                    color: AppColors.goldSoft,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'O token bruto não fica salvo no banco. Gere uma nova chave somente quando necessário e compartilhe o endereço exclusivamente com o aluno correspondente.',
+                  style: TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 12.5,
+                    height: 1.42,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 60),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 960),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Container(
-                    padding: const EdgeInsets.all(22),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: <Color>[Color(0xFF1A1507), Color(0xFF101010)],
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: _AccessColors.border),
-                    ),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          'LINK + QR INDIVIDUAL',
-                          style: TextStyle(
-                            color: _AccessColors.goldSoft,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          'Cada aluno recebe um acesso privado ao treino.',
-                          style: TextStyle(
-                            color: _AccessColors.text,
-                            fontSize: 25,
-                            height: 1.12,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'O link expira em 30 dias. Ao gerar novamente, o acesso anterior é revogado automaticamente. O token bruto não fica salvo no banco.',
-                          style: TextStyle(
-                            color: _AccessColors.muted,
-                            height: 1.45,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  if (_loading && _students.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(40),
-                      child: Center(
-                        child: CircularProgressIndicator(color: _AccessColors.gold),
-                      ),
-                    )
-                  else if (_error != null)
-                    _MessageCard(
-                      icon: Icons.error_outline_rounded,
-                      text: _error!,
-                      action: TextButton(
-                        onPressed: _load,
-                        child: const Text('Tentar novamente'),
-                      ),
-                    )
-                  else if (_students.isEmpty)
-                    const _MessageCard(
-                      icon: Icons.group_off_rounded,
-                      text: 'Cadastre um aluno no painel antes de gerar o acesso.',
-                    )
-                  else
-                    ..._students.map(
-                      (StudentRecord student) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _StudentAccessRow(
-                          student: student,
-                          busy: _issuingStudentId == student.id,
-                          onGenerate: () => _issue(student),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
+    );
+  }
+}
+
+class _StudentCount extends StatelessWidget {
+  const _StudentCount({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        const Icon(Icons.groups_rounded, color: AppColors.goldSoft, size: 20),
+        const SizedBox(width: BlackGoldSpace.xs),
+        Text(
+          '$count alunos disponíveis',
+          style: Theme.of(context).textTheme.titleLarge,
         ),
-      ),
+      ],
     );
   }
 }
@@ -206,25 +275,26 @@ class _StudentAccessRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _AccessColors.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _AccessColors.border),
-      ),
+    return FitCard(
+      padding: const EdgeInsets.all(BlackGoldSpace.md),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           final Widget identity = Row(
-            mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              const CircleAvatar(
-                backgroundColor: _AccessColors.gold,
-                foregroundColor: Colors.black,
-                child: Icon(Icons.person_rounded),
+              CircleAvatar(
+                radius: 21,
+                backgroundColor: AppColors.gold.withValues(alpha: 0.10),
+                foregroundColor: AppColors.goldSoft,
+                child: Text(
+                  _initials(student.name),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
               ),
-              const SizedBox(width: 12),
-              Flexible(
+              const SizedBox(width: BlackGoldSpace.sm),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -232,18 +302,18 @@ class _StudentAccessRow extends StatelessWidget {
                       student.name,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: _AccessColors.text,
+                        color: AppColors.text,
+                        fontSize: 15,
                         fontWeight: FontWeight.w900,
-                        fontSize: 16,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${student.objective} • ${student.status}',
+                      '${student.objective} • ${student.level} • ${student.status}',
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: _AccessColors.muted,
-                        fontSize: 12,
+                        color: AppColors.muted,
+                        fontSize: 11.5,
                       ),
                     ),
                   ],
@@ -252,21 +322,10 @@ class _StudentAccessRow extends StatelessWidget {
             ],
           );
 
-          final Widget action = FilledButton.icon(
-            onPressed: busy ? null : onGenerate,
-            icon: busy
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.qr_code_2_rounded),
-            label: Text(busy ? 'Gerando...' : 'Gerar link + QR'),
-            style: FilledButton.styleFrom(
-              backgroundColor: _AccessColors.gold,
-              foregroundColor: Colors.black,
-              textStyle: const TextStyle(fontWeight: FontWeight.w900),
-            ),
+          final Widget action = GoldButton(
+            label: busy ? 'Gerando...' : 'Gerar link + QR',
+            icon: busy ? Icons.hourglass_top_rounded : Icons.qr_code_2_rounded,
+            onTap: busy ? null : onGenerate,
           );
 
           if (constraints.maxWidth < 620) {
@@ -274,7 +333,7 @@ class _StudentAccessRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 identity,
-                const SizedBox(height: 14),
+                const SizedBox(height: BlackGoldSpace.md),
                 action,
               ],
             );
@@ -283,7 +342,7 @@ class _StudentAccessRow extends StatelessWidget {
           return Row(
             children: <Widget>[
               Expanded(child: identity),
-              const SizedBox(width: 16),
+              const SizedBox(width: BlackGoldSpace.md),
               action,
             ],
           );
@@ -303,20 +362,20 @@ class _AccessDialog extends StatelessWidget {
     await Clipboard.setData(ClipboardData(text: link));
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        behavior: SnackBarBehavior.floating,
-        content: Text('Link do aluno copiado.'),
-      ),
+      const SnackBar(content: Text('Link do aluno copiado.')),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: _AccessColors.card,
-      title: Text(
-        'Acesso de $studentName',
-        style: const TextStyle(fontWeight: FontWeight.w900),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const SectionLabel('Acesso privado'),
+          const SizedBox(height: BlackGoldSpace.xs),
+          Text('Acesso de $studentName'),
+        ],
       ),
       content: SizedBox(
         width: 520,
@@ -328,7 +387,7 @@ class _AccessDialog extends StatelessWidget {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(BlackGoldRadius.card),
                 ),
                 child: QrImageView(
                   data: link,
@@ -336,25 +395,37 @@ class _AccessDialog extends StatelessWidget {
                   size: 230,
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: BlackGoldSpace.lg),
               SelectableText(
                 link,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: _AccessColors.muted,
-                  fontSize: 12,
+                  color: AppColors.muted,
+                  fontSize: 11.5,
                   height: 1.45,
                 ),
               ),
-              const SizedBox(height: 14),
-              const Text(
-                'Este endereço funciona como uma chave privada e expira em 30 dias. Compartilhe somente com o aluno correspondente.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _AccessColors.text,
-                  fontSize: 12,
-                  height: 1.4,
-                ),
+              const SizedBox(height: BlackGoldSpace.md),
+              const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Icon(
+                    Icons.lock_outline_rounded,
+                    color: AppColors.goldSoft,
+                    size: 17,
+                  ),
+                  SizedBox(width: BlackGoldSpace.xs),
+                  Expanded(
+                    child: Text(
+                      'Este endereço funciona como uma chave privada e expira em 30 dias. Compartilhe somente com o aluno correspondente.',
+                      style: TextStyle(
+                        color: AppColors.text,
+                        fontSize: 11.5,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -376,44 +447,89 @@ class _AccessDialog extends StatelessWidget {
 }
 
 class _MessageCard extends StatelessWidget {
-  const _MessageCard({required this.icon, required this.text, this.action});
+  const _MessageCard({
+    required this.icon,
+    required this.title,
+    required this.text,
+    this.action,
+    this.error = false,
+  });
 
   final IconData icon;
+  final String title;
   final String text;
   final Widget? action;
+  final bool error;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: _AccessColors.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _AccessColors.border),
-      ),
+    final Color accent = error ? AppColors.danger : AppColors.goldSoft;
+    return FitCard(
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Icon(icon, color: _AccessColors.goldSoft),
-          const SizedBox(width: 12),
+          Icon(icon, color: accent, size: 24),
+          const SizedBox(width: BlackGoldSpace.sm),
           Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(color: _AccessColors.text, height: 1.4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.text,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  text,
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 12.5,
+                    height: 1.42,
+                  ),
+                ),
+                if (action != null) ...<Widget>[
+                  const SizedBox(height: BlackGoldSpace.sm),
+                  action!,
+                ],
+              ],
             ),
           ),
-          if (action != null) action!,
         ],
       ),
     );
   }
 }
 
-class _AccessColors {
-  static const Color black = Color(0xFF050505);
-  static const Color card = Color(0xFF111111);
-  static const Color border = Color(0xFF302B1D);
-  static const Color gold = Color(0xFFE1B92F);
-  static const Color goldSoft = Color(0xFFFFD45A);
-  static const Color text = Color(0xFFF7F7F7);
-  static const Color muted = Color(0xFFB7B7B7);
+class _LoadingPanel extends StatelessWidget {
+  const _LoadingPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return const FitCard(
+      child: SizedBox(
+        height: 240,
+        child: Center(
+          child: CircularProgressIndicator(color: AppColors.gold),
+        ),
+      ),
+    );
+  }
+}
+
+String _initials(String name) {
+  final List<String> parts = name
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((String part) => part.isNotEmpty)
+      .toList(growable: false);
+  if (parts.isEmpty) return 'AL';
+  if (parts.length == 1) {
+    final int end = parts.first.length >= 2 ? 2 : 1;
+    return parts.first.substring(0, end).toUpperCase();
+  }
+  return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
 }

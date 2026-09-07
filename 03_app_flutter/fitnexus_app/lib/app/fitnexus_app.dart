@@ -1,18 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../core/theme/app_theme.dart';
 import '../features/auth/auth_preview_page.dart';
 import '../features/demo/demo_home_page.dart';
 import '../features/landing/ecosystem_links_page.dart';
+import '../features/landing/landing_page.dart';
 import '../features/landing/public_contact_page.dart';
-import '../features/landing/responsive_landing_page.dart';
 import '../features/professor/authenticated_professor_page.dart';
 import '../features/student/student_experience_page.dart';
 
 Map<String, WidgetBuilder> buildFitNexusRoutes({required bool includeDemo}) {
   return <String, WidgetBuilder>{
-    '/landing': (_) => const ResponsiveLandingPage(),
-    '/': (_) => const ResponsiveLandingPage(),
+    '/landing': (_) => const LandingPage(),
+    '/': (_) => const LandingPage(),
     '/links': (_) => const EcosystemLinksPage(),
     '/support': (_) => const PublicContactPage(),
     if (includeDemo) '/demo': (_) => const DemoHomePage(),
@@ -42,16 +43,7 @@ class FitNexusApp extends StatelessWidget {
     return MaterialApp(
       title: 'FitNexus Coach BlackGold',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF050505),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFE1B92F),
-          secondary: Color(0xFFFFD45A),
-          surface: Color(0xFF101010),
-        ),
-      ),
+      theme: AppTheme.dark,
       routes: buildFitNexusRoutes(includeDemo: !kReleaseMode),
       onGenerateRoute: _onGenerateRoute,
     );

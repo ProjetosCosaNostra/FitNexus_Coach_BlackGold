@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/blackgold_tokens.dart';
+import '../shared/fitnexus_ui.dart';
 import 'professor_coach_action_repository.dart';
 import 'professor_decision_intelligence_page.dart';
 import 'professor_feedback_page.dart';
@@ -118,10 +121,8 @@ class _ProfessorCoachActionCenterPageState
   void _toast(String message, {bool error = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor:
-            error ? const Color(0xFF5A1919) : const Color(0xFF171717),
         content: Text(message),
+        backgroundColor: error ? AppColors.danger : AppColors.cardRaised,
       ),
     );
   }
@@ -129,174 +130,140 @@ class _ProfessorCoachActionCenterPageState
   @override
   Widget build(BuildContext context) {
     final CoachActionSnapshot? snapshot = _snapshot;
-    return Scaffold(
-      backgroundColor: const Color(0xFF050505),
-      body: SafeArea(
+
+    return Material(
+      color: AppColors.black,
+      child: SafeArea(
+        bottom: false,
         child: RefreshIndicator(
-          color: const Color(0xFFE1B92F),
+          color: AppColors.gold,
+          backgroundColor: AppColors.cardRaised,
           onRefresh: _reload,
-          child: ListView(
+          child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 120),
-            children: <Widget>[
-              _Header(
-                loading: _loading,
-                onRefresh: _reload,
-                onOpenPanel: _openOperationalPanel,
-              ),
-              const SizedBox(height: 20),
-              if (_loading && snapshot == null)
-                const SizedBox(
-                  height: 280,
+            slivers: <Widget>[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  BlackGoldSpace.lg,
+                  BlackGoldSpace.lg,
+                  BlackGoldSpace.lg,
+                  120,
+                ),
+                sliver: SliverToBoxAdapter(
                   child: Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFFE1B92F),
-                    ),
-                  ),
-                )
-              else if (_error != null && snapshot == null)
-                _Notice(
-                  icon: Icons.error_outline_rounded,
-                  title: 'Coach Action Center indisponível',
-                  text: _error!,
-                  error: true,
-                )
-              else if (snapshot != null) ...<Widget>[
-                _SummaryGrid(summary: snapshot.summary),
-                const SizedBox(height: 18),
-                _Principle(text: snapshot.principle),
-                const SizedBox(height: 18),
-                if (_error != null) ...<Widget>[
-                  _Notice(
-                    icon: Icons.sync_problem_rounded,
-                    title: 'Não foi possível atualizar agora',
-                    text: _error!,
-                    error: true,
-                  ),
-                  const SizedBox(height: 14),
-                ],
-                if (snapshot.actions.isEmpty)
-                  const _Notice(
-                    icon: Icons.task_alt_rounded,
-                    title: 'Fila limpa por agora',
-                    text:
-                        'Não há nenhuma próxima ação ativa. Itens concluídos reaparecem somente se o sinal persistir depois da janela de 24 horas ou se o contexto mudar.',
-                  )
-                else ...<Widget>[
-                  Text(
-                    '${snapshot.actions.length} próximas ações priorizadas',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ...snapshot.actions.map(
-                    (CoachActionItem action) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _ActionCard(
-                        action: action,
-                        busy: _busyFingerprint == action.actionFingerprint,
-                        onOpen: () => _openContext(action),
-                        onComplete: () => _complete(action),
-                        onSnooze: () => _snooze(action),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1360),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          FitPageTitle(
+                            eyebrow: 'Coach Action Center',
+                            title: 'O que precisa da sua atenção hoje',
+                            description:
+                                'O FitNexus cruza execução, aderência, feedback, acesso e decisões pendentes para priorizar a próxima ação sem tirar o professor do controle.',
+                            trailing: Wrap(
+                              spacing: BlackGoldSpace.xs,
+                              runSpacing: BlackGoldSpace.xs,
+                              children: <Widget>[
+                                OutlinedButton.icon(
+                                  onPressed:
+                                      _loading ? null : _openOperationalPanel,
+                                  icon: const Icon(
+                                    Icons.dashboard_customize_rounded,
+                                    size: 18,
+                                  ),
+                                  label: const Text('Painel'),
+                                ),
+                                OutlinedButton.icon(
+                                  onPressed: _loading ? null : _reload,
+                                  icon: _loading
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppColors.goldSoft,
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.refresh_rounded,
+                                          size: 18,
+                                        ),
+                                  label: const Text('Atualizar'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: BlackGoldSpace.xl),
+                          if (_loading && snapshot == null)
+                            const _LoadingPanel()
+                          else if (_error != null && snapshot == null)
+                            _Notice(
+                              icon: Icons.error_outline_rounded,
+                              title: 'Coach Action Center indisponível',
+                              text: _error!,
+                              error: true,
+                            )
+                          else if (snapshot != null) ...<Widget>[
+                            _SummaryGrid(summary: snapshot.summary),
+                            const SizedBox(height: BlackGoldSpace.lg),
+                            _Principle(text: snapshot.principle),
+                            if (_error != null) ...<Widget>[
+                              const SizedBox(height: BlackGoldSpace.md),
+                              _Notice(
+                                icon: Icons.sync_problem_rounded,
+                                title: 'Não foi possível atualizar agora',
+                                text: _error!,
+                                error: true,
+                              ),
+                            ],
+                            const SizedBox(height: BlackGoldSpace.xl),
+                            if (snapshot.actions.isEmpty)
+                              const _Notice(
+                                icon: Icons.task_alt_rounded,
+                                title: 'Fila limpa por agora',
+                                text:
+                                    'Não há nenhuma próxima ação ativa. O FitNexus continua acompanhando os sinais e trará uma ação quando houver contexto suficiente.',
+                              )
+                            else ...<Widget>[
+                              _QueueHeader(count: snapshot.actions.length),
+                              const SizedBox(height: BlackGoldSpace.md),
+                              ...snapshot.actions.map(
+                                (CoachActionItem action) => Padding(
+                                  padding: const EdgeInsets.only(
+                                    bottom: BlackGoldSpace.sm,
+                                  ),
+                                  child: _ActionCard(
+                                    action: action,
+                                    busy: _busyFingerprint ==
+                                        action.actionFingerprint,
+                                    onOpen: () => _openContext(action),
+                                    onComplete: () => _complete(action),
+                                    onSnooze: () => _snooze(action),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: BlackGoldSpace.sm),
+                            Text(
+                              'Atualizado em ${_formatDate(snapshot.generatedAt)}',
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                color: AppColors.mutedSoft,
+                                fontSize: 10.5,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ],
+                ),
+              ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({
-    required this.loading,
-    required this.onRefresh,
-    required this.onOpenPanel,
-  });
-
-  final bool loading;
-  final Future<void> Function() onRefresh;
-  final VoidCallback onOpenPanel;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        final Widget copy = const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'COACH ACTION CENTER',
-              style: TextStyle(
-                color: Color(0xFFFFD45A),
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.1,
-              ),
-            ),
-            SizedBox(height: 7),
-            Text(
-              'O que precisa da sua atenção hoje',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 29,
-                height: 1.06,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            SizedBox(height: 7),
-            Text(
-              'O FitNexus cruza execução, aderência, feedback, acesso, prescrição e decisões pendentes para entregar uma única próxima ação por aluno — sempre explicada e sempre humana.',
-              style: TextStyle(color: Color(0xFFAAAAAA), height: 1.45),
-            ),
-          ],
-        );
-
-        final Widget actions = Wrap(
-          spacing: 9,
-          runSpacing: 9,
-          children: <Widget>[
-            OutlinedButton.icon(
-              onPressed: onOpenPanel,
-              icon: const Icon(Icons.dashboard_rounded),
-              label: const Text('Painel operacional'),
-            ),
-            IconButton.filledTonal(
-              tooltip: 'Atualizar prioridades',
-              onPressed: loading ? null : onRefresh,
-              icon: loading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.refresh_rounded),
-            ),
-          ],
-        );
-
-        if (constraints.maxWidth < 760) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[copy, const SizedBox(height: 15), actions],
-          );
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: <Widget>[
-            Expanded(child: copy),
-            const SizedBox(width: 24),
-            actions,
-          ],
-        );
-      },
     );
   }
 }
@@ -310,106 +277,51 @@ class _SummaryGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final int columns = constraints.maxWidth >= 1100
+        final int columns = constraints.maxWidth >= 1050
             ? 4
             : constraints.maxWidth >= 620
                 ? 2
                 : 1;
-        const double gap = 10;
+        const double gap = BlackGoldSpace.sm;
         final double width =
             (constraints.maxWidth - gap * (columns - 1)) / columns;
+
+        final List<Widget> cards = <Widget>[
+          FitMetricCard(
+            icon: Icons.auto_awesome_rounded,
+            label: 'Ações ativas',
+            value: '${summary.activeActions}',
+            detail: '${summary.attention} pedem atenção',
+          ),
+          FitMetricCard(
+            icon: Icons.priority_high_rounded,
+            label: 'Urgentes',
+            value: '${summary.urgent}',
+            detail: 'Prioridade máxima hoje',
+          ),
+          FitMetricCard(
+            icon: Icons.task_alt_rounded,
+            label: 'Concluídas hoje',
+            value: '${summary.completedToday}',
+            detail: 'Ações registradas pelo professor',
+            positive: true,
+          ),
+          FitMetricCard(
+            icon: Icons.schedule_rounded,
+            label: 'Adiados',
+            value: '${summary.snoozed}',
+            detail: '${summary.monitor} em monitoramento',
+          ),
+        ];
+
         return Wrap(
           spacing: gap,
           runSpacing: gap,
-          children: <Widget>[
-            SizedBox(
-              width: width,
-              child: _Metric(
-                value: '${summary.activeActions}',
-                label: 'ações ativas',
-                icon: Icons.bolt_rounded,
-                color: const Color(0xFFFFD45A),
-              ),
-            ),
-            SizedBox(
-              width: width,
-              child: _Metric(
-                value: '${summary.urgent}',
-                label: 'prioridade agora',
-                icon: Icons.priority_high_rounded,
-                color: const Color(0xFFFF7474),
-              ),
-            ),
-            SizedBox(
-              width: width,
-              child: _Metric(
-                value: '${summary.completedToday}',
-                label: 'concluídas hoje',
-                icon: Icons.task_alt_rounded,
-                color: const Color(0xFF75E39B),
-              ),
-            ),
-            SizedBox(
-              width: width,
-              child: _Metric(
-                value: '${summary.snoozed}',
-                label: 'lembrar depois',
-                icon: Icons.schedule_rounded,
-                color: const Color(0xFF8EBBFF),
-              ),
-            ),
-          ],
+          children: cards
+              .map((Widget card) => SizedBox(width: width, child: card))
+              .toList(growable: false),
         );
       },
-    );
-  }
-}
-
-class _Metric extends StatelessWidget {
-  const _Metric({
-    required this.value,
-    required this.label,
-    required this.icon,
-    required this.color,
-  });
-
-  final String value;
-  final String label;
-  final IconData icon;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: const Color(0xFF111111),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.22)),
-      ),
-      child: Row(
-        children: <Widget>[
-          Icon(icon, color: color, size: 25),
-          const SizedBox(width: 11),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                value,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 23,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              Text(
-                label,
-                style: const TextStyle(color: Color(0xFF999999), fontSize: 11),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }
@@ -421,30 +333,81 @@ class _Principle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF10141A),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF8EBBFF).withValues(alpha: 0.24),
-        ),
-      ),
+    return FitCard(
+      highlight: true,
+      padding: const EdgeInsets.all(BlackGoldSpace.md),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Icon(Icons.shield_outlined, color: Color(0xFF8EBBFF)),
-          const SizedBox(width: 10),
+          Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.09),
+              borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+            ),
+            child: const Icon(
+              Icons.psychology_alt_rounded,
+              color: AppColors.goldSoft,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: BlackGoldSpace.sm),
           Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                color: Color(0xFFB8C7DB),
-                fontWeight: FontWeight.w700,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                const Text(
+                  'PRINCÍPIO DE DECISÃO',
+                  style: TextStyle(
+                    color: AppColors.goldSoft,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.05,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  text,
+                  style: const TextStyle(
+                    color: AppColors.text,
+                    fontSize: 13,
+                    height: 1.4,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _QueueHeader extends StatelessWidget {
+  const _QueueHeader({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        const Icon(
+          Icons.view_agenda_outlined,
+          color: AppColors.goldSoft,
+          size: 20,
+        ),
+        const SizedBox(width: BlackGoldSpace.xs),
+        Expanded(
+          child: Text(
+            '$count próximas ações priorizadas',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -466,124 +429,205 @@ class _ActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _PriorityVisual visual = _priority(action.priorityLabel);
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF101010),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: visual.color.withValues(alpha: 0.34)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
+    final _PriorityMeta priority = _priorityMeta(action.priorityLabel);
+    final List<String> evidence = _evidenceLabels(action);
+
+    return FitCard(
+      highlight: action.urgent,
+      padding: const EdgeInsets.all(BlackGoldSpace.lg),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final bool compact = constraints.maxWidth < 760;
+          final Widget identity = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              _Tag(label: visual.label, color: visual.color),
-              _Tag(
-                label: 'score ${action.priorityScore}',
-                color: const Color(0xFF8EBBFF),
-              ),
-              _Tag(
-                label: '${action.adherence}% aderência',
-                color: const Color(0xFFFFD45A),
-              ),
-            ],
-          ),
-          const SizedBox(height: 13),
-          Text(
-            action.studentName,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            '${action.objective} • ${action.level}',
-            style: const TextStyle(color: Color(0xFF999999), fontSize: 12),
-          ),
-          const SizedBox(height: 13),
-          Text(
-            action.actionTitle,
-            style: TextStyle(
-              color: visual.color,
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            action.actionReason,
-            style: const TextStyle(color: Color(0xFFCCCCCC), height: 1.45),
-          ),
-          const SizedBox(height: 13),
-          _Evidence(action: action),
-          const SizedBox(height: 15),
-          LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-              final List<Widget> buttons = <Widget>[
-                FilledButton.icon(
-                  onPressed: busy ? null : onOpen,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFE1B92F),
-                    foregroundColor: Colors.black,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: AppColors.gold.withValues(alpha: 0.10),
+                    foregroundColor: AppColors.goldSoft,
+                    child: Text(
+                      _initials(action.studentName),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                   ),
-                  icon: const Icon(Icons.open_in_new_rounded),
-                  label: const Text('Abrir contexto'),
+                  const SizedBox(width: BlackGoldSpace.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Text(
+                                action.studentName,
+                                style: const TextStyle(
+                                  color: AppColors.text,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                            _PriorityPill(meta: priority),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${action.objective} • ${action.level} • ${action.adherence}% aderência',
+                          style: const TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 11.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: BlackGoldSpace.md),
+              Text(
+                action.actionTitle,
+                style: const TextStyle(
+                  color: AppColors.text,
+                  fontSize: 17,
+                  height: 1.2,
+                  fontWeight: FontWeight.w900,
                 ),
-                OutlinedButton.icon(
-                  onPressed: busy ? null : onComplete,
-                  icon: const Icon(Icons.task_alt_rounded),
-                  label: const Text('Concluir por hoje'),
+              ),
+              const SizedBox(height: BlackGoldSpace.xs),
+              Text(
+                action.actionReason,
+                style: const TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 12.5,
+                  height: 1.45,
                 ),
-                TextButton.icon(
-                  onPressed: busy ? null : onSnooze,
-                  icon: const Icon(Icons.schedule_rounded),
-                  label: const Text('Lembrar amanhã'),
-                ),
-              ];
-              if (constraints.maxWidth < 650) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: buttons
-                      .expand(
-                        (Widget button) => <Widget>[
-                          button,
-                          const SizedBox(height: 8),
-                        ],
-                      )
+              ),
+              if (evidence.isNotEmpty) ...<Widget>[
+                const SizedBox(height: BlackGoldSpace.md),
+                Wrap(
+                  spacing: BlackGoldSpace.xs,
+                  runSpacing: BlackGoldSpace.xs,
+                  children: evidence
+                      .map((String item) => _EvidenceChip(text: item))
                       .toList(growable: false),
-                );
-              }
-              return Wrap(spacing: 9, runSpacing: 9, children: buttons);
-            },
-          ),
-          const SizedBox(height: 9),
-          Row(
-            children: <Widget>[
-              const Icon(
-                Icons.person_outline_rounded,
-                size: 15,
-                color: Color(0xFF777777),
-              ),
-              const SizedBox(width: 5),
-              Expanded(
-                child: Text(
-                  action.humanActionRequired
-                      ? 'Nenhuma ação é executada automaticamente.'
-                      : 'Revisão humana continua obrigatória.',
-                  style: const TextStyle(
-                    color: Color(0xFF777777),
-                    fontSize: 10,
-                  ),
                 ),
+              ],
+              if (action.humanActionRequired) ...<Widget>[
+                const SizedBox(height: BlackGoldSpace.md),
+                const Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.person_pin_circle_outlined,
+                      color: AppColors.goldSoft,
+                      size: 16,
+                    ),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Decisão humana obrigatória — o FitNexus não executa esta ação sozinho.',
+                        style: TextStyle(
+                          color: AppColors.goldSoft,
+                          fontSize: 10.5,
+                          height: 1.3,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          );
+
+          final Widget actions = Wrap(
+            spacing: BlackGoldSpace.xs,
+            runSpacing: BlackGoldSpace.xs,
+            alignment: compact ? WrapAlignment.start : WrapAlignment.end,
+            children: <Widget>[
+              OutlinedButton.icon(
+                onPressed: busy ? null : onOpen,
+                icon: const Icon(Icons.open_in_new_rounded, size: 17),
+                label: const Text('Ver contexto'),
+              ),
+              OutlinedButton.icon(
+                onPressed: busy ? null : onSnooze,
+                icon: const Icon(Icons.schedule_rounded, size: 17),
+                label: const Text('Lembrar em 24h'),
+              ),
+              GoldButton(
+                label: busy ? 'Processando' : 'Concluir hoje',
+                icon: busy
+                    ? Icons.hourglass_top_rounded
+                    : Icons.check_rounded,
+                onTap: busy ? null : onComplete,
               ),
             ],
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                identity,
+                const SizedBox(height: BlackGoldSpace.lg),
+                actions,
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: <Widget>[
+              Expanded(child: identity),
+              const SizedBox(width: BlackGoldSpace.lg),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 430),
+                child: actions,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PriorityPill extends StatelessWidget {
+  const _PriorityPill({required this.meta});
+
+  final _PriorityMeta meta;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: meta.color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.pill),
+        border: Border.all(
+          color: meta.color.withValues(alpha: 0.45),
+          width: BlackGoldStroke.hairline,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(meta.icon, color: meta.color, size: 13),
+          const SizedBox(width: 4),
+          Text(
+            meta.label,
+            style: TextStyle(
+              color: meta.color,
+              fontSize: 9.5,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.3,
+            ),
           ),
         ],
       ),
@@ -591,74 +635,30 @@ class _ActionCard extends StatelessWidget {
   }
 }
 
-class _Evidence extends StatelessWidget {
-  const _Evidence({required this.action});
+class _EvidenceChip extends StatelessWidget {
+  const _EvidenceChip({required this.text});
 
-  final CoachActionItem action;
-
-  @override
-  Widget build(BuildContext context) {
-    final CoachActionEvidence evidence = action.evidence;
-    final List<String> items = <String>[
-      '${action.sessions30d} sessões/30d',
-      '${action.completed30d} concluídas',
-      if (evidence.painScore != null) 'dor ${evidence.painScore}/10',
-      if (evidence.perceivedExertion != null)
-        'esforço ${evidence.perceivedExertion}/10',
-      if (evidence.energyScore != null) 'energia ${evidence.energyScore}/5',
-      if ((evidence.activePlanName ?? '').isNotEmpty)
-        'treino: ${evidence.activePlanName}',
-      if (evidence.hasActiveAccess != null)
-        evidence.hasActiveAccess! ? 'acesso ativo' : 'sem acesso ativo',
-      if ((evidence.unresolvedDecisionRunId ?? '').isNotEmpty)
-        'Decision Brief pendente',
-    ];
-    return Wrap(
-      spacing: 7,
-      runSpacing: 7,
-      children: items
-          .map(
-            (String item) => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFF191919),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                item,
-                style: const TextStyle(
-                  color: Color(0xFFB8B8B8),
-                  fontSize: 11,
-                ),
-              ),
-            ),
-          )
-          .toList(growable: false),
-    );
-  }
-}
-
-class _Tag extends StatelessWidget {
-  const _Tag({required this.label, required this.color});
-
-  final String label;
-  final Color color;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      constraints: const BoxConstraints(minHeight: 30),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.30)),
+        color: AppColors.cardRaised,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.pill),
+        border: Border.all(
+          color: AppColors.borderGold.withValues(alpha: 0.56),
+          width: BlackGoldStroke.hairline,
+        ),
       ),
       child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.w900,
+        text,
+        style: const TextStyle(
+          color: AppColors.muted,
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -680,20 +680,13 @@ class _Notice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: error ? const Color(0xFF351515) : const Color(0xFF111111),
-        borderRadius: BorderRadius.circular(18),
-      ),
+    final Color accent = error ? AppColors.danger : AppColors.goldSoft;
+    return FitCard(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Icon(
-            icon,
-            color: error ? const Color(0xFFFF9A9A) : const Color(0xFFFFD45A),
-          ),
-          const SizedBox(width: 10),
+          Icon(icon, color: accent, size: 23),
+          const SizedBox(width: BlackGoldSpace.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -701,16 +694,18 @@ class _Notice extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.text,
+                    fontSize: 15,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 5),
                 Text(
                   text,
                   style: const TextStyle(
-                    color: Color(0xFFBBBBBB),
-                    height: 1.4,
+                    color: AppColors.muted,
+                    fontSize: 12.5,
+                    height: 1.42,
                   ),
                 ),
               ],
@@ -722,18 +717,102 @@ class _Notice extends StatelessWidget {
   }
 }
 
-class _PriorityVisual {
-  const _PriorityVisual(this.label, this.color);
+class _LoadingPanel extends StatelessWidget {
+  const _LoadingPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return const FitCard(
+      child: SizedBox(
+        height: 280,
+        child: Center(
+          child: CircularProgressIndicator(color: AppColors.gold),
+        ),
+      ),
+    );
+  }
+}
+
+class _PriorityMeta {
+  const _PriorityMeta(this.label, this.icon, this.color);
 
   final String label;
+  final IconData icon;
   final Color color;
 }
 
-_PriorityVisual _priority(String value) {
-  return switch (value) {
-    'urgent' => const _PriorityVisual('AGORA', Color(0xFFFF7474)),
-    'attention' => const _PriorityVisual('ATENÇÃO', Color(0xFFFFC85A)),
-    'setup' => const _PriorityVisual('CONFIGURAR', Color(0xFF8EBBFF)),
-    _ => const _PriorityVisual('ACOMPANHAR', Color(0xFF75E39B)),
-  };
+_PriorityMeta _priorityMeta(String priority) {
+  switch (priority.toLowerCase()) {
+    case 'urgent':
+      return const _PriorityMeta(
+        'URGENTE',
+        Icons.priority_high_rounded,
+        AppColors.danger,
+      );
+    case 'attention':
+      return const _PriorityMeta(
+        'ATENÇÃO',
+        Icons.warning_amber_rounded,
+        AppColors.warning,
+      );
+    case 'setup':
+      return const _PriorityMeta(
+        'CONFIGURAR',
+        Icons.tune_rounded,
+        AppColors.goldSoft,
+      );
+    default:
+      return const _PriorityMeta(
+        'MONITORAR',
+        Icons.visibility_outlined,
+        AppColors.success,
+      );
+  }
+}
+
+List<String> _evidenceLabels(CoachActionItem action) {
+  final List<String> labels = <String>[
+    '${action.sessions30d} sessões / 30d',
+    '${action.completed30d} concluídas',
+  ];
+  final CoachActionEvidence evidence = action.evidence;
+  if (evidence.perceivedExertion != null) {
+    labels.add('Esforço ${evidence.perceivedExertion}/10');
+  }
+  if (evidence.energyScore != null) {
+    labels.add('Energia ${evidence.energyScore}/5');
+  }
+  if (evidence.painScore != null && evidence.painScore! > 0) {
+    labels.add('Dor ${evidence.painScore}/10');
+  }
+  if (evidence.activePlanName != null &&
+      evidence.activePlanName!.trim().isNotEmpty) {
+    labels.add(evidence.activePlanName!);
+  }
+  if (evidence.hasActiveAccess == false) {
+    labels.add('Acesso inativo');
+  }
+  return labels;
+}
+
+String _initials(String name) {
+  final List<String> parts = name
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((String part) => part.isNotEmpty)
+      .toList(growable: false);
+  if (parts.isEmpty) return 'AL';
+  if (parts.length == 1) {
+    final int end = parts.first.length >= 2 ? 2 : 1;
+    return parts.first.substring(0, end).toUpperCase();
+  }
+  return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+}
+
+String _formatDate(DateTime date) {
+  final String day = date.day.toString().padLeft(2, '0');
+  final String month = date.month.toString().padLeft(2, '0');
+  final String hour = date.hour.toString().padLeft(2, '0');
+  final String minute = date.minute.toString().padLeft(2, '0');
+  return '$day/$month/${date.year} • $hour:$minute';
 }

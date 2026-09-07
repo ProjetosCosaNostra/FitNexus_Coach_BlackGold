@@ -20,7 +20,7 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
   });
 
-  testWidgets('FitNexus landing renders without overflow at 800x600',
+  testWidgets('FitNexus approved home renders without overflow at 800x600',
       (WidgetTester tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -28,15 +28,15 @@ void main() {
     await pumpAtSize(tester, const Size(800, 600));
 
     expect(tester.takeException(), isNull);
-    expect(find.text('FitNexus Coach'), findsOneWidget);
-    expect(
-      find.text('Treinos digitais profissionais para personal, professor e academia.'),
-      findsOneWidget,
-    );
-    expect(find.text('Ver painel do professor'), findsWidgets);
+    expect(find.text('COACH  BLACKGOLD'), findsOneWidget);
+    expect(find.textContaining('Sua evolução'), findsOneWidget);
+    expect(find.text('Criar conta'), findsOneWidget);
+    expect(find.text('Começar treino'), findsOneWidget);
+    expect(find.byKey(const ValueKey<String>('public-login-entry')), findsOneWidget);
+    expect(find.byKey(const ValueKey<String>('public-signup-entry')), findsOneWidget);
   });
 
-  testWidgets('FitNexus landing renders without overflow on mobile',
+  testWidgets('FitNexus approved home renders without overflow on mobile',
       (WidgetTester tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -44,8 +44,12 @@ void main() {
     await pumpAtSize(tester, const Size(390, 844));
 
     expect(tester.takeException(), isNull);
-    expect(find.text('FitNexus Coach'), findsOneWidget);
-    expect(find.text('Como funciona'), findsOneWidget);
+    expect(find.text('COACH  BLACKGOLD'), findsOneWidget);
+    expect(find.textContaining('Sua evolução'), findsOneWidget);
+    expect(find.text('Ecossistema'), findsOneWidget);
+    expect(find.text('Criar conta'), findsOneWidget);
+    expect(find.text('Plano alimentar'), findsOneWidget);
+    expect(find.text('Falar com coach'), findsOneWidget);
   });
 
   testWidgets('Student screen fails closed when access token is missing',
