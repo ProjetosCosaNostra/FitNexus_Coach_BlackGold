@@ -29,7 +29,9 @@ class FitFloatingAction extends StatelessWidget {
         color: onTap == null ? AppColors.goldDeep : null,
         borderRadius: BorderRadius.circular(BlackGoldRadius.pill),
         border: Border.all(
-          color: AppColors.goldBright.withValues(alpha: onTap == null ? 0.18 : 0.58),
+          color: BlackGoldPalette.goldBright.withValues(
+            alpha: onTap == null ? 0.18 : 0.58,
+          ),
           width: BlackGoldStroke.hairline,
         ),
         boxShadow: onTap == null ? const <BoxShadow>[] : BlackGoldEffects.goldGlow,
