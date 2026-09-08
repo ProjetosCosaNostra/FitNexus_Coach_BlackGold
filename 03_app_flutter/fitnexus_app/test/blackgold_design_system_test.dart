@@ -1,6 +1,7 @@
 import 'package:fitnexus_app/core/theme/app_colors.dart';
 import 'package:fitnexus_app/core/theme/app_theme.dart';
 import 'package:fitnexus_app/core/theme/blackgold_tokens.dart';
+import 'package:fitnexus_app/features/shared/fitnexus_floating_action.dart';
 import 'package:fitnexus_app/features/shared/fitnexus_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,5 +51,30 @@ void main() {
     expect(find.text('Ecossistema'), findsOneWidget);
     expect(find.text('Início'), findsOneWidget);
     expect(find.text('Conteúdo'), findsOneWidget);
+  });
+
+  testWidgets('floating actions stay inside the shared BlackGold component',
+      (WidgetTester tester) async {
+    bool tapped = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: Scaffold(
+          body: Center(
+            child: FitFloatingAction(
+              label: 'Ação BlackGold',
+              icon: Icons.forum_rounded,
+              onTap: () => tapped = true,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(FitFloatingAction), findsOneWidget);
+    expect(find.text('Ação BlackGold'), findsOneWidget);
+    await tester.tap(find.text('Ação BlackGold'));
+    expect(tapped, isTrue);
   });
 }
