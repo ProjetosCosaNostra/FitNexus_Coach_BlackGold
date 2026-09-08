@@ -311,7 +311,7 @@ class LandingPage extends StatelessWidget {
 
   Widget _hero(BuildContext context, double u) {
     return SizedBox(
-      height: 205 * u,
+      height: 216 * u,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -342,7 +342,7 @@ class LandingPage extends StatelessWidget {
                 bottomRight: Radius.circular(10 * u),
               ),
               child: Image.asset(
-                'assets/images/fitnexus_mobile_approved_hero_overlap.webp',
+                'assets/images/fitnexus_mobile_approved_hero.webp',
                 fit: BoxFit.cover,
                 alignment: Alignment.centerRight,
               ),
