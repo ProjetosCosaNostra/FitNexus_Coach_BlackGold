@@ -1,12 +1,33 @@
 import 'package:flutter/material.dart';
 
+import 'blackgold_tokens.dart';
+
+/// Backwards-compatible color facade.
+///
+/// Existing screens may keep importing [AppColors], but every value now comes
+/// from the single BlackGold visual authority. New code should prefer the
+/// semantic names exposed here or [BlackGoldPalette] directly.
 class AppColors {
-  static const Color black = Color(0xFF070707);
-  static const Color blackSoft = Color(0xFF111111);
-  static const Color card = Color(0xFF171717);
-  static const Color gold = Color(0xFFD4AF37);
-  static const Color goldSoft = Color(0xFFFFD76A);
-  static const Color text = Color(0xFFF5F5F5);
-  static const Color muted = Color(0xFFB8B8B8);
-  static const Color border = Color(0xFF3A2F13);
+  const AppColors._();
+
+  static const Color black = BlackGoldPalette.canvas;
+  static const Color blackSoft = BlackGoldPalette.canvasSoft;
+  static const Color card = BlackGoldPalette.surface;
+  static const Color cardRaised = BlackGoldPalette.surfaceRaised;
+  static const Color cardSoft = BlackGoldPalette.surfaceMuted;
+
+  static const Color gold = BlackGoldPalette.gold;
+  static const Color goldSoft = BlackGoldPalette.goldBright;
+  static const Color goldDeep = BlackGoldPalette.goldDeep;
+
+  static const Color text = BlackGoldPalette.textPrimary;
+  static const Color muted = BlackGoldPalette.textSecondary;
+  static const Color mutedSoft = BlackGoldPalette.textTertiary;
+
+  static const Color border = BlackGoldPalette.goldBorderSoft;
+  static const Color borderGold = BlackGoldPalette.goldBorder;
+
+  static const Color success = BlackGoldPalette.success;
+  static const Color warning = BlackGoldPalette.warning;
+  static const Color danger = BlackGoldPalette.danger;
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/blackgold_tokens.dart';
 import '../auth/auth_service.dart';
 import 'professor_data_repository.dart';
 
@@ -7,10 +9,12 @@ class ProfessorLiveDashboardPage extends StatefulWidget {
   const ProfessorLiveDashboardPage({super.key});
 
   @override
-  State<ProfessorLiveDashboardPage> createState() => _ProfessorLiveDashboardPageState();
+  State<ProfessorLiveDashboardPage> createState() =>
+      _ProfessorLiveDashboardPageState();
 }
 
-class _ProfessorLiveDashboardPageState extends State<ProfessorLiveDashboardPage> {
+class _ProfessorLiveDashboardPageState
+    extends State<ProfessorLiveDashboardPage> {
   final ProfessorDataRepository _repository = ProfessorDataRepository.instance;
 
   List<StudentRecord> _students = const <StudentRecord>[];
@@ -54,7 +58,7 @@ class _ProfessorLiveDashboardPageState extends State<ProfessorLiveDashboardPage>
   Future<void> _createStudent() async {
     final _NewStudentInput? input = await showDialog<_NewStudentInput>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.72),
+      barrierColor: Colors.black.withValues(alpha: 0.78),
       builder: (BuildContext context) => const _NewStudentDialog(),
     );
 
@@ -85,7 +89,7 @@ class _ProfessorLiveDashboardPageState extends State<ProfessorLiveDashboardPage>
 
     final _TrainingInput? input = await showDialog<_TrainingInput>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.72),
+      barrierColor: Colors.black.withValues(alpha: 0.78),
       builder: (BuildContext context) => _TrainingDialog(students: _students),
     );
 
@@ -111,8 +115,9 @@ class _ProfessorLiveDashboardPageState extends State<ProfessorLiveDashboardPage>
   void _toast(String message, {bool error = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: error ? const Color(0xFF5A1919) : _LiveColors.card,
+        backgroundColor: error
+            ? AppColors.danger.withValues(alpha: 0.24)
+            : AppColors.cardRaised,
         content: Text(message),
       ),
     );
@@ -120,61 +125,148 @@ class _ProfessorLiveDashboardPageState extends State<ProfessorLiveDashboardPage>
 
   int get _averageAdherence {
     if (_students.isEmpty) return 0;
-    final int total = _students.fold<int>(0, (int sum, StudentRecord student) => sum + student.adherence);
+    final int total = _students.fold<int>(
+      0,
+      (int sum, StudentRecord student) => sum + student.adherence,
+    );
     return (total / _students.length).round();
+  }
+
+  String _studentName(String studentId) {
+    for (final StudentRecord student in _students) {
+      if (student.id == studentId) return student.name;
+    }
+    return 'Aluno';
   }
 
   @override
   Widget build(BuildContext context) {
-    final String professorEmail = AuthService.instance.currentUser?.email ?? 'Professor';
+    final String professorEmail =
+        AuthService.instance.currentUser?.email ?? 'Professor';
+    final List<TrainingPlanRecord> activePlans =
+        _plans.where((TrainingPlanRecord plan) => plan.isActive).toList();
 
     return Scaffold(
-      backgroundColor: _LiveColors.black,
-      body: SafeArea(
-        child: RefreshIndicator(
-          color: _LiveColors.gold,
-          onRefresh: _reload,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 120),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1420),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    _DashboardHeader(
-                      email: professorEmail,
-                      loading: _loading,
-                      onRefresh: _reload,
+      backgroundColor: AppColors.black,
+      body: Stack(
+        children: <Widget>[
+          const Positioned.fill(child: _DashboardAtmosphere()),
+          SafeArea(
+            child: RefreshIndicator(
+              color: AppColors.gold,
+              backgroundColor: AppColors.cardRaised,
+              onRefresh: _reload,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(
+                  BlackGoldSpace.lg,
+                  BlackGoldSpace.xl,
+                  BlackGoldSpace.lg,
+                  120,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1420),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        _DashboardHeader(
+                          email: professorEmail,
+                          loading: _loading,
+                          onRefresh: _reload,
+                          onNewStudent: _createStudent,
+                          onNewTraining: _createTraining,
+                        ),
+                        const SizedBox(height: BlackGoldSpace.lg),
+                        _StatsRow(
+                          students: _students.length,
+                          plans: activePlans.length,
+                          adherence: _averageAdherence,
+                          scheduled: _students
+                              .where((student) =>
+                                  (student.nextSession ?? '').trim().isNotEmpty)
+                              .length,
+                        ),
+                        if (_error != null) ...<Widget>[
+                          const SizedBox(height: BlackGoldSpace.sm),
+                          _ErrorPanel(message: _error!, onRetry: _reload),
+                        ],
+                        const SizedBox(height: BlackGoldSpace.lg),
+                        LayoutBuilder(
+                          builder: (
+                            BuildContext context,
+                            BoxConstraints constraints,
+                          ) {
+                            if (constraints.maxWidth < 980) {
+                              return Column(
+                                children: <Widget>[
+                                  _StudentsPanel(
+                                    students: _students,
+                                    loading: _loading,
+                                    onNewStudent: _createStudent,
+                                  ),
+                                  const SizedBox(height: BlackGoldSpace.lg),
+                                  _PlansPanel(
+                                    plans: _plans,
+                                    studentName: _studentName,
+                                    onNewTraining: _createTraining,
+                                  ),
+                                ],
+                              );
+                            }
+
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Expanded(
+                                  flex: 6,
+                                  child: _StudentsPanel(
+                                    students: _students,
+                                    loading: _loading,
+                                    onNewStudent: _createStudent,
+                                  ),
+                                ),
+                                const SizedBox(width: BlackGoldSpace.lg),
+                                Expanded(
+                                  flex: 5,
+                                  child: _PlansPanel(
+                                    plans: _plans,
+                                    studentName: _studentName,
+                                    onNewTraining: _createTraining,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 24),
-                    _HeroActions(
-                      onNewStudent: _createStudent,
-                      onNewTraining: _createTraining,
-                    ),
-                    const SizedBox(height: 20),
-                    _StatsRow(
-                      students: _students.length,
-                      plans: _plans.where((TrainingPlanRecord plan) => plan.isActive).length,
-                      adherence: _averageAdherence,
-                    ),
-                    if (_error != null) ...<Widget>[
-                      const SizedBox(height: 18),
-                      _ErrorPanel(message: _error!, onRetry: _reload),
-                    ],
-                    const SizedBox(height: 22),
-                    _StudentsPanel(
-                      students: _students,
-                      loading: _loading,
-                      onNewStudent: _createStudent,
-                    ),
-                    const SizedBox(height: 22),
-                    _PlansPanel(plans: _plans, students: _students),
-                  ],
+                  ),
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardAtmosphere extends StatelessWidget {
+  const _DashboardAtmosphere();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: const Alignment(0.75, -0.95),
+            radius: 1.2,
+            colors: <Color>[
+              AppColors.gold.withValues(alpha: 0.075),
+              Colors.transparent,
+            ],
           ),
         ),
       ),
@@ -187,162 +279,143 @@ class _DashboardHeader extends StatelessWidget {
     required this.email,
     required this.loading,
     required this.onRefresh,
+    required this.onNewStudent,
+    required this.onNewTraining,
   });
 
   final String email;
   final bool loading;
   final Future<void> Function() onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 18,
-      runSpacing: 16,
-      alignment: WrapAlignment.spaceBetween,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: <Widget>[
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                gradient: _LiveColors.goldGradient,
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: <BoxShadow>[
-                  BoxShadow(
-                    color: _LiveColors.gold.withValues(alpha: 0.25),
-                    blurRadius: 26,
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.fitness_center_rounded, color: Colors.black),
-            ),
-            const SizedBox(width: 14),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                const Text(
-                  'FitNexus Coach',
-                  style: TextStyle(
-                    color: _LiveColors.text,
-                    fontSize: 23,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  email,
-                  style: const TextStyle(color: _LiveColors.muted, fontSize: 12),
-                ),
-              ],
-            ),
-          ],
-        ),
-        IconButton.filledTonal(
-          tooltip: 'Atualizar dados',
-          onPressed: loading ? null : onRefresh,
-          icon: loading
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.refresh_rounded),
-        ),
-      ],
-    );
-  }
-}
-
-class _HeroActions extends StatelessWidget {
-  const _HeroActions({
-    required this.onNewStudent,
-    required this.onNewTraining,
-  });
-
   final VoidCallback onNewStudent;
   final VoidCallback onNewTraining;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.all(BlackGoldSpace.xl),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
-          colors: <Color>[Color(0xFF171205), Color(0xFF0D0D0D)],
-        ),
-        border: Border.all(color: _LiveColors.border),
+        gradient: BlackGoldEffects.panelGradient,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.hero),
+        border: Border.all(color: AppColors.borderGold),
+        boxShadow: BlackGoldEffects.cardShadow,
       ),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
-          final bool narrow = constraints.maxWidth < 760;
-          final Widget copy = const Column(
+          final Widget copy = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(
-                'PAINEL AO VIVO',
-                style: TextStyle(
-                  color: _LiveColors.goldSoft,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 12,
-                  letterSpacing: 1,
-                ),
+              Row(
+                children: <Widget>[
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: BlackGoldEffects.goldGradient,
+                      borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+                      boxShadow: BlackGoldEffects.goldGlow,
+                    ),
+                    child: const Icon(
+                      Icons.fitness_center_rounded,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(width: BlackGoldSpace.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const Text(
+                          'PAINEL OPERACIONAL',
+                          style: TextStyle(
+                            color: AppColors.goldSoft,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: BlackGoldSpace.xxs),
+                        const Text(
+                          'Alunos e treinos no mesmo centro de comando',
+                          style: TextStyle(
+                            color: AppColors.text,
+                            fontSize: 28,
+                            height: 1.06,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.6,
+                          ),
+                        ),
+                        const SizedBox(height: BlackGoldSpace.xxs),
+                        Text(
+                          email,
+                          style: const TextStyle(
+                            color: AppColors.mutedSoft,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: 10),
-              Text(
-                'Alunos e treinos agora vivem no seu banco FitNexus.',
+              const SizedBox(height: BlackGoldSpace.md),
+              const Text(
+                'Cada registro é isolado por organização e protegido por RLS no Postgres. Use este painel para cadastrar alunos e criar prescrições reais.',
                 style: TextStyle(
-                  color: _LiveColors.text,
-                  fontSize: 28,
-                  height: 1.12,
-                  fontWeight: FontWeight.w900,
+                  color: AppColors.muted,
+                  fontSize: 14,
+                  height: 1.5,
                 ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Cada registro é isolado pela sua organização e protegido por RLS no Postgres.',
-                style: TextStyle(color: _LiveColors.muted, height: 1.45),
               ),
             ],
           );
 
           final Widget actions = Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: BlackGoldSpace.xs,
+            runSpacing: BlackGoldSpace.xs,
             children: <Widget>[
-              _GoldAction(
-                label: 'Novo aluno',
-                icon: Icons.person_add_alt_1_rounded,
+              FilledButton.icon(
+                key: const ValueKey<String>('live-dashboard-new-student'),
                 onPressed: onNewStudent,
+                icon: const Icon(Icons.person_add_alt_1_rounded),
+                label: const Text('Novo aluno'),
               ),
               OutlinedButton.icon(
+                key: const ValueKey<String>('live-dashboard-new-training'),
                 onPressed: onNewTraining,
                 icon: const Icon(Icons.assignment_add),
                 label: const Text('Criar treino'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: _LiveColors.text,
-                  side: const BorderSide(color: _LiveColors.border),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                ),
+              ),
+              IconButton.outlined(
+                tooltip: 'Atualizar dados',
+                onPressed: loading ? null : onRefresh,
+                icon: loading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh_rounded),
               ),
             ],
           );
 
-          if (narrow) {
+          if (constraints.maxWidth < BlackGoldBreakpoints.tablet) {
             return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[copy, const SizedBox(height: 20), actions],
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                copy,
+                const SizedBox(height: BlackGoldSpace.lg),
+                actions,
+              ],
             );
           }
 
           return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Expanded(child: copy),
-              const SizedBox(width: 26),
-              actions,
+              Expanded(flex: 7, child: copy),
+              const SizedBox(width: BlackGoldSpace.xxl),
+              Flexible(flex: 5, child: actions),
             ],
           );
         },
@@ -352,54 +425,131 @@ class _HeroActions extends StatelessWidget {
 }
 
 class _StatsRow extends StatelessWidget {
-  const _StatsRow({required this.students, required this.plans, required this.adherence});
+  const _StatsRow({
+    required this.students,
+    required this.plans,
+    required this.adherence,
+    required this.scheduled,
+  });
 
   final int students;
   final int plans;
   final int adherence;
+  final int scheduled;
 
   @override
   Widget build(BuildContext context) {
+    final List<_StatData> data = <_StatData>[
+      _StatData(Icons.groups_rounded, '$students', 'Alunos', 'cadastrados'),
+      _StatData(
+        Icons.assignment_turned_in_rounded,
+        '$plans',
+        'Treinos ativos',
+        'em acompanhamento',
+      ),
+      _StatData(
+        Icons.trending_up_rounded,
+        '$adherence%',
+        'Aderência média',
+        'da base atual',
+      ),
+      _StatData(
+        Icons.event_available_rounded,
+        '$scheduled',
+        'Próximas sessões',
+        'com agenda definida',
+      ),
+    ];
+
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final int columns = constraints.maxWidth < 680 ? 1 : 3;
-        const double gap = 12;
-        final double width = (constraints.maxWidth - gap * (columns - 1)) / columns;
-
+        final int columns = constraints.maxWidth >= 1040
+            ? 4
+            : constraints.maxWidth >= BlackGoldBreakpoints.mobile
+                ? 2
+                : 1;
+        const double gap = BlackGoldSpace.sm;
+        final double width =
+            (constraints.maxWidth - gap * (columns - 1)) / columns;
         return Wrap(
           spacing: gap,
           runSpacing: gap,
-          children: <Widget>[
-            SizedBox(width: width, child: _StatCard(icon: Icons.groups_rounded, value: '$students', label: 'Alunos cadastrados')),
-            SizedBox(width: width, child: _StatCard(icon: Icons.assignment_turned_in_rounded, value: '$plans', label: 'Treinos ativos')),
-            SizedBox(width: width, child: _StatCard(icon: Icons.trending_up_rounded, value: '$adherence%', label: 'Aderência média')),
-          ],
+          children: data
+              .map((item) => SizedBox(width: width, child: _StatCard(data: item)))
+              .toList(growable: false),
         );
       },
     );
   }
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({required this.icon, required this.value, required this.label});
+class _StatData {
+  const _StatData(this.icon, this.value, this.label, this.detail);
 
   final IconData icon;
   final String value;
   final String label;
+  final String detail;
+}
+
+class _StatCard extends StatelessWidget {
+  const _StatCard({required this.data});
+
+  final _StatData data;
 
   @override
   Widget build(BuildContext context) {
-    return _Panel(
+    return Container(
+      padding: const EdgeInsets.all(BlackGoldSpace.md),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+        border: Border.all(color: AppColors.border),
+        boxShadow: BlackGoldEffects.cardShadow,
+      ),
       child: Row(
         children: <Widget>[
-          Icon(icon, color: _LiveColors.goldSoft, size: 28),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(value, style: const TextStyle(color: _LiveColors.text, fontSize: 25, fontWeight: FontWeight.w900)),
-              Text(label, style: const TextStyle(color: _LiveColors.muted, fontSize: 12)),
-            ],
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.09),
+              borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Icon(data.icon, color: AppColors.goldSoft),
+          ),
+          const SizedBox(width: BlackGoldSpace.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  data.value,
+                  style: const TextStyle(
+                    color: AppColors.text,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(
+                  data.label,
+                  style: const TextStyle(
+                    color: AppColors.goldSoft,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  data.detail,
+                  style: const TextStyle(
+                    color: AppColors.mutedSoft,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -421,31 +571,39 @@ class _StudentsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Panel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const _PanelTitle(title: 'Alunos', subtitle: 'Dados reais da sua organização'),
-          const SizedBox(height: 18),
-          if (loading && students.isEmpty)
-            const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator(color: _LiveColors.gold)))
-          else if (students.isEmpty)
-            _EmptyState(
-              icon: Icons.group_add_rounded,
-              title: 'Nenhum aluno cadastrado ainda',
-              text: 'Crie o primeiro aluno e o FitNexus começa a montar sua base real.',
-              action: _GoldAction(label: 'Cadastrar primeiro aluno', icon: Icons.add_rounded, onPressed: onNewStudent),
-            )
-          else
-            Column(
-              children: students
-                  .map((StudentRecord student) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _StudentRow(student: student),
-                      ))
-                  .toList(growable: false),
-            ),
-        ],
+      icon: Icons.groups_rounded,
+      eyebrow: 'BASE DE ALUNOS',
+      title: 'Alunos',
+      action: TextButton.icon(
+        onPressed: onNewStudent,
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Adicionar'),
       ),
+      child: loading && students.isEmpty
+          ? const _InlineLoading(text: 'Carregando alunos…')
+          : students.isEmpty
+              ? _EmptyState(
+                  icon: Icons.group_add_rounded,
+                  title: 'Nenhum aluno cadastrado ainda',
+                  text:
+                      'Crie o primeiro aluno e o FitNexus começa a montar sua base real.',
+                  action: FilledButton.icon(
+                    onPressed: onNewStudent,
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text('Cadastrar primeiro aluno'),
+                  ),
+                )
+              : Column(
+                  children: students
+                      .map(
+                        (StudentRecord student) => Padding(
+                          padding:
+                              const EdgeInsets.only(bottom: BlackGoldSpace.xs),
+                          child: _StudentRow(student: student),
+                        ),
+                      )
+                      .toList(growable: false),
+                ),
     );
   }
 }
@@ -465,102 +623,428 @@ class _StudentRow extends StatelessWidget {
         .join();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(BlackGoldSpace.sm),
       decoration: BoxDecoration(
-        color: _LiveColors.cardSoft,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _LiveColors.border),
+        color: AppColors.cardRaised,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+        border: Border.all(color: AppColors.border),
       ),
-      child: Row(
-        children: <Widget>[
-          CircleAvatar(
-            backgroundColor: _LiveColors.gold,
-            foregroundColor: Colors.black,
-            child: Text(initials, style: const TextStyle(fontWeight: FontWeight.w900)),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(student.name, style: const TextStyle(color: _LiveColors.text, fontSize: 16, fontWeight: FontWeight.w900)),
-                const SizedBox(height: 4),
-                Text('${student.objective} • ${student.level}', style: const TextStyle(color: _LiveColors.muted, fontSize: 12)),
-                if ((student.lastWorkout ?? '').isNotEmpty) ...<Widget>[
-                  const SizedBox(height: 4),
-                  Text('Último treino: ${student.lastWorkout}', style: const TextStyle(color: _LiveColors.muted, fontSize: 12)),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final Widget identity = Row(
             children: <Widget>[
-              Text('${student.adherence}%', style: const TextStyle(color: _LiveColors.goldSoft, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 3),
-              Text(student.status, style: const TextStyle(color: _LiveColors.muted, fontSize: 11)),
+              CircleAvatar(
+                backgroundColor: AppColors.gold,
+                foregroundColor: Colors.black,
+                child: Text(
+                  initials,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+              const SizedBox(width: BlackGoldSpace.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      student.name,
+                      style: const TextStyle(
+                        color: AppColors.text,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: BlackGoldSpace.xxs),
+                    Text(
+                      '${student.objective} • ${student.level}',
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 11,
+                      ),
+                    ),
+                    if ((student.lastWorkout ?? '').trim().isNotEmpty) ...<Widget>[
+                      const SizedBox(height: BlackGoldSpace.xxs),
+                      Text(
+                        'Último treino: ${student.lastWorkout}',
+                        style: const TextStyle(
+                          color: AppColors.mutedSoft,
+                          fontSize: 10.5,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ],
-          ),
-        ],
+          );
+
+          final Widget status = Wrap(
+            spacing: BlackGoldSpace.xs,
+            runSpacing: BlackGoldSpace.xs,
+            children: <Widget>[
+              _Pill(
+                label: '${student.adherence}% aderência',
+                color: student.adherence >= 75
+                    ? AppColors.success
+                    : AppColors.warning,
+              ),
+              _Pill(label: student.status, color: AppColors.goldSoft),
+            ],
+          );
+
+          if (constraints.maxWidth < 620) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                identity,
+                const SizedBox(height: BlackGoldSpace.sm),
+                status,
+              ],
+            );
+          }
+
+          return Row(
+            children: <Widget>[
+              Expanded(child: identity),
+              const SizedBox(width: BlackGoldSpace.sm),
+              status,
+            ],
+          );
+        },
       ),
     );
   }
 }
 
 class _PlansPanel extends StatelessWidget {
-  const _PlansPanel({required this.plans, required this.students});
+  const _PlansPanel({
+    required this.plans,
+    required this.studentName,
+    required this.onNewTraining,
+  });
 
   final List<TrainingPlanRecord> plans;
-  final List<StudentRecord> students;
-
-  String _studentName(String id) {
-    for (final StudentRecord student in students) {
-      if (student.id == id) return student.name;
-    }
-    return 'Aluno';
-  }
+  final String Function(String studentId) studentName;
+  final VoidCallback onNewTraining;
 
   @override
   Widget build(BuildContext context) {
     return _Panel(
+      icon: Icons.assignment_turned_in_rounded,
+      eyebrow: 'PRESCRIÇÕES',
+      title: 'Treinos',
+      action: TextButton.icon(
+        onPressed: onNewTraining,
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Criar'),
+      ),
+      child: plans.isEmpty
+          ? _EmptyState(
+              icon: Icons.assignment_add,
+              title: 'Nenhum treino criado ainda',
+              text:
+                  'Crie a primeira prescrição para conectar um aluno a um treino real.',
+              action: FilledButton.icon(
+                onPressed: onNewTraining,
+                icon: const Icon(Icons.assignment_add),
+                label: const Text('Criar primeiro treino'),
+              ),
+            )
+          : Column(
+              children: plans
+                  .map(
+                    (TrainingPlanRecord plan) => Padding(
+                      padding:
+                          const EdgeInsets.only(bottom: BlackGoldSpace.xs),
+                      child: _PlanRow(
+                        plan: plan,
+                        studentName: studentName(plan.studentId),
+                      ),
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
+    );
+  }
+}
+
+class _PlanRow extends StatelessWidget {
+  const _PlanRow({required this.plan, required this.studentName});
+
+  final TrainingPlanRecord plan;
+  final String studentName;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color accent = plan.isActive ? AppColors.success : AppColors.mutedSoft;
+    return Container(
+      padding: const EdgeInsets.all(BlackGoldSpace.sm),
+      decoration: BoxDecoration(
+        color: AppColors.cardRaised,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+        border: Border.all(color: AppColors.border),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const _PanelTitle(title: 'Treinos', subtitle: 'Planos persistidos no Supabase'),
-          const SizedBox(height: 18),
-          if (plans.isEmpty)
-            const Text('Nenhum treino criado ainda.', style: TextStyle(color: _LiveColors.muted))
-          else
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: plans
-                  .map((TrainingPlanRecord plan) => ConstrainedBox(
-                        constraints: const BoxConstraints(minWidth: 250, maxWidth: 390),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: _LiveColors.cardSoft,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: _LiveColors.border),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(plan.name, style: const TextStyle(color: _LiveColors.text, fontWeight: FontWeight.w900, fontSize: 16)),
-                              const SizedBox(height: 6),
-                              Text(_studentName(plan.studentId), style: const TextStyle(color: _LiveColors.goldSoft, fontSize: 12)),
-                              if ((plan.nextSession ?? '').isNotEmpty) ...<Widget>[
-                                const SizedBox(height: 8),
-                                Text('Próxima sessão: ${plan.nextSession}', style: const TextStyle(color: _LiveColors.muted, fontSize: 12)),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ))
-                  .toList(growable: false),
+          Row(
+            children: <Widget>[
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+                ),
+                child: Icon(
+                  Icons.fitness_center_rounded,
+                  color: accent,
+                  size: 19,
+                ),
+              ),
+              const SizedBox(width: BlackGoldSpace.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      plan.name,
+                      style: const TextStyle(
+                        color: AppColors.text,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: BlackGoldSpace.xxs),
+                    Text(
+                      studentName,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _Pill(
+                label: plan.isActive ? 'ATIVO' : 'ARQUIVADO',
+                color: accent,
+              ),
+            ],
+          ),
+          if ((plan.nextSession ?? '').trim().isNotEmpty) ...<Widget>[
+            const SizedBox(height: BlackGoldSpace.sm),
+            Row(
+              children: <Widget>[
+                const Icon(
+                  Icons.event_rounded,
+                  color: AppColors.goldSoft,
+                  size: 15,
+                ),
+                const SizedBox(width: BlackGoldSpace.xs),
+                Expanded(
+                  child: Text(
+                    'Próxima sessão: ${plan.nextSession}',
+                    style: const TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
             ),
+          ],
+          if ((plan.notes ?? '').trim().isNotEmpty) ...<Widget>[
+            const SizedBox(height: BlackGoldSpace.xs),
+            Text(
+              plan.notes!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.mutedSoft,
+                fontSize: 10.5,
+                height: 1.35,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _Panel extends StatelessWidget {
+  const _Panel({
+    required this.icon,
+    required this.eyebrow,
+    required this.title,
+    required this.child,
+    this.action,
+  });
+
+  final IconData icon;
+  final String eyebrow;
+  final String title;
+  final Widget child;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(BlackGoldSpace.lg),
+      decoration: BoxDecoration(
+        gradient: BlackGoldEffects.panelGradient,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+        border: Border.all(color: AppColors.borderGold),
+        boxShadow: BlackGoldEffects.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.09),
+                  borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Icon(icon, color: AppColors.goldSoft, size: 20),
+              ),
+              const SizedBox(width: BlackGoldSpace.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      eyebrow,
+                      style: const TextStyle(
+                        color: AppColors.goldSoft,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.9,
+                      ),
+                    ),
+                    const SizedBox(height: BlackGoldSpace.xxs),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: AppColors.text,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (action != null) action!,
+            ],
+          ),
+          const SizedBox(height: BlackGoldSpace.md),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.09),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.pill),
+        border: Border.all(color: color.withValues(alpha: 0.24)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({
+    required this.icon,
+    required this.title,
+    required this.text,
+    required this.action,
+  });
+
+  final IconData icon;
+  final String title;
+  final String text;
+  final Widget action;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: BlackGoldSpace.xl),
+      child: Column(
+        children: <Widget>[
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: AppColors.gold.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Icon(icon, color: AppColors.goldSoft, size: 28),
+          ),
+          const SizedBox(height: BlackGoldSpace.sm),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AppColors.text,
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: BlackGoldSpace.xs),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.muted, height: 1.4),
+          ),
+          const SizedBox(height: BlackGoldSpace.md),
+          action,
+        ],
+      ),
+    );
+  }
+}
+
+class _InlineLoading extends StatelessWidget {
+  const _InlineLoading({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(BlackGoldSpace.xl),
+      child: Column(
+        children: <Widget>[
+          const CircularProgressIndicator(color: AppColors.gold),
+          const SizedBox(height: BlackGoldSpace.sm),
+          Text(text, style: const TextStyle(color: AppColors.muted)),
         ],
       ),
     );
@@ -576,112 +1060,25 @@ class _ErrorPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(BlackGoldSpace.md),
       decoration: BoxDecoration(
-        color: const Color(0xFF351313),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+        color: AppColors.danger.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+        border: Border.all(color: AppColors.danger.withValues(alpha: 0.35)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Icon(Icons.error_outline_rounded, color: Colors.redAccent),
-          const SizedBox(width: 12),
-          Expanded(child: Text(message, style: const TextStyle(color: _LiveColors.text))),
+          const Icon(Icons.error_outline_rounded, color: AppColors.danger),
+          const SizedBox(width: BlackGoldSpace.sm),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: AppColors.text, height: 1.4),
+            ),
+          ),
           TextButton(onPressed: onRetry, child: const Text('Tentar novamente')),
         ],
-      ),
-    );
-  }
-}
-
-class _Panel extends StatelessWidget {
-  const _Panel({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: _LiveColors.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _LiveColors.border),
-      ),
-      child: child,
-    );
-  }
-}
-
-class _PanelTitle extends StatelessWidget {
-  const _PanelTitle({required this.title, required this.subtitle});
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(title, style: const TextStyle(color: _LiveColors.text, fontSize: 21, fontWeight: FontWeight.w900)),
-        const SizedBox(height: 4),
-        Text(subtitle, style: const TextStyle(color: _LiveColors.muted, fontSize: 12)),
-      ],
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.icon, required this.title, required this.text, required this.action});
-
-  final IconData icon;
-  final String title;
-  final String text;
-  final Widget action;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 30),
-        child: Column(
-          children: <Widget>[
-            Icon(icon, color: _LiveColors.goldSoft, size: 42),
-            const SizedBox(height: 12),
-            Text(title, textAlign: TextAlign.center, style: const TextStyle(color: _LiveColors.text, fontSize: 18, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 6),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Text(text, textAlign: TextAlign.center, style: const TextStyle(color: _LiveColors.muted, height: 1.4)),
-            ),
-            const SizedBox(height: 18),
-            action,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _GoldAction extends StatelessWidget {
-  const _GoldAction({required this.label, required this.icon, required this.onPressed});
-
-  final String label;
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return FilledButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon),
-      label: Text(label),
-      style: FilledButton.styleFrom(
-        backgroundColor: _LiveColors.gold,
-        foregroundColor: Colors.black,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        textStyle: const TextStyle(fontWeight: FontWeight.w900),
       ),
     );
   }
@@ -714,7 +1111,8 @@ class _NewStudentDialogState extends State<_NewStudentDialog> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _name = TextEditingController();
   final TextEditingController _email = TextEditingController();
-  final TextEditingController _objective = TextEditingController(text: 'Hipertrofia');
+  final TextEditingController _objective =
+      TextEditingController(text: 'Hipertrofia');
   final TextEditingController _level = TextEditingController(text: 'Iniciante');
   final TextEditingController _next = TextEditingController();
 
@@ -731,8 +1129,11 @@ class _NewStudentDialogState extends State<_NewStudentDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: _LiveColors.card,
-      title: const Text('Novo aluno'),
+      title: const _DialogTitle(
+        icon: Icons.person_add_alt_1_rounded,
+        eyebrow: 'BASE DE ALUNOS',
+        title: 'Novo aluno',
+      ),
       content: SizedBox(
         width: 520,
         child: Form(
@@ -741,14 +1142,26 @@ class _NewStudentDialogState extends State<_NewStudentDialog> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                _Field(controller: _name, label: 'Nome *', validator: _required),
-                const SizedBox(height: 10),
+                _Field(
+                  controller: _name,
+                  label: 'Nome *',
+                  validator: _required,
+                ),
+                const SizedBox(height: BlackGoldSpace.sm),
                 _Field(controller: _email, label: 'E-mail'),
-                const SizedBox(height: 10),
-                _Field(controller: _objective, label: 'Objetivo *', validator: _required),
-                const SizedBox(height: 10),
-                _Field(controller: _level, label: 'Nível *', validator: _required),
-                const SizedBox(height: 10),
+                const SizedBox(height: BlackGoldSpace.sm),
+                _Field(
+                  controller: _objective,
+                  label: 'Objetivo *',
+                  validator: _required,
+                ),
+                const SizedBox(height: BlackGoldSpace.sm),
+                _Field(
+                  controller: _level,
+                  label: 'Nível *',
+                  validator: _required,
+                ),
+                const SizedBox(height: BlackGoldSpace.sm),
                 _Field(controller: _next, label: 'Próxima sessão'),
               ],
             ),
@@ -756,8 +1169,11 @@ class _NewStudentDialogState extends State<_NewStudentDialog> {
         ),
       ),
       actions: <Widget>[
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-        FilledButton(
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton.icon(
           onPressed: () {
             if (!(_formKey.currentState?.validate() ?? false)) return;
             Navigator.pop(
@@ -771,7 +1187,8 @@ class _NewStudentDialogState extends State<_NewStudentDialog> {
               ),
             );
           },
-          child: const Text('Salvar'),
+          icon: const Icon(Icons.check_rounded),
+          label: const Text('Salvar aluno'),
         ),
       ],
     );
@@ -814,7 +1231,8 @@ class _TrainingDialogState extends State<_TrainingDialog> {
   final TextEditingController _next = TextEditingController();
   final TextEditingController _notes = TextEditingController();
   final TextEditingController _exercises = TextEditingController(
-    text: 'Agachamento livre | 3x10\nSupino reto | 3x10\nRemada baixa | 3x12',
+    text:
+        'Agachamento livre | 3x10\nSupino reto | 3x10\nRemada baixa | 3x12',
   );
 
   @override
@@ -835,7 +1253,8 @@ class _TrainingDialogState extends State<_TrainingDialog> {
           final List<String> parts = line.split('|');
           return TrainingExerciseDraft(
             name: parts.first.trim(),
-            prescription: parts.length > 1 ? parts.sublist(1).join('|').trim() : '',
+            prescription:
+                parts.length > 1 ? parts.sublist(1).join('|').trim() : '',
           );
         })
         .toList(growable: false);
@@ -844,8 +1263,11 @@ class _TrainingDialogState extends State<_TrainingDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: _LiveColors.card,
-      title: const Text('Criar treino'),
+      title: const _DialogTitle(
+        icon: Icons.assignment_add,
+        eyebrow: 'PRESCRIÇÃO',
+        title: 'Criar treino',
+      ),
       content: SizedBox(
         width: 600,
         child: Form(
@@ -856,29 +1278,47 @@ class _TrainingDialogState extends State<_TrainingDialog> {
               children: <Widget>[
                 DropdownButtonFormField<String>(
                   initialValue: _studentId,
-                  dropdownColor: _LiveColors.card,
+                  dropdownColor: AppColors.cardRaised,
                   decoration: const InputDecoration(labelText: 'Aluno'),
                   items: widget.students
-                      .map((StudentRecord student) => DropdownMenuItem<String>(value: student.id, child: Text(student.name)))
+                      .map(
+                        (StudentRecord student) => DropdownMenuItem<String>(
+                          value: student.id,
+                          child: Text(student.name),
+                        ),
+                      )
                       .toList(growable: false),
                   onChanged: (String? value) {
                     if (value != null) setState(() => _studentId = value);
                   },
                 ),
-                const SizedBox(height: 10),
-                _Field(controller: _name, label: 'Nome do treino *', validator: _required),
-                const SizedBox(height: 10),
+                const SizedBox(height: BlackGoldSpace.sm),
+                _Field(
+                  controller: _name,
+                  label: 'Nome do treino *',
+                  validator: _required,
+                ),
+                const SizedBox(height: BlackGoldSpace.sm),
                 _Field(controller: _next, label: 'Próxima sessão'),
-                const SizedBox(height: 10),
-                _Field(controller: _notes, label: 'Observações', maxLines: 2),
-                const SizedBox(height: 10),
+                const SizedBox(height: BlackGoldSpace.sm),
+                _Field(
+                  controller: _notes,
+                  label: 'Observações',
+                  maxLines: 2,
+                ),
+                const SizedBox(height: BlackGoldSpace.sm),
                 _Field(
                   controller: _exercises,
                   label: 'Exercícios — um por linha: nome | prescrição *',
                   maxLines: 7,
                   validator: (String? value) {
-                    if (value == null || value.trim().isEmpty) return 'Informe pelo menos um exercício.';
-                    if (_parseExercises().any((TrainingExerciseDraft exercise) => exercise.name.length < 2)) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Informe pelo menos um exercício.';
+                    }
+                    if (_parseExercises().any(
+                      (TrainingExerciseDraft exercise) =>
+                          exercise.name.length < 2,
+                    )) {
                       return 'Revise os nomes dos exercícios.';
                     }
                     return null;
@@ -890,8 +1330,11 @@ class _TrainingDialogState extends State<_TrainingDialog> {
         ),
       ),
       actions: <Widget>[
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-        FilledButton(
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton.icon(
           onPressed: () {
             if (!(_formKey.currentState?.validate() ?? false)) return;
             Navigator.pop(
@@ -905,7 +1348,8 @@ class _TrainingDialogState extends State<_TrainingDialog> {
               ),
             );
           },
-          child: const Text('Criar treino'),
+          icon: const Icon(Icons.check_rounded),
+          label: const Text('Criar treino'),
         ),
       ],
     );
@@ -913,6 +1357,61 @@ class _TrainingDialogState extends State<_TrainingDialog> {
 
   String? _required(String? value) {
     return value == null || value.trim().isEmpty ? 'Campo obrigatório.' : null;
+  }
+}
+
+class _DialogTitle extends StatelessWidget {
+  const _DialogTitle({
+    required this.icon,
+    required this.eyebrow,
+    required this.title,
+  });
+
+  final IconData icon;
+  final String eyebrow;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            gradient: BlackGoldEffects.goldGradient,
+            borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+          ),
+          child: Icon(icon, color: Colors.black, size: 20),
+        ),
+        const SizedBox(width: BlackGoldSpace.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                eyebrow,
+                style: const TextStyle(
+                  color: AppColors.goldSoft,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.9,
+                ),
+              ),
+              const SizedBox(height: BlackGoldSpace.xxs),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: AppColors.text,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -935,28 +1434,8 @@ class _Field extends StatelessWidget {
       controller: controller,
       validator: validator,
       maxLines: maxLines,
-      style: const TextStyle(color: _LiveColors.text),
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: _LiveColors.cardSoft,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-      ),
+      style: const TextStyle(color: AppColors.text),
+      decoration: InputDecoration(labelText: label),
     );
   }
-}
-
-class _LiveColors {
-  static const Color black = Color(0xFF050505);
-  static const Color card = Color(0xFF101010);
-  static const Color cardSoft = Color(0xFF171717);
-  static const Color border = Color(0xFF2C2A22);
-  static const Color gold = Color(0xFFE1B92F);
-  static const Color goldSoft = Color(0xFFFFD45A);
-  static const Color text = Color(0xFFF7F7F7);
-  static const Color muted = Color(0xFFB7B7B7);
-
-  static const LinearGradient goldGradient = LinearGradient(
-    colors: <Color>[goldSoft, gold],
-  );
 }

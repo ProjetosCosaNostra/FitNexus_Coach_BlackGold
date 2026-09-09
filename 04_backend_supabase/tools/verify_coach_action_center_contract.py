@@ -124,13 +124,13 @@ def main() -> int:
         ),
         (
             page,
-            "Concluir por hoje",
+            "Concluir hoje",
             "BGF-ACTION-WORKFLOW-041",
             "daily completion workflow disappeared",
         ),
         (
             page,
-            "Lembrar amanhã",
+            "Lembrar em 24h",
             "BGF-ACTION-WORKFLOW-041",
             "daily snooze workflow disappeared",
         ),

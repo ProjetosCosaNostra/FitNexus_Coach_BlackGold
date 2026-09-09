@@ -2,6 +2,8 @@
 # Windows bootstrap for the exact-SHA V2 runner.
 # Handles Windows PowerShell 5.1 native stderr semantics, patches parser compatibility,
 # then executes the real runner under PowerShell 7 (pwsh). No Play publication occurs.
+# V3 also hardens visual proof: production entrypoint must compile, visual capture bypasses
+# Supabase bootstrap only for the initial exact-SHA UI, and the dedicated AVD gets a clean install.
 
 [CmdletBinding()]
 param(
@@ -96,6 +98,59 @@ if ($Patched2 -eq $Patched) {
 }
 $Patched = $Patched2
 
+# Keep production main.dart as a mandatory compile gate, then build a visual-only
+# entrypoint from the exact same SHA that launches FitNexusApp directly. This avoids
+# a network/Supabase bootstrap hang from being mistaken for the approved Home UI.
+$ProductionBuildNeedle = "        Invoke-Native -FilePath `$Flutter -Arguments @('build', 'apk', '--release') -WorkingDirectory `$AppPath"
+$ProductionBuildReplacement = @'
+        Write-Host 'FITNEXUS_BUILD_GATE=PRODUCTION_ENTRYPOINT'
+        Invoke-Native -FilePath $Flutter -Arguments @('build', 'apk', '--release') -WorkingDirectory $AppPath
+        $State['production_entrypoint_compiled'] = $true
+
+        $VisualMain = Join-Path $AppPath 'lib\visual_approval_main_local.dart'
+        $VisualSource = @"
+import 'package:flutter/material.dart';
+import 'app/fitnexus_app.dart';
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const FitNexusApp());
+}
+"@
+        Write-Utf8NoBom -Path $VisualMain -Content ($VisualSource + [Environment]::NewLine)
+        $State['visual_entrypoint'] = 'lib/visual_approval_main_local.dart -> FitNexusApp exact-SHA UI/routes/theme'
+        $State['supabase_bootstrap_bypassed_for_visual_capture_only'] = $true
+        Write-Host 'FITNEXUS_BUILD_GATE=VISUAL_ENTRYPOINT'
+        Invoke-Native -FilePath $Flutter -Arguments @('build', 'apk', '--release', '-t', 'lib/visual_approval_main_local.dart') -WorkingDirectory $AppPath
+'@
+$Patched2 = $Patched.Replace($ProductionBuildNeedle, $ProductionBuildReplacement.TrimEnd())
+if ($Patched2 -eq $Patched) {
+    throw 'V3_VISUAL_ENTRYPOINT_PATCH_TARGET_NOT_FOUND'
+}
+$Patched = $Patched2
+
+# A pre-existing package is never trusted as visual evidence. Remove it from the
+# dedicated approval AVD, then install only the APK built from the pinned SHA.
+$InstallNeedle = '    $InstallOutput = & $Adb -s $Serial install -r $ApkPath 2>&1'
+$InstallReplacement = @'
+    & $Adb -s $Serial shell am force-stop $PackageName | Out-Null
+    $UninstallOutput = & $Adb -s $Serial uninstall $PackageName 2>&1
+    $UninstallExitCode = $LASTEXITCODE
+    $UninstallText = (($UninstallOutput | ForEach-Object { "$_" }) -join [Environment]::NewLine).Trim()
+    if ($UninstallExitCode -ne 0 -and $UninstallText -notmatch 'Unknown package|not installed|DELETE_FAILED_INTERNAL_ERROR') {
+        throw "ADB_UNINSTALL_FAILED ($UninstallExitCode): $UninstallText"
+    }
+    $State.data_wipe_performed = $true
+    $State['clean_install_performed'] = $true
+    Write-Host 'FITNEXUS_CLEAN_INSTALL=PASS'
+    $InstallOutput = & $Adb -s $Serial install $ApkPath 2>&1
+'@
+$Patched2 = $Patched.Replace($InstallNeedle, $InstallReplacement.TrimEnd())
+if ($Patched2 -eq $Patched) {
+    throw 'V3_CLEAN_INSTALL_PATCH_TARGET_NOT_FOUND'
+}
+$Patched = $Patched2
+
 $Tmp = Join-Path $env:TEMP ("FITNEXUS_VISUAL_APPROVAL_LOCAL_V2_FIXED_" + $RemoteSha.Substring(0, 12) + '.ps1')
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($Tmp, $Patched + [Environment]::NewLine, $Utf8NoBom)
@@ -112,6 +167,9 @@ Write-Host 'FITNEXUS_VISUAL_APPROVAL_V3_BOOTSTRAP=PASS'
 Write-Host "EXACT_SHA=$RemoteSha"
 Write-Host "PATCHED_V2=$Tmp"
 Write-Host "CHILD_SHELL=$Pwsh"
+Write-Host 'PRODUCTION_ENTRYPOINT_COMPILE_REQUIRED=true'
+Write-Host 'VISUAL_SUPABASE_BOOTSTRAP_BYPASS_ONLY=true'
+Write-Host 'CLEAN_INSTALL_REQUIRED=true'
 Write-Host 'PLAY_PUBLICATION_PERFORMED=false'
 Write-Host 'FITNEXUS_V3_STAGE=EXECUTE_REAL_LOCAL_RUNNER'
 

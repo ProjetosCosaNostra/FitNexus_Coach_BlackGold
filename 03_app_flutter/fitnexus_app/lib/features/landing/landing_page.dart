@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'blackgold_contract_landing_page.dart' as premium;
 import 'blackgold_desktop_home.dart';
+import 'blackgold_mockup_mobile_landing_page.dart' as premium;
 
 /// Public entry that preserves the frozen BlackGold mobile contract and uses
 /// a purpose-built desktop cockpit at 900 px and above.

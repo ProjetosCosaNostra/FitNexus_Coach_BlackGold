@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/blackgold_tokens.dart';
+import '../shared/fitnexus_floating_action.dart';
 import 'student_feedback_sheet.dart';
 import 'student_workout_page.dart';
 
@@ -28,8 +31,17 @@ class StudentExperiencePage extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      backgroundColor: const Color(0xFF080808),
-      barrierColor: Colors.black.withValues(alpha: 0.78),
+      backgroundColor: AppColors.cardRaised,
+      barrierColor: AppColors.black.withValues(alpha: 0.78),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(BlackGoldRadius.panel),
+        ),
+        side: BorderSide(
+          color: AppColors.borderGold,
+          width: BlackGoldStroke.hairline,
+        ),
+      ),
       builder: (_) => StudentFeedbackSheet(token: accessToken),
     );
   }
@@ -43,19 +55,15 @@ class StudentExperiencePage extends StatelessWidget {
         StudentWorkoutPage(token: accessToken),
         if (accessToken.isNotEmpty)
           Positioned(
-            right: 18,
-            bottom: 18,
+            right: BlackGoldSpace.md,
+            bottom: BlackGoldSpace.md,
             child: SafeArea(
-              child: FloatingActionButton.extended(
+              child: FitFloatingAction(
+                key: const ValueKey<String>('student-feedback-action'),
                 heroTag: 'fitnexus_student_feedback',
-                onPressed: () => _openFeedback(context, accessToken),
-                backgroundColor: const Color(0xFFE1B92F),
-                foregroundColor: Colors.black,
-                icon: const Icon(Icons.forum_rounded),
-                label: const Text(
-                  'Como foi o treino?',
-                  style: TextStyle(fontWeight: FontWeight.w900),
-                ),
+                onTap: () => _openFeedback(context, accessToken),
+                icon: Icons.forum_rounded,
+                label: 'Como foi o treino?',
               ),
             ),
           ),
