@@ -509,7 +509,7 @@ class LandingPage extends StatelessWidget {
       (Icons.fitness_center_rounded, 'Treinos da semana', '5/6', '83%', _gold),
       (Icons.local_fire_department_outlined, 'Calorias', '2.450', '▲ 12%', _green),
       (Icons.monitor_weight_outlined, 'Peso', '78,4', '▼ 0,6 kg', _green),
-      (Icons.stacked_line_chart_rounded, 'Progresso', '72%', '⌁⌁⌁', _gold2),
+      (Icons.stacked_line_chart_rounded, 'Progresso', '72%', '', _gold2),
     ];
     return Row(
       children: List.generate(items.length, (index) {
@@ -561,16 +561,23 @@ class LandingPage extends StatelessWidget {
                       height: 1,
                     ),
                   ),
-                  SizedBox(height: 5 * u),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      item.$4,
-                      maxLines: 1,
-                      style: TextStyle(color: item.$5, fontSize: 8 * u, fontWeight: FontWeight.w700),
+                  if (index == 1 || index == 2)
+                    Text(index == 1 ? 'kcal' : 'kg', style: TextStyle(color: _muted, fontSize: 6.7 * u, height: 1.05)),
+                  SizedBox(height: 3 * u),
+                  if (index == 0)
+                    Row(children: [
+                      Expanded(child: ClipRRect(borderRadius: BorderRadius.circular(2 * u), child: LinearProgressIndicator(value: .83, minHeight: 2.2 * u, backgroundColor: const Color(0xFF3A321D), valueColor: const AlwaysStoppedAnimation<Color>(_gold2)))),
+                      SizedBox(width: 4 * u),
+                      Text('83%', style: TextStyle(color: _gold2, fontSize: 7.5 * u, fontWeight: FontWeight.w700)),
+                    ])
+                  else if (index == 3)
+                    SizedBox(height: 11 * u, width: double.infinity, child: CustomPaint(painter: _SparklinePainter()))
+                  else
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(item.$4, maxLines: 1, style: TextStyle(color: item.$5, fontSize: 8 * u, fontWeight: FontWeight.w700)),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -719,23 +726,17 @@ class LandingPage extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
+                    SizedBox(
                       width: 30 * u,
                       height: 30 * u,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: done || current ? _gold2 : const Color(0xFF777777),
-                          width: 1.5,
-                        ),
-                        gradient: current
-                            ? const SweepGradient(
-                                colors: [_gold2, _gold2, Color(0xFF252525), Color(0xFF252525)],
-                                stops: [0, .55, .56, 1],
-                              )
-                            : null,
-                      ),
-                      child: done ? Icon(Icons.check_rounded, color: _gold2, size: 18 * u) : null,
+                      child: done
+                          ? Container(
+                              decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: _gold2, width: 1.5)),
+                              child: Icon(Icons.check_rounded, color: _gold2, size: 18 * u),
+                            )
+                          : current
+                              ? CircularProgressIndicator(value: .55, strokeWidth: 1.5 * u, backgroundColor: const Color(0xFF252525), valueColor: const AlwaysStoppedAnimation<Color>(_gold2))
+                              : CustomPaint(painter: _DashedCirclePainter(strokeWidth: 1.5 * u)),
                     ),
                     SizedBox(height: 4 * u),
                     Text(days[index], maxLines: 1, style: TextStyle(color: _muted, fontSize: 7.7 * u)),
@@ -797,4 +798,30 @@ class LandingPage extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SparklinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = Paint()..color = const Color(0xFFFFD45A)..strokeWidth = 1.35..style = PaintingStyle.stroke..strokeCap = StrokeCap.round..strokeJoin = StrokeJoin.round;
+    final pts = <Offset>[Offset(0, size.height*.72), Offset(size.width*.14, size.height*.68), Offset(size.width*.28, size.height*.74), Offset(size.width*.45, size.height*.40), Offset(size.width*.60, size.height*.51), Offset(size.width*.78, size.height*.30), Offset(size.width, size.height*.08)];
+    final path = Path()..moveTo(pts.first.dx, pts.first.dy);
+    for (final pt in pts.skip(1)) { path.lineTo(pt.dx, pt.dy); }
+    canvas.drawPath(path, p);
+  }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _DashedCirclePainter extends CustomPainter {
+  const _DashedCirclePainter({required this.strokeWidth});
+  final double strokeWidth;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = Paint()..color = const Color(0xFF777777)..strokeWidth = strokeWidth..style = PaintingStyle.stroke..strokeCap = StrokeCap.round;
+    final r = (size.shortestSide - strokeWidth) / 2; final c = Offset(size.width/2, size.height/2); const dash = .30; const gap = .17;
+    for (double a = -.05; a < 6.283; a += dash + gap) { canvas.drawArc(Rect.fromCircle(center:c, radius:r), a, dash, false, p); }
+  }
+  @override
+  bool shouldRepaint(covariant _DashedCirclePainter oldDelegate) => oldDelegate.strokeWidth != strokeWidth;
 }
