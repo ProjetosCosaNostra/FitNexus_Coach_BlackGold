@@ -2,324 +2,199 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class EcosystemLinksPage extends StatelessWidget {
+import '../../core/config/blackgold_ecosystem_manifest.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/blackgold_tokens.dart';
+import '../shared/fitnexus_ui.dart';
+
+class EcosystemLinksPage extends StatefulWidget {
   const EcosystemLinksPage({super.key});
 
-  static const String hubUrl =
-      'https://projetoscosanostra.github.io/FitNexus_Coach_BlackGold/#/links';
+  @override
+  State<EcosystemLinksPage> createState() => _EcosystemLinksPageState();
+}
 
-  static const List<_EcoLink> _mainLinks = <_EcoLink>[
-    _EcoLink(
-      title: 'Loja Oficial',
-      badge: 'Vitrine',
-      description: 'Achados selecionados, curadoria premium e produtos úteis.',
-      handle: 'La Famiglia Links',
-      url: 'https://projetoscosanostra.github.io/La_Famiglia_Links/',
-      icon: Icons.storefront_rounded,
-    ),
-    _EcoLink(
-      title: 'FitNexus Coach',
-      badge: 'SaaS Fitness',
-      description:
-          'Sistema fitness para personal, professor, aluno e academia.',
-      handle: 'Projeto BlackGold',
-      url: 'https://projetoscosanostra.github.io/FitNexus_Coach_BlackGold/',
-      icon: Icons.fitness_center_rounded,
-    ),
-  ];
+class _EcosystemLinksPageState extends State<EcosystemLinksPage> {
+  BlackGoldLocale _locale = BlackGoldLocale.ptBr;
 
-  static const List<_EcoLink> _socialLinks = <_EcoLink>[
-    _EcoLink(
-      title: 'Instagram',
-      badge: 'Rede social',
-      description: 'Stories, criativos, novidades e vitrine visual.',
-      handle: '@cosanostra.blackgold',
-      url: 'https://www.instagram.com/cosanostra.blackgold/',
-      icon: Icons.photo_camera_rounded,
-    ),
-    _EcoLink(
-      title: 'Telegram',
-      badge: 'Canal',
-      description: 'Atualizações rápidas e achados.',
-      handle: '@BlackGoldSociety',
-      url: 'https://t.me/BlackGoldSociety',
-      icon: Icons.send_rounded,
-    ),
-    _EcoLink(
-      title: 'YouTube',
-      badge: 'Conteúdo',
-      description: 'Vídeos, bastidores e projetos.',
-      handle: '@cosanostra.blackgold',
-      url: 'https://www.youtube.com/@cosanostra.blackgold',
-      icon: Icons.play_arrow_rounded,
-    ),
-    _EcoLink(
-      title: 'TikTok',
-      badge: 'Shorts',
-      description: 'Tendências, cortes e divulgação.',
-      handle: '@cosanostra.blackgold',
-      url:
-          'https://www.tiktok.com/@cosanostra.blackgold?_r=1&_t=ZS-97W9QcZEfcw',
-      icon: Icons.music_note_rounded,
-    ),
-    _EcoLink(
-      title: 'Kwai',
-      badge: 'Vídeos',
-      description: 'Canal extra para vídeos curtos.',
-      handle: '@cosanostra.blackgold',
-      url: 'https://kwai-video.com/u/@cosanostra.blackgold/CwdSwBPA',
-      icon: Icons.video_library_rounded,
-    ),
-    _EcoLink(
-      title: 'Facebook',
-      badge: 'Rede social',
-      description: 'Página social da marca.',
-      handle: 'cosanostra.blackgold',
-      url: 'https://www.facebook.com/cosanostra.blackgold',
-      icon: Icons.facebook_rounded,
-    ),
-  ];
+  String _t(String pt, String en, String es) {
+    switch (_locale) {
+      case BlackGoldLocale.ptBr:
+        return pt;
+      case BlackGoldLocale.en:
+        return en;
+      case BlackGoldLocale.es:
+        return es;
+    }
+  }
 
-  static const List<_EcoLink> _professionalLinks = <_EcoLink>[
-    _EcoLink(
-      title: 'GitHub',
-      badge: 'Código',
-      description: 'Repositórios, páginas públicas e projetos digitais.',
-      handle: 'ProjetosCosaNostra',
-      url: 'https://github.com/ProjetosCosaNostra',
-      icon: Icons.code_rounded,
-    ),
-    _EcoLink(
-      title: 'LinkedIn',
-      badge: 'Profissional',
-      description: 'Perfil profissional, tecnologia, automação e projetos.',
-      handle: 'Felipe Rosa Gomes',
-      url: 'https://www.linkedin.com/in/felipe-projetoscosanostra/',
-      icon: Icons.work_rounded,
-    ),
-  ];
+  Future<void> _openEntry(BlackGoldEcoEntry entry) async {
+    final Uri uri = Uri.parse(entry.canonicalUrl);
+    final bool launched = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _t(
+              'Não foi possível abrir ${entry.label(_locale)} agora.',
+              'Could not open ${entry.label(_locale)} right now.',
+              'No fue posible abrir ${entry.label(_locale)} ahora.',
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _copyContact() async {
+    await Clipboard.setData(
+      const ClipboardData(text: BlackGoldEcosystemManifest.contactEmail),
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          _t('Contato copiado.', 'Contact copied.', 'Contacto copiado.'),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _K.black,
-      body: Stack(
-        children: const <Widget>[
-          _BackgroundGlow(),
-          SafeArea(
-            child: _PageBody(),
+    return FitShell(
+      maxWidth: 1180,
+      showHeader: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          _EcosystemTopBar(
+            locale: _locale,
+            onLocaleChanged: (BlackGoldLocale value) {
+              setState(() => _locale = value);
+            },
           ),
+          const SizedBox(height: BlackGoldSpace.xxl),
+          _EcosystemHero(locale: _locale, translate: _t),
+          const SizedBox(height: BlackGoldSpace.xxl),
+          _EcosystemSection(
+            title: _t('Projetos ativos', 'Active projects', 'Proyectos activos'),
+            subtitle: _t(
+              'Produtos e ativos oficiais do ecossistema BlackGold.',
+              'Official products and assets from the BlackGold ecosystem.',
+              'Productos y activos oficiales del ecosistema BlackGold.',
+            ),
+            entries: BlackGoldEcosystemManifest.byGroup(
+              BlackGoldEcoGroup.projects,
+            ),
+            locale: _locale,
+            onOpen: _openEntry,
+            featured: true,
+          ),
+          const SizedBox(height: BlackGoldSpace.xxl),
+          _EcosystemSection(
+            title: _t('Redes oficiais', 'Official channels', 'Canales oficiales'),
+            subtitle: _t(
+              'Conteúdo, comunidade e presença digital oficial.',
+              'Official content, community and digital presence.',
+              'Contenido, comunidad y presencia digital oficial.',
+            ),
+            entries: BlackGoldEcosystemManifest.byGroup(
+              BlackGoldEcoGroup.social,
+            ),
+            locale: _locale,
+            onOpen: _openEntry,
+          ),
+          const SizedBox(height: BlackGoldSpace.xxl),
+          _EcosystemSection(
+            title: _t('Profissional', 'Professional', 'Profesional'),
+            subtitle: _t(
+              'Engenharia, perfil profissional e projetos públicos.',
+              'Engineering, professional profile and public projects.',
+              'Ingeniería, perfil profesional y proyectos públicos.',
+            ),
+            entries: BlackGoldEcosystemManifest.byGroup(
+              BlackGoldEcoGroup.professional,
+            ),
+            locale: _locale,
+            onOpen: _openEntry,
+          ),
+          const SizedBox(height: BlackGoldSpace.xxl),
+          _ContactCallout(
+            translate: _t,
+            onOpen: () => _openEntry(
+              BlackGoldEcosystemManifest.byGroup(
+                BlackGoldEcoGroup.contact,
+              ).first,
+            ),
+            onCopy: _copyContact,
+          ),
+          const SizedBox(height: BlackGoldSpace.xxl),
+          _ManifestFooter(translate: _t),
         ],
       ),
     );
   }
 }
 
-class _PageBody extends StatelessWidget {
-  const _PageBody();
+class _EcosystemTopBar extends StatelessWidget {
+  const _EcosystemTopBar({
+    required this.locale,
+    required this.onLocaleChanged,
+  });
 
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(22, 22, 22, 34),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1180),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const <Widget>[
-              _Header(),
-              SizedBox(height: 42),
-              _Hero(),
-              SizedBox(height: 34),
-              _SectionTitle('Principal'),
-              SizedBox(height: 10),
-              _LinksGrid(
-                  items: EcosystemLinksPage._mainLinks, desktopColumns: 2),
-              SizedBox(height: 22),
-              _SectionTitle('Redes oficiais'),
-              SizedBox(height: 10),
-              _LinksGrid(
-                  items: EcosystemLinksPage._socialLinks, desktopColumns: 3),
-              SizedBox(height: 22),
-              _SectionTitle('Profissional'),
-              SizedBox(height: 10),
-              _LinksGrid(
-                items: EcosystemLinksPage._professionalLinks,
-                desktopColumns: 2,
-              ),
-              SizedBox(height: 24),
-              _FinalCallout(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: <Widget>[
-        Container(
-          width: 58,
-          height: 58,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            gradient: const LinearGradient(
-              colors: <Color>[_K.gold, _K.goldLight],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: <BoxShadow>[
-              BoxShadow(
-                color: _K.gold.withValues(alpha: 0.30),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: const Icon(Icons.link_rounded, color: Colors.black, size: 30),
-        ),
-        const SizedBox(width: 16),
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                'Ecossistema BlackGold',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: _K.text,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  height: 1,
-                ),
-              ),
-              SizedBox(height: 6),
-              Text(
-                'Todos os canais oficiais em um só lugar.',
-                style: TextStyle(
-                  color: _K.muted,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 14),
-        _SmallRouteButton(
-          text: 'Landing',
-          icon: Icons.home_rounded,
-          route: '/',
-        ),
-      ],
-    );
-  }
-}
-
-class _Hero extends StatelessWidget {
-  const _Hero();
+  final BlackGoldLocale locale;
+  final ValueChanged<BlackGoldLocale> onLocaleChanged;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final bool narrow = constraints.maxWidth < 820;
-
-        final Widget textBlock = Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment:
-              narrow ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+        final bool compact = constraints.maxWidth < 720;
+        final Widget brand = const _EcosystemBrand();
+        final Widget controls = Wrap(
+          spacing: BlackGoldSpace.xs,
+          runSpacing: BlackGoldSpace.xs,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: <Widget>[
-            const _Badge(text: 'CANAIS OFICIAIS'),
-            const SizedBox(height: 18),
-            RichText(
-              textAlign: narrow ? TextAlign.center : TextAlign.left,
-              text: const TextSpan(
-                style: TextStyle(
-                  color: _K.text,
-                  fontSize: 34,
-                  height: 0.98,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1,
-                ),
-                children: <TextSpan>[
-                  TextSpan(text: 'Um hub único para loja,\n'),
-                  TextSpan(text: 'projetos, conteúdo e\n'),
-                  TextSpan(
-                    text: 'presença digital.',
-                    style: TextStyle(color: _K.gold),
-                  ),
-                ],
+            _LocaleSelector(locale: locale, onChanged: onLocaleChanged),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
+                '/',
+                (Route<dynamic> route) => false,
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'A pessoa chega aqui e escolhe para onde quer ir: loja, redes sociais, projeto fitness ou perfil profissional.',
-              textAlign: narrow ? TextAlign.center : TextAlign.left,
-              style: const TextStyle(
-                color: _K.muted,
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                height: 1.45,
+              icon: const Icon(Icons.home_rounded, size: 17),
+              label: Text(
+                locale == BlackGoldLocale.ptBr
+                    ? 'Início'
+                    : locale == BlackGoldLocale.en
+                        ? 'Home'
+                        : 'Inicio',
               ),
-            ),
-            const SizedBox(height: 18),
-            Wrap(
-              alignment: narrow ? WrapAlignment.center : WrapAlignment.start,
-              spacing: 10,
-              runSpacing: 10,
-              children: <Widget>[
-                _HeroButton(
-                  text: 'Copiar link',
-                  icon: Icons.copy_rounded,
-                  filled: true,
-                  onPressed: () => _copyHub(context),
-                ),
-                _HeroButton(
-                  text: 'Instagram',
-                  icon: Icons.photo_camera_rounded,
-                  onPressed: () => _openLink(
-                    'https://www.instagram.com/cosanostra.blackgold/',
-                  ),
-                ),
-                _HeroButton(
-                  text: 'Loja oficial',
-                  icon: Icons.storefront_rounded,
-                  onPressed: () => _openLink(
-                    'https://projetoscosanostra.github.io/La_Famiglia_Links/',
-                  ),
-                ),
-              ],
             ),
           ],
         );
 
-        final Widget heroImage = const _HeroImage();
-
-        if (narrow) {
+        if (compact) {
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              textBlock,
-              const SizedBox(height: 24),
-              heroImage,
+              brand,
+              const SizedBox(height: BlackGoldSpace.md),
+              controls,
             ],
           );
         }
 
         return Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Expanded(flex: 9, child: textBlock),
-            const SizedBox(width: 34),
-            Expanded(flex: 10, child: heroImage),
+            brand,
+            const Spacer(),
+            controls,
           ],
         );
       },
@@ -327,304 +202,113 @@ class _Hero extends StatelessWidget {
   }
 }
 
-class _HeroImage extends StatelessWidget {
-  const _HeroImage();
+class _EcosystemBrand extends StatelessWidget {
+  const _EcosystemBrand();
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        constraints: const BoxConstraints(
-          maxWidth: 540,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Container(
+          width: 44,
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+            border: Border.all(
+              color: AppColors.gold.withValues(alpha: 0.58),
+              width: BlackGoldStroke.regular,
+            ),
+            boxShadow: BlackGoldEffects.goldGlow,
+          ),
+          child: const Icon(
+            Icons.hub_rounded,
+            color: AppColors.goldSoft,
+            size: 22,
+          ),
         ),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(26),
-          boxShadow: <BoxShadow>[
-            BoxShadow(
-              color: _K.gold.withValues(alpha: 0.12),
-              blurRadius: 44,
-              offset: const Offset(0, 22),
+        const SizedBox(width: BlackGoldSpace.sm),
+        const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text.rich(
+              TextSpan(
+                children: <InlineSpan>[
+                  TextSpan(
+                    text: 'FIT',
+                    style: TextStyle(color: AppColors.text),
+                  ),
+                  TextSpan(
+                    text: 'NEXUS',
+                    style: TextStyle(color: AppColors.goldSoft),
+                  ),
+                ],
+              ),
+              style: TextStyle(
+                fontSize: 22,
+                height: 1,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.1,
+              ),
+            ),
+            SizedBox(height: 5),
+            Text(
+              'B L A C K G O L D   E C O S Y S T E M',
+              style: TextStyle(
+                color: AppColors.muted,
+                fontSize: 7.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.15,
+              ),
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(26),
-          child: Image.asset(
-            'assets/images/ecosistema_blackgold.png',
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.high,
-            errorBuilder: (
-              BuildContext context,
-              Object error,
-              StackTrace? stackTrace,
-            ) {
-              return Container(
-                height: 360,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(26),
-                  border: Border.all(color: _K.gold.withValues(alpha: 0.24)),
-                  color: _K.card,
-                ),
-                child: const Text(
-                  'BLACKGOLD\nECOSYSTEM',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: _K.gold,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w900,
-                    height: 0.95,
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
+      ],
     );
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      '✦ $text',
-      style: const TextStyle(
-        color: _K.text,
-        fontSize: 23,
-        fontWeight: FontWeight.w900,
-        height: 1,
-      ),
-    );
-  }
-}
-
-class _LinksGrid extends StatelessWidget {
-  const _LinksGrid({
-    required this.items,
-    required this.desktopColumns,
+class _LocaleSelector extends StatelessWidget {
+  const _LocaleSelector({
+    required this.locale,
+    required this.onChanged,
   });
 
-  final List<_EcoLink> items;
-  final int desktopColumns;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        final double width = constraints.maxWidth;
-        final int columns = width >= 980
-            ? desktopColumns
-            : width >= 680
-                ? 2
-                : 1;
-
-        final double gap = width >= 980 ? 14 : 12;
-        final double itemWidth = (width - (gap * (columns - 1))) / columns;
-
-        return Wrap(
-          spacing: gap,
-          runSpacing: gap,
-          children: items
-              .map(
-                (item) => SizedBox(
-                  width: itemWidth,
-                  child: _LinkCard(item: item),
-                ),
-              )
-              .toList(),
-        );
-      },
-    );
-  }
-}
-
-class _LinkCard extends StatelessWidget {
-  const _LinkCard({required this.item});
-
-  final _EcoLink item;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => _openLink(item.url),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 104),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          decoration: BoxDecoration(
-            color: _K.card.withValues(alpha: 0.95),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: _K.gold.withValues(alpha: 0.36)),
-            boxShadow: <BoxShadow>[
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.24),
-                blurRadius: 22,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          child: Row(
-            children: <Widget>[
-              Container(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: <Color>[_K.gold, _K.goldDark],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: <BoxShadow>[
-                    BoxShadow(
-                      color: _K.gold.withValues(alpha: 0.18),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Icon(item.icon, color: Colors.black, size: 28),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Text(
-                            item.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: _K.text,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w900,
-                              height: 1.05,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _TinyBadge(text: item.badge),
-                      ],
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      item.description,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: _K.muted,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        height: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      item.handle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: _K.gold,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w900,
-                        height: 1.1,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _K.gold.withValues(alpha: 0.50)),
-                  color: _K.gold.withValues(alpha: 0.08),
-                ),
-                child: const Icon(
-                  Icons.north_east_rounded,
-                  color: _K.gold,
-                  size: 21,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FinalCallout extends StatelessWidget {
-  const _FinalCallout();
+  final BlackGoldLocale locale;
+  final ValueChanged<BlackGoldLocale> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      height: 42,
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: _K.card.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: _K.gold.withValues(alpha: 0.35)),
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+        border: Border.all(
+          color: AppColors.borderGold,
+          width: BlackGoldStroke.hairline,
+        ),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _K.gold.withValues(alpha: 0.38)),
-              color: _K.gold.withValues(alpha: 0.10),
-            ),
-            child: const Icon(Icons.link_rounded, color: _K.gold, size: 31),
+          _LanguageChip(
+            label: 'PT',
+            selected: locale == BlackGoldLocale.ptBr,
+            onTap: () => onChanged(BlackGoldLocale.ptBr),
           ),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  'Divulgue tudo com um único link.',
-                  style: TextStyle(
-                    color: _K.text,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                SizedBox(height: 6),
-                Text(
-                  'Use este hub em bio, QR Code, criativos, vídeos, perfis sociais e páginas dos projetos.',
-                  style: TextStyle(
-                    color: _K.muted,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
+          _LanguageChip(
+            label: 'EN',
+            selected: locale == BlackGoldLocale.en,
+            onTap: () => onChanged(BlackGoldLocale.en),
           ),
-          const SizedBox(width: 14),
-          _HeroButton(
-            text: 'Copiar link do ecossistema',
-            icon: Icons.copy_rounded,
-            filled: true,
-            onPressed: null,
+          _LanguageChip(
+            label: 'ES',
+            selected: locale == BlackGoldLocale.es,
+            onTap: () => onChanged(BlackGoldLocale.es),
           ),
         ],
       ),
@@ -632,168 +316,267 @@ class _FinalCallout extends StatelessWidget {
   }
 }
 
-class _HeroButton extends StatelessWidget {
-  const _HeroButton({
-    required this.text,
-    required this.icon,
-    this.filled = false,
-    this.onPressed,
+class _LanguageChip extends StatelessWidget {
+  const _LanguageChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
   });
 
-  final String text;
-  final IconData icon;
-  final bool filled;
-  final VoidCallback? onPressed;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return TextButton.icon(
-      onPressed: onPressed ?? () => _copyHub(context),
-      icon: Icon(icon, size: 16),
-      label: Text(text),
-      style: TextButton.styleFrom(
-        backgroundColor: filled ? _K.gold : Colors.transparent,
-        foregroundColor: filled ? Colors.black : _K.text,
-        side: BorderSide(
-            color: filled ? _K.gold : _K.gold.withValues(alpha: 0.72)),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-        textStyle: const TextStyle(
-          fontWeight: FontWeight.w900,
-          fontSize: 13.5,
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          constraints: const BoxConstraints(minWidth: 42, minHeight: 34),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? AppColors.gold : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.black : AppColors.muted,
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-class _SmallRouteButton extends StatelessWidget {
-  const _SmallRouteButton({
-    required this.text,
-    required this.icon,
-    required this.route,
+class _EcosystemHero extends StatelessWidget {
+  const _EcosystemHero({
+    required this.locale,
+    required this.translate,
   });
 
-  final String text;
+  final BlackGoldLocale locale;
+  final String Function(String, String, String) translate;
+
+  @override
+  Widget build(BuildContext context) {
+    return FitCard(
+      highlight: true,
+      padding: EdgeInsets.zero,
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final bool compact = constraints.maxWidth < 820;
+          final Widget copy = Padding(
+            padding: EdgeInsets.all(
+              compact ? BlackGoldSpace.lg : BlackGoldSpace.xxl,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                SectionLabel(
+                  translate(
+                    'Ecossistema BlackGold',
+                    'BlackGold Ecosystem',
+                    'Ecosistema BlackGold',
+                  ),
+                ),
+                const SizedBox(height: BlackGoldSpace.md),
+                Text.rich(
+                  TextSpan(
+                    children: <InlineSpan>[
+                      TextSpan(
+                        text: translate(
+                          'Um sistema.\n',
+                          'One system.\n',
+                          'Un sistema.\n',
+                        ),
+                      ),
+                      TextSpan(
+                        text: translate(
+                          'Todos os caminhos oficiais.',
+                          'Every official path.',
+                          'Todos los caminos oficiales.',
+                        ),
+                        style: const TextStyle(color: AppColors.goldSoft),
+                      ),
+                    ],
+                  ),
+                  style: Theme.of(context).textTheme.displayMedium,
+                ),
+                const SizedBox(height: BlackGoldSpace.md),
+                Text(
+                  translate(
+                    'Escolha o destino. Nenhum redirecionamento oculto: projetos, loja, canais e contato permanecem separados e claros.',
+                    'Choose the destination. No hidden redirects: projects, store, channels and contact stay separate and clear.',
+                    'Elige el destino. Sin redirecciones ocultas: proyectos, tienda, canales y contacto permanecen separados y claros.',
+                  ),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppColors.muted,
+                      ),
+                ),
+                const SizedBox(height: BlackGoldSpace.xl),
+                Wrap(
+                  spacing: BlackGoldSpace.xs,
+                  runSpacing: BlackGoldSpace.xs,
+                  children: <Widget>[
+                    _HeroBadge(
+                      icon: Icons.verified_rounded,
+                      text: 'V${BlackGoldEcosystemManifest.version}',
+                    ),
+                    _HeroBadge(
+                      icon: Icons.language_rounded,
+                      text: locale == BlackGoldLocale.ptBr
+                          ? 'PT-BR'
+                          : locale == BlackGoldLocale.en
+                              ? 'EN'
+                              : 'ES',
+                    ),
+                    const _HeroBadge(
+                      icon: Icons.lock_outline_rounded,
+                      text: 'HTTPS',
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+
+          final Widget artwork = ClipRRect(
+            borderRadius: BorderRadius.only(
+              topRight: Radius.circular(
+                compact ? 0 : BlackGoldRadius.panel,
+              ),
+              bottomRight: const Radius.circular(BlackGoldRadius.panel),
+              bottomLeft: Radius.circular(
+                compact ? BlackGoldRadius.panel : 0,
+              ),
+            ),
+            child: Container(
+              constraints: BoxConstraints(
+                minHeight: compact ? 260 : 390,
+              ),
+              decoration: const BoxDecoration(
+                color: Color(0xFF050505),
+              ),
+              child: Image.asset(
+                'assets/images/ecosistema_blackgold.png',
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
+                filterQuality: FilterQuality.high,
+                errorBuilder: (
+                  BuildContext context,
+                  Object error,
+                  StackTrace? stackTrace,
+                ) {
+                  return const _EcosystemArtworkFallback();
+                },
+              ),
+            ),
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[copy, artwork],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Expanded(flex: 10, child: copy),
+              Expanded(flex: 9, child: artwork),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _HeroBadge extends StatelessWidget {
+  const _HeroBadge({required this.icon, required this.text});
+
   final IconData icon;
-  final String route;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextButton.icon(
-      onPressed: () => Navigator.of(context).pushNamed(route),
-      icon: Icon(icon, size: 16),
-      label: Text(text),
-      style: TextButton.styleFrom(
-        foregroundColor: _K.text,
-        side: BorderSide(color: _K.gold.withValues(alpha: 0.55)),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-        textStyle: const TextStyle(fontWeight: FontWeight.w900),
-      ),
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  const _Badge({required this.text});
-
   final String text;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: _K.gold.withValues(alpha: 0.20),
-        borderRadius: BorderRadius.circular(999),
+      constraints: const BoxConstraints(minHeight: 36),
+      padding: const EdgeInsets.symmetric(
+        horizontal: BlackGoldSpace.sm,
+        vertical: BlackGoldSpace.xs,
       ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: _K.gold,
-          fontSize: 12,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 0.5,
+      decoration: BoxDecoration(
+        color: AppColors.gold.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.pill),
+        border: Border.all(
+          color: AppColors.gold.withValues(alpha: 0.34),
+          width: BlackGoldStroke.hairline,
         ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, color: AppColors.goldSoft, size: 15),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: const TextStyle(
+              color: AppColors.text,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _TinyBadge extends StatelessWidget {
-  const _TinyBadge({required this.text});
-
-  final String text;
+class _EcosystemArtworkFallback extends StatelessWidget {
+  const _EcosystemArtworkFallback();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    return const DecoratedBox(
       decoration: BoxDecoration(
-        color: _K.gold.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          color: _K.gold,
-          fontSize: 10,
-          fontWeight: FontWeight.w900,
-          height: 1,
-        ),
-      ),
-    );
-  }
-}
-
-class _BackgroundGlow extends StatelessWidget {
-  const _BackgroundGlow();
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        Container(color: _K.black),
-        Positioned(
-          top: 90,
-          left: -220,
-          child: _Glow(size: 520, opacity: 0.10),
-        ),
-        Positioned(
-          top: 120,
-          right: -180,
-          child: _Glow(size: 560, opacity: 0.12),
-        ),
-        Positioned(
-          bottom: -260,
-          right: 160,
-          child: _Glow(size: 520, opacity: 0.06),
-        ),
-      ],
-    );
-  }
-}
-
-class _Glow extends StatelessWidget {
-  const _Glow({required this.size, required this.opacity});
-
-  final double size;
-  final double opacity;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
         gradient: RadialGradient(
+          center: Alignment.center,
+          radius: 0.95,
           colors: <Color>[
-            _K.gold.withValues(alpha: opacity),
-            Colors.transparent,
+            Color(0x44382109),
+            Color(0xFF050505),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(Icons.hub_rounded, color: AppColors.goldSoft, size: 68),
+            SizedBox(height: BlackGoldSpace.md),
+            Text(
+              'BLACKGOLD\nECOSYSTEM',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.goldSoft,
+                fontSize: 26,
+                height: 0.95,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+              ),
+            ),
           ],
         ),
       ),
@@ -801,61 +584,312 @@ class _Glow extends StatelessWidget {
   }
 }
 
-class _EcoLink {
-  const _EcoLink({
+class _EcosystemSection extends StatelessWidget {
+  const _EcosystemSection({
     required this.title,
-    required this.badge,
-    required this.description,
-    required this.handle,
-    required this.url,
-    required this.icon,
+    required this.subtitle,
+    required this.entries,
+    required this.locale,
+    required this.onOpen,
+    this.featured = false,
   });
 
   final String title;
-  final String badge;
-  final String description;
-  final String handle;
-  final String url;
-  final IconData icon;
+  final String subtitle;
+  final List<BlackGoldEcoEntry> entries;
+  final BlackGoldLocale locale;
+  final ValueChanged<BlackGoldEcoEntry> onOpen;
+  final bool featured;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        FitPageTitle(
+          eyebrow: featured ? 'BlackGold' : 'Links oficiais',
+          title: title,
+          description: subtitle,
+        ),
+        const SizedBox(height: BlackGoldSpace.lg),
+        LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final int columns = constraints.maxWidth >= 980
+                ? (featured ? 2 : 3)
+                : constraints.maxWidth >= 650
+                    ? 2
+                    : 1;
+            const double gap = BlackGoldSpace.sm;
+            final double itemWidth =
+                (constraints.maxWidth - gap * (columns - 1)) / columns;
+
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: entries
+                  .map(
+                    (BlackGoldEcoEntry entry) => SizedBox(
+                      width: itemWidth,
+                      child: _EcosystemLinkCard(
+                        entry: entry,
+                        locale: locale,
+                        onTap: () => onOpen(entry),
+                        featured: featured,
+                      ),
+                    ),
+                  )
+                  .toList(growable: false),
+            );
+          },
+        ),
+      ],
+    );
+  }
 }
 
-class _K {
-  static const Color black = Color(0xFF050505);
-  static const Color card = Color(0xFF111111);
-  static const Color text = Color(0xFFF8F6EF);
-  static const Color muted = Color(0xFFC1B9AA);
-  static const Color gold = Color(0xFFFFC83D);
-  static const Color goldLight = Color(0xFFFFD96B);
-  static const Color goldDark = Color(0xFF9D7410);
+class _EcosystemLinkCard extends StatelessWidget {
+  const _EcosystemLinkCard({
+    required this.entry,
+    required this.locale,
+    required this.onTap,
+    required this.featured,
+  });
+
+  final BlackGoldEcoEntry entry;
+  final BlackGoldLocale locale;
+  final VoidCallback onTap;
+  final bool featured;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      link: true,
+      label: entry.label(locale),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(BlackGoldRadius.panel),
+          child: FitCard(
+            highlight: featured,
+            padding: const EdgeInsets.all(BlackGoldSpace.lg),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: featured ? 144 : 126),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Container(
+                    width: featured ? 48 : 42,
+                    height: featured ? 48 : 42,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.gold.withValues(alpha: 0.09),
+                      borderRadius: BorderRadius.circular(BlackGoldRadius.card),
+                      border: Border.all(
+                        color: AppColors.gold.withValues(alpha: 0.42),
+                        width: BlackGoldStroke.hairline,
+                      ),
+                    ),
+                    child: Icon(
+                      entry.icon,
+                      color: AppColors.goldSoft,
+                      size: featured ? 24 : 21,
+                    ),
+                  ),
+                  const SizedBox(width: BlackGoldSpace.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Text(
+                                entry.label(locale),
+                                style: TextStyle(
+                                  color: AppColors.text,
+                                  fontSize: featured ? 17 : 15,
+                                  height: 1.15,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                            const Icon(
+                              Icons.arrow_outward_rounded,
+                              color: AppColors.gold,
+                              size: 17,
+                            ),
+                          ],
+                        ),
+                        if (entry.badge != null || entry.handle != null) ...<Widget>[
+                          const SizedBox(height: 6),
+                          Text(
+                            entry.badge ?? entry.handle!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.goldSoft,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: BlackGoldSpace.xs),
+                        Text(
+                          entry.description(locale),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 12.5,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-Future<void> _copyHub(BuildContext context) async {
-  await Clipboard.setData(
-    const ClipboardData(text: EcosystemLinksPage.hubUrl),
-  );
+class _ContactCallout extends StatelessWidget {
+  const _ContactCallout({
+    required this.translate,
+    required this.onOpen,
+    required this.onCopy,
+  });
 
-  if (!context.mounted) return;
+  final String Function(String, String, String) translate;
+  final VoidCallback onOpen;
+  final VoidCallback onCopy;
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: const Text('Link do ecossistema copiado.'),
-      backgroundColor: _K.card,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    ),
-  );
+  @override
+  Widget build(BuildContext context) {
+    return FitCard(
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final bool compact = constraints.maxWidth < 700;
+          final Widget copy = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              SectionLabel(
+                translate('Contato oficial', 'Official contact', 'Contacto oficial'),
+              ),
+              const SizedBox(height: BlackGoldSpace.sm),
+              Text(
+                BlackGoldEcosystemManifest.contactEmail,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: BlackGoldSpace.xs),
+              Text(
+                translate(
+                  'Suporte, privacidade, cobrança e projetos.',
+                  'Support, privacy, billing and projects.',
+                  'Soporte, privacidad, facturación y proyectos.',
+                ),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
+          );
+          final Widget actions = Wrap(
+            spacing: BlackGoldSpace.xs,
+            runSpacing: BlackGoldSpace.xs,
+            children: <Widget>[
+              OutlinedButton.icon(
+                onPressed: onCopy,
+                icon: const Icon(Icons.copy_rounded, size: 17),
+                label: Text(translate('Copiar', 'Copy', 'Copiar')),
+              ),
+              GoldButton(
+                label: translate('Enviar e-mail', 'Send email', 'Enviar correo'),
+                icon: Icons.mail_rounded,
+                onTap: onOpen,
+              ),
+            ],
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                copy,
+                const SizedBox(height: BlackGoldSpace.lg),
+                actions,
+              ],
+            );
+          }
+
+          return Row(
+            children: <Widget>[
+              Expanded(child: copy),
+              const SizedBox(width: BlackGoldSpace.xl),
+              actions,
+            ],
+          );
+        },
+      ),
+    );
+  }
 }
 
-Future<void> _openLink(String url) async {
-  final Uri uri = Uri.parse(url);
+class _ManifestFooter extends StatelessWidget {
+  const _ManifestFooter({required this.translate});
 
-  final bool opened = await launchUrl(
-    uri,
-    mode: LaunchMode.externalApplication,
-    webOnlyWindowName: '_blank',
-  );
+  final String Function(String, String, String) translate;
 
-  if (!opened) {
-    throw Exception('Não foi possível abrir o link oficial.');
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: BlackGoldSpace.md,
+        vertical: BlackGoldSpace.sm,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.card.withValues(alpha: 0.58),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+        border: Border.all(
+          color: AppColors.borderGold.withValues(alpha: 0.48),
+          width: BlackGoldStroke.hairline,
+        ),
+      ),
+      child: Wrap(
+        spacing: BlackGoldSpace.md,
+        runSpacing: BlackGoldSpace.xs,
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: <Widget>[
+          const Text(
+            'BLACKGOLD ECOSYSTEM • V${BlackGoldEcosystemManifest.version} • ${BlackGoldEcosystemManifest.effectiveDate}',
+            style: TextStyle(
+              color: AppColors.muted,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.55,
+            ),
+          ),
+          Text(
+            translate(
+              'Links oficiais • sem redirecionamento oculto',
+              'Official links • no hidden redirect',
+              'Enlaces oficiales • sin redirección oculta',
+            ),
+            style: const TextStyle(
+              color: AppColors.goldSoft,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

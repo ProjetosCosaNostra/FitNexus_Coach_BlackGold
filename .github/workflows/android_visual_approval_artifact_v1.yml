@@ -1,0 +1,122 @@
+name: Android Visual Approval Artifact V1
+
+on:
+  push:
+    branches:
+      - blackgold/mobile-home-premium-redesign-v1
+    paths:
+      - '03_app_flutter/fitnexus_app/**'
+      - '.github/workflows/android_visual_approval_artifact_v1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-visual-approval-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 03_app_flutter/fitnexus_app
+
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Prepare ephemeral visual-only release signing
+        shell: bash
+        run: |
+          set -euo pipefail
+          PASSWORD="$(openssl rand -hex 24)"
+          KEYSTORE="android/visual-approval-ci.jks"
+          keytool -genkeypair \
+            -keystore "$KEYSTORE" \
+            -storepass "$PASSWORD" \
+            -keypass "$PASSWORD" \
+            -alias visual_approval \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 30 \
+            -dname 'CN=FitNexus Visual Approval,O=BlackGold,C=BR' \
+            -noprompt >/dev/null 2>&1
+          {
+            echo "storePassword=$PASSWORD"
+            echo "keyPassword=$PASSWORD"
+            echo 'keyAlias=visual_approval'
+            echo 'storeFile=visual-approval-ci.jks'
+          } > android/key.properties
+          echo 'VISUAL_SIGNING_MODE=EPHEMERAL_CI_RELEASE_KEY'
+          echo 'PLAY_UPLOAD_KEY_USED=false'
+
+      - name: Build exact-SHA release APK
+        run: flutter build apk --release
+
+      - name: Create exact-SHA visual approval receipt
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+          SOURCE_REF: ${{ github.ref_name }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          APK='build/app/outputs/flutter-apk/app-release.apk'
+          test -f "$APK"
+          mkdir -p build/visual_approval
+          APK_SHA="$(sha256sum "$APK" | awk '{print $1}')"
+          APK_BYTES="$(stat -c%s "$APK")"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          apk = Path('build/app/outputs/flutter-apk/app-release.apk')
+          import hashlib
+          sha = hashlib.sha256(apk.read_bytes()).hexdigest()
+          receipt = {
+              'schema_version': 1,
+              'kind': 'FITNEXUS_ANDROID_VISUAL_APPROVAL_ARTIFACT',
+              'source_commit_sha': os.environ['SOURCE_SHA'],
+              'source_ref': os.environ['SOURCE_REF'],
+              'github_run_id': os.environ['RUN_ID'],
+              'application_id': 'br.com.lafamigliaplayworks.fitnexuscoach',
+              'build_mode': 'release',
+              'signing_mode': 'EPHEMERAL_CI_VISUAL_APPROVAL_ONLY',
+              'play_upload_key_used': False,
+              'play_publication_authorized': False,
+              'apk_path': 'app-release.apk',
+              'apk_sha256': sha,
+              'apk_bytes': apk.stat().st_size,
+              'purpose': 'isolated_emulator_visual_approval_before_pr_merge',
+          }
+          Path('build/visual_approval/FITNEXUS_ANDROID_VISUAL_APPROVAL_RECEIPT_V1.json').write_text(
+              json.dumps(receipt, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          PY
+          cp "$APK" build/visual_approval/FITNEXUS_ANDROID_VISUAL_${SOURCE_SHA}.apk
+          echo "ANDROID_VISUAL_APK_SHA256=$APK_SHA"
+          echo "ANDROID_VISUAL_APK_BYTES=$APK_BYTES"
+          echo "ANDROID_VISUAL_SOURCE_SHA=$SOURCE_SHA"
+          echo 'PLAY_UPLOAD_PERFORMED=false'
+          echo 'PLAY_PUBLICATION_PERFORMED=false'
+
+      - name: Remove ephemeral signing material before artifact upload
+        if: always()
+        shell: bash
+        run: |
+          rm -f android/key.properties android/visual-approval-ci.jks
+
+      - name: Upload exact-SHA visual approval artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FITNEXUS_ANDROID_VISUAL_${{ github.sha }}
+          path: 03_app_flutter/fitnexus_app/build/visual_approval/
+          if-no-files-found: error
+          retention-days: 7

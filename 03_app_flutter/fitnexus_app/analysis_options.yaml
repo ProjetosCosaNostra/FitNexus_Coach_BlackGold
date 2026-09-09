@@ -6,6 +6,7 @@ analyzer:
     prefer_const_constructors: ignore
     prefer_const_declarations: ignore
     prefer_const_literals_to_create_immutables: ignore
+    unused_element_parameter: ignore
 
 linter:
   rules:

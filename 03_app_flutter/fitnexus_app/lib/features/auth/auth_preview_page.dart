@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/blackgold_tokens.dart';
 import '../growth/public_funnel_telemetry.dart';
 import '../shared/fitnexus_ui.dart';
 import 'auth_service.dart';
@@ -120,7 +122,8 @@ class _AuthPreviewPageState extends State<AuthPreviewPage> {
         if (response.session == null) {
           setState(() {
             _pendingConfirmationEmail = _emailController.text.trim();
-            _message = 'Conta criada. Confirme o e-mail enviado pelo FitNexus e depois entre com sua senha.';
+            _message =
+                'Conta criada. Confirme o e-mail enviado pelo FitNexus e depois entre com sua senha.';
             _messageIsError = false;
             _registerMode = false;
           });
@@ -173,7 +176,8 @@ class _AuthPreviewPageState extends State<AuthPreviewPage> {
   }
 
   Future<void> _resendConfirmation() async {
-    final String email = (_pendingConfirmationEmail ?? _emailController.text).trim();
+    final String email =
+        (_pendingConfirmationEmail ?? _emailController.text).trim();
     if (email.isEmpty || _busy) return;
 
     setState(() {
@@ -202,182 +206,339 @@ class _AuthPreviewPageState extends State<AuthPreviewPage> {
   InputDecoration _decoration(String label, {Widget? suffixIcon}) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: FitColors.muted),
-      filled: true,
-      fillColor: FitColors.cardSoft,
       suffixIcon: suffixIcon,
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: FitColors.border),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: FitColors.gold, width: 1.4),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Colors.redAccent),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(18),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 1.4),
-      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return FitShell(
-      maxWidth: 680,
-      child: FitCard(
-        padding: const EdgeInsets.all(30),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              const SectionLabel('Acesso seguro'),
-              const SizedBox(height: 12),
-              Text(
-                _registerMode ? 'Crie seu espaço profissional' : 'Entre no FitNexus',
-                style: const TextStyle(
-                  color: FitColors.text,
-                  fontSize: 34,
-                  fontWeight: FontWeight.w900,
+      maxWidth: 1040,
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final bool desktop = constraints.maxWidth >= 820;
+          final Widget form = _buildForm(context);
+
+          if (!desktop) {
+            return FitCard(
+              highlight: true,
+              padding: const EdgeInsets.all(BlackGoldSpace.lg),
+              child: form,
+            );
+          }
+
+          return FitCard(
+            highlight: true,
+            padding: EdgeInsets.zero,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                const Expanded(
+                  flex: 9,
+                  child: _AuthBrandPanel(),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                _registerMode
-                    ? 'Sua conta já nasce isolada por organização, com autenticação e regras de acesso no banco.'
-                    : 'Acesse seu painel, seus alunos e seus treinos com sessão protegida pelo Supabase Auth.',
-                style: const TextStyle(color: FitColors.muted, height: 1.45),
-              ),
-              const SizedBox(height: 22),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: _ModeButton(
-                      label: 'Entrar',
-                      selected: !_registerMode,
-                      onTap: () => _setMode(false),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _ModeButton(
-                      label: 'Criar conta',
-                      selected: _registerMode,
-                      onTap: () => _setMode(true),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 22),
-              if (_registerMode) ...<Widget>[
-                TextFormField(
-                  controller: _nameController,
-                  enabled: !_busy,
-                  textInputAction: TextInputAction.next,
-                  style: const TextStyle(color: FitColors.text),
-                  decoration: _decoration('Seu nome'),
-                  validator: (String? value) => _required(value, 'seu nome'),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _organizationController,
-                  enabled: !_busy,
-                  textInputAction: TextInputAction.next,
-                  style: const TextStyle(color: FitColors.text),
-                  decoration: _decoration('Academia, studio ou nome profissional'),
-                  validator: (String? value) => _required(value, 'o nome do seu espaço'),
-                ),
-                const SizedBox(height: 12),
-              ],
-              TextFormField(
-                controller: _emailController,
-                enabled: !_busy,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next,
-                autofillHints: const <String>[AutofillHints.email],
-                style: const TextStyle(color: FitColors.text),
-                decoration: _decoration('E-mail'),
-                validator: _validateEmail,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _passwordController,
-                enabled: !_busy,
-                obscureText: _obscurePassword,
-                textInputAction: TextInputAction.done,
-                autofillHints: <String>[
-                  _registerMode ? AutofillHints.newPassword : AutofillHints.password,
-                ],
-                onFieldSubmitted: (_) => _submit(),
-                style: const TextStyle(color: FitColors.text),
-                decoration: _decoration(
-                  'Senha',
-                  suffixIcon: IconButton(
-                    onPressed: _busy
-                        ? null
-                        : () => setState(() => _obscurePassword = !_obscurePassword),
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility_rounded : Icons.visibility_off_rounded,
-                      color: FitColors.gold,
-                    ),
-                  ),
-                ),
-                validator: _validatePassword,
-              ),
-              if (_message != null) ...<Widget>[
-                const SizedBox(height: 16),
                 Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: _messageIsError
-                        ? Colors.redAccent.withValues(alpha: 0.10)
-                        : FitColors.gold.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: _messageIsError ? Colors.redAccent : FitColors.gold,
-                    ),
-                  ),
-                  child: Text(
-                    _message!,
-                    style: TextStyle(
-                      color: _messageIsError ? Colors.redAccent : FitColors.goldSoft,
-                      height: 1.4,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  width: 1,
+                  color: AppColors.borderGold.withValues(alpha: 0.46),
+                ),
+                Expanded(
+                  flex: 11,
+                  child: Padding(
+                    padding: const EdgeInsets.all(BlackGoldSpace.xxl),
+                    child: form,
                   ),
                 ),
               ],
-              const SizedBox(height: 22),
-              GoldButton(
-                label: _busy
-                    ? 'Processando...'
-                    : _registerMode
-                        ? 'Criar minha conta'
-                        : 'Entrar no painel',
-                icon: _registerMode ? Icons.person_add_alt_1_rounded : Icons.login_rounded,
-                onTap: _busy ? null : _submit,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildForm(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const SectionLabel('Acesso seguro'),
+          const SizedBox(height: BlackGoldSpace.sm),
+          Text(
+            _registerMode ? 'Crie seu espaço profissional' : 'Entre no FitNexus',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          const SizedBox(height: BlackGoldSpace.xs),
+          Text(
+            _registerMode
+                ? 'Comece com a mesma experiência BlackGold do painel: organização isolada, autenticação e acesso protegido.'
+                : 'Acesse alunos, treinos, evolução e decisões em um único sistema profissional.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: BlackGoldSpace.lg),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: _ModeButton(
+                  label: 'Entrar',
+                  selected: !_registerMode,
+                  onTap: () => _setMode(false),
+                ),
               ),
-              if (_pendingConfirmationEmail != null) ...<Widget>[
-                const SizedBox(height: 10),
-                TextButton.icon(
-                  onPressed: _busy ? null : _resendConfirmation,
-                  icon: const Icon(Icons.mark_email_unread_rounded),
-                  label: const Text('Reenviar confirmação'),
+              const SizedBox(width: BlackGoldSpace.xs),
+              Expanded(
+                child: _ModeButton(
+                  label: 'Criar conta',
+                  selected: _registerMode,
+                  onTap: () => _setMode(true),
                 ),
-              ],
-              const SizedBox(height: 14),
-              const Text(
-                'O aplicativo usa apenas a chave pública do projeto. Permissões reais são decididas pelo login, pelos grants e pelo RLS no Postgres.',
-                style: TextStyle(color: FitColors.muted, fontSize: 12, height: 1.45),
               ),
             ],
           ),
+          const SizedBox(height: BlackGoldSpace.lg),
+          if (_registerMode) ...<Widget>[
+            TextFormField(
+              controller: _nameController,
+              enabled: !_busy,
+              textInputAction: TextInputAction.next,
+              decoration: _decoration('Seu nome'),
+              validator: (String? value) => _required(value, 'seu nome'),
+            ),
+            const SizedBox(height: BlackGoldSpace.sm),
+            TextFormField(
+              controller: _organizationController,
+              enabled: !_busy,
+              textInputAction: TextInputAction.next,
+              decoration: _decoration('Academia, studio ou nome profissional'),
+              validator: (String? value) =>
+                  _required(value, 'o nome do seu espaço'),
+            ),
+            const SizedBox(height: BlackGoldSpace.sm),
+          ],
+          TextFormField(
+            controller: _emailController,
+            enabled: !_busy,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            autofillHints: const <String>[AutofillHints.email],
+            decoration: _decoration('E-mail'),
+            validator: _validateEmail,
+          ),
+          const SizedBox(height: BlackGoldSpace.sm),
+          TextFormField(
+            controller: _passwordController,
+            enabled: !_busy,
+            obscureText: _obscurePassword,
+            textInputAction: TextInputAction.done,
+            autofillHints: <String>[
+              _registerMode
+                  ? AutofillHints.newPassword
+                  : AutofillHints.password,
+            ],
+            onFieldSubmitted: (_) => _submit(),
+            decoration: _decoration(
+              'Senha',
+              suffixIcon: IconButton(
+                onPressed: _busy
+                    ? null
+                    : () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                icon: Icon(
+                  _obscurePassword
+                      ? Icons.visibility_rounded
+                      : Icons.visibility_off_rounded,
+                  color: AppColors.gold,
+                ),
+              ),
+            ),
+            validator: _validatePassword,
+          ),
+          if (_message != null) ...<Widget>[
+            const SizedBox(height: BlackGoldSpace.md),
+            _StatusMessage(
+              text: _message!,
+              isError: _messageIsError,
+            ),
+          ],
+          const SizedBox(height: BlackGoldSpace.lg),
+          SizedBox(
+            width: double.infinity,
+            child: GoldButton(
+              label: _busy
+                  ? 'Processando...'
+                  : _registerMode
+                      ? 'Criar minha conta'
+                      : 'Entrar no painel',
+              icon: _registerMode
+                  ? Icons.person_add_alt_1_rounded
+                  : Icons.login_rounded,
+              onTap: _busy ? null : _submit,
+            ),
+          ),
+          if (_pendingConfirmationEmail != null) ...<Widget>[
+            const SizedBox(height: BlackGoldSpace.xs),
+            TextButton.icon(
+              onPressed: _busy ? null : _resendConfirmation,
+              icon: const Icon(Icons.mark_email_unread_rounded),
+              label: const Text('Reenviar confirmação'),
+            ),
+          ],
+          const SizedBox(height: BlackGoldSpace.md),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const Icon(
+                Icons.verified_user_outlined,
+                color: AppColors.goldSoft,
+                size: 16,
+              ),
+              const SizedBox(width: BlackGoldSpace.xs),
+              Expanded(
+                child: Text(
+                  'Sessão protegida pelo Supabase Auth. Permissões reais continuam decididas pelos grants e pelo RLS no Postgres.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AuthBrandPanel extends StatelessWidget {
+  const _AuthBrandPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 590),
+      padding: const EdgeInsets.all(BlackGoldSpace.xxl),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[
+            Color(0xFF151107),
+            Color(0xFF080807),
+            Color(0xFF020202),
+          ],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Icon(
+            Icons.fitness_center_rounded,
+            color: AppColors.goldSoft,
+            size: 34,
+          ),
+          const Spacer(),
+          const Text(
+            'SUA EVOLUÇÃO',
+            style: TextStyle(
+              color: AppColors.goldSoft,
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2.1,
+            ),
+          ),
+          const SizedBox(height: BlackGoldSpace.sm),
+          Text.rich(
+            TextSpan(
+              children: <InlineSpan>[
+                const TextSpan(text: 'Tudo sob\n'),
+                TextSpan(
+                  text: 'controle.',
+                  style: TextStyle(color: AppColors.goldSoft),
+                ),
+              ],
+            ),
+            style: Theme.of(context).textTheme.displayMedium,
+          ),
+          const SizedBox(height: BlackGoldSpace.md),
+          const Text(
+            'Alunos, treinos, nutrição, progresso e decisões inteligentes com a mesma linguagem visual do painel BlackGold.',
+            style: TextStyle(
+              color: AppColors.muted,
+              fontSize: 14,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: BlackGoldSpace.xxl),
+          const _SecurityRow(
+            icon: Icons.shield_outlined,
+            text: 'Acesso seguro e isolado por organização',
+          ),
+          const SizedBox(height: BlackGoldSpace.sm),
+          const _SecurityRow(
+            icon: Icons.auto_awesome_outlined,
+            text: 'Experiência premium consistente em todas as telas',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SecurityRow extends StatelessWidget {
+  const _SecurityRow({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Icon(icon, color: AppColors.gold, size: 18),
+        const SizedBox(width: BlackGoldSpace.xs),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: AppColors.text,
+              fontSize: 12,
+              height: 1.35,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatusMessage extends StatelessWidget {
+  const _StatusMessage({required this.text, required this.isError});
+
+  final String text;
+  final bool isError;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color accent = isError ? AppColors.danger : AppColors.gold;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(BlackGoldSpace.sm),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+        border: Border.all(
+          color: accent.withValues(alpha: 0.72),
+          width: BlackGoldStroke.hairline,
+        ),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: isError ? AppColors.danger : AppColors.goldSoft,
+          height: 1.4,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -399,20 +560,25 @@ class _ModeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(BlackGoldRadius.control),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(vertical: 13),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? FitColors.gold : FitColors.cardSoft,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: selected ? FitColors.gold : FitColors.border),
+          color: selected
+              ? AppColors.gold
+              : AppColors.cardRaised.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(BlackGoldRadius.control),
+          border: Border.all(
+            color: selected ? AppColors.gold : AppColors.borderGold,
+            width: BlackGoldStroke.regular,
+          ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.black : FitColors.text,
+            color: selected ? Colors.black : AppColors.text,
             fontWeight: FontWeight.w900,
           ),
         ),
