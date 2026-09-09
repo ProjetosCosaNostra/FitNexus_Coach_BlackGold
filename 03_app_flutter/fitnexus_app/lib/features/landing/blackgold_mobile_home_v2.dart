@@ -311,6 +311,8 @@ class LandingPage extends StatelessWidget {
 
   Widget _hero(BuildContext context, double u) {
     return SizedBox(
+      key: const ValueKey<String>('blackgold-home-hero'),
+      width: double.infinity,
       height: 216 * u,
       child: Stack(
         clipBehavior: Clip.none,
@@ -332,17 +334,17 @@ class LandingPage extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: -61 * u,
-            right: 0,
-            width: 176 * u,
-            height: 266 * u,
+            top: -48 * u,
+            right: 18 * u,
+            width: 174 * u,
+            height: 250 * u,
             child: ClipRRect(
               borderRadius: BorderRadius.only(
                 topRight: Radius.circular(10 * u),
                 bottomRight: Radius.circular(10 * u),
               ),
               child: Image.asset(
-                'assets/images/fitnexus_mobile_approved_hero.webp',
+                'assets/images/fitnexus_mobile_approved_hero_v3.png',
                 fit: BoxFit.cover,
                 alignment: Alignment.centerRight,
               ),
