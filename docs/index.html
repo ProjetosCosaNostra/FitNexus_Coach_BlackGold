@@ -31,6 +31,41 @@
 
   <title>fitnexus_app</title>
   <link rel="manifest" href="manifest.json">
+
+  <style id="fitnexus-construction-notice-style">
+    #fitnexus-construction-notice {
+      position: fixed;
+      z-index: 2147483647;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: calc(100vw - 24px);
+      padding: 9px 16px;
+      border: 1px solid #8A7130;
+      border-radius: 999px;
+      background: rgba(12, 12, 12, 0.96);
+      color: #FFD45A;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.25;
+      letter-spacing: 0.01em;
+      text-align: center;
+      pointer-events: none;
+      box-sizing: border-box;
+    }
+
+    @media (max-width: 620px) {
+      #fitnexus-construction-notice {
+        top: 8px;
+        width: calc(100vw - 20px);
+        padding: 8px 12px;
+        border-radius: 14px;
+        font-size: 11px;
+      }
+    }
+  </style>
 </head>
 <body>
   <!--
@@ -41,6 +76,24 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
+  
+  <div id="fitnexus-construction-notice" role="status" aria-live="polite">
+    FITNEXUS COACH — EM CONSTRUÇÃO
+  </div>
+  <script>
+    (function () {
+      var el = document.getElementById('fitnexus-construction-notice');
+      if (!el) return;
+      var lang = (navigator.language || 'en').toLowerCase();
+      if (lang.indexOf('pt') === 0) {
+        el.textContent = 'FITNEXUS COACH — EM CONSTRUÇÃO • Algumas funções e links ainda não estão disponíveis.';
+      } else if (lang.indexOf('es') === 0) {
+        el.textContent = 'FITNEXUS COACH — EN CONSTRUCCIÓN • Algunas funciones y enlaces todavía no están disponibles.';
+      } else {
+        el.textContent = 'FITNEXUS COACH — UNDER CONSTRUCTION • Some features and links are not available yet.';
+      }
+    }());
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
