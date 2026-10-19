@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "project_ref": "mceukeondizkwlpfxzgf",
+  "failure_class": "BGF-STAGE31-PROOF-GUARD-SENTINEL-SELF-MATCH-222",
+  "incident": {
+    "workflow_run_id": 32478699265,
+    "job_id": 96760279084,
+    "failing_step": "Stage 31 client Edge live proof candidate guard",
+    "detail": "The proof source intentionally listed service_role as a forbidden response key, while the guard rejected any occurrence of the same sentinel string.",
+    "live_proof_executed": false,
+    "fixture_mutated_by_incident": false
+  },
+  "cause": "A raw substring prohibition could not distinguish a security sentinel used to detect response leakage from an actual service-role credential or direct privileged client configuration.",
+  "permanent_prevention": {
+    "forbidden_response_sentinel_is_allowed_in_test_assertion_set": true,
+    "service_role_key_or_secret_configuration_remains_forbidden": true,
+    "direct_rpc_and_direct_functions_invoke_remain_forbidden_in_proof": true,
+    "raw_64_hex_bearer_literal_remains_forbidden": true,
+    "guard_must_validate_semantic_credential_patterns_not_the_sentinel_label_alone": true
+  },
+  "production_boundary": {
+    "active_transport": "directRpc",
+    "edge_gateway_selected": false,
+    "direct_rpc_execute_revoked": false,
+    "launch_gate_promoted": false
+  }
+}
